@@ -17,7 +17,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() async {
     setState(() => _isLoading = true);
 
-    // TODO: tutaj logika walidacji backend / API
     await Future.delayed(const Duration(seconds: 1));
 
     if (_emailController.text == "user@example.com" &&
