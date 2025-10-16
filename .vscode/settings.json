@@ -1,3 +1,37 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic"
+  "java.configuration.updateBuildConfiguration": "automatic",
+
+  // (Explorer)
+  "files.exclude": {
+    ".dart_tool": true,
+    ".idea": true,
+    ".flutter-plugins-dependencies": true,
+    ".metadata": true,
+    "build": true,
+    // "analysis_options.yaml": true,
+    "obywatel_app.iml": true,
+    "ios": true,
+    "linux": true,
+    "macos": true,
+    "web": true,
+    "windows": true,
+    "test": true
+  },
+
+  // (Search)
+  "search.exclude": {
+    ".dart_tool": true,
+    ".idea": true,
+    ".flutter-plugins-dependencies": true,
+    ".metadata": true,
+    "build": true,
+    // "analysis_options.yaml": true,
+    "obywatel_app.iml": true,
+    "ios": true,
+    "linux": true,
+    "macos": true,
+    "web": true,
+    "windows": true,
+    "test": true
+  }
 }

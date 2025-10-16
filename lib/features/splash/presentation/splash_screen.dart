@@ -4,8 +4,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../providers/backend_provider.dart';
 import 'splash_logo.dart';
 import 'splash_status.dart';
-import '../pin_screen.dart';
-import '../login_screen.dart';
+import '../../pin/presentation/pin_screen.dart';
+import '../../auth/presentation/login_screen.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});

@@ -1,4 +1,4 @@
-name: obywatel_app
+name: obywatel_plus
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -40,6 +40,7 @@ dependencies:
   dio: ^5.9.0
   logger: ^2.6.2
   get_it: ^8.2.0
+  go_router: ^16.2.5
 
 dev_dependencies:
   flutter_test:

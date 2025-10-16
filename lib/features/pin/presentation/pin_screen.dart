@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'login_screen.dart';
+import '../../auth/presentation/login_screen.dart';
 
 class PinScreen extends StatefulWidget {
   const PinScreen({super.key});
