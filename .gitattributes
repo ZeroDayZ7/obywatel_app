@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Treat HTML files as vendored (GitHub Linguist will ignore them for language stats)
+*.html linguist-vendored
