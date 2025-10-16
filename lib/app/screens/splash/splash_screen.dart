@@ -41,7 +41,7 @@ class SplashScreen extends ConsumerWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF2ABF91), Color(0xFF1F8C6E)],
+            colors: [Color.fromARGB(255, 119, 119, 119), Color.fromARGB(255, 53, 53, 53)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

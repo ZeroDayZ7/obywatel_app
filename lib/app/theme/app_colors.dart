@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary
-  static const primary = Color(0xFF2ABF91); // turkusowy
-  static const primaryDark = Color(0xFF1F8C6E);
+  static const primary = Color.fromARGB(255, 83, 83, 83); // turkusowy
+  static const primaryDark = Color.fromARGB(255, 54, 54, 54);
 
   // Accent
-  static const accent = Color(0xFF50E3C2);
+  static const accent = Color.fromARGB(255, 160, 160, 160);
 
   // Background
   static const backgroundLight = Color(0xFFF5F7FA);
