@@ -2,7 +2,12 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../go/http-server-v2"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"java.configuration.updateBuildConfiguration": "automatic"
+	}
 }

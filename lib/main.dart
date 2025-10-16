@@ -1,29 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/splash_screen.dart';
-import 'theme/app_theme.dart';
-import 'theme/theme_notifier.dart';
+import 'app/app.dart';
+import 'app/di/injector.dart';
 
-void main() {
-  runApp(
-    // Riverpod ProviderScope
-    const ProviderScope(child: MyApp()),
-  );
-}
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-class MyApp extends ConsumerWidget {
-  const MyApp({super.key});
+  await AppInjector.setup();
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider); // Riverpod provider do tematu
-    return MaterialApp(
-      title: 'Obywatel+',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode, // dynamiczny light/dark
-      home: const SplashScreen(),
-    );
-  }
+  runApp(const ProviderScope(child: ObywatelPlusApp()));
 }
