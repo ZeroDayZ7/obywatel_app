@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../providers/backend_provider.dart';
+import '../data/remote/backend_api.dart';
 import 'splash_logo.dart';
 import 'splash_status.dart';
 import '../../pin/presentation/pin_screen.dart';

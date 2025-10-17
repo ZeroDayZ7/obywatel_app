@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:dio/dio.dart';
-import '../app/config/env.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 
 // Stany połączenia
 enum BackendStatus { loading, ok, error }

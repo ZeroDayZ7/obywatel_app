@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 
 import '../../core/logger/app_logger.dart';
 import '../../core/network/api_client.dart';
@@ -16,7 +17,13 @@ class AppInjector {
     );
 
     sl.registerLazySingleton<Dio>(
-      () => Dio(BaseOptions(baseUrl: 'https://api.twojbackend.pl')),
+      () => Dio(
+        BaseOptions(
+          baseUrl: ApiConstants.baseUrl,
+          connectTimeout: Duration(seconds: ApiConstants.connectTimeoutSeconds),
+          receiveTimeout: Duration(seconds: ApiConstants.receiveTimeoutSeconds),
+        ),
+      ),
     );
 
     sl.registerLazySingleton<ApiClient>(
