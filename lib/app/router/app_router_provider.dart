@@ -9,6 +9,9 @@ import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/fingerprint_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/set_pin_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/pattern_lock_screen.dart';
 import 'app_routes.dart';
 import 'package:obywatel_plus/providers/auth_provider.dart';
 import 'package:obywatel_plus/providers/auth_refresh_provider.dart';
@@ -30,7 +33,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.settings,
         builder: (_, _) => const SettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'set_pin', // <-- bez / na początku
+            builder: (_, _) => const SetPinScreen(),
+          ),
+          GoRoute(
+            path: 'pattern_lock',
+            builder: (_, _) => const PatternLockScreen(),
+          ),
+          GoRoute(
+            path: 'fingerprint',
+            builder: (_, _) => const FingerprintScreen(),
+          ),
+        ],
       ),
+
       GoRoute(
         path: AppRoutes.profile,
         builder: (_, _) => const ProfileScreen(),
