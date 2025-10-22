@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_notifier.dart';
-import 'router/app_router.dart';
+import 'router/app_router_provider.dart';
 
 class ObywatelPlusApp extends ConsumerWidget {
   const ObywatelPlusApp({super.key});

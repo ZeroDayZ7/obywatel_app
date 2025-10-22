@@ -1,18 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/pin/presentation/pin_screen.dart';
 import 'package:obywatel_plus/features/splash/presentation/splash_screen.dart';
 import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'app_routes.dart';
 import 'package:obywatel_plus/providers/auth_provider.dart';
 import 'package:obywatel_plus/providers/auth_refresh_provider.dart';
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = ref.watch(authRefreshListenableProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey, // <-- dodane
     initialLocation: AppRoutes.splash,
     refreshListenable: refreshListenable,
     routes: [
@@ -24,10 +31,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.settings,
         builder: (_, _) => const SettingsScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (_, _) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.documents,
+        builder: (_, _) => const DocumentsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, _) => const NotificationsScreen(),
+      ),
     ],
     redirect: (context, state) {
       final authState = ProviderScope.containerOf(context).read(authProvider);
-      final isLoggedIn = authState.isLoggedIn; 
+      final isLoggedIn = authState.isLoggedIn;
       final goingToLogin = state.uri.path == AppRoutes.login;
       final goingToSplash = state.uri.path == AppRoutes.splash;
 
