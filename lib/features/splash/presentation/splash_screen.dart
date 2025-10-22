@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 import '../data/remote/backend_api.dart';
 import 'splash_logo.dart';
 import 'splash_status.dart';
-import '../../pin/presentation/pin_screen.dart';
-import '../../auth/presentation/login_screen.dart';
+// import '../../pin/presentation/pin_screen.dart';
+// import '../../auth/presentation/login_screen.dart';
+// import 'package:obywatel_plus/app/router/app_router.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
@@ -23,15 +26,13 @@ class SplashScreen extends ConsumerWidget {
           if (!context.mounted) return;
 
           if (pin != null && pin.isNotEmpty) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const PinScreen()),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(AppRoutes.pin);
+            });
           } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (_) => const LoginScreen()),
-            );
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.go(AppRoutes.login);
+            });
           }
         });
       }
@@ -41,7 +42,10 @@ class SplashScreen extends ConsumerWidget {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color.fromARGB(255, 119, 119, 119), Color.fromARGB(255, 53, 53, 53)],
+            colors: [
+              Color.fromARGB(255, 119, 119, 119),
+              Color.fromARGB(255, 53, 53, 53),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

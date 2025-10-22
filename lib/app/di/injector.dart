@@ -6,6 +6,7 @@ import 'package:obywatel_plus/app/config/env.dart';
 import '../../core/logger/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
 
 final sl = GetIt.instance;
 
@@ -28,6 +29,10 @@ class AppInjector {
 
     sl.registerLazySingleton<ApiClient>(
       () => ApiClient(sl<Dio>(), sl<SecureStorageService>()),
+    );
+
+    sl.registerLazySingleton<AuthApi>(
+      () => AuthApi(baseUrl: ApiConstants.baseUrl),
     );
 
     // Jeden logger dla całej aplikacji

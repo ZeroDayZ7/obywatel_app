@@ -1,38 +1,85 @@
 import 'package:flutter/material.dart';
-// import 'two_fa_screen.dart'; // później 2FA
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 
-class LoginScreen extends StatefulWidget {
+import 'package:obywatel_plus/app/di/injector.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final TextEditingController _emailController = TextEditingController(
+    text: ApiConstants.defaultEmail,
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: ApiConstants.defaultPassword,
+  );
 
   bool _isLoading = false;
 
-  void _login() async {
+  Future<void> _login() async {
+    if (_isLoading) return;
+
     setState(() => _isLoading = true);
 
-    await Future.delayed(const Duration(seconds: 1));
+    final logger = sl<AppLogger>();
 
-    if (_emailController.text == "user@example.com" &&
-        _passwordController.text == "123456") {
-      // jeśli poprawne, przechodzimy do 2FA lub Home
-      // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => TwoFAScreen()));
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login successful! (2FA pending)")),
+    try {
+      // Pobieramy singleton AuthApi i SecureStorage
+      final authApi = sl<AuthApi>();
+      final storage = sl<SecureStorageService>();
+
+      // Wywołanie login API
+      final token = await authApi.login(
+        _emailController.text.trim(),
+        _passwordController.text,
       );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid email or password")),
+
+      // Zapis tokenu w secure storage
+      await storage.write('user_token', token);
+
+      if (!mounted) return;
+
+      // Przekierowanie po logowaniu
+      context.go(AppRoutes.home);
+    } on DioException catch (e) {
+      logger.e(
+        'DioException during login',
+        error: e, // sam wyjątek
+        stackTrace: e.stackTrace, // jeśli dostępny
       );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Nieprawidłowe dane")));
+    } catch (e, st) {
+      logger.e('Unexpected error during login', error: e, stackTrace: st);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Coś poszło nie tak, spróbuj ponownie")),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
+  }
 
-    setState(() => _isLoading = false);
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
@@ -51,6 +98,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 30),
               TextField(
                 controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: "Email",
                   border: OutlineInputBorder(),

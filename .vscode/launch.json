@@ -2,9 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Debug",
+      "name": "Flutter Debug (Phone)",
       "request": "launch",
-      "type": "dart"
+      "type": "dart",
+      "deviceId": "5200d78bfa479449"
     }
   ]
 }

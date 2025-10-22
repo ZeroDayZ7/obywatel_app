@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/features/pin/presentation/pin_screen.dart';
 import 'package:obywatel_plus/features/splash/presentation/splash_screen.dart';
 import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
@@ -16,6 +17,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshListenable,
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
+      GoRoute(path: AppRoutes.pin, builder: (_, _) => const PinScreen()),
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeScreen()),
       GoRoute(
