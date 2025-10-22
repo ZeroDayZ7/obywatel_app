@@ -26,7 +26,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final isLoggedIn = ProviderScope.containerOf(context).read(authProvider);
+      final authState = ProviderScope.containerOf(context).read(authProvider);
+      final isLoggedIn = authState.isLoggedIn; 
       final goingToLogin = state.uri.path == AppRoutes.login;
       final goingToSplash = state.uri.path == AppRoutes.splash;
 

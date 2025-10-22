@@ -17,8 +17,8 @@ class AuthApi {
   }
 
   /// Logowanie użytkownika
-  /// Zwraca token JWT w przypadku sukcesu
-  Future<String> login(String email, String password) async {
+  /// Zwraca mapę { 'token': String, '2fa_required': bool }
+  Future<Map<String, dynamic>> login(String email, String password) async {
     logger.i('Starting login request for $email');
 
     try {
@@ -30,36 +30,23 @@ class AuthApi {
       logger.d('Login response status: ${response.statusCode}');
       logger.d('Response data: ${response.data}');
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 && response.data != null) {
         final data = response.data;
+        final token = data['token'];
+        final twoFaRequired = data['2fa_required'] ?? false;
 
-        if (data != null && data['token'] != null) {
-          final token = data['token'];
-          logger.i('Login successful for user: $email');
-          return token;
-        } else {
+        if (token == null) {
           logger.w('Token not found in response for user: $email');
           throw Exception('Token not found in response');
         }
+
+        return {'token': token, '2fa_required': twoFaRequired};
       } else {
-        logger.w(
-          'Login failed with status: ${response.statusCode}, message: ${response.statusMessage}',
-        );
         throw Exception('Login failed: ${response.statusMessage}');
       }
     } on DioException catch (e, st) {
-      if (e.response != null) {
-        logger.e('DioException during login request', error: e, stackTrace: st);
-        logger.d('Response data: ${e.response?.data}');
-        throw Exception('Login failed: ${e.response?.data}');
-      } else {
-        logger.e(
-          'Network or unexpected Dio error during login',
-          error: e,
-          stackTrace: st,
-        );
-        throw Exception('Login failed: ${e.message}');
-      }
+      logger.e('DioException during login request', error: e, stackTrace: st);
+      throw Exception('Login failed: ${e.response?.data ?? e.message}');
     } catch (e, st) {
       logger.e('Unexpected error during login', error: e, stackTrace: st);
       rethrow;

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/providers/auth_provider.dart';
 
 import 'package:obywatel_plus/app/di/injector.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
@@ -29,46 +30,53 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _login() async {
     if (_isLoading) return;
-
     setState(() => _isLoading = true);
 
     final logger = sl<AppLogger>();
 
     try {
-      // Pobieramy singleton AuthApi i SecureStorage
       final authApi = sl<AuthApi>();
       final storage = sl<SecureStorageService>();
 
-      // Wywołanie login API
-      final token = await authApi.login(
+      // Wywołanie API i pobranie tokenu oraz flagi 2FA
+      final response = await authApi.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
+      final token = response['token'] as String;
+      final twoFaRequired = response['2fa_required'] as bool;
+
       // Zapis tokenu w secure storage
       await storage.write('user_token', token);
 
+      // Aktualizacja stanu globalnego providerem
+      ref.read(authProvider.notifier).login(token);
+
       if (!mounted) return;
 
-      // Przekierowanie po logowaniu
+      // Jeśli wymagana jest 2FA → przekierowanie do PIN/2FA
+      if (twoFaRequired) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          context.go(AppRoutes.pin);
+        });
+        return;
+      }
+
+      // Przekierowanie po zwykłym logowaniu
       context.go(AppRoutes.home);
     } on DioException catch (e) {
-      logger.e(
-        'DioException during login',
-        error: e, // sam wyjątek
-        stackTrace: e.stackTrace, // jeśli dostępny
-      );
-
+      logger.e('DioException during login', error: e, stackTrace: e.stackTrace);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Nieprawidłowe dane")));
+      ).showSnackBar(const SnackBar(content: Text("Nieprawidłowe dane")));
     } catch (e, st) {
       logger.e('Unexpected error during login', error: e, stackTrace: st);
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Coś poszło nie tak, spróbuj ponownie")),
+        const SnackBar(content: Text("Coś poszło nie tak, spróbuj ponownie")),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

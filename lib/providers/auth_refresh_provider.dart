@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_provider.dart';
 
+/// ChangeNotifier, który nasłuchuje zmiany AuthState
 class AuthRefreshListenable extends ChangeNotifier {
-  late final ProviderSubscription<bool> _subscription;
+  late final ProviderSubscription<AuthState> _subscription;
 
   AuthRefreshListenable(Ref ref) {
-    _subscription = ref.listen<bool>(
-      authProvider,
-      (_, __) => notifyListeners(),
+    _subscription = ref.listen<AuthState>(
+      authProvider, // teraz AuthState, nie bool
+      (_, _) => notifyListeners(), // powiadamia wszystkie nasłuchujące widgety
     );
   }
 
@@ -19,6 +20,7 @@ class AuthRefreshListenable extends ChangeNotifier {
   }
 }
 
+/// Provider, który daje dostęp do listenable w całej aplikacji
 final authRefreshListenableProvider = Provider<AuthRefreshListenable>((ref) {
   final listenable = AuthRefreshListenable(ref);
   ref.onDispose(listenable.dispose);
