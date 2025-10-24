@@ -35,15 +35,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const SettingsScreen(),
         routes: [
           GoRoute(
-            path: 'set_pin', // <-- bez / na początku
+            path: AppRoutes.setPin, // <-- bez / na początku
             builder: (_, _) => const SetPinScreen(),
           ),
           GoRoute(
-            path: 'pattern_lock',
+            path: AppRoutes.patternLock,
             builder: (_, _) => const PatternLockScreen(),
           ),
           GoRoute(
-            path: 'fingerprint',
+            path: AppRoutes.fingerprint,
             builder: (_, _) => const FingerprintScreen(),
           ),
         ],
