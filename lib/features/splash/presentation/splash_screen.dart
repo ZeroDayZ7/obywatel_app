@@ -1,43 +1,77 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
-import '../data/remote/backend_api.dart';
-import 'splash_logo.dart';
-import 'splash_status.dart';
-// import '../../pin/presentation/pin_screen.dart';
-// import '../../auth/presentation/login_screen.dart';
-// import 'package:obywatel_plus/app/router/app_router.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'splash_logo.dart';
+import 'package:obywatel_plus/app/di/injector.dart';
 
-class SplashScreen extends ConsumerWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final backendStatus = ref.watch(backendProvider);
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+}
 
-    // ref.listen do nawigacji
-    ref.listen<BackendStatus>(backendProvider, (previous, next) {
-      if (next == BackendStatus.ok) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          final storage = FlutterSecureStorage();
-          String? pin = await storage.read(key: 'user_pin');
-          if (!context.mounted) return;
+class _SplashScreenState extends ConsumerState<SplashScreen> {
+  final _storage = const FlutterSecureStorage();
+  late final AppLogger _logger;
 
-          if (pin != null && pin.isNotEmpty) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.go(AppRoutes.pin);
-            });
-          } else {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              context.go(AppRoutes.login);
-            });
-          }
-        });
+  @override
+  void initState() {
+    super.initState();
+    _logger = sl<AppLogger>(); // inicjalizacja loggera z DI
+    _logger.i('SplashScreen: initState');
+
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    try {
+      _logger.i('SplashScreen: Sprawdzanie tokena i ustawień lokalnych');
+
+      // 1️⃣ Sprawdzenie tokena (sesji)
+      final token = await _storage.read(key: 'accessToken');
+      final hasSession = token != null && token.isNotEmpty;
+      _logger.i('Token: ${token ?? "brak"}, hasSession=$hasSession');
+
+      // 2️⃣ Sprawdzenie lokalnych zabezpieczeń
+      final pin = await _storage.read(key: 'user_pin');
+      final hasLocalLock = pin != null && pin.isNotEmpty;
+      _logger.i('PIN: ${pin ?? "brak"}, hasLocalLock=$hasLocalLock');
+
+      final biometricEnabled = await _storage.read(key: 'biometric') == 'true';
+      _logger.i('Biometria włączona: $biometricEnabled');
+
+      if (!mounted) return;
+
+      // 3️⃣ Logika nawigacji
+      if (!hasSession) {
+        _logger.i('Brak sesji → przejście do LoginScreen');
+        context.go(AppRoutes.login);
+      } else if (!hasLocalLock) {
+        _logger.i('Brak PIN → przejście do SecuritySetupScreen');
+        context.go(AppRoutes.securitySetup);
+      } else if (biometricEnabled) {
+        _logger.i('PIN/biometria aktywna → przejście do PinScreen');
+        context.go(AppRoutes.pin);
+      } else {
+        _logger.i('Wszystko ustawione → przejście do HomeScreen');
+        context.go(AppRoutes.home);
       }
-    });
+    } catch (e, st) {
+      _logger.e(
+        'Błąd podczas inicjalizacji SplashScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (mounted) context.go(AppRoutes.login);
+    }
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -50,20 +84,7 @@ class SplashScreen extends ConsumerWidget {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SplashLogo(),
-              SplashStatus(
-                isLoading: backendStatus == BackendStatus.loading,
-                isError: backendStatus == BackendStatus.error,
-                onRetry: () =>
-                    ref.read(backendProvider.notifier).checkBackend(),
-              ),
-            ],
-          ),
-        ),
+        child: const Center(child: SplashLogo()),
       ),
     );
   }

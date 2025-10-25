@@ -12,9 +12,12 @@ import 'package:obywatel_plus/features/settings/presentation/settings_screen.dar
 import 'package:obywatel_plus/features/settings/presentation/fingerprint_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/set_pin_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/pattern_lock_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
+
 import 'app_routes.dart';
 import 'package:obywatel_plus/providers/auth_provider.dart';
 import 'package:obywatel_plus/providers/auth_refresh_provider.dart';
+import 'package:obywatel_plus/core/security/security_service_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -31,19 +34,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeScreen()),
       GoRoute(
+        path: AppRoutes.securitySetup,
+        builder: (_, _) => const SecuritySetupScreen(),
+      ),
+      GoRoute(
         path: AppRoutes.settings,
         builder: (_, _) => const SettingsScreen(),
         routes: [
           GoRoute(
-            path: 'set_pin', // <-- bez / na początku
+            path: AppRoutes.setPin,
             builder: (_, _) => const SetPinScreen(),
           ),
           GoRoute(
-            path: 'pattern_lock',
+            path: AppRoutes.patternLock,
             builder: (_, _) => const PatternLockScreen(),
           ),
           GoRoute(
-            path: 'fingerprint',
+            path: AppRoutes.fingerprint,
             builder: (_, _) => const FingerprintScreen(),
           ),
         ],
@@ -63,17 +70,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final authState = ProviderScope.containerOf(context).read(authProvider);
+      final container = ProviderScope.containerOf(context);
+      final authState = container.read(authProvider);
+      final securityService = container.read(securityServiceProvider);
+
       final isLoggedIn = authState.isLoggedIn;
       final goingToLogin = state.uri.path == AppRoutes.login;
       final goingToSplash = state.uri.path == AppRoutes.splash;
+      final goingToPin = state.uri.path == AppRoutes.pin;
 
+      // jeśli nie zalogowany -> login
       if (!isLoggedIn && !goingToLogin && !goingToSplash) {
         return AppRoutes.login;
       }
 
-      if (isLoggedIn && (goingToLogin || goingToSplash)) {
-        return AppRoutes.home;
+      // jeśli zalogowany i próbuje iść na login lub splash -> home
+      if (isLoggedIn && (goingToLogin || goingToSplash)) return AppRoutes.home;
+
+      // jeśli zalogowany i powinna być blokada -> PIN
+      if (isLoggedIn && securityService.shouldShowLock && !goingToPin) {
+        return AppRoutes.pin;
       }
 
       return null;

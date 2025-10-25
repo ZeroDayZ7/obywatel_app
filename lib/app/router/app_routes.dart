@@ -10,6 +10,9 @@ class AppRoutes {
   static const setPin = 'set_pin';
   static const patternLock = 'pattern_lock';
   static const fingerprint = 'fingerprint';
+
+  static const securitySetup = '/security_setup';
+
   
     // Nowe ścieżki dla HomeScreen dashboard
   static const profile = '/profile';

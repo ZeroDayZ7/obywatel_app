@@ -7,16 +7,31 @@ import '../../core/logger/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
+import 'package:obywatel_plus/core/security/security_service.dart';
+import 'package:local_auth/local_auth.dart';
 
 final sl = GetIt.instance;
 
 class AppInjector {
   static Future<void> setup() async {
-    // Rejestracja usług
+    // Rejestracja LocalAuthentication
+    sl.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
+
+    // Rejestracja SecureStorageService
     sl.registerLazySingleton<SecureStorageService>(
       () => SecureStorageService(const FlutterSecureStorage()),
     );
 
+    // Rejestracja SecurityService korzystającego z DI
+    sl.registerLazySingleton<SecurityService>(
+      () => SecurityService(
+        secureStorage: sl<SecureStorageService>(),
+        localAuth: sl<LocalAuthentication>(),
+        logger: sl<AppLogger>(),
+      ),
+    );
+
+    // Reszta rejestracji
     sl.registerLazySingleton<Dio>(
       () => Dio(
         BaseOptions(
@@ -35,10 +50,8 @@ class AppInjector {
       () => AuthApi(baseUrl: ApiConstants.baseUrl),
     );
 
-    // Jeden logger dla całej aplikacji
     sl.registerLazySingleton<AppLogger>(() => AppLogger());
 
-    // Testowy log po rejestracji
     sl<AppLogger>().i("AppInjector: all dependencies registered ✅");
   }
 }

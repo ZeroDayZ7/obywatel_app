@@ -33,39 +33,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = true);
 
     final logger = sl<AppLogger>();
+    final authApi = sl<AuthApi>();
+    final storage = sl<SecureStorageService>();
 
     try {
-      final authApi = sl<AuthApi>();
-      final storage = sl<SecureStorageService>();
-
-      // Wywołanie API i pobranie tokenu oraz flagi 2FA
+      // 1️⃣ Wywołanie API logowania
       final response = await authApi.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
+      if (!mounted) return;
+
       final token = response['token'] as String;
-      final twoFaRequired = response['2fa_required'] as bool;
 
-      // Zapis tokenu w secure storage
-      await storage.write('user_token', token);
-
-      // Aktualizacja stanu globalnego providerem
+      // 2️⃣ Zapis tokenu i aktualizacja providera
+      await storage.write(key: 'accessToken', value: token);
       ref.read(authProvider.notifier).login(token);
 
       if (!mounted) return;
 
-      // Jeśli wymagana jest 2FA → przekierowanie do PIN/2FA
-      if (twoFaRequired) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          context.go(AppRoutes.pin);
-        });
-        return;
-      }
-
-      // Przekierowanie po zwykłym logowaniu
-      context.go(AppRoutes.home);
+      // 3️⃣ Sprawdzenie lokalnych zabezpieczeń
+      await _navigateAfterLogin(storage);
     } on DioException catch (e) {
       logger.e('DioException during login', error: e, stackTrace: e.stackTrace);
       if (!mounted) return;
@@ -80,6 +69,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _navigateAfterLogin(SecureStorageService storage) async {
+    final pin = await storage.read(key: 'user_pin');
+    final hasLocalLock = pin != null && pin.isNotEmpty;
+    final biometricEnabled = await storage.read(key: 'biometric') == 'true';
+
+    if (!mounted) return;
+
+    if (!hasLocalLock) {
+      context.go(AppRoutes.securitySetup); // brak PIN → setup
+    } else if (biometricEnabled) {
+      context.go(AppRoutes.pin); // PIN/biometria włączona → ekran blokady
+    } else {
+      context.go(AppRoutes.home); // wszystko ustawione → home
     }
   }
 
