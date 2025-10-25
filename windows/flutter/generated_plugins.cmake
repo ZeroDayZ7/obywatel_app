@@ -3,6 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  dargon2_flutter_desktop
   flutter_secure_storage_windows
   local_auth_windows
 )

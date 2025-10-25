@@ -41,7 +41,7 @@ dependencies:
   logger: ^2.6.2
   get_it: ^8.2.0
   go_router: ^16.2.5
-  argon2: ^1.0.1
+  dargon2_flutter: ^3.3.0
   local_auth: ^3.0.0
 
 dev_dependencies:
