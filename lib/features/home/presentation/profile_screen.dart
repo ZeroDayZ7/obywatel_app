@@ -13,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () {
-              // TODO: implement edit profile
+              Navigator.pushNamed(context, '/edit-profile');
             },
           ),
         ],
@@ -154,7 +154,7 @@ class _ActionButton extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.1),
+              color: Colors.blueAccent.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 32, color: Colors.blueAccent),

@@ -1,15 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/providers/auth_provider.dart';
-
 import 'package:obywatel_plus/app/di/injector.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
+import 'package:obywatel_plus/features/auth/application/state/login/login_state.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,73 +14,16 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(
-    text: ApiConstants.defaultEmail,
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: ApiConstants.defaultPassword,
-  );
+  late final LoginService _loginService;
 
-  bool _isLoading = false;
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
 
-  Future<void> _login() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-
-    final logger = sl<AppLogger>();
-    final authApi = sl<AuthApi>();
-    final storage = sl<SecureStorageService>();
-
-    try {
-      // 1️⃣ Wywołanie API logowania
-      final response = await authApi.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
-
-      if (!mounted) return;
-
-      final token = response['token'] as String;
-
-      // 2️⃣ Zapis tokenu i aktualizacja providera
-      await storage.write(key: 'accessToken', value: token);
-      ref.read(authProvider.notifier).login(token);
-
-      if (!mounted) return;
-
-      // 3️⃣ Sprawdzenie lokalnych zabezpieczeń
-      await _navigateAfterLogin(storage);
-    } on DioException catch (e) {
-      logger.e('DioException during login', error: e, stackTrace: e.stackTrace);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Nieprawidłowe dane")));
-    } catch (e, st) {
-      logger.e('Unexpected error during login', error: e, stackTrace: st);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Coś poszło nie tak, spróbuj ponownie")),
-      );
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _navigateAfterLogin(SecureStorageService storage) async {
-    final pin = await storage.read(key: 'user_pin');
-    final hasLocalLock = pin != null && pin.isNotEmpty;
-    final biometricEnabled = await storage.read(key: 'biometric') == 'true';
-
-    if (!mounted) return;
-
-    if (!hasLocalLock) {
-      context.go(AppRoutes.securitySetup); // brak PIN → setup
-    } else if (biometricEnabled) {
-      context.go(AppRoutes.pin); // PIN/biometria włączona → ekran blokady
-    } else {
-      context.go(AppRoutes.home); // wszystko ustawione → home
-    }
+  @override
+  void initState() {
+    super.initState();
+    // inicjalizacja LoginService przez DI
+    _loginService = getIt<LoginService>();
   }
 
   @override
@@ -95,8 +33,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  Future<void> _onLogin() async {
+    final loginNotifier = ref.read(loginStateProvider.notifier);
+    loginNotifier.setLoading(true);
+    loginNotifier.setError(null);
+
+    try {
+      final token = await _loginService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      // aktualizacja globalnego authProvider
+      ref.read(authProvider.notifier).login(token);
+
+      final nextRoute = await _loginService.determineNextRoute();
+      if (!mounted) return;
+      context.go(nextRoute);
+    } catch (e) {
+      loginNotifier.setError(e.toString());
+    } finally {
+      if (mounted) loginNotifier.setLoading(false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final loginState = ref.watch(loginStateProvider);
+    final isLoading = loginState.isLoading;
+
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -111,7 +76,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               const SizedBox(height: 30),
               TextField(
                 controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
                 decoration: const InputDecoration(
                   labelText: "Email",
                   border: OutlineInputBorder(),
@@ -128,11 +92,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
+                onPressed: isLoading ? null : _onLogin,
+                child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Login"),
               ),
+              if (loginState.error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    loginState.error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
             ],
           ),
         ),

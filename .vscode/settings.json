@@ -17,6 +17,8 @@
     "web": true,
     "windows": true,
     "test": true,
+    ".gitattributes": true,
+    "pubspec.lock": true,
     // "android": true
   },
 

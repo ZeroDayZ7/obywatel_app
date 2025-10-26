@@ -13,11 +13,9 @@ import 'package:obywatel_plus/features/settings/presentation/fingerprint_screen.
 import 'package:obywatel_plus/features/settings/presentation/set_pin_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/pattern_lock_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
-
+import 'redirect_logic.dart';
 import 'app_routes.dart';
-import 'package:obywatel_plus/providers/auth_provider.dart';
-import 'package:obywatel_plus/providers/auth_refresh_provider.dart';
-import 'package:obywatel_plus/core/security/security_service_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth_refresh_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -25,74 +23,73 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   final refreshListenable = ref.watch(authRefreshListenableProvider);
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey, // <-- dodane
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     refreshListenable: refreshListenable,
     routes: [
-      GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashScreen()),
-      GoRoute(path: AppRoutes.pin, builder: (_, _) => const PinScreen()),
-      GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginScreen()),
-      GoRoute(path: AppRoutes.home, builder: (_, _) => const HomeScreen()),
-      GoRoute(
-        path: AppRoutes.securitySetup,
-        builder: (_, _) => const SecuritySetupScreen(),
-      ),
+      _goRouteWithTransition(AppRoutes.splash, const SplashScreen()),
+      _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
+      _goRouteWithTransition(AppRoutes.pin, const PinScreen()),
+      _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
       GoRoute(
         path: AppRoutes.settings,
-        builder: (_, _) => const SettingsScreen(),
+        pageBuilder: (context, state) =>
+            _customPage(state: state, child: const SettingsScreen()),
         routes: [
-          GoRoute(
-            path: AppRoutes.setPin,
-            builder: (_, _) => const SetPinScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.patternLock,
-            builder: (_, _) => const PatternLockScreen(),
-          ),
-          GoRoute(
-            path: AppRoutes.fingerprint,
-            builder: (_, _) => const FingerprintScreen(),
-          ),
+          _goNestedRoute(AppRoutes.setPin, const SetPinScreen()),
+          _goNestedRoute(AppRoutes.patternLock, const PatternLockScreen()),
+          _goNestedRoute(AppRoutes.fingerprint, const FingerprintScreen()),
         ],
       ),
-
-      GoRoute(
-        path: AppRoutes.profile,
-        builder: (_, _) => const ProfileScreen(),
+      _goRouteWithTransition(
+        AppRoutes.securitySetup,
+        const SecuritySetupScreen(),
       ),
-      GoRoute(
-        path: AppRoutes.documents,
-        builder: (_, _) => const DocumentsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.notifications,
-        builder: (_, _) => const NotificationsScreen(),
+      _goRouteWithTransition(AppRoutes.profile, const ProfileScreen()),
+      _goRouteWithTransition(AppRoutes.documents, const DocumentsScreen()),
+      _goRouteWithTransition(
+        AppRoutes.notifications,
+        const NotificationsScreen(),
       ),
     ],
-    redirect: (context, state) {
-      final container = ProviderScope.containerOf(context);
-      final authState = container.read(authProvider);
-      final securityService = container.read(securityServiceProvider);
-
-      final isLoggedIn = authState.isLoggedIn;
-      final goingToLogin = state.uri.path == AppRoutes.login;
-      final goingToSplash = state.uri.path == AppRoutes.splash;
-      final goingToPin = state.uri.path == AppRoutes.pin;
-
-      // jeśli nie zalogowany -> login
-      if (!isLoggedIn && !goingToLogin && !goingToSplash) {
-        return AppRoutes.login;
-      }
-
-      // jeśli zalogowany i próbuje iść na login lub splash -> home
-      if (isLoggedIn && (goingToLogin || goingToSplash)) return AppRoutes.home;
-
-      // jeśli zalogowany i powinna być blokada -> PIN
-      if (isLoggedIn && securityService.shouldShowLock && !goingToPin) {
-        return AppRoutes.pin;
-      }
-
-      return null;
-    },
+    redirect: (context, state) => appRedirectLogic(ref, state),
   );
 });
+
+// Funkcja pomocnicza dla routingu z animacją
+GoRoute _goRouteWithTransition(String path, Widget screen) {
+  return GoRoute(
+    path: path,
+    pageBuilder: (context, state) => _customPage(state: state, child: screen),
+  );
+}
+
+// Funkcja pomocnicza dla nested routes (pod routes)
+GoRoute _goNestedRoute(String path, Widget screen) {
+  return GoRoute(
+    path: path,
+    pageBuilder: (context, state) => _customPage(state: state, child: screen),
+  );
+}
+
+// Tworzymy CustomTransitionPage dla animacji
+CustomTransitionPage _customPage({
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final tween = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
+      final fadeTween = Tween<double>(begin: 0, end: 1);
+      return SlideTransition(
+        position: animation.drive(tween),
+        child: FadeTransition(
+          opacity: animation.drive(fadeTween),
+          child: child,
+        ),
+      );
+    },
+  );
+}

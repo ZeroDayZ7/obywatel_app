@@ -18,6 +18,15 @@ class SecureStorageService {
     await _storage.delete(key: key);
   }
 
+  Future<Map<String, String>> readAll() async {
+    final all = await _storage.readAll();
+    return all;
+  }
+
+  Future<void> clearAll() async {
+    await _storage.deleteAll();
+  }
+
   /// 🔍 Wypisuje wszystkie klucze i wartości w storage
   Future<void> debugPrintAll() async {
     final all = await _storage.readAll();
