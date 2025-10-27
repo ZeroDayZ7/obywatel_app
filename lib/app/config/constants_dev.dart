@@ -1,10 +1,14 @@
-class ApiConstants {
-  // static const String baseUrl = 'http://192.168.42.129:8081';
-  static const String baseUrl = 'http://localhost:8081';
-  static const String pingEndpoint = '/health';
-  static const int connectTimeoutSeconds = 5;
-  static const int receiveTimeoutSeconds = 5;
+// lib/config/constants_dev.dart
+import 'constants_base.dart';
 
-  static const String defaultEmail = 'user@example.com';
-  static const String defaultPassword = 'Zaq1@wsx';
+class ApiConstants extends ApiConstantsBase {
+  const ApiConstants()
+    : super(
+        baseUrl: 'http://localhost:8081',
+        pingEndpoint: '/health',
+        defaultEmail: 'user@example.com',
+        defaultPassword: 'Zaq1@wsx',
+        appName: "Obywatel+ Dev",
+        appDescription: "Secure Citizen App Dev",
+      );
 }

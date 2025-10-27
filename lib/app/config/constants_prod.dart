@@ -1,9 +1,14 @@
-class ApiConstants {
-  static const String baseUrl = 'https://prod-backend.com';
-  static const String pingEndpoint = '/ping';
-  static const int connectTimeoutSeconds = 5;
-  static const int receiveTimeoutSeconds = 5;
+// lib/config/constants_prod.dart
+import 'constants_base.dart';
 
-  static const String defaultEmail = '';
-  static const String defaultPassword = '';
+class ApiConstants extends ApiConstantsBase {
+  const ApiConstants()
+    : super(
+        baseUrl: 'https://prod-backend.com',
+        pingEndpoint: '/ping',
+        defaultEmail: '',
+        defaultPassword: '',
+        appName: "Obywatel+",
+        appDescription: "Secure Citizen App",
+      );
 }

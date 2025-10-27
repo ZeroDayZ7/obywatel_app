@@ -1,3 +1,4 @@
+// lib/main.dart
 import 'package:obywatel_plus/app/bootstrap/app_bootstrapper.dart';
 
 Future<void> main() async {

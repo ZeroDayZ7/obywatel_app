@@ -1,6 +1,4 @@
 // lib/config/env.dart
+import 'constants_dev.dart' if (dart.vm.product) 'constants_prod.dart';
 
-// W zależności od środowiska buildowego, eksportujesz odpowiedni plik:
-export 'constants_dev.dart';     // <- podczas dev
-// export 'constants_prod.dart';  // <- podczas produkcji
-// export 'constants_staging.dart'; // <- staging
+const apiConstants = ApiConstants();

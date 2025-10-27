@@ -1,5 +1,7 @@
+// lib/app/app.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_notifier.dart';
 import 'router/app_router_provider.dart';
@@ -13,12 +15,11 @@ class ObywatelPlusApp extends ConsumerWidget {
     final router = ref.watch(appRouterProvider);
 
     return MaterialApp.router(
-      title: 'Obywatel+',
+      title: apiConstants.appName,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
-      // home: const SplashScreen(),
       routerConfig: router,
     );
   }

@@ -1,3 +1,4 @@
+// lib/app/router/app_routes.dart
 class AppRoutes {
   static const splash = '/splash';
   static const pin = '/pin';

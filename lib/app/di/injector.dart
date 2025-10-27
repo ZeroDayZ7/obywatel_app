@@ -9,6 +9,10 @@ import '../../core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
 import 'package:local_auth/local_auth.dart';
+// import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
+// import 'package:obywatel_plus/app/bootstrap/version_service.dart';
+// import 'package:obywatel_plus/app/bootstrap/migration_service.dart';
+// import 'package:obywatel_plus/app/bootstrap/remote_config_service.dart';
 
 final sl = GetIt.instance;
 
@@ -35,22 +39,64 @@ class AppInjector {
     sl.registerLazySingleton<Dio>(
       () => Dio(
         BaseOptions(
-          baseUrl: ApiConstants.baseUrl,
-          connectTimeout: Duration(seconds: ApiConstants.connectTimeoutSeconds),
-          receiveTimeout: Duration(seconds: ApiConstants.receiveTimeoutSeconds),
+          baseUrl: apiConstants.baseUrl,
+          connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
+          receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
         ),
       ),
     );
 
     sl.registerLazySingleton<ApiClient>(
-      () => ApiClient(sl<Dio>(), sl<SecureStorageService>()),
+      () => ApiClient(
+        dio: sl<Dio>(),
+        storage: sl<SecureStorageService>(),
+        logger: sl<AppLogger>(),
+      ),
     );
 
     sl.registerLazySingleton<AuthApi>(
-      () => AuthApi(baseUrl: ApiConstants.baseUrl),
+      () => AuthApi(baseUrl: apiConstants.baseUrl),
     );
 
     sl.registerLazySingleton<AppLogger>(() => AppLogger());
+
+    // sl.registerLazySingleton<VersionService>(
+    //   () => VersionService(sl<ApiClient>(), sl<AppLogger>()),
+    // );
+    // sl.registerLazySingleton<MigrationService>(
+    //   () => MigrationService(sl<SecureStorageService>(), sl<AppLogger>()),
+    // );
+    // sl.registerLazySingleton<RemoteConfigService>(
+    //   () => RemoteConfigService(
+    //     sl<ApiClient>(),
+    //     sl<SecureStorageService>(),
+    //     sl<AppLogger>(),
+    //   ),
+    // );
+
+    // sl.registerLazySingleton<StartupService>(
+    //   () => StartupService(
+    //     storage: sl<SecureStorageService>(),
+    //     api: sl<ApiClient>(),
+    //     logger: sl<AppLogger>(),
+    //     versionService: sl<VersionService>(),
+    //     migrationService: sl<MigrationService>(),
+    //     remoteConfigService: sl<RemoteConfigService>(),
+    //   ),
+    // );
+
+    // sl.registerLazySingleton<LoginService>(
+    //   () => LoginService(
+    //     authApi: sl<AuthApi>(),
+    //     storage: sl<SecureStorageService>(),
+    //     logger: sl<AppLogger>(),
+    //   ),
+    // );
+
+    // sl.registerLazySingleton<PinService>(
+    //   () => PinService(const FlutterSecureStorage()),
+    // );
+    // Factory dla controllers: sl.registerFactory<LoginController>(() => LoginController(service: sl<LoginService>(), ref: /* pass ref in use */));
 
     sl<AppLogger>().i("AppInjector: all dependencies registered ✅");
   }
