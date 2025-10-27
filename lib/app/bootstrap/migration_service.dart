@@ -34,6 +34,7 @@ class MigrationService {
       }
       _logger.i('Applying migration: ${m.id} - ${m.description}');
       try {
+        // ignore: todo
         // TODO: Implement real migration cases by id.
         await _applyMigrationById(m.id);
         await _storage.write(key: 'migration_${m.id}', value: 'done');

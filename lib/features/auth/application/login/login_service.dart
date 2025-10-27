@@ -1,15 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
+import 'package:obywatel_plus/core/network/api_client.dart';
+import 'package:obywatel_plus/app/config/storage_keys.dart';
 
 class LoginService {
-  final AuthApi authApi;
+  final ApiClient apiClient;
   final SecureStorageService storage;
   final AppLogger logger;
 
   LoginService({
-    required this.authApi,
+    required this.apiClient,
     required this.storage,
     required this.logger,
   });
@@ -17,30 +18,28 @@ class LoginService {
   /// Zwraca token lub rzuca wyjątek
   Future<String> login(String email, String password) async {
     try {
-      final response = await authApi.login(email.trim(), password);
-      final token = response['token'] as String;
+      final response = await apiClient.post(
+        '/auth/login',
+        data: {'email': email.trim(), 'password': password},
+      );
 
-      // zapis tokenu
-      await storage.write(key: 'accessToken', value: token);
+      final data = response.data;
+      final token = data['token'] as String?;
+
+      if (token == null) {
+        throw Exception('Token not found in response');
+      }
+
+      // zapis tokenu w storage
+      await storage.write(key: StorageKeys.accessToken, value: token);
 
       return token;
-    } on DioException catch (e) {
-      logger.e('DioException during login', error: e, stackTrace: e.stackTrace);
+    } on DioException catch (e, st) {
+      logger.e('DioException during login', error: e, stackTrace: st);
       rethrow;
     } catch (e, st) {
       logger.e('Unexpected error during login', error: e, stackTrace: st);
       rethrow;
     }
-  }
-
-  /// Określa, dokąd przejść po zalogowaniu
-  Future<String> determineNextRoute() async {
-    final pin = await storage.read(key: 'user_pin');
-    final hasLocalLock = pin != null && pin.isNotEmpty;
-    final biometricEnabled = await storage.read(key: 'biometric') == 'true';
-
-    if (!hasLocalLock) return '/securitySetup';
-    if (biometricEnabled) return '/pin';
-    return '/home';
   }
 }

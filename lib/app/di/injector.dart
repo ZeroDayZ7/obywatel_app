@@ -6,8 +6,9 @@ import 'package:obywatel_plus/app/config/env.dart';
 import '../../core/logger/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
+
 import 'package:local_auth/local_auth.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
@@ -54,10 +55,6 @@ class AppInjector {
       ),
     );
 
-    sl.registerLazySingleton<AuthApi>(
-      () => AuthApi(baseUrl: apiConstants.baseUrl),
-    );
-
     sl.registerLazySingleton<AppLogger>(() => AppLogger());
 
     // sl.registerLazySingleton<VersionService>(
@@ -85,13 +82,13 @@ class AppInjector {
     //   ),
     // );
 
-    // sl.registerLazySingleton<LoginService>(
-    //   () => LoginService(
-    //     authApi: sl<AuthApi>(),
-    //     storage: sl<SecureStorageService>(),
-    //     logger: sl<AppLogger>(),
-    //   ),
-    // );
+    sl.registerLazySingleton<LoginService>(
+      () => LoginService(
+        apiClient: sl<ApiClient>(),
+        storage: sl<SecureStorageService>(),
+        logger: sl<AppLogger>(),
+      ),
+    );
 
     // sl.registerLazySingleton<PinService>(
     //   () => PinService(const FlutterSecureStorage()),

@@ -1,0 +1,374 @@
+
+
+
+
+───────────── auth_provider.dart ─────────────
+// lib/features/auth/application/auth_provider.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Stan Auth – trzyma info o tokenie i zalogowaniu
+class AuthState {
+  final bool isLoggedIn;
+  final String? token;
+
+  AuthState({required this.isLoggedIn, this.token});
+
+  factory AuthState.initial() => AuthState(isLoggedIn: false);
+
+  AuthState copyWith({bool? isLoggedIn, String? token}) {
+    return AuthState(
+      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
+      token: token ?? this.token,
+    );
+  }
+}
+
+/// Notifier zarządzający auth
+class AuthNotifier extends Notifier<AuthState> {
+  @override
+  AuthState build() => AuthState.initial();
+
+  void login(String token) {
+    state = state.copyWith(isLoggedIn: true, token: token);
+  }
+
+  void logout() {
+    state = state.copyWith(isLoggedIn: false, token: null);
+  }
+}
+
+/// Provider dla całej aplikacji
+final authProvider = NotifierProvider.autoDispose<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
+
+
+───────────── auth_refresh_provider.dart ─────────────
+// lib/features/auth/application/auth_refresh_provider.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'auth_provider.dart';
+
+/// ChangeNotifier, który nasłuchuje zmiany AuthState
+class AuthRefreshListenable extends ChangeNotifier {
+  late final ProviderSubscription<AuthState> _subscription;
+
+  AuthRefreshListenable(Ref ref) {
+    _subscription = ref.listen<AuthState>(
+      authProvider, // teraz AuthState, nie bool
+      (_, _) => notifyListeners(), // powiadamia wszystkie nasłuchujące widgety
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription.close();
+    super.dispose();
+  }
+}
+
+/// Provider, który daje dostęp do listenable w całej aplikacji
+final authRefreshListenableProvider = Provider<AuthRefreshListenable>((ref) {
+  final listenable = AuthRefreshListenable(ref);
+  ref.onDispose(listenable.dispose);
+  return listenable;
+});
+
+
+───────────── login_controller.dart ─────────────
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import './login_service.dart';
+import '../../state/login/login_state.dart';
+import '../auth_provider.dart';
+
+class LoginController {
+  final LoginService service;
+  final Ref ref;
+
+  LoginController({required this.service, required this.ref});
+
+  Future<void> login(String email, String password) async {
+    final loginState = ref.read(loginStateProvider.notifier);
+    loginState.setLoading(true);
+    try {
+      final token = await service.login(email, password);
+      ref.read(authProvider.notifier).login(token);
+
+      final nextRoute = await service.determineNextRoute();
+      ref.read(loginStateProvider.notifier).setNextRoute(nextRoute);
+    } catch (e) {
+      loginState.setError(e.toString());
+    } finally {
+      loginState.setLoading(false);
+    }
+  }
+}
+
+
+───────────── login_service.dart ─────────────
+import 'package:dio/dio.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/features/auth/data/remote/auth_api.dart';
+
+class LoginService {
+  final AuthApi authApi;
+  final SecureStorageService storage;
+  final AppLogger logger;
+
+  LoginService({
+    required this.authApi,
+    required this.storage,
+    required this.logger,
+  });
+
+  /// Zwraca token lub rzuca wyjątek
+  Future<String> login(String email, String password) async {
+    try {
+      final response = await authApi.login(email.trim(), password);
+      final token = response['token'] as String;
+
+      // zapis tokenu
+      await storage.write(key: 'accessToken', value: token);
+
+      return token;
+    } on DioException catch (e) {
+      logger.e('DioException during login', error: e, stackTrace: e.stackTrace);
+      rethrow;
+    } catch (e, st) {
+      logger.e('Unexpected error during login', error: e, stackTrace: st);
+      rethrow;
+    }
+  }
+
+  /// Określa, dokąd przejść po zalogowaniu
+  Future<String> determineNextRoute() async {
+    final pin = await storage.read(key: 'user_pin');
+    final hasLocalLock = pin != null && pin.isNotEmpty;
+    final biometricEnabled = await storage.read(key: 'biometric') == 'true';
+
+    if (!hasLocalLock) return '/securitySetup';
+    if (biometricEnabled) return '/pin';
+    return '/home';
+  }
+}
+
+
+───────────── auth_api.dart ─────────────
+import 'package:dio/dio.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+
+class AuthApi {
+  final String baseUrl;
+  final Dio _dio;
+  final AppLogger logger = AppLogger();
+
+  AuthApi({required this.baseUrl})
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          headers: {'Content-Type': 'application/json'},
+        ),
+      ) {
+    logger.i('AuthApi initialized with baseUrl: $baseUrl');
+  }
+
+  /// Logowanie użytkownika
+  /// Zwraca mapę { 'token': String, '2fa_required': bool }
+  Future<Map<String, dynamic>> login(String email, String password) async {
+    logger.i('Starting login request for $email');
+
+    try {
+      final response = await _dio.post(
+        '/auth/login',
+        data: {'email': email, 'password': password},
+      );
+
+      logger.d('Login response status: ${response.statusCode}');
+      logger.d('Response data: ${response.data}');
+
+      if (response.statusCode == 200 && response.data != null) {
+        final data = response.data;
+        final token = data['token'];
+        final twoFaRequired = data['2fa_required'] ?? false;
+
+        if (token == null) {
+          logger.w('Token not found in response for user: $email');
+          throw Exception('Token not found in response');
+        }
+
+        return {'token': token, '2fa_required': twoFaRequired};
+      } else {
+        throw Exception('Login failed: ${response.statusMessage}');
+      }
+    } on DioException catch (e, st) {
+      logger.e('DioException during login request', error: e, stackTrace: st);
+      throw Exception('Login failed: ${e.response?.data ?? e.message}');
+    } catch (e, st) {
+      logger.e('Unexpected error during login', error: e, stackTrace: st);
+      rethrow;
+    }
+  }
+}
+
+
+───────────── auth_exceptions.dart ─────────────
+
+
+───────────── user.dart ─────────────
+
+
+───────────── login_screen.dart ─────────────
+// lib/features/auth/presentation/login_screen.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/di/injector.dart';
+import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
+import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  late final LoginService _loginService;
+
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // inicjalizacja LoginService przez DI
+    _loginService = sl<LoginService>();
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _onLogin() async {
+    final loginNotifier = ref.read(loginStateProvider.notifier);
+    loginNotifier.setLoading(true);
+    loginNotifier.setError(null);
+
+    try {
+      final token = await _loginService.login(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      // aktualizacja globalnego authProvider
+      ref.read(authProvider.notifier).login(token);
+
+      final nextRoute = await _loginService.determineNextRoute();
+      if (!mounted) return;
+      context.go(nextRoute);
+    } catch (e) {
+      loginNotifier.setError(e.toString());
+    } finally {
+      if (mounted) loginNotifier.setLoading(false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loginState = ref.watch(loginStateProvider);
+    final isLoading = loginState.isLoading;
+
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                "Login",
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 30),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: "Email",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: "Password",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                onPressed: isLoading ? null : _onLogin,
+                child: isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("Login"),
+              ),
+              if (loginState.error != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: Text(
+                    loginState.error!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+───────────── login_state.dart ─────────────
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class LoginState {
+  final bool isLoading;
+  final String? error;
+  final String? nextRoute;
+
+  LoginState({this.isLoading = false, this.error, this.nextRoute});
+
+  LoginState copyWith({bool? isLoading, String? error, String? nextRoute}) {
+    return LoginState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      nextRoute: nextRoute ?? this.nextRoute,
+    );
+  }
+}
+
+// nowa wersja Notifier
+class LoginNotifier extends Notifier<LoginState> {
+  @override
+  LoginState build() => LoginState();
+
+  void setLoading(bool value) => state = state.copyWith(isLoading: value);
+  void setError(String? error) => state = state.copyWith(error: error);
+  void setNextRoute(String? route) => state = state.copyWith(nextRoute: route);
+}
+
+// nowy provider
+final loginStateProvider = NotifierProvider<LoginNotifier, LoginState>(
+  () => LoginNotifier(),
+);
+
+

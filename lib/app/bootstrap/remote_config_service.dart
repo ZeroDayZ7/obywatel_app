@@ -19,10 +19,13 @@ class RemoteConfigService {
       final Map<String, dynamic> data = resp.data as Map<String, dynamic>;
       final theme = data['theme'] as String?;
       final announcement = data['announcement'] as String?;
-      if (theme != null)
+      if (theme != null) {
         await _storage.write(key: 'remote_theme', value: theme);
-      if (announcement != null)
+      }
+      if (announcement != null) {
         await _storage.write(key: 'remote_announcement', value: announcement);
+      }
+
       _logger.i('RemoteConfigService: remote config stored');
     } else {
       _logger.w(

@@ -1,3 +1,4 @@
+// lib/features/auth/application/auth_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Stan Auth – trzyma info o tokenie i zalogowaniu

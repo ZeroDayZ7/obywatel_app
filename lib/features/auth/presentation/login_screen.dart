@@ -1,9 +1,10 @@
+// lib/features/auth/presentation/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/di/injector.dart';
 import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
-import 'package:obywatel_plus/features/auth/application/state/login/login_state.dart';
+import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
 import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -23,7 +24,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
     // inicjalizacja LoginService przez DI
-    _loginService = getIt<LoginService>();
+    _loginService = sl<LoginService>();
   }
 
   @override
@@ -33,6 +34,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
+  // przykładowy _onLogin
   Future<void> _onLogin() async {
     final loginNotifier = ref.read(loginStateProvider.notifier);
     loginNotifier.setLoading(true);
@@ -44,16 +46,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         _passwordController.text,
       );
 
-      // aktualizacja globalnego authProvider
       ref.read(authProvider.notifier).login(token);
-
-      final nextRoute = await _loginService.determineNextRoute();
-      if (!mounted) return;
-      context.go(nextRoute);
+      // GoRouter redirect logic zajmie się dalszą nawigacją
     } catch (e) {
       loginNotifier.setError(e.toString());
     } finally {
-      if (mounted) loginNotifier.setLoading(false);
+      loginNotifier.setLoading(false);
     }
   }
 
