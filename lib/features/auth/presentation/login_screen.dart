@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/app/di/injector.dart';
 import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -15,16 +18,23 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  late final LoginService _loginService;
+  late final AuthService _authService;
 
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  // final TextEditingController _emailController = TextEditingController();
+  // final TextEditingController _passwordController = TextEditingController();
+
+  final TextEditingController _emailController = TextEditingController(
+    text: apiConstants.defaultEmail,
+  );
+  final TextEditingController _passwordController = TextEditingController(
+    text: apiConstants.defaultPassword,
+  );
 
   @override
   void initState() {
     super.initState();
     // inicjalizacja LoginService przez DI
-    _loginService = sl<LoginService>();
+    _authService = sl<AuthService>();
   }
 
   @override
@@ -41,13 +51,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     loginNotifier.setError(null);
 
     try {
-      final token = await _loginService.login(
-        _emailController.text,
-        _passwordController.text,
+      // Wywołanie logowania, zwraca bool
+      final success = await _authService.login(
+        email: _emailController.text,
+        password: _passwordController.text,
       );
 
-      ref.read(authProvider.notifier).login(token);
-      // GoRouter redirect logic zajmie się dalszą nawigacją
+      if (success) {
+        // Odczyt tokena z SecureStorage
+        final token = await sl<SecureStorageService>().read(
+          key: StorageKeys.accessToken,
+        );
+
+        if (token != null) {
+          // Ustawienie stanu auth w Riverpod
+          ref.read(authProvider.notifier).login();
+        } else {
+          loginNotifier.setError('Token not found after login');
+        }
+      } else {
+        loginNotifier.setError('Login failed');
+      }
     } catch (e) {
       loginNotifier.setError(e.toString());
     } finally {
@@ -61,49 +85,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = loginState.isLoading;
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Login",
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch, // zamiast center
+              children: [
+                const SizedBox(height: 80),
+                const Text(
+                  "Login",
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 30),
-              ElevatedButton(
-                onPressed: isLoading ? null : _onLogin,
-                child: isLoading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text("Login"),
-              ),
-              if (loginState.error != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 16),
-                  child: Text(
-                    loginState.error!,
-                    style: const TextStyle(color: Colors.red),
+                const SizedBox(height: 30),
+                TextField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(
+                    labelText: "Email",
+                    border: OutlineInputBorder(),
                   ),
                 ),
-            ],
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: "Password",
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: isLoading ? null : _onLogin,
+                  child: isLoading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text("Login"),
+                ),
+                if (loginState.error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 16),
+                    child: Text(
+                      loginState.error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                const SizedBox(height: 50), // margines od dołu
+              ],
+            ),
           ),
         ),
       ),

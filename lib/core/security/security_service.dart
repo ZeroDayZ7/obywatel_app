@@ -1,4 +1,5 @@
 import 'package:local_auth/local_auth.dart';
+import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
@@ -22,10 +23,15 @@ class SecurityService {
 
   /// Inicjalizacja serwisu, sprawdzenie wszystkich ustawień
   Future<void> init() async {
+    await Future.delayed(Duration.zero);
     logger.i('Inicjalizacja SecurityService...');
-    await _checkSession();
-    await _checkLocalLockSettings();
-    await _checkBiometricSettings();
+
+    await Future.wait([
+      _checkSession(),
+      _checkLocalLockSettings(),
+      _checkBiometricSettings(),
+    ]);
+
     logger.i('SecurityService: init zakończone ✅');
   }
 
@@ -46,7 +52,7 @@ class SecurityService {
   Future<void> _checkLocalLockSettings() async {
     try {
       hasLocalLock = await _readBool('hasLocalLock');
-      isPinConfigured = (await secureStorage.read(key: 'pinHash')) != null;
+      isPinConfigured = (await secureStorage.read(key: StorageKeys.pinHash)) != null;
       logger.i(
         'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
       );

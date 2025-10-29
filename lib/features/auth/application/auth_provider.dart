@@ -1,38 +1,42 @@
-// lib/features/auth/application/auth_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+// import 'package:obywatel_plus/app/di/injector.dart';
 
-/// Stan Auth – trzyma info o tokenie i zalogowaniu
 class AuthState {
   final bool isLoggedIn;
-  final String? token;
 
-  AuthState({required this.isLoggedIn, this.token});
+  const AuthState({required this.isLoggedIn});
 
-  factory AuthState.initial() => AuthState(isLoggedIn: false);
+  factory AuthState.initial() => const AuthState(isLoggedIn: false);
 
-  AuthState copyWith({bool? isLoggedIn, String? token}) {
-    return AuthState(
-      isLoggedIn: isLoggedIn ?? this.isLoggedIn,
-      token: token ?? this.token,
-    );
+  AuthState copyWith({bool? isLoggedIn}) {
+    return AuthState(isLoggedIn: isLoggedIn ?? this.isLoggedIn);
   }
 }
 
-/// Notifier zarządzający auth
 class AuthNotifier extends Notifier<AuthState> {
-  @override
-  AuthState build() => AuthState.initial();
+  late final AppLogger _logger;
 
-  void login(String token) {
-    state = state.copyWith(isLoggedIn: true, token: token);
+  @override
+  AuthState build() {
+    // _logger = sl<AppLogger>();
+    // _logger.i('AuthNotifier initialized ✅');
+    return AuthState.initial();
   }
 
+  /// Oznacz użytkownika jako zalogowanego (token już zapisany w storage)
+  void login() {
+    state = state.copyWith(isLoggedIn: true);
+    _logger.i('User logged in');
+  }
+
+  /// Oznacz użytkownika jako wylogowanego (token usunięty ze storage)
   void logout() {
-    state = state.copyWith(isLoggedIn: false, token: null);
+    state = state.copyWith(isLoggedIn: false);
+    _logger.i('User logged out');
   }
 }
 
-/// Provider dla całej aplikacji
 final authProvider = NotifierProvider.autoDispose<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );

@@ -7,7 +7,7 @@ import '../../core/logger/app_logger.dart';
 import '../../core/network/api_client.dart';
 import '../../core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 
 import 'package:local_auth/local_auth.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
@@ -82,8 +82,8 @@ class AppInjector {
     //   ),
     // );
 
-    sl.registerLazySingleton<LoginService>(
-      () => LoginService(
+    sl.registerLazySingleton<AuthService>(
+      () => AuthService(
         apiClient: sl<ApiClient>(),
         storage: sl<SecureStorageService>(),
         logger: sl<AppLogger>(),

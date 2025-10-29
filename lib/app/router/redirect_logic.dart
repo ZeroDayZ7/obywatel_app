@@ -14,16 +14,15 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   final shouldShowLock = securityService.shouldShowLock;
 
   final goingToLogin = path == AppRoutes.login;
-  final goingToSplash = path == AppRoutes.splash;
   final goingToPin = path == AppRoutes.pin;
 
   // nie zalogowany → login
-  if (!isLoggedIn && !goingToLogin && !goingToSplash) {
+  if (!isLoggedIn && !goingToLogin) {
     return AppRoutes.login;
   }
 
-  // zalogowany i próbuje wejść na login lub splash → home
-  if (isLoggedIn && (goingToLogin || goingToSplash)) {
+  // zalogowany i próbuje wejść
+  if (isLoggedIn && goingToLogin) {
     return AppRoutes.home;
   }
 
