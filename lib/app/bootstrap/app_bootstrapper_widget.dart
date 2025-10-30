@@ -1,0 +1,42 @@
+import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/bootstrap/app_bootstrapper.dart';
+import 'package:obywatel_plus/app/app.dart';
+import 'package:obywatel_plus/features/splash/presentation/splash_screen.dart';
+
+class BootstrapApp extends StatefulWidget {
+  const BootstrapApp({super.key});
+
+  @override
+  State<BootstrapApp> createState() => _BootstrapAppState();
+}
+
+class _BootstrapAppState extends State<BootstrapApp> {
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initApp();
+  }
+
+  Future<void> _initApp() async {
+    await AppBootstrapper.init();
+    if (mounted) {
+      setState(() => _initialized = true);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_initialized) {
+      // Splash screen dopóki wszystko się ładuje
+      return const MaterialApp(
+        home: SplashScreen(),
+        debugShowCheckedModeBanner: false,
+      );
+    }
+
+    // Po inicjalizacji – start właściwej aplikacji
+    return const ObywatelPlusApp();
+  }
+}

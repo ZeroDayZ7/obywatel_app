@@ -9,6 +9,7 @@ import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -47,15 +48,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // przykładowy _onLogin
   Future<void> _onLogin() async {
     final loginNotifier = ref.read(loginStateProvider.notifier);
+    final logger = sl<AppLogger>(); // wczytanie loggera przez service locator
+
     loginNotifier.setLoading(true);
     loginNotifier.setError(null);
+    logger.i('Login started for email: ${_emailController.text}');
 
     try {
-      // Wywołanie logowania, zwraca bool
+      // Wywołanie logowania
       final success = await _authService.login(
         email: _emailController.text,
         password: _passwordController.text,
       );
+
+      logger.i('Login response: $success');
 
       if (success) {
         // Odczyt tokena z SecureStorage
@@ -64,18 +70,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         );
 
         if (token != null) {
-          // Ustawienie stanu auth w Riverpod
+          logger.i('Access token found, setting auth state');
           ref.read(authProvider.notifier).login();
         } else {
+          logger.w('Token not found after login');
           loginNotifier.setError('Token not found after login');
         }
       } else {
+        logger.w('Login failed');
         loginNotifier.setError('Login failed');
       }
-    } catch (e) {
+    } catch (e, st) {
+      logger.e('Exception during login', error: e, stackTrace: st);
       loginNotifier.setError(e.toString());
     } finally {
       loginNotifier.setLoading(false);
+      logger.i('Login finished');
     }
   }
 

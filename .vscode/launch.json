@@ -5,7 +5,8 @@
       "name": "Flutter Debug (Phone)",
       "request": "launch",
       "type": "dart",
-      "deviceId": "5200d78bfa479449"
+      "deviceId": "5200d78bfa479449",
+      // "preLaunchTask": "adb reverse 8081"
     }
   ]
 }

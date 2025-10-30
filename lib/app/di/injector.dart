@@ -50,6 +50,7 @@ class AppInjector {
     sl.registerLazySingleton<ApiClient>(
       () => ApiClient(
         dio: sl<Dio>(),
+        tokenRefreshDio: Dio(),
         storage: sl<SecureStorageService>(),
         logger: sl<AppLogger>(),
       ),

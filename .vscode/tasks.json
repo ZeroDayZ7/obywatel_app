@@ -1,0 +1,11 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "adb reverse 8081",
+      "type": "shell",
+      "command": "adb -s 5200d78bfa479449 reverse tcp:8081 tcp:8081",
+      "problemMatcher": []
+    }
+  ]
+}

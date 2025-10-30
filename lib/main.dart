@@ -1,7 +1,14 @@
 // lib/main.dart
-import 'package:obywatel_plus/app/bootstrap/app_bootstrapper.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/bootstrap/app_bootstrapper_widget.dart';
 
-Future<void> main() async {
-  await AppBootstrapper.init();
-  AppBootstrapper.run();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // --- Inicjalizacja DI i serwisów ---
+  // await AppBootstrapper.init();
+
+  // --- Uruchomienie aplikacji ---
+  runApp(const ProviderScope(child: BootstrapApp()));
 }

@@ -7,4 +7,7 @@ class ApiEndpoints {
   static String get userProfile => '${apiConstants.baseUrl}/user/profile';
   static String get fetchConfig => '${apiConstants.baseUrl}/app/config';
   static String get checkVersion => '${apiConstants.baseUrl}/app/version';
+
+  /// Endpoint do odświeżania tokena
+  static String get refreshToken => '${apiConstants.baseUrl}/auth/refresh';
 }
