@@ -4,10 +4,10 @@ import 'constants_base.dart';
 class ApiConstants extends ApiConstantsBase {
   const ApiConstants()
     : super(
-        baseUrl: 'http://localhost:8081',
+        baseUrl: 'https://api-test.ct8.pl',
         pingEndpoint: '/health',
-        defaultEmail: '',
-        defaultPassword: '',
+        defaultEmail: 'user@example.com',
+        defaultPassword: 'Zaq1@wsx',
         appName: "Obywatel+",
         appDescription: "Secure Citizen App",
       );
