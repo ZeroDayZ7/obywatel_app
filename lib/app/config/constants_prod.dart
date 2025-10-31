@@ -4,8 +4,8 @@ import 'constants_base.dart';
 class ApiConstants extends ApiConstantsBase {
   const ApiConstants()
     : super(
-        baseUrl: 'https://prod-backend.com',
-        pingEndpoint: '/ping',
+        baseUrl: 'http://localhost:8081',
+        pingEndpoint: '/health',
         defaultEmail: '',
         defaultPassword: '',
         appName: "Obywatel+",

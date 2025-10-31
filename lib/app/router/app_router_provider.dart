@@ -61,6 +61,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 GoRoute _goRouteWithTransition(String path, Widget screen) {
   return GoRoute(
     path: path,
+    parentNavigatorKey: _rootNavigatorKey,
     pageBuilder: (context, state) => _customPage(state: state, child: screen),
   );
 }
@@ -69,6 +70,7 @@ GoRoute _goRouteWithTransition(String path, Widget screen) {
 GoRoute _goNestedRoute(String path, Widget screen) {
   return GoRoute(
     path: path,
+    parentNavigatorKey: _rootNavigatorKey,
     pageBuilder: (context, state) => _customPage(state: state, child: screen),
   );
 }
@@ -82,14 +84,20 @@ CustomTransitionPage _customPage({
     key: state.pageKey,
     child: child,
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final tween = Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero);
-      final fadeTween = Tween<double>(begin: 0, end: 1);
+      const curve = Curves.easeInOut;
+      final slideAnimation = Tween<Offset>(
+        begin: const Offset(0.1, 0), // subtelne przesunięcie z prawej
+        end: Offset.zero,
+      ).animate(CurvedAnimation(parent: animation, curve: curve));
+
+      final fadeAnimation = Tween<double>(
+        begin: 0,
+        end: 1,
+      ).animate(CurvedAnimation(parent: animation, curve: curve));
+
       return SlideTransition(
-        position: animation.drive(tween),
-        child: FadeTransition(
-          opacity: animation.drive(fadeTween),
-          child: child,
-        ),
+        position: slideAnimation,
+        child: FadeTransition(opacity: fadeAnimation, child: child),
       );
     },
   );
