@@ -1,8 +1,8 @@
 // lib/config/storage_keys.dart
 class StorageKeys {
-  static const accessToken = 'accessToken';
-  static const refreshToken = 'refreshToken';
+  static const accessToken = 'access_token';
+  static const refreshToken = 'refresh_token';
   static const userPin = 'user_pin';
-  static const pinHash = 'pinHash';
+  static const pinHash = 'pin_hash';
   static const biometric = 'biometric';
 }

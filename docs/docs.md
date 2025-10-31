@@ -9,4 +9,4 @@ flutter run
 adb -s 5200d78bfa479449 reverse tcp:8081 tcp:8081
 .\scrcpy -s 5200d78bfa479449 --video-buffer 2 --max-fps 60
 
-!D/ViewR, !D/InputM, !D/InputT, !V/InputMetho, !I/InputMetho, !I/AssistStr
+!D/ViewR, !D/InputM, !D/InputT, !V/InputMetho, !I/InputMetho, !I/AssistStr, !D/Surf, !W/libE

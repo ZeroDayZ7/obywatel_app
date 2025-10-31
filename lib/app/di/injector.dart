@@ -19,6 +19,7 @@ final sl = GetIt.instance;
 
 class AppInjector {
   static Future<void> setup() async {
+    sl.registerLazySingleton<AppLogger>(() => AppLogger());
     // Rejestracja LocalAuthentication
     sl.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
 
@@ -55,8 +56,6 @@ class AppInjector {
         logger: sl<AppLogger>(),
       ),
     );
-
-    sl.registerLazySingleton<AppLogger>(() => AppLogger());
 
     // sl.registerLazySingleton<VersionService>(
     //   () => VersionService(sl<ApiClient>(), sl<AppLogger>()),

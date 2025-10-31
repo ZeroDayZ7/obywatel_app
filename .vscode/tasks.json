@@ -6,6 +6,16 @@
       "type": "shell",
       "command": "adb -s 5200d78bfa479449 reverse tcp:8081 tcp:8081",
       "problemMatcher": []
+    },
+    {
+      "label": "Run scrcpy (device 5200d78bfa479449)",
+      "type": "shell",
+      "command": "scrcpy -s 5200d78bfa479449",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
     }
   ]
 }

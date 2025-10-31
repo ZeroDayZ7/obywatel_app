@@ -14,6 +14,17 @@ class AppLogger {
         ),
       );
 
+  // AppLogger()
+  //   : _logger = Logger(
+  //       printer: PrettyPrinter(
+  //         methodCount: 0, // bez stacktrace
+  //         errorMethodCount: 0,
+  //         lineLength: 50,
+  //         colors: true,
+  //         printEmojis: true,
+  //       ),
+  //     );
+
   void d(
     String message, {
     String? module,
