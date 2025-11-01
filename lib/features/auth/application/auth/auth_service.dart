@@ -5,6 +5,13 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/app/config/storage_keys.dart';
 
+class LoginResult {
+  final bool success;
+  final String? error;
+
+  const LoginResult({required this.success, this.error});
+}
+
 class AuthService {
   final ApiClient _apiClient;
   final SecureStorageService _storage;
@@ -19,7 +26,10 @@ class AuthService {
        _logger = logger;
 
   /// Logowanie użytkownika
-  Future<bool> login({required String email, required String password}) async {
+  Future<LoginResult> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       final response = await _apiClient.post(
         ApiEndpoints.login,
@@ -29,24 +39,19 @@ class AuthService {
       _logger.i('Login response: ${response.data}');
 
       final token = response.data[StorageKeys.accessToken] as String?;
-      final refreshToken = response.data[StorageKeys.refreshToken] as String?;
-
       if (token != null) {
         await _storage.write(key: StorageKeys.accessToken, value: token);
-        if (refreshToken != null) {
-          await _storage.write(
-            key: StorageKeys.refreshToken,
-            value: refreshToken,
-          );
-        }
         _logger.i('Login successful');
-        return true;
+        return const LoginResult(success: true);
       }
 
-      return false;
+      return const LoginResult(
+        success: false,
+        error: 'Token missing in response',
+      );
     } catch (e, st) {
       _logger.e('Login failed', error: e, stackTrace: st);
-      return false;
+      return LoginResult(success: false, error: e.toString());
     }
   }
 

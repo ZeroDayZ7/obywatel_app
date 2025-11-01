@@ -88,15 +88,15 @@ class ApiClient {
 
   Future<String?> _refreshToken() async {
     try {
-      final refreshToken = await _storage.read(key: 'refreshToken');
+      final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
       if (refreshToken == null) return null;
 
       final response = await _tokenRefreshDio.post(ApiEndpoints.refreshToken,
-        data: {'refreshToken': refreshToken},
+        data: {StorageKeys.refreshToken: refreshToken},
       );
 
       if (response.statusCode == 200 && response.data != null) {
-        return response.data['accessToken'] as String?;
+        return response.data[StorageKeys.accessToken] as String?;
       }
       return null;
     } catch (e) {

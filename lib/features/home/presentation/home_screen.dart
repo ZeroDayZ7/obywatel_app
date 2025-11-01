@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/app_text_styles.dart';
+import 'package:obywatel_plus/core/widgets/main_app_bar.dart';
 import './widgets/home_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -19,30 +22,14 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Obywatel App'),
-        centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () => context.go(AppRoutes.notifications),
-          ),
-        ],
-      ),
+      appBar: MainAppBar(title: apiConstants.appName),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Welcome back!',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Welcome back!', style: AppTextStyles.headline),
             const SizedBox(height: 20),
             Expanded(
               child: GridView.builder(

@@ -3,12 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+// import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/app/di/injector.dart';
 import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+// import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
@@ -20,9 +20,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   late final AuthService _authService;
-
-  // final TextEditingController _emailController = TextEditingController();
-  // final TextEditingController _passwordController = TextEditingController();
 
   final TextEditingController _emailController = TextEditingController(
     text: apiConstants.defaultEmail,
@@ -48,44 +45,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   // przykładowy _onLogin
   Future<void> _onLogin() async {
     final loginNotifier = ref.read(loginStateProvider.notifier);
-    final logger = sl<AppLogger>(); // wczytanie loggera przez service locator
+    final authNotifier = ref.read(authProvider.notifier);
+    final logger = sl<AppLogger>();
 
     loginNotifier.setLoading(true);
     loginNotifier.setError(null);
-    logger.i('Login started for email: ${_emailController.text}');
 
     try {
-      // Wywołanie logowania
-      final success = await _authService.login(
+      final result = await _authService.login(
         email: _emailController.text,
         password: _passwordController.text,
       );
 
-      logger.i('Login response: $success');
-
-      if (success) {
-        // Odczyt tokena z SecureStorage
-        final token = await sl<SecureStorageService>().read(
-          key: StorageKeys.accessToken,
-        );
-
-        if (token != null) {
-          logger.i('Access token found, setting auth state');
-          ref.read(authProvider.notifier).login();
-        } else {
-          logger.w('Token not found after login');
-          loginNotifier.setError('Token not found after login');
-        }
+      if (result.success) {
+        authNotifier.login();
       } else {
-        logger.w('Login failed');
-        loginNotifier.setError('Login failed');
+        loginNotifier.setError('Login failed: ${result.error}');
       }
     } catch (e, st) {
-      logger.e('Exception during login', error: e, stackTrace: st);
-      loginNotifier.setError(e.toString());
+      logger.e('Unexpected login error', error: e, stackTrace: st);
+      loginNotifier.setError('Unexpected error');
     } finally {
       loginNotifier.setLoading(false);
-      logger.i('Login finished');
     }
   }
 
