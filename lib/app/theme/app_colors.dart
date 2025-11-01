@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   // Primary
-  static const primary = Color.fromARGB(255, 83, 83, 83); // turkusowy
+  static const primary = Color.fromARGB(255, 226, 226, 226); // turkusowy
   static const primaryDark = Color.fromARGB(255, 54, 54, 54);
 
   // Accent

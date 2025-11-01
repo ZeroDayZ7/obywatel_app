@@ -8,6 +8,7 @@ class AppRoutes {
 
   // Nowe ścieżki dla Settings
   static const settings = '/settings';
+  static const security = 'security';
   static const setPin = 'set_pin';
   static const patternLock = 'pattern_lock';
   static const fingerprint = 'fingerprint';

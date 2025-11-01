@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+// import 'package:obywatel_plus/app/theme/theme_notifier.dart'; // Import dla themeProvider
+import 'theme_selector_sheet.dart'; // Import Twojego ThemeSelectorSheet
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
+  // Zmiana na ConsumerWidget dla Riverpod
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(title: const Text('Settings'), centerTitle: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // User info
+            // User info – bez zmian
             Row(
               children: [
                 const CircleAvatar(
@@ -42,41 +46,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Security settings section
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Security & Access',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 8),
-            _SettingsCard(
-              icon: Icons.pin,
-              title: 'Set PIN',
-              subtitle: 'Choose a PIN to unlock the app',
-              onTap: () =>
-                  context.push('${AppRoutes.settings}/${AppRoutes.setPin}'),
-            ),
-            _SettingsCard(
-              icon: Icons.gesture,
-              title: 'Pattern Lock',
-              subtitle: 'Draw a pattern to unlock the app',
-              onTap: () => context.push(
-                '${AppRoutes.settings}/${AppRoutes.patternLock}',
-              ),
-            ),
-            _SettingsCard(
-              icon: Icons.fingerprint,
-              title: 'Fingerprint',
-              subtitle: 'Use fingerprint to unlock the app',
-              onTap: () => context.push(
-                '${AppRoutes.settings}/${AppRoutes.fingerprint}',
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // General settings section
+            // Sekcja General Settings – dodana karta Theme
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -89,17 +59,50 @@ class SettingsScreen extends StatelessWidget {
               icon: Icons.notifications,
               title: 'Notifications',
               subtitle: 'Manage app notifications',
-              onTap: () {},
+              onTap: () {}, // W przyszłości: context.push do sub-ekranu
             ),
             _SettingsCard(
               icon: Icons.language,
               title: 'Language',
               subtitle: 'Choose your preferred language',
-              onTap: () {},
+              onTap: () {}, // W przyszłości: context.push do sub-ekranu
+            ),
+            _SettingsCard(
+              icon: Icons.palette, // Ikona dla theme
+              title: 'Theme',
+              subtitle: 'Select light, dark or system theme',
+              onTap: () => _showThemeSelectorSheet(context, ref),
+            ),
+            const SizedBox(height: 24),
+
+            // Sekcja Security – teraz jedna karta do sub-ekranu
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Security & Access',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 8),
+            _SettingsCard(
+              icon: Icons.security,
+              title: 'Security',
+              subtitle: 'Manage PIN, pattern and biometrics',
+              onTap: () =>
+                  context.push('${AppRoutes.settings}/${AppRoutes.security}'),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  // Funkcja do otwierania bottom sheet z theme
+  void _showThemeSelectorSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<ThemeMode>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => const ThemeSelectorSheet(), // Twój sheet z Riverpod
     );
   }
 }
@@ -129,6 +132,55 @@ class _SettingsCard extends StatelessWidget {
         subtitle: Text(subtitle),
         trailing: const Icon(Icons.arrow_forward_ios, size: 16),
         onTap: onTap,
+      ),
+    );
+  }
+}
+
+// Przykładowy sub-ekran Security – dodaj do AppRoutes: security = 'security'
+class SecurityScreen extends StatelessWidget {
+  const SecurityScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Security'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            // Tu wracają karty security
+            _SettingsCard(
+              icon: Icons.pin,
+              title: 'Set PIN',
+              subtitle: 'Choose a PIN to unlock the app',
+              onTap: () =>
+                  context.push('${AppRoutes.settings}/${AppRoutes.setPin}'),
+            ),
+            _SettingsCard(
+              icon: Icons.gesture,
+              title: 'Pattern Lock',
+              subtitle: 'Draw a pattern to unlock the app',
+              onTap: () => context.push(
+                '${AppRoutes.settings}/${AppRoutes.patternLock}',
+              ),
+            ),
+            _SettingsCard(
+              icon: Icons.fingerprint,
+              title: 'Fingerprint',
+              subtitle: 'Use fingerprint to unlock the app',
+              onTap: () => context.push(
+                '${AppRoutes.settings}/${AppRoutes.fingerprint}',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

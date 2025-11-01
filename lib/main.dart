@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/app_bootstrapper_widget.dart';
-import 'app/config/env.dart';
+// import 'app/config/env.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,6 +11,6 @@ void main() async {
   // await AppBootstrapper.init();
 
   // --- Uruchomienie aplikacji ---
-  debugPrintEnv();
+  // debugPrintEnv();
   runApp(const ProviderScope(child: BootstrapApp()));
 }

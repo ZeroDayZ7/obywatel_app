@@ -32,16 +32,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
       _goRouteWithTransition(AppRoutes.pin, const PinScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
+
+      // Settings
       GoRoute(
         path: AppRoutes.settings,
         pageBuilder: (context, state) =>
             _customPage(state: state, child: const SettingsScreen()),
         routes: [
-          _goNestedRoute(AppRoutes.setPin, const SetPinScreen()),
-          _goNestedRoute(AppRoutes.patternLock, const PatternLockScreen()),
-          _goNestedRoute(AppRoutes.fingerprint, const FingerprintScreen()),
+          // Security jako nested pod /settings
+          GoRoute(
+            path: AppRoutes.security,
+            pageBuilder: (context, state) =>
+                _customPage(state: state, child: const SecurityScreen()),
+            routes: [
+              _goNestedRoute(AppRoutes.setPin, const SetPinScreen()),
+              _goNestedRoute(AppRoutes.patternLock, const PatternLockScreen()),
+              _goNestedRoute(AppRoutes.fingerprint, const FingerprintScreen()),
+            ],
+          ),
         ],
       ),
+
       _goRouteWithTransition(
         AppRoutes.securitySetup,
         const SecuritySetupScreen(),
