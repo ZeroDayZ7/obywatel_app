@@ -38,16 +38,25 @@ class AuthService {
 
       _logger.i('Login response: ${response.data}');
 
-      final token = response.data[StorageKeys.accessToken] as String?;
-      if (token != null) {
-        await _storage.write(key: StorageKeys.accessToken, value: token);
+      final accessToken = response.data[StorageKeys.accessToken] as String?;
+      final refreshToken = response.data[StorageKeys.refreshToken] as String?;
+
+      if (accessToken != null && refreshToken != null) {
+        await _storage.write(key: StorageKeys.accessToken, value: accessToken);
+        await _storage.write(
+          key: StorageKeys.refreshToken,
+          value: refreshToken,
+        );
+
+        await _storage.debugPrintAll();
+
         _logger.i('Login successful');
         return const LoginResult(success: true);
       }
 
       return const LoginResult(
         success: false,
-        error: 'Token missing in response',
+        error: 'Tokens missing in response',
       );
     } catch (e, st) {
       _logger.e('Login failed', error: e, stackTrace: st);
@@ -58,7 +67,12 @@ class AuthService {
   /// Wylogowanie użytkownika
   Future<void> logout() async {
     try {
-      await _apiClient.post(ApiEndpoints.logout);
+      final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
+
+      await _apiClient.post(
+        ApiEndpoints.logout,
+        data: {StorageKeys.refreshToken: refreshToken},
+      );
     } catch (e, st) {
       _logger.w('Logout request failed', error: e, stackTrace: st);
     }
