@@ -10,9 +10,6 @@ import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
-import 'package:obywatel_plus/features/settings/presentation/fingerprint_screen.dart';
-import 'package:obywatel_plus/features/settings/presentation/set_pin_screen.dart';
-import 'package:obywatel_plus/features/settings/presentation/pattern_lock_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
 import 'redirect_logic.dart';
 import 'app_routes.dart';
@@ -34,24 +31,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
 
       // Settings
-      GoRoute(
-        path: AppRoutes.settings,
-        pageBuilder: (context, state) =>
-            _customPage(state: state, child: const SettingsScreen()),
-        routes: [
-          // Security jako nested pod /settings
-          GoRoute(
-            path: AppRoutes.security,
-            pageBuilder: (context, state) =>
-                _customPage(state: state, child: const SecurityScreen()),
-            routes: [
-              _goNestedRoute(AppRoutes.setPin, const SetPinScreen()),
-              _goNestedRoute(AppRoutes.patternLock, const PatternLockScreen()),
-              _goNestedRoute(AppRoutes.fingerprint, const FingerprintScreen()),
-            ],
-          ),
-        ],
-      ),
+      _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
 
       _goRouteWithTransition(
         AppRoutes.securitySetup,
@@ -67,7 +47,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) => appRedirectLogic(ref, state),
   );
 });
-
 // Funkcja pomocnicza dla routingu z animacją
 GoRoute _goRouteWithTransition(String path, Widget screen) {
   return GoRoute(
@@ -78,6 +57,7 @@ GoRoute _goRouteWithTransition(String path, Widget screen) {
 }
 
 // Funkcja pomocnicza dla nested routes (pod routes)
+// ignore: unused_element
 GoRoute _goNestedRoute(String path, Widget screen) {
   return GoRoute(
     path: path,
