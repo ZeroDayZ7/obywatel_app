@@ -16,19 +16,24 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   final goingToLogin = path == AppRoutes.login;
   final goingToPin = path == AppRoutes.pin;
 
-  // nie zalogowany → login
+  // 1. Nie zalogowany → login
   if (!isLoggedIn && !goingToLogin) {
     return AppRoutes.login;
   }
 
-  // zalogowany i próbuje wejść
-  if (isLoggedIn && goingToLogin) {
-    return AppRoutes.home;
+  // 2. Zalogowany, brak lokalnej blokady, ale powinien ustawić → PIN setup
+  if (isLoggedIn && !shouldShowLock && !goingToPin) {
+    return AppRoutes.securitySetup;
   }
 
-  // zalogowany i powinna być blokada → PIN
+  // 3. Zalogowany i powinna być blokada → PIN
   if (isLoggedIn && shouldShowLock && !goingToPin) {
     return AppRoutes.pin;
+  }
+
+  // 4. Zalogowany i próbuje wejść na login → home
+  if (isLoggedIn && goingToLogin) {
+    return AppRoutes.home;
   }
 
   return null;

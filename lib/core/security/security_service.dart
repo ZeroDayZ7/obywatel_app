@@ -14,6 +14,7 @@ class SecurityService {
   bool isPinConfigured = false;
   bool isBiometricAvailable = false;
   bool canUseBiometrics = false;
+  bool skipSetup = false;
 
   SecurityService({
     required this.secureStorage,
@@ -35,6 +36,17 @@ class SecurityService {
     logger.i('SecurityService: init zakończone ✅');
   }
 
+  // setter po ustawieniu PIN
+  Future<void> setPin(String pin) async {
+    await secureStorage.write(key: StorageKeys.pinHash, value: pin);
+    isPinConfigured = true;
+  }
+
+  // setter po kliknięciu „Pomiń”
+  void skipPinSetup() {
+    skipSetup = true;
+  }
+
   /// Sprawdzenie, czy istnieje sesja (np. accessToken)
   Future<void> _checkSession() async {
     try {
@@ -52,7 +64,8 @@ class SecurityService {
   Future<void> _checkLocalLockSettings() async {
     try {
       hasLocalLock = await _readBool('hasLocalLock');
-      isPinConfigured = (await secureStorage.read(key: StorageKeys.pinHash)) != null;
+      isPinConfigured =
+          (await secureStorage.read(key: StorageKeys.pinHash)) != null;
       logger.i(
         'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
       );
@@ -107,12 +120,9 @@ class SecurityService {
 
   /// Czy należy pokazać ekran blokady (PIN / biometryczne)
   bool get shouldShowLock {
-    final result =
-        hasSession &&
-        hasLocalLock &&
-        (isPinConfigured || (isBiometricEnabled && canUseBiometrics));
-    logger.d('shouldShowLock = $result');
-    return result;
+    if (skipSetup) return false; // użytkownik pominął setup → brak blokady
+    if (!isPinConfigured) return false; // brak PIN → brak blokady
+    return hasLocalLock; // tylko jeśli użytkownik ustawił lokalną blokadę
   }
 
   /// Próba autoryzacji biometrycznej
