@@ -28,15 +28,14 @@ class _BootstrapAppState extends State<BootstrapApp> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_initialized) {
-      // Splash screen dopóki wszystko się ładuje
-      return const MaterialApp(
-        home: SplashScreen(),
-        debugShowCheckedModeBanner: false,
-      );
-    }
-
-    // Po inicjalizacji – start właściwej aplikacji
-    return const ObywatelPlusApp();
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      child: _initialized
+          ? const ObywatelPlusApp()
+          : const MaterialApp(
+              home: SplashScreen(),
+              debugShowCheckedModeBanner: false,
+            ),
+    );
   }
 }

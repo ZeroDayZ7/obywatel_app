@@ -53,6 +53,7 @@ class AppBootstrapper {
     // await Future.delayed(const Duration(milliseconds: 300));
     final storage = sl<SecureStorageService>();
     await storage.clearAll();
+    // await storage.readAll();
     assert(() {
       storage.debugPrintAll();
       return true;

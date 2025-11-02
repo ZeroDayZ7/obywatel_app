@@ -48,8 +48,6 @@ class AuthService {
           value: refreshToken,
         );
 
-        await _storage.debugPrintAll();
-
         _logger.i('Login successful');
         return const LoginResult(success: true);
       }

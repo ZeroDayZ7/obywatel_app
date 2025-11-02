@@ -5,6 +5,8 @@ import 'package:obywatel_plus/app/config/env.dart';
 
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
+import 'package:obywatel_plus/core/crypto/hash_service.dart';
+import 'package:obywatel_plus/core/crypto/pin_service.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
@@ -20,6 +22,14 @@ final sl = GetIt.instance;
 class AppInjector {
   static Future<void> setup() async {
     sl.registerLazySingleton<AppLogger>(() => AppLogger());
+    sl.registerLazySingleton<HashService>(() => HashService(sl<AppLogger>()));
+    sl.registerLazySingleton<PinService>(
+      () => PinService(
+        storage: const FlutterSecureStorage(),
+        hashService: sl<HashService>(),
+        logger: sl<AppLogger>(),
+      ),
+    );
     // Rejestracja LocalAuthentication
     sl.registerLazySingleton<LocalAuthentication>(() => LocalAuthentication());
 
@@ -31,6 +41,7 @@ class AppInjector {
     // Rejestracja SecurityService korzystającego z DI
     sl.registerLazySingleton<SecurityService>(
       () => SecurityService(
+        pinService: sl<PinService>(),
         secureStorage: sl<SecureStorageService>(),
         localAuth: sl<LocalAuthentication>(),
         logger: sl<AppLogger>(),
@@ -94,7 +105,5 @@ class AppInjector {
     //   () => PinService(const FlutterSecureStorage()),
     // );
     // Factory dla controllers: sl.registerFactory<LoginController>(() => LoginController(service: sl<LoginService>(), ref: /* pass ref in use */));
-
-    sl<AppLogger>().i("AppInjector: all dependencies registered ✅");
   }
 }

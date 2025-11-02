@@ -2,8 +2,10 @@ import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/crypto/pin_service.dart';
 
 class SecurityService {
+  final PinService pinService;
   final SecureStorageService secureStorage;
   final LocalAuthentication localAuth;
   final AppLogger logger;
@@ -17,6 +19,7 @@ class SecurityService {
   bool skipSetup = false;
 
   SecurityService({
+    required this.pinService,
     required this.secureStorage,
     required this.localAuth,
     required this.logger,
@@ -50,8 +53,7 @@ class SecurityService {
   /// Sprawdzenie, czy istnieje sesja (np. accessToken)
   Future<void> _checkSession() async {
     try {
-      await secureStorage.delete(key: 'user_token');
-      final token = await secureStorage.read(key: 'accessToken');
+      final token = await secureStorage.read(key: StorageKeys.accessToken);
       hasSession = token != null && token.isNotEmpty;
       logger.i('Sprawdzono sesję: hasSession=$hasSession');
     } catch (e, st) {
@@ -106,7 +108,7 @@ class SecurityService {
     try {
       final value = await secureStorage.read(key: key);
       final result = value == 'true';
-      logger.d('Odczytano bool z SecureStorage: $key=$result');
+      // logger.d('Odczytano bool z SecureStorage: $key=$result');
       return result;
     } catch (e, st) {
       logger.e(
@@ -120,9 +122,9 @@ class SecurityService {
 
   /// Czy należy pokazać ekran blokady (PIN / biometryczne)
   bool get shouldShowLock {
-    if (skipSetup) return false; // użytkownik pominął setup → brak blokady
-    if (!isPinConfigured) return false; // brak PIN → brak blokady
-    return hasLocalLock; // tylko jeśli użytkownik ustawił lokalną blokadę
+    if (skipSetup) return false;
+    if (!isPinConfigured) return false;
+    return hasLocalLock;
   }
 
   /// Próba autoryzacji biometrycznej

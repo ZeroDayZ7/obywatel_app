@@ -6,6 +6,8 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/core/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/app/di/injector.dart';
 
 import 'widgets/pin_tile.dart';
 import 'widgets/biometric_tile.dart';
@@ -29,87 +31,124 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
   bool _biometricAvailable = false;
   bool _biometricSet = false;
 
+  late final AppLogger _logger;
+
   @override
   void initState() {
     super.initState();
+    _logger = sl<AppLogger>(); // Fix: Inicjalizuj z DI
     _initSecurityOptions();
   }
 
   Future<void> _initSecurityOptions() async {
-    final pin = await _storage.read(key: StorageKeys.pinHash);
-    final biometric = await _storage.read(key: StorageKeys.biometric);
-    final canCheckBiometrics = await _localAuth.canCheckBiometrics;
+    _logger.d('SecuritySetup: Inicjalizacja opcji bezpieczeństwa...');
+    try {
+      final securityService = ref.read(securityServiceProvider);
+      _pinSet = await securityService.pinService.hasPin();
+      final biometric = await _storage.read(key: StorageKeys.biometric);
+      _biometricAvailable = await _localAuth.canCheckBiometrics;
 
-    if (!mounted) return;
-    setState(() {
-      _pinSet = pin != null && pin.isNotEmpty;
-      _biometricSet = biometric == 'true';
-      _biometricAvailable = canCheckBiometrics;
-    });
+      if (!mounted) return;
+      setState(() {
+        _biometricSet = biometric == 'true';
+      });
+
+      _logger.i(
+        'SecuritySetup: PIN: $_pinSet, biometria: $_biometricSet, dostępna: $_biometricAvailable',
+      );
+    } catch (e, st) {
+      _logger.e('SecuritySetup: Błąd inicjalizacji', error: e, stackTrace: st);
+    }
   }
 
   Future<void> _finishSetup() async {
+    _logger.d('SecuritySetup: Kończenie setupu');
     if (!_pinSet) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Musisz ustawić PIN, inaczej będziesz się logował za każdym razem!',
-          ),
-        ),
-      );
+      if (context.mounted) {
+        // Fix mounted check
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Musisz ustawić PIN!')));
+      }
       return;
     }
 
-    final pin = await _storage.read(key: StorageKeys.pinHash);
-    if (pin != null && pin.isNotEmpty) {
-      await ref.read(securityServiceProvider).setPin(pin);
-    }
+    // setPin już zahashowany w service
+    final securityService = ref.read(securityServiceProvider);
+    await securityService.setPin(
+      '',
+    ); // Lub przekaż jeśli potrzeba, ale hasPin wystarcza
 
     if (!mounted) return;
-    context.go(AppRoutes.home);
+    if (context.mounted) {
+      context.go(AppRoutes.home);
+    }
   }
 
   Future<void> _skipSetup() async {
+    _logger.i('SecuritySetup: Skip setup');
     ref.read(securityServiceProvider).skipPinSetup();
     if (!mounted) return;
-    context.go(AppRoutes.home);
+    if (context.mounted) {
+      context.go(AppRoutes.home);
+    }
   }
 
-  void _onSetupPin() {
-    showDialog<String>(
+  Future<void> _onSetupPin() async {
+    _logger.d('SecuritySetup: Otwieram dialog PIN');
+    final result = await showDialog<String>(
       context: context,
       builder: (_) =>
-          Dialog(child: SingleChildScrollView(child: PinSetupDialog())),
-    ).then((result) async {
-      if (result != null && result.isNotEmpty) {
-        await _storage.write(key: StorageKeys.pinHash, value: result);
-        if (!mounted) return;
-        setState(() => _pinSet = true);
-      }
-    });
+          const Dialog(child: SingleChildScrollView(child: PinSetupDialog())),
+    );
+
+    if (result == null || result.isEmpty) return;
+
+    try {
+      await ref.read(securityServiceProvider).setPin(result);
+
+      if (!mounted) return;
+      setState(() => _pinSet = true);
+      _logger.i('SecuritySetup: PIN ustawiony');
+    } catch (e, s) {
+      _logger.e('SecuritySetup: Błąd ustawiania PIN', error: e, stackTrace: s);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Błąd: $e')));
+    }
   }
 
   Future<void> _onSetupBiometric() async {
-    if (!_pinSet) return;
+    if (!_pinSet) {
+      _logger.w('SecuritySetup: Biometria bez PIN – blokada');
+      return;
+    }
 
+    _logger.d('SecuritySetup: Setup biometrii');
     try {
       final success = await _localAuth.authenticate(
-        localizedReason: 'Potwierdź biometrię, aby włączyć blokadę',
+        localizedReason: 'Potwierdź biometrię',
         biometricOnly: true,
       );
 
-      if (!success) return;
+      if (!success) {
+        _logger.w('SecuritySetup: Biometria nieudana');
+        return;
+      }
 
       await _storage.write(key: StorageKeys.biometric, value: 'true');
-
       if (!mounted) return;
       setState(() => _biometricSet = true);
-    } catch (_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nie udało się włączyć biometrii')),
-      );
+      _logger.i('SecuritySetup: Biometria włączona');
+    } catch (e, s) {
+      _logger.e('SecuritySetup: Błąd biometrii', error: e, stackTrace: s);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nie udało się włączyć biometrii')),
+        );
+      }
     }
   }
 
@@ -127,9 +166,7 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
               const InfoCard(
                 icon: Icons.security,
                 title: 'Dodatkowe zabezpieczenie',
-                description:
-                    'Ustaw PIN lub biometrię, aby chronić dostęp do aplikacji. '
-                    'Możesz pominąć, ale będziesz musiał logować się przy każdym uruchomieniu.',
+                description: 'Ustaw PIN lub biometrię...',
               ),
               const SizedBox(height: 30),
               PinTile(pinSet: _pinSet, onSetup: _onSetupPin),
