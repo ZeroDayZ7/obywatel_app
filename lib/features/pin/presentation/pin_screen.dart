@@ -1,37 +1,33 @@
+// lib/features/pin/presentation/pin_screen.dart
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // Nowy import: dla Consumer
 import 'package:pin_code_fields/pin_code_fields.dart';
-import '../../auth/presentation/login_screen.dart';
-import '../../../app/theme/app_colors.dart';
+import '../../../../../app/theme/app_colors.dart'; // Dostosuj ścieżkę
+import '../../../../auth/presentation/login_screen.dart'; // Dostosuj
+import '../providers/pin_provider.dart'; // Nowy import: twój provider
 
-class PinScreen extends StatefulWidget {
-  const PinScreen({super.key});
+class PinScreen extends ConsumerStatefulWidget {
+  // Zmień na ConsumerStatefulWidget
+  const PinScreen({
+    super.key,
+  }); // Usuń required pinService – ref.watch to obsłuży
 
   @override
-  State<PinScreen> createState() => _PinScreenState();
+  ConsumerState<PinScreen> createState() => _PinScreenState();
 }
 
-class _PinScreenState extends State<PinScreen> {
+class _PinScreenState extends ConsumerState<PinScreen> {
+  // Zmień na ConsumerState
   final TextEditingController _pinController = TextEditingController();
-  final _storage = const FlutterSecureStorage();
   late StreamController<ErrorAnimationType> _errorController;
-
-  String _correctPin = '';
 
   @override
   void initState() {
     super.initState();
     _errorController = StreamController<ErrorAnimationType>();
-    _loadPin();
-  }
-
-  Future<void> _loadPin() async {
-    final pin = await _storage.read(key: StorageKeys.pinHash);
-    if (!mounted) return;
-    setState(() => _correctPin = pin ?? '');
+    // Nie ładujemy niczego tu – serwis zrobi to w verifyPin()
   }
 
   @override
@@ -41,26 +37,46 @@ class _PinScreenState extends State<PinScreen> {
     super.dispose();
   }
 
-  void _verifyPin() {
-    if (_pinController.text == _correctPin && _correctPin.isNotEmpty) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
-    } else {
-      _errorController.add(ErrorAnimationType.shake);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text("Niepoprawny PIN"),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      _pinController.clear();
+  Future<void> _verifyPin() async {
+    final pin = _pinController.text;
+    if (pin.isEmpty) {
+      _showError('Wprowadź PIN');
+      return;
     }
+
+    // Pobierz serwis via ref (z Riverpod)
+    final pinService = ref.read(
+      pinServiceProvider,
+    ); // Lub ref.watch, jeśli chcesz reaktywność
+    final isValid = await pinService.verifyPin(pin);
+
+    if (isValid) {
+      if (mounted) {
+        // Przekazanie dalej: nawigacja (użyj GoRouter.contextOf(context).go('/login') jeśli chcesz)
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      }
+    } else {
+      _showError('Niepoprawny PIN');
+    }
+  }
+
+  void _showError(String message) {
+    _errorController.add(ErrorAnimationType.shake);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: AppColors.error),
+      );
+    }
+    _pinController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    // ref jest dostępny tu automatycznie dzięki ConsumerStatefulWidget
+
     final theme = Theme.of(context);
 
     Color white20 = Colors.white.withAlpha((0.2 * 255).toInt());
@@ -109,7 +125,7 @@ class _PinScreenState extends State<PinScreen> {
                   ),
                   animationDuration: const Duration(milliseconds: 300),
                   enableActiveFill: true,
-                  onChanged: (_) {},
+                  onChanged: (_) {}, // Opcjonalnie: debounce + auto-verify
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(

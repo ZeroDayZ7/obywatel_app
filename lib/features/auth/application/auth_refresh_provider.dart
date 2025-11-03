@@ -5,12 +5,12 @@ import 'auth_provider.dart';
 
 /// ChangeNotifier, który nasłuchuje zmiany AuthState
 class AuthRefreshListenable extends ChangeNotifier {
-  late final ProviderSubscription<AuthState> _subscription;
+  late final ProviderSubscription<AsyncValue<AuthState>> _subscription;
 
   AuthRefreshListenable(Ref ref) {
-    _subscription = ref.listen<AuthState>(
-      authProvider, // teraz AuthState, nie bool
-      (_, _) => notifyListeners(), // powiadamia wszystkie nasłuchujące widgety
+    _subscription = ref.listen<AsyncValue<AuthState>>(
+      authProvider,
+      (_, _) => notifyListeners(),
     );
   }
 

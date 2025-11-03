@@ -3,27 +3,27 @@ import 'package:logger/logger.dart';
 class AppLogger {
   final Logger _logger;
 
-  AppLogger()
-    : _logger = Logger(
-        printer: PrettyPrinter(
-          methodCount: 2,
-          errorMethodCount: 5,
-          lineLength: 80,
-          colors: true,
-          printEmojis: true,
-        ),
-      );
-
   // AppLogger()
   //   : _logger = Logger(
   //       printer: PrettyPrinter(
-  //         methodCount: 0, // bez stacktrace
-  //         errorMethodCount: 0,
-  //         lineLength: 50,
+  //         methodCount: 2,
+  //         errorMethodCount: 5,
+  //         lineLength: 80,
   //         colors: true,
   //         printEmojis: true,
   //       ),
   //     );
+
+  AppLogger()
+    : _logger = Logger(
+        printer: PrettyPrinter(
+          methodCount: 0, // bez stacktrace
+          errorMethodCount: 0,
+          lineLength: 50,
+          colors: true,
+          printEmojis: false,
+        ),
+      );
 
   void d(
     String message, {

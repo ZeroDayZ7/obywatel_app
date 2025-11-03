@@ -6,7 +6,7 @@ import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
-import 'package:obywatel_plus/core/crypto/pin_service.dart';
+import 'package:obywatel_plus/core/security/pin_service.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
@@ -21,7 +21,8 @@ final sl = GetIt.instance;
 
 class AppInjector {
   static Future<void> setup() async {
-    sl.registerLazySingleton<AppLogger>(() => AppLogger());
+    sl.registerSingleton<AppLogger>(AppLogger());
+
     sl.registerLazySingleton<HashService>(() => HashService(sl<AppLogger>()));
     sl.registerLazySingleton<PinService>(
       () => PinService(
@@ -93,8 +94,8 @@ class AppInjector {
     //   ),
     // );
 
-    sl.registerLazySingleton<AuthService>(
-      () => AuthService(
+    sl.registerSingleton<AuthService>(
+      AuthService(
         apiClient: sl<ApiClient>(),
         storage: sl<SecureStorageService>(),
         logger: sl<AppLogger>(),

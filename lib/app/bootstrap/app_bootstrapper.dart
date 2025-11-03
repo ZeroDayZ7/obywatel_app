@@ -32,6 +32,7 @@ class AppBootstrapper {
         stackTrace: st,
       );
     }
+
     // --- StartupService ---
     // try {
     //   await sl<StartupService>().run();
@@ -52,8 +53,7 @@ class AppBootstrapper {
     // assert(all.isEmpty);
     // await Future.delayed(const Duration(milliseconds: 300));
     final storage = sl<SecureStorageService>();
-    await storage.clearAll();
-    // await storage.readAll();
+    // await storage.clearAll();
     assert(() {
       storage.debugPrintAll();
       return true;

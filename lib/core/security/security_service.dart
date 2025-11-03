@@ -2,7 +2,7 @@ import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/app/config/storage_keys.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/crypto/pin_service.dart';
+import 'package:obywatel_plus/core/security/pin_service.dart';
 
 class SecurityService {
   final PinService pinService;
@@ -17,6 +17,7 @@ class SecurityService {
   bool isBiometricAvailable = false;
   bool canUseBiometrics = false;
   bool skipSetup = false;
+  bool initialized = false;
 
   SecurityService({
     required this.pinService,
@@ -35,19 +36,9 @@ class SecurityService {
       _checkLocalLockSettings(),
       _checkBiometricSettings(),
     ]);
+    initialized = true;
 
     logger.i('SecurityService: init zakończone ✅');
-  }
-
-  // setter po ustawieniu PIN
-  Future<void> setPin(String pin) async {
-    await secureStorage.write(key: StorageKeys.pinHash, value: pin);
-    isPinConfigured = true;
-  }
-
-  // setter po kliknięciu „Pomiń”
-  void skipPinSetup() {
-    skipSetup = true;
   }
 
   /// Sprawdzenie, czy istnieje sesja (np. accessToken)
@@ -62,18 +53,46 @@ class SecurityService {
     }
   }
 
+  /// Ustawienie PIN-u (hash + flaga lokalnej blokady)
+  Future<void> setPin(String pin) async {
+    logger.d('SecurityService: Ustawianie PIN przez PinService...');
+    await pinService.setPin(pin);
+
+    isPinConfigured = true;
+    hasLocalLock = true;
+
+    await secureStorage.write(key: StorageKeys.localLockEnabled, value: 'true');
+
+    final storedHash = await secureStorage.read(key: StorageKeys.pinHash);
+    logger.i('🔑 PIN zapisany jako hash: ${storedHash?.substring(0, 12)}...');
+    logger.i('SecurityService: Blokada lokalna aktywowana ✅');
+  }
+
+  Future<void> completeSetup() async {
+    logger.i('SecurityService: Setup zakończony');
+    skipSetup = true;
+
+    await secureStorage.write(key: StorageKeys.setupCompleted, value: 'true');
+  }
+
+  // setter po kliknięciu „Pomiń”
+  void skipPinSetup() {
+    skipSetup = true;
+    logger.w('⚠️ Użytkownik pominął konfigurację bezpieczeństwa');
+  }
+
   /// Sprawdzenie lokalnych ustawień blokady i PIN-u
   Future<void> _checkLocalLockSettings() async {
     try {
-      hasLocalLock = await _readBool('hasLocalLock');
-      isPinConfigured =
-          (await secureStorage.read(key: StorageKeys.pinHash)) != null;
+      hasLocalLock = await _readBool(StorageKeys.localLockEnabled);
+      isPinConfigured = await pinService.hasPin();
+
       logger.i(
-        'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
+        '💡 Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
       );
     } catch (e, st) {
       logger.e(
-        'Błąd podczas sprawdzania lokalnych ustawień',
+        'SecurityService: Błąd podczas sprawdzania lokalnych ustawień',
         error: e,
         stackTrace: st,
       );

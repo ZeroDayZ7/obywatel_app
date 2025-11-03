@@ -65,25 +65,17 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
     _logger.d('SecuritySetup: Kończenie setupu');
     if (!_pinSet) {
       if (!mounted) return;
-      if (context.mounted) {
-        // Fix mounted check
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Musisz ustawić PIN!')));
-      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Musisz ustawić PIN!')));
       return;
     }
 
-    // setPin już zahashowany w service
     final securityService = ref.read(securityServiceProvider);
-    await securityService.setPin(
-      '',
-    ); // Lub przekaż jeśli potrzeba, ale hasPin wystarcza
+    await securityService.completeSetup();
 
     if (!mounted) return;
-    if (context.mounted) {
-      context.go(AppRoutes.home);
-    }
+    context.go(AppRoutes.home);
   }
 
   Future<void> _skipSetup() async {

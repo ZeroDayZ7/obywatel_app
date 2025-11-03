@@ -50,6 +50,7 @@ dependencies:
   shared_preferences: ^2.5.3
   cryptography: ^2.7.0
   collection: ^1.19.1
+  flutter_spinkit: ^5.2.2
 
 dev_dependencies:
   flutter_test:
