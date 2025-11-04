@@ -6,7 +6,7 @@ import 'package:obywatel_plus/core/core_providers.dart';
 
 String? appRedirectLogic(Ref ref, GoRouterState state) {
   final logger = ref.read(appLoggerProvider);
-  final securityState = ref.watch(securityServiceProvider); // obserwowany stan
+  final securityState = ref.watch(securityServiceProvider);
 
   final path = state.uri.path;
   final isLoggedIn = securityState.hasSession;
