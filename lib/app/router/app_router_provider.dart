@@ -27,7 +27,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       _goRouteWithTransition(AppRoutes.splash, const SplashScreen()),
       _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
-      _goRouteWithTransition(AppRoutes.pin, const PinScreen()),
+      _goRouteWithTransition(AppRoutes.pin, const SimplePinScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
 
       // Settings

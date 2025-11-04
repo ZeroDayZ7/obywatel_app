@@ -29,7 +29,7 @@ class SecurityService {
   /// Inicjalizacja serwisu, sprawdzenie wszystkich ustawień
   Future<void> init() async {
     await Future.delayed(Duration.zero);
-    logger.i('Inicjalizacja SecurityService...');
+    logger.i('🚀 Inicjalizacja SecurityService...');
 
     await Future.wait([
       _checkSession(),
@@ -38,7 +38,7 @@ class SecurityService {
     ]);
     initialized = true;
 
-    logger.i('SecurityService: init zakończone ✅');
+    logger.i('✅ SecurityService: init zakończone');
   }
 
   /// Sprawdzenie, czy istnieje sesja (np. accessToken)
@@ -88,7 +88,7 @@ class SecurityService {
       isPinConfigured = await pinService.hasPin();
 
       logger.i(
-        '💡 Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
+        'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
       );
     } catch (e, st) {
       logger.e(

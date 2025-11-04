@@ -1,16 +1,16 @@
 // lib/core/security/pin_service.dart
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 class PinService {
-  final FlutterSecureStorage _storage;
+  final SecureStorageService _storage;
   final HashService _hashService;
   final AppLogger _logger;
 
   PinService({
-    required FlutterSecureStorage storage,
+    required SecureStorageService storage,
     required HashService hashService,
     required AppLogger logger,
   }) : _storage = storage,

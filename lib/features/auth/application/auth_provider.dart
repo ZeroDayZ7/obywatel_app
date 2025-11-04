@@ -1,11 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/app/di/injector.dart';
-
-// lib/features/auth/application/auth_provider.dart
-import 'package:obywatel_plus/core/security/security_provider.dart'; // Dodaj zależność
+import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
+/// Model stanu autoryzacji użytkownika
 class AuthState {
   final bool isLoggedIn;
 
@@ -18,65 +15,68 @@ class AuthState {
   }
 }
 
+/// Główny kontroler logiki autoryzacji
 class AuthNotifier extends AsyncNotifier<AuthState> {
-  final AppLogger _logger;
-
-  AuthNotifier() : _logger = sl<AppLogger>();
-
   @override
   Future<AuthState> build() async {
-    _logger.i('AuthNotifier: Ładowanie stanu...');
-    // Automatycznie załaduj stan z SecurityService podczas build
-    final securityService = ref.read(securityServiceProvider);
-    await securityService.init(); // Czekaj na init, jeśli nie było wcześniej
+    final logger = ref.watch(appLoggerProvider);
+    final securityService = ref.watch(securityServiceProvider);
+
+    logger.i('AuthNotifier: Ładowanie stanu...');
+    await securityService.init();
+
     final isLoggedIn = securityService.hasSession;
-    _logger.i('AuthNotifier: Załadowano stan, isLoggedIn=$isLoggedIn');
+    logger.i('AuthNotifier: Załadowano stan, isLoggedIn=$isLoggedIn');
+
     return AuthState(isLoggedIn: isLoggedIn);
   }
 
-  /// Oznacz użytkownika jako zalogowanego (token już zapisany)
+  /// Zaloguj użytkownika (po udanym uwierzytelnieniu i zapisaniu tokenu)
   Future<void> login() async {
     state = const AsyncValue.loading();
+    final logger = ref.read(appLoggerProvider);
 
     try {
       final securityService = ref.read(securityServiceProvider);
-      // Tutaj możesz dodatkowo zapisać token, jeśli potrzeba
-      securityService.hasSession = true; // Synchronizuj z service
-      state = AsyncValue.data(
-        state.value?.copyWith(isLoggedIn: true) ?? AuthState(isLoggedIn: true),
-      );
-      _logger.i('User logged in');
+
+      // Jeśli używasz tokenów – zapisz token w secureStorage
+      // await securityService.secureStorage.write(
+      //   key: StorageKeys.accessToken,
+      //   value: token,
+      // );
+
+      securityService.hasSession = true;
+      state = AsyncValue.data(AuthState(isLoggedIn: true));
+      logger.i('✅ Użytkownik zalogowany');
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      _logger.e('Błąd login', error: e, stackTrace: st);
+      logger.e('❌ Błąd logowania', error: e, stackTrace: st);
     }
   }
 
-  /// Oznacz użytkownika jako wylogowanego
+  /// Wyloguj użytkownika i wyczyść dane sesji
   Future<void> logout() async {
     state = const AsyncValue.loading();
+    final logger = ref.read(appLoggerProvider);
 
     try {
       final securityService = ref.read(securityServiceProvider);
-      // Usuń token z storage (jeśli masz metodę)
       await securityService.secureStorage.delete(key: StorageKeys.accessToken);
-      securityService.hasSession = false; // Synchronizuj
-      state = AsyncValue.data(
-        state.value?.copyWith(isLoggedIn: false) ??
-            AuthState(isLoggedIn: false),
-      );
-      _logger.i('User logged out');
+      securityService.hasSession = false;
+
+      state = AsyncValue.data(AuthState(isLoggedIn: false));
+      logger.i('🚪 Użytkownik wylogowany');
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      _logger.e('Błąd logout', error: e, stackTrace: st);
+      logger.e('❌ Błąd podczas wylogowania', error: e, stackTrace: st);
     }
   }
 
-  // Helper: Czytaj synchroniczny stan (po załadowaniu)
+  /// Pomocniczy getter — czy użytkownik jest zalogowany
   bool get isLoggedIn => state.value?.isLoggedIn ?? false;
 }
 
-// Provider teraz async
+/// Provider globalny odpowiedzialny za stan autoryzacji
 final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
   AuthNotifier.new,
 );

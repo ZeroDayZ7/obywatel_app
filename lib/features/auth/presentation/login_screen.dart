@@ -1,15 +1,10 @@
-// lib/features/auth/presentation/login_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-// import 'package:obywatel_plus/app/config/storage_keys.dart';
-import 'package:obywatel_plus/app/di/injector.dart';
 import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth_service_provider.dart';
 import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
-import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
-// import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/core_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -19,8 +14,6 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  late final AuthService _authService;
-
   final TextEditingController _emailController = TextEditingController(
     text: apiConstants.defaultEmail,
   );
@@ -29,42 +22,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   );
 
   @override
-  void initState() {
-    super.initState();
-    // inicjalizacja LoginService przez DI
-    _authService = sl<AuthService>();
-  }
-
-  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  // przykładowy _onLogin
   Future<void> _onLogin() async {
     final loginNotifier = ref.read(loginStateProvider.notifier);
     final authNotifier = ref.read(authProvider.notifier);
-    final logger = sl<AppLogger>();
+    final authService = ref.read(authServiceProvider);
+    final logger = ref.read(appLoggerProvider);
 
     loginNotifier.setLoading(true);
     loginNotifier.setError(null);
 
     try {
-      final result = await _authService.login(
-        email: _emailController.text,
-        password: _passwordController.text,
+      final result = await authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
 
       if (result.success) {
-        authNotifier.login();
+        await authNotifier.login();
+        logger.i('✅ User logged in successfully');
       } else {
         loginNotifier.setError('Login failed: ${result.error}');
+        logger.w('⚠️ Login failed: ${result.error}');
       }
     } catch (e, st) {
-      logger.e('Unexpected login error', error: e, stackTrace: st);
-      loginNotifier.setError('Unexpected error');
+      logger.e('❌ Unexpected login error', error: e, stackTrace: st);
+      loginNotifier.setError('Unexpected error occurred');
     } finally {
       loginNotifier.setLoading(false);
     }
@@ -81,7 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch, // zamiast center
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 80),
                 const Text(
@@ -121,7 +109,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       style: const TextStyle(color: Colors.red),
                     ),
                   ),
-                const SizedBox(height: 50), // margines od dołu
+                const SizedBox(height: 50),
               ],
             ),
           ),

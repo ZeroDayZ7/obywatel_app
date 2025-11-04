@@ -11,10 +11,10 @@ class HashService {
 
   HashService(this._logger)
     : _argon2 = Argon2id(
-        memory: 64 * 1024, // 64 MiB
-        parallelism: 4,
-        iterations: 3,
-        hashLength: 32,
+        memory: 8 * 1024, // 8 MiB → 8 razy mniej pamięci
+        parallelism: 1, // jeden wątek wystarczy
+        iterations: 1, // jedna iteracja
+        hashLength: 16, // hash krótszy, nadal bezpieczny lokalnie
       ),
       _random = Random.secure();
 
