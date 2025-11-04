@@ -1,6 +1,6 @@
 // lib/core/security/pin_service.dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 

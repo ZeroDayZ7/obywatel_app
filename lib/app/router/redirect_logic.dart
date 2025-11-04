@@ -1,6 +1,6 @@
 // lib/app/router/redirect_logic.dart
 // import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
-import 'package:obywatel_plus/core/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';

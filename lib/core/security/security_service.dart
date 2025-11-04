@@ -1,5 +1,5 @@
 import 'package:local_auth/local_auth.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/security/pin_service.dart';

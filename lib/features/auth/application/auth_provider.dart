@@ -3,8 +3,8 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/app/di/injector.dart';
 
 // lib/features/auth/application/auth_provider.dart
-import 'package:obywatel_plus/core/security/security_service_provider.dart'; // Dodaj zależność
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+import 'package:obywatel_plus/core/security/security_provider.dart'; // Dodaj zależność
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 class AuthState {
   final bool isLoggedIn;

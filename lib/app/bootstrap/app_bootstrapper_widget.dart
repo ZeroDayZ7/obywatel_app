@@ -12,15 +12,27 @@ class BootstrapApp extends StatefulWidget {
 
 class _BootstrapAppState extends State<BootstrapApp> {
   bool _initialized = false;
+  double _opacity = 0.0;
 
   @override
   void initState() {
     super.initState();
+    _fadeInSplash();
     _initApp();
+  }
+
+  Future<void> _fadeInSplash() async {
+    // mały delay żeby zadziałało AnimatedOpacity
+    await Future.delayed(const Duration(milliseconds: 50));
+    if (mounted) {
+      setState(() => _opacity = 1.0);
+    }
   }
 
   Future<void> _initApp() async {
     await AppBootstrapper.init();
+    // wymuszone 3 sekundy splasha
+    await Future.delayed(const Duration(seconds: 3));
     if (mounted) {
       setState(() => _initialized = true);
     }
@@ -32,9 +44,13 @@ class _BootstrapAppState extends State<BootstrapApp> {
       duration: const Duration(milliseconds: 300),
       child: _initialized
           ? const ObywatelPlusApp()
-          : const MaterialApp(
-              home: SplashScreen(),
+          : MaterialApp(
               debugShowCheckedModeBanner: false,
+              home: AnimatedOpacity(
+                opacity: _opacity,
+                duration: const Duration(seconds: 1),
+                child: const SplashScreen(),
+              ),
             ),
     );
   }

@@ -3,7 +3,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 class LoginResult {
   final bool success;

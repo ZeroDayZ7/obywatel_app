@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/app/config/storage_keys.dart';
-import 'package:obywatel_plus/core/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/security/security_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/app/di/injector.dart';
 

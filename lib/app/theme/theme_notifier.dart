@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/app/di/injector.dart';
+import 'package:obywatel_plus/core/core_providers.dart';
 
 const _themeKey = 'theme_mode';
 
@@ -17,7 +17,8 @@ class ThemeNotifier extends Notifier<ThemeMode> {
 
   @override
   ThemeMode build() {
-    _logger = sl<AppLogger>();
+    // _logger = sl<AppLogger>();
+    _logger = ref.read(appLoggerProvider);
     _logger.i('🎨 ThemeNotifier initialized');
 
     // wczytaj motyw asynchronicznie po starcie
