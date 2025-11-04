@@ -1,19 +1,19 @@
 // lib/app/router/app_router_provider.dart
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/pin/presentation/pin_screen.dart';
-import 'package:obywatel_plus/features/splash/presentation/splash_screen.dart';
-import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
-import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
-import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
-import 'redirect_logic.dart';
-import 'app_routes.dart';
 import 'package:obywatel_plus/features/auth/application/auth_refresh_provider.dart';
+import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
+import 'package:obywatel_plus/features/pin/presentation/pin_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
+
+import 'app_routes.dart';
+import 'redirect_logic.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -22,12 +22,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.home,
     refreshListenable: refreshListenable,
     routes: [
-      _goRouteWithTransition(AppRoutes.splash, const SplashScreen()),
       _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
-      _goRouteWithTransition(AppRoutes.pin, const SimplePinScreen()),
+      _goRouteWithTransition(AppRoutes.pin, const PinVerificationScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
 
       // Settings

@@ -39,7 +39,7 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
     final logger = ref.read(appLoggerProvider);
     logger.d('SecuritySetup: Inicjalizacja opcji bezpieczeństwa...');
     try {
-      final securityService = ref.read(securityServiceProvider);
+      final securityService = ref.read(securityServiceProvider.notifier);
       final storage = ref.read(secureStorageProvider);
       final localAuth = ref.read(localAuthProvider);
 
@@ -70,7 +70,7 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
       return;
     }
 
-    final securityService = ref.read(securityServiceProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
     await securityService.completeSetup();
 
     if (!mounted) return;
@@ -78,7 +78,8 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
   }
 
   Future<void> _skipSetup() async {
-    ref.read(securityServiceProvider).skipPinSetup();
+    // wywołanie metody przez .notifier
+    ref.read(securityServiceProvider.notifier).skipPinSetup();
     if (!mounted) return;
     context.go(AppRoutes.home);
   }
@@ -94,7 +95,8 @@ class _SecuritySetupScreenState extends ConsumerState<SecuritySetupScreen> {
     if (result == null || result.isEmpty) return;
 
     try {
-      await ref.read(securityServiceProvider).setPin(result);
+      // wywołanie setPin przez Notifier
+      await ref.read(securityServiceProvider.notifier).setPin(result);
       if (!mounted) return;
       setState(() => _pinSet = true);
       logger.i('SecuritySetup: PIN ustawiony');

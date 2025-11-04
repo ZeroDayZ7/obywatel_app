@@ -1,134 +1,167 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/pin_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/crypto/hash_service.dart';
 
-class SecurityService {
-  final PinService pinService;
-  final SecureStorageService secureStorage;
-  final LocalAuthentication localAuth;
-  final AppLogger logger;
+/// 🔑 Stan bezpieczeństwa aplikacji
+class SecurityState {
+  final bool hasSession;
+  final bool hasLocalLock;
+  final bool isPinConfigured;
+  final bool isBiometricEnabled;
+  final bool canUseBiometrics;
+  final bool skipSetup;
+  final bool initialized;
 
-  bool hasSession = false;
-  bool hasLocalLock = false;
-  bool isBiometricEnabled = false;
-  bool isPinConfigured = false;
-  bool isBiometricAvailable = false;
-  bool canUseBiometrics = false;
-  bool skipSetup = false;
-  bool initialized = false;
-
-  SecurityService({
-    required this.pinService,
-    required this.secureStorage,
-    required this.localAuth,
-    required this.logger,
+  SecurityState({
+    required this.hasSession,
+    required this.hasLocalLock,
+    required this.isPinConfigured,
+    required this.isBiometricEnabled,
+    required this.canUseBiometrics,
+    required this.skipSetup,
+    required this.initialized,
   });
 
-  /// Inicjalizacja serwisu, sprawdzenie wszystkich ustawień
-  Future<void> init() async {
-    await Future.delayed(Duration.zero);
-    logger.i('🚀 Inicjalizacja SecurityService...');
-
-    await Future.wait([
-      _checkSession(),
-      _checkLocalLockSettings(),
-      _checkBiometricSettings(),
-    ]);
-    initialized = true;
-
-    logger.i('✅ SecurityService: init zakończone');
+  SecurityState copyWith({
+    bool? hasSession,
+    bool? hasLocalLock,
+    bool? isPinConfigured,
+    bool? isBiometricEnabled,
+    bool? canUseBiometrics,
+    bool? skipSetup,
+    bool? initialized,
+  }) {
+    return SecurityState(
+      hasSession: hasSession ?? this.hasSession,
+      hasLocalLock: hasLocalLock ?? this.hasLocalLock,
+      isPinConfigured: isPinConfigured ?? this.isPinConfigured,
+      isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
+      canUseBiometrics: canUseBiometrics ?? this.canUseBiometrics,
+      skipSetup: skipSetup ?? this.skipSetup,
+      initialized: initialized ?? this.initialized,
+    );
   }
 
-  /// Sprawdzenie, czy istnieje sesja (np. accessToken)
-  Future<void> _checkSession() async {
+  bool get shouldShowLock => !skipSetup && isPinConfigured && hasLocalLock;
+}
+
+/// 🔐 Notifier bezpieczeństwa
+class SecurityNotifier extends Notifier<SecurityState> {
+  late final PinService pinService;
+  late final SecureStorageService secureStorage;
+  late final LocalAuthentication localAuth;
+  late final AppLogger logger;
+
+  @override
+  SecurityState build() {
+    // Inicjalizacja zależności od razu
+    logger = ref.read(appLoggerProvider);
+    secureStorage = ref.read(secureStorageProvider);
+    pinService = PinService(
+      storage: secureStorage,
+      hashService: HashService(logger),
+      logger: logger,
+    );
+    localAuth = LocalAuthentication();
+
+    // Zwrócenie początkowego stanu
+    return SecurityState(
+      hasSession: false,
+      hasLocalLock: false,
+      isPinConfigured: false,
+      isBiometricEnabled: false,
+      canUseBiometrics: false,
+      skipSetup: false,
+      initialized: false,
+    );
+  }
+
+  Future<void> init() async {
+    logger.i('🚀 Inicjalizacja SecurityNotifier...');
+
+    final hasSession = await _checkSession();
+    final localLock = await _checkLocalLockSettings();
+    final biometric = await _checkBiometricSettings();
+
+    state = state.copyWith(
+      hasSession: hasSession,
+      hasLocalLock: localLock.hasLocalLock,
+      isPinConfigured: localLock.isPinConfigured,
+      isBiometricEnabled: biometric.isBiometricEnabled,
+      canUseBiometrics: biometric.canUseBiometrics,
+      initialized: true,
+    );
+
+    logger.i('✅ SecurityNotifier: init zakończone');
+  }
+
+  Future<bool> _checkSession() async {
     try {
       final token = await secureStorage.read(key: StorageKeys.accessToken);
-      hasSession = token != null && token.isNotEmpty;
+      final hasSession = token?.isNotEmpty ?? false;
       logger.i('Sprawdzono sesję: hasSession=$hasSession');
+      return hasSession;
     } catch (e, st) {
       logger.e('Błąd podczas sprawdzania sesji', error: e, stackTrace: st);
-      hasSession = false;
+      return false;
     }
   }
 
-  /// Ustawienie PIN-u (hash + flaga lokalnej blokady)
-  Future<void> setPin(String pin) async {
-    logger.d('SecurityService: Ustawianie PIN przez PinService...');
-    await pinService.setPin(pin);
-
-    isPinConfigured = true;
-    hasLocalLock = true;
-
-    await secureStorage.write(key: StorageKeys.localLockEnabled, value: 'true');
-
-    final storedHash = await secureStorage.read(key: StorageKeys.pinHash);
-    logger.i('🔑 PIN zapisany jako hash: ${storedHash?.substring(0, 12)}...');
-    logger.i('SecurityService: Blokada lokalna aktywowana ✅');
-  }
-
-  Future<void> completeSetup() async {
-    logger.i('SecurityService: Setup zakończony');
-    skipSetup = true;
-
-    await secureStorage.write(key: StorageKeys.setupCompleted, value: 'true');
-  }
-
-  // setter po kliknięciu „Pomiń”
-  void skipPinSetup() {
-    skipSetup = true;
-    logger.w('⚠️ Użytkownik pominął konfigurację bezpieczeństwa');
-  }
-
-  /// Sprawdzenie lokalnych ustawień blokady i PIN-u
-  Future<void> _checkLocalLockSettings() async {
+  Future<_LocalLockResult> _checkLocalLockSettings() async {
     try {
-      hasLocalLock = await _readBool(StorageKeys.localLockEnabled);
-      isPinConfigured = await pinService.hasPin();
-
+      final hasLocalLock = await _readBool(StorageKeys.localLockEnabled);
+      final isPinConfigured = await pinService.hasPin();
       logger.i(
-        'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, isPinConfigured=$isPinConfigured',
+        'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, '
+        'isPinConfigured=$isPinConfigured',
       );
+      return _LocalLockResult(hasLocalLock, isPinConfigured);
     } catch (e, st) {
       logger.e(
-        'SecurityService: Błąd podczas sprawdzania lokalnych ustawień',
+        'Błąd podczas sprawdzania lokalnych ustawień',
         error: e,
         stackTrace: st,
       );
-      hasLocalLock = false;
-      isPinConfigured = false;
+      return _LocalLockResult(false, false);
     }
   }
 
-  /// Sprawdzenie ustawień biometrii i dostępności na urządzeniu
-  Future<void> _checkBiometricSettings() async {
+  Future<_BiometricResult> _checkBiometricSettings() async {
     try {
-      isBiometricEnabled = await _readBool('biometric');
-
-      isBiometricAvailable = await localAuth.isDeviceSupported();
-      final availableBiometrics = await localAuth.getAvailableBiometrics();
-      canUseBiometrics = availableBiometrics.isNotEmpty;
+      final isBiometricEnabled = await _readBool(StorageKeys.biometric);
+      final isBiometricAvailable = await localAuth.isDeviceSupported();
+      final available = await localAuth.getAvailableBiometrics();
+      final canUseBiometrics = available.isNotEmpty;
 
       logger.i(
         'Biometria: isBiometricEnabled=$isBiometricEnabled, '
         'isBiometricAvailable=$isBiometricAvailable, '
         'canUseBiometrics=$canUseBiometrics',
       );
+
+      return _BiometricResult(
+        isBiometricEnabled: isBiometricEnabled,
+        canUseBiometrics: canUseBiometrics,
+      );
     } catch (e, st) {
       logger.e('Błąd biometrii', error: e, stackTrace: st);
-      isBiometricAvailable = false;
-      canUseBiometrics = false;
+      return _BiometricResult(
+        isBiometricEnabled: false,
+        canUseBiometrics: false,
+      );
     }
   }
 
-  /// Pomocnicza funkcja do odczytu bool z SecureStorage
   Future<bool> _readBool(String key) async {
     try {
       final value = await secureStorage.read(key: key);
-      final result = value == 'true';
-      // logger.d('Odczytano bool z SecureStorage: $key=$result');
-      return result;
+      return value == 'true';
     } catch (e, st) {
       logger.e(
         'Błąd odczytu bool z SecureStorage: $key',
@@ -139,34 +172,48 @@ class SecurityService {
     }
   }
 
-  /// Czy należy pokazać ekran blokady (PIN / biometryczne)
-  bool get shouldShowLock {
-    if (skipSetup) return false;
-    if (!isPinConfigured) return false;
-    return hasLocalLock;
+  Future<void> setPin(String pin) async {
+    logger.d('Ustawianie PIN...');
+    await pinService.setPin(pin);
+    await secureStorage.write(key: StorageKeys.localLockEnabled, value: 'true');
+
+    state = state.copyWith(hasLocalLock: true, isPinConfigured: true);
   }
 
-  /// Próba autoryzacji biometrycznej
-  Future<bool> tryBiometricAuth() async {
-    if (!isBiometricEnabled || !canUseBiometrics) {
-      logger.w(
-        'Próba autoryzacji biometrycznej niemożliwa: warunki niespełnione',
-      );
-      return false;
-    }
+  Future<void> completeSetup() async {
+    await secureStorage.write(key: StorageKeys.setupCompleted, value: 'true');
+    state = state.copyWith(skipSetup: true);
+    logger.i('Setup zakończony');
+  }
 
+  void skipPinSetup() {
+    state = state.copyWith(skipSetup: true);
+    logger.w('Użytkownik pominął konfigurację bezpieczeństwa');
+  }
+
+  Future<void> unlockApp() async {
+    state = state.copyWith(
+      hasLocalLock: false,
+      skipSetup: true,
+    );
+    logger.i('🔓 Aplikacja odblokowana');
+  }
+
+  Future<void> lockApp() async {
+    state = state.copyWith(hasLocalLock: true);
+    logger.i('🔒 Aplikacja zablokowana');
+  }
+
+  Future<bool> tryBiometricAuth() async {
+    if (!state.isBiometricEnabled || !state.canUseBiometrics) return false;
     try {
       final canCheck = await localAuth.canCheckBiometrics;
-      if (!canCheck) {
-        logger.w('Urządzenie nie pozwala na sprawdzenie biometrii');
-        return false;
-      }
+      if (!canCheck) return false;
 
       final success = await localAuth.authenticate(
         localizedReason: 'Odblokuj aplikację za pomocą biometrii',
         biometricOnly: true,
       );
-
       logger.i('Autoryzacja biometryczna zakończona: success=$success');
       return success;
     } catch (e, st) {
@@ -178,4 +225,21 @@ class SecurityService {
       return false;
     }
   }
+}
+
+/// Wynik lokalnego PIN/lock
+class _LocalLockResult {
+  final bool hasLocalLock;
+  final bool isPinConfigured;
+  _LocalLockResult(this.hasLocalLock, this.isPinConfigured);
+}
+
+/// Wynik ustawień biometrii
+class _BiometricResult {
+  final bool isBiometricEnabled;
+  final bool canUseBiometrics;
+  _BiometricResult({
+    required this.isBiometricEnabled,
+    required this.canUseBiometrics,
+  });
 }

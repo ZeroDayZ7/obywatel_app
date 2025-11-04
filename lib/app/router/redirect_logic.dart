@@ -6,18 +6,19 @@ import 'package:obywatel_plus/core/core_providers.dart';
 
 String? appRedirectLogic(Ref ref, GoRouterState state) {
   final logger = ref.read(appLoggerProvider);
-  final securityService = ref.read(securityServiceProvider);
+  final securityState = ref.watch(securityServiceProvider); // obserwowany stan
 
   final path = state.uri.path;
-  final isLoggedIn = securityService.hasSession;
-  final shouldShowLock = securityService.shouldShowLock;
-  final skipSetup = securityService.skipSetup;
+  final isLoggedIn = securityState.hasSession;
+  final shouldShowLock = securityState.shouldShowLock;
+  final skipSetup = securityState.skipSetup;
+  final initialized = securityState.initialized;
 
   final goingToLogin = path == AppRoutes.login;
   final goingToPin = path == AppRoutes.pin;
   final goingToSetup = path == AppRoutes.securitySetup;
 
-  if (!securityService.initialized) {
+  if (!initialized) {
     logger.w('⏳ SecurityService nie zainicjalizowany — brak redirectu');
     return null;
   }

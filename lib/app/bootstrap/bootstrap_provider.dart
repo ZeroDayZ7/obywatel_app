@@ -16,14 +16,14 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
 
     // 🔹 Opcjonalne wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
-      await storage.clearAll(); // odkomentuj jeśli chcesz wyczyścić w debug
+      // await storage.clearAll(); // odkomentuj jeśli chcesz wyczyścić w debug
       await storage.debugPrintAll();
     }
 
     logger.i('🔒 SecureStorage gotowy');
 
     // 2️⃣ Inicjalizacja SecurityService
-    final securityService = ref.read(securityServiceProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
     await securityService.init();
     logger.i('🛡️ SecurityService gotowy');
 

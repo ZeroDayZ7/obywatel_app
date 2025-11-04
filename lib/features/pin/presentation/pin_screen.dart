@@ -1,50 +1,84 @@
+// lib/features/security/pin_verification_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:obywatel_plus/core/core_providers.dart';
 
-class SimplePinScreen extends StatefulWidget {
-  const SimplePinScreen({super.key});
+class PinVerificationScreen extends ConsumerStatefulWidget {
+  const PinVerificationScreen({super.key});
 
   @override
-  State<SimplePinScreen> createState() => _SimplePinScreenState();
+  ConsumerState<PinVerificationScreen> createState() =>
+      _PinVerificationScreenState();
 }
 
-class _SimplePinScreenState extends State<SimplePinScreen> {
-  final _storage = const FlutterSecureStorage();
+class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen> {
   final _pinController = TextEditingController();
-  String _savedPin = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPin();
-  }
-
-  Future<void> _loadPin() async {
-    final pin = await _storage.read(key: 'pin') ?? '';
-    setState(() => _savedPin = pin);
-  }
+  bool _error = false;
+  bool _loading = false;
 
   Future<void> _verifyPin() async {
-    if (_savedPin.isEmpty) {
-      await _storage.write(key: 'pin', value: _pinController.text);
+    final pin = _pinController.text.trim();
+    if (pin.isEmpty) return;
+
+    setState(() {
+      _loading = true;
+      _error = false;
+    });
+
+    final pinService = ref.read(pinServiceProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
+    final logger = ref.read(appLoggerProvider);
+
+    try {
+      setState(() => _loading = true);
+
+      final isValid = await pinService.verifyPin(pin);
+      logger.i('🔐 Weryfikacja PIN: wynik=$isValid');
+
+      if (!mounted) return; // 🧠 kluczowy moment — ochrona po await
+
+      if (isValid) {
+        await securityService.unlockApp();
+
+        if (!mounted) return; // 🔒 kolejny bezpiecznik po kolejnym await
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Poprawny PIN — aplikacja odblokowana'),
+          ),
+        );
+      } else {
+        setState(() => _error = true);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('❌ Błędny PIN! Spróbuj ponownie.')),
+        );
+      }
+    } catch (e, s) {
+      ref
+          .read(appLoggerProvider)
+          .e('Błąd podczas weryfikacji PIN', error: e, stackTrace: s);
+
+      if (!mounted) {
+        return;
+      }
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('PIN ustawiony!')));
-    } else if (_pinController.text == _savedPin) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('✅ Poprawny PIN!')));
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('❌ Błędny PIN!')));
+      ).showSnackBar(SnackBar(content: Text('⚠️ Błąd: ${e.toString()}')));
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+        _pinController.clear();
+      }
     }
-    _pinController.clear();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isBusy = _loading;
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: Center(
@@ -74,25 +108,27 @@ class _SimplePinScreenState extends State<SimplePinScreen> {
                   borderRadius: BorderRadius.circular(8),
                   fieldHeight: 60,
                   fieldWidth: 50,
-                  inactiveColor: Colors.white24,
+                  inactiveColor: _error ? Colors.redAccent : Colors.white24,
                   activeColor: Colors.white,
                   selectedColor: Colors.blueAccent,
                 ),
                 textStyle: const TextStyle(color: Colors.white, fontSize: 20),
-                onChanged: (_) {},
+                onChanged: (_) => setState(() => _error = false),
               ),
               const SizedBox(height: 30),
               ElevatedButton(
-                onPressed: _verifyPin,
+                onPressed: isBusy ? null : _verifyPin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
                   minimumSize: const Size(double.infinity, 50),
                 ),
-                child: const Text(
-                  'ZATWIERDŹ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: isBusy
+                    ? const CircularProgressIndicator(color: Colors.black)
+                    : const Text(
+                        'ZATWIERDŹ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
               ),
             ],
           ),

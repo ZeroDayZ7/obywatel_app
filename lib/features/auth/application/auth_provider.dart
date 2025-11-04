@@ -20,32 +20,30 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   @override
   Future<AuthState> build() async {
     final logger = ref.watch(appLoggerProvider);
-    final securityService = ref.watch(securityServiceProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
 
     logger.i('AuthNotifier: Ładowanie stanu...');
     await securityService.init();
 
-    final isLoggedIn = securityService.hasSession;
+    // Teraz dostęp do hasSession przez state
+    final isLoggedIn = securityService.state.hasSession;
     logger.i('AuthNotifier: Załadowano stan, isLoggedIn=$isLoggedIn');
 
     return AuthState(isLoggedIn: isLoggedIn);
   }
 
-  /// Zaloguj użytkownika (po udanym uwierzytelnieniu i zapisaniu tokenu)
   Future<void> login() async {
     state = const AsyncValue.loading();
     final logger = ref.read(appLoggerProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
 
     try {
-      final securityService = ref.read(securityServiceProvider);
+      // Zapisywanie tokenu w secureStorage jeśli potrzebne
+      // await securityService.secureStorage.write(...);
 
-      // Jeśli używasz tokenów – zapisz token w secureStorage
-      // await securityService.secureStorage.write(
-      //   key: StorageKeys.accessToken,
-      //   value: token,
-      // );
+      // Aktualizacja stanu SecurityState zamiast pola
+      securityService.state = securityService.state.copyWith(hasSession: true);
 
-      securityService.hasSession = true;
       state = AsyncValue.data(AuthState(isLoggedIn: true));
       logger.i('✅ Użytkownik zalogowany');
     } catch (e, st) {
@@ -54,15 +52,16 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
   }
 
-  /// Wyloguj użytkownika i wyczyść dane sesji
   Future<void> logout() async {
     state = const AsyncValue.loading();
     final logger = ref.read(appLoggerProvider);
+    final securityService = ref.read(securityServiceProvider.notifier);
 
     try {
-      final securityService = ref.read(securityServiceProvider);
       await securityService.secureStorage.delete(key: StorageKeys.accessToken);
-      securityService.hasSession = false;
+
+      // Aktualizacja stanu SecurityState
+      securityService.state = securityService.state.copyWith(hasSession: false);
 
       state = AsyncValue.data(AuthState(isLoggedIn: false));
       logger.i('🚪 Użytkownik wylogowany');
@@ -72,7 +71,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
   }
 
-  /// Pomocniczy getter — czy użytkownik jest zalogowany
   bool get isLoggedIn => state.value?.isLoggedIn ?? false;
 }
 

@@ -70,7 +70,7 @@ class HashService {
 
     try {
       final decoded = base64Decode(storedHash);
-      if (decoded.length < 48) {
+      if (decoded.length < 32) {
         _logger.w(
           'HashService: Invalid stored hash (zbyt krótki: ${decoded.length} bajtów)',
         );
