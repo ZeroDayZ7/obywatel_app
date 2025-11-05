@@ -1,43 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
-import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
+import 'package:obywatel_plus/core/core_providers.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class BasicLoginWidget extends ConsumerWidget {
+  const BasicLoginWidget({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(loginStateProvider);
+    final notifier = ref.read(loginStateProvider.notifier);
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController(
-    text: apiConstants.defaultEmail,
-  );
-  final TextEditingController _passwordController = TextEditingController(
-    text: apiConstants.defaultPassword,
-  );
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _onLogin() async {
-    final authNotifier = ref.read(authProvider.notifier);
-    await authNotifier.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final loginState = ref.watch(loginStateProvider);
-    final isLoading = loginState.isLoading;
+    // Kontrolery z aktualną wartością stanu (email/password)
+    final emailController = TextEditingController(text: state.email);
+    final passwordController = TextEditingController(text: state.password);
 
     return Scaffold(
       body: SafeArea(
@@ -55,34 +30,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 30),
                 TextField(
-                  controller: _emailController,
+                  controller: emailController,
                   decoration: const InputDecoration(
                     labelText: "Email",
                     border: OutlineInputBorder(),
                   ),
+                  onChanged: notifier.setEmail,
                 ),
                 const SizedBox(height: 20),
                 TextField(
-                  controller: _passwordController,
+                  controller: passwordController,
                   obscureText: true,
                   decoration: const InputDecoration(
                     labelText: "Password",
                     border: OutlineInputBorder(),
                   ),
+                  onChanged: notifier.setPassword,
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(
-                  onPressed: isLoading ? null : _onLogin,
-                  child: isLoading
+                  onPressed: state.isLoading ? null : () => notifier.onLogin(),
+                  child: state.isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text("Login"),
                 ),
-                if (loginState.error != null)
+                if (state.error != null)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: Text(
-                      loginState.error!,
+                      state.error!,
                       style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                 const SizedBox(height: 50),

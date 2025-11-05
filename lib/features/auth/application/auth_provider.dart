@@ -48,11 +48,15 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         state = AsyncValue.data(const AuthState(isLoggedIn: true));
         logger.i('✅ Użytkownik zalogowany');
       } else {
-        throw Exception(result.error ?? 'Nieznany błąd logowania');
+        const userMessage = '❌ Błąd logowania';
+        state = AsyncValue.error(userMessage, StackTrace.current);
+        logger.e('❌ Błąd logowania: ${result.error}');
       }
     } catch (e, st) {
-      state = AsyncValue.error(e, st);
-      logger.e('❌ Błąd logowania', error: e, stackTrace: st);
+      // przechwytywanie surowych wyjątków np. DioException
+      final friendlyMessage = '❌ Błąd połączenia z serwerem';
+      state = AsyncValue.error(friendlyMessage, StackTrace.current);
+      logger.e(friendlyMessage, error: e, stackTrace: st);
     }
   }
 

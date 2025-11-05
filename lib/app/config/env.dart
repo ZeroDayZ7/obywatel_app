@@ -4,7 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'constants_dev.dart';
 const apiConstants = ApiConstants();
 
-final bool isProduction = true;
+final bool isProduction = false;
+final bool serverOnline = true;
 
 void debugPrintEnv() {
   if (kDebugMode) {

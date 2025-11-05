@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/auth/application/auth_refresh_provider.dart';
-import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
+
+// import 'package:obywatel_plus/features/auth/presentation/login_screen.dart';
+
+import 'package:obywatel_plus/features/auth/presentation/login/login_screen.dart';
+
 import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';

@@ -6,5 +6,6 @@ export 'package:obywatel_plus/core/network/api_provider.dart';
 export 'package:obywatel_plus/core/security/pin_service_provider.dart';
 export 'package:obywatel_plus/core/security/pin_attempt_limiter.dart';
 export 'package:obywatel_plus/features/auth/application/auth_service_provider.dart';
+export 'package:obywatel_plus/features/auth/application/login_provider.dart';
 
 export 'package:obywatel_plus/app/theme/theme_notifier.dart';

@@ -303,7 +303,7 @@ class CyberGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF00f0ff).withOpacity(0.05)
+      ..color = const Color(0xFF00f0ff).withValues(alpha: 0.05)
       ..strokeWidth = 1
       ..style = PaintingStyle.stroke;
 
