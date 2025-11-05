@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/security/pin_service.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
 
 /// 🔑 Stan bezpieczeństwa aplikacji
 class SecurityState {
@@ -58,12 +58,8 @@ class SecurityNotifier extends Notifier<SecurityState> {
     // Inicjalizacja zależności od razu
     logger = ref.read(appLoggerProvider);
     secureStorage = ref.read(secureStorageProvider);
-    pinService = PinService(
-      storage: secureStorage,
-      hashService: HashService(logger),
-      logger: logger,
-    );
-    localAuth = LocalAuthentication();
+    pinService = ref.read(pinServiceProvider);
+    localAuth = ref.read(localAuthProvider);
 
     // Zwrócenie początkowego stanu
     return SecurityState(

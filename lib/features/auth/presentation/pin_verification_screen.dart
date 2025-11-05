@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/widgets/ui/app_toast.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
   const PinVerificationScreen({super.key});
@@ -28,49 +29,67 @@ class _PinVerificationScreenState extends ConsumerState<PinVerificationScreen> {
 
     final pinService = ref.read(pinServiceProvider);
     final securityService = ref.read(securityServiceProvider.notifier);
+    final pinLimiter = ref.read(pinAttemptLimiterProvider.notifier);
     final logger = ref.read(appLoggerProvider);
 
     try {
-      setState(() => _loading = true);
+      // Pobieramy stan limitera po async
+      final limiterState = ref.read(pinAttemptLimiterProvider);
+
+      // jeśli zablokowany, od razu pokaż komunikat
+      if (limiterState.isLocked) {
+        if (!mounted) return;
+        final remaining = limiterState.lockUntil!.difference(DateTime.now());
+        AppToast.show(
+          context,
+          message: '❌ Zbyt wiele prób! Spróbuj za ${remaining.inSeconds}s',
+          type: ToastType.info,
+        );
+        return;
+      }
 
       final isValid = await pinService.verifyPin(pin);
       logger.i('🔐 Weryfikacja PIN: wynik=$isValid');
 
-      if (!mounted) return; // 🧠 kluczowy moment — ochrona po await
+      if (!mounted) return;
 
       if (isValid) {
+        await pinLimiter.reset(); // resetujemy licznik po poprawnym PIN
         await securityService.unlockApp();
 
-        if (!mounted) return; // 🔒 kolejny bezpiecznik po kolejnym await
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Poprawny PIN — aplikacja odblokowana'),
-          ),
+        if (!mounted) return;
+        AppToast.show(
+          context,
+          message: '✅ Poprawny PIN — aplikacja odblokowana',
+          type: ToastType.success,
         );
       } else {
+        await pinLimiter.registerFailedAttempt();
+        if (!mounted) return;
         setState(() => _error = true);
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('❌ Błędny PIN! Spróbuj ponownie.')),
+        AppToast.show(
+          context,
+          message: '❌ Błędny PIN! Spróbuj ponownie.',
+          type: ToastType.error,
         );
       }
     } catch (e, s) {
-      ref
-          .read(appLoggerProvider)
-          .e('Błąd podczas weryfikacji PIN', error: e, stackTrace: s);
+      logger.e('Błąd podczas weryfikacji PIN', error: e, stackTrace: s);
 
-      if (!mounted) {
-        return;
-      }
+      if (!mounted) return;
 
-      ScaffoldMessenger.of(
+      AppToast.show(
         context,
-      ).showSnackBar(SnackBar(content: Text('⚠️ Błąd: ${e.toString()}')));
+        message: '⚠️ Błąd: ${e.toString()}',
+        type: ToastType.error,
+      );
     } finally {
       if (mounted) {
-        setState(() => _loading = false);
-        _pinController.clear();
+        setState(() {
+          _loading = false;
+          _pinController.clear();
+        });
       }
     }
   }

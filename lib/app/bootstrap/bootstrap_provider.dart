@@ -21,15 +21,12 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       await storage.debugPrintAll();
     }
 
-    logger.i('🔒 SecureStorage gotowy');
-
     // 2️⃣ Inicjalizacja SecurityService
     final securityService = ref.read(securityServiceProvider.notifier);
-    await securityService.init();
-
     // **Inicjalizacja Auth**
     final authNotifier = ref.read(authProvider.notifier);
-    await authNotifier.init();
+    await Future.wait([securityService.init(), authNotifier.init()]);
+    logger.i('🔒 SecureStorage gotowy');
     logger.i('🔑 AuthProvider zainicjalizowany');
 
     // 3️⃣ (Opcjonalnie) migracje / wersje
