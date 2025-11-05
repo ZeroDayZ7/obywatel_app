@@ -9,7 +9,7 @@
     ".metadata": true,
     "**/.kotlin": true,
     "**/build": true,
-    // "analysis_options.yaml": true,
+    "analysis_options.yaml": true,
     "obywatel_app.iml": true,
     "ios": true,
     "linux": true,
@@ -19,6 +19,7 @@
     "test": true,
     ".gitattributes": true,
     "pubspec.lock": true,
+    "obywatel_app.code-workspace": true
     // "android": true
   },
 
@@ -46,7 +47,7 @@
     "obywatel_app.code-workspace": true,
     ".vscode": true,
     "docs": true,
-    "android": true,
+    "android": true
     // "android": true,
   }
 }
