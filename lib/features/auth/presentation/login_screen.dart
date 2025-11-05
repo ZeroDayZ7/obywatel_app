@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
-import 'package:obywatel_plus/features/auth/application/auth_service_provider.dart';
 import 'package:obywatel_plus/features/auth/state/login/login_state.dart';
-import 'package:obywatel_plus/core/core_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -29,33 +27,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _onLogin() async {
-    final loginNotifier = ref.read(loginStateProvider.notifier);
     final authNotifier = ref.read(authProvider.notifier);
-    final authService = ref.read(authServiceProvider);
-    final logger = ref.read(appLoggerProvider);
-
-    loginNotifier.setLoading(true);
-    loginNotifier.setError(null);
-
-    try {
-      final result = await authService.login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
-
-      if (result.success) {
-        await authNotifier.login();
-        logger.i('✅ User logged in successfully');
-      } else {
-        loginNotifier.setError('Login failed: ${result.error}');
-        logger.w('⚠️ Login failed: ${result.error}');
-      }
-    } catch (e, st) {
-      logger.e('❌ Unexpected login error', error: e, stackTrace: st);
-      loginNotifier.setError('Unexpected error occurred');
-    } finally {
-      loginNotifier.setLoading(false);
-    }
+    await authNotifier.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
   }
 
   @override

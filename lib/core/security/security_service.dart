@@ -1,16 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/pin_service.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/core/crypto/hash_service.dart';
 
 /// 🔑 Stan bezpieczeństwa aplikacji
 class SecurityState {
-  final bool hasSession;
   final bool hasLocalLock;
   final bool isPinConfigured;
   final bool isBiometricEnabled;
@@ -19,7 +17,6 @@ class SecurityState {
   final bool initialized;
 
   SecurityState({
-    required this.hasSession,
     required this.hasLocalLock,
     required this.isPinConfigured,
     required this.isBiometricEnabled,
@@ -29,7 +26,6 @@ class SecurityState {
   });
 
   SecurityState copyWith({
-    bool? hasSession,
     bool? hasLocalLock,
     bool? isPinConfigured,
     bool? isBiometricEnabled,
@@ -38,7 +34,6 @@ class SecurityState {
     bool? initialized,
   }) {
     return SecurityState(
-      hasSession: hasSession ?? this.hasSession,
       hasLocalLock: hasLocalLock ?? this.hasLocalLock,
       isPinConfigured: isPinConfigured ?? this.isPinConfigured,
       isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
@@ -72,7 +67,6 @@ class SecurityNotifier extends Notifier<SecurityState> {
 
     // Zwrócenie początkowego stanu
     return SecurityState(
-      hasSession: false,
       hasLocalLock: false,
       isPinConfigured: false,
       isBiometricEnabled: false,
@@ -85,12 +79,10 @@ class SecurityNotifier extends Notifier<SecurityState> {
   Future<void> init() async {
     logger.i('🚀 Inicjalizacja SecurityNotifier...');
 
-    final hasSession = await _checkSession();
     final localLock = await _checkLocalLockSettings();
     final biometric = await _checkBiometricSettings();
 
     state = state.copyWith(
-      hasSession: hasSession,
       hasLocalLock: localLock.hasLocalLock,
       isPinConfigured: localLock.isPinConfigured,
       isBiometricEnabled: biometric.isBiometricEnabled,
@@ -99,18 +91,6 @@ class SecurityNotifier extends Notifier<SecurityState> {
     );
 
     logger.i('✅ SecurityNotifier: init zakończone');
-  }
-
-  Future<bool> _checkSession() async {
-    try {
-      final token = await secureStorage.read(key: StorageKeys.accessToken);
-      final hasSession = token?.isNotEmpty ?? false;
-      logger.i('Sprawdzono sesję: hasSession=$hasSession');
-      return hasSession;
-    } catch (e, st) {
-      logger.e('Błąd podczas sprawdzania sesji', error: e, stackTrace: st);
-      return false;
-    }
   }
 
   Future<_LocalLockResult> _checkLocalLockSettings() async {
@@ -192,10 +172,7 @@ class SecurityNotifier extends Notifier<SecurityState> {
   }
 
   Future<void> unlockApp() async {
-    state = state.copyWith(
-      hasLocalLock: false,
-      skipSetup: true,
-    );
+    state = state.copyWith(hasLocalLock: false, skipSetup: true);
     logger.i('🔓 Aplikacja odblokowana');
   }
 

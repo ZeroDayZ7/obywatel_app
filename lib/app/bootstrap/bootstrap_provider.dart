@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 
 final bootstrapProvider = FutureProvider<void>((ref) async {
   final logger = ref.read(appLoggerProvider);
@@ -16,7 +17,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
 
     // 🔹 Opcjonalne wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
-      // await storage.clearAll(); // odkomentuj jeśli chcesz wyczyścić w debug
+      await storage.clearAll(); // odkomentuj jeśli chcesz wyczyścić w debug
       await storage.debugPrintAll();
     }
 
@@ -25,7 +26,11 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     // 2️⃣ Inicjalizacja SecurityService
     final securityService = ref.read(securityServiceProvider.notifier);
     await securityService.init();
-    logger.i('🛡️ SecurityService gotowy');
+
+    // **Inicjalizacja Auth**
+    final authNotifier = ref.read(authProvider.notifier);
+    await authNotifier.init();
+    logger.i('🔑 AuthProvider zainicjalizowany');
 
     // 3️⃣ (Opcjonalnie) migracje / wersje
     // final migrationService = ref.read(migrationServiceProvider);

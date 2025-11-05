@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/app.dart';
 import 'package:obywatel_plus/app/bootstrap/bootstrap_provider.dart';
+// import 'package:obywatel_plus/core/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/splash/presentation/splash_screen.dart';
 
 class AppRoot extends ConsumerWidget {
@@ -29,6 +30,13 @@ class AppRoot extends ConsumerWidget {
 
       // Kiedy inicjalizacja się powiedzie
       data: (_) => const ObywatelPlusApp(),
+      // data: (_) {
+      //   final securityState = ref.watch(securityServiceProvider);
+      //   if (!securityState.initialized) {
+      //     return const MaterialApp(home: SplashScreen());
+      //   }
+      //   return const ObywatelPlusApp();
+      // },
     );
   }
 }

@@ -69,5 +69,5 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/logo.jpg
+    - assets/images/
     - assets/icons/
