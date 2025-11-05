@@ -4,7 +4,7 @@ class AppRoutes {
   static const pin = '/pin';
   static const login = '/login';
   static const home = '/home';
-  
+  static const error = '/error';
 
   // Nowe ścieżki dla Settings
   static const settings = '/settings';
@@ -15,8 +15,7 @@ class AppRoutes {
 
   static const securitySetup = '/security_setup';
 
-  
-    // Nowe ścieżki dla HomeScreen dashboard
+  // Nowe ścieżki dla HomeScreen dashboard
   static const profile = '/profile';
   static const documents = '/documents';
   static const notifications = '/notifications';

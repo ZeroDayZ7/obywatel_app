@@ -15,25 +15,26 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     // 1️⃣ Pobranie SecureStorageService z providera
     final storage = ref.read(secureStorageProvider);
 
-    // 🔹 Opcjonalne wyczyszczenie wszystkiego (tylko w debugu/testach)
+    // 🔹 Wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
-      await storage.clearAll(); // odkomentuj jeśli chcesz wyczyścić w debug
       await storage.debugPrintAll();
+      await storage.clearAll();
     }
 
-    // 2️⃣ Inicjalizacja SecurityService
+    // 2️ Inicjalizacja SecurityService, Auth**
     final securityService = ref.read(securityServiceProvider.notifier);
-    // **Inicjalizacja Auth**
     final authNotifier = ref.read(authProvider.notifier);
-    await Future.wait([securityService.init(), authNotifier.init()]);
+    // 3️⃣ migracje / wersje
+    // final migrationService = ref.read(migrationServiceProvider);
+    // final versionService = ref.read(versionServiceProvider);
+    await Future.wait([
+      securityService.init(),
+      authNotifier.init(),
+      // migrationService.run(),
+      // versionService.checkForUpdates(),
+    ]);
     logger.i('🔒 SecureStorage gotowy');
     logger.i('🔑 AuthProvider zainicjalizowany');
-
-    // 3️⃣ (Opcjonalnie) migracje / wersje
-    // final migrationService = ref.read(migrationServiceProvider);
-    // await migrationService.run();
-    // final versionService = ref.read(versionServiceProvider);
-    // await versionService.checkForUpdates();
   } catch (e, st) {
     logger.e(
       '❌ Błąd podczas inicjalizacji aplikacji',

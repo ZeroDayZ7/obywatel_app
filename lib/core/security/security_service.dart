@@ -73,8 +73,6 @@ class SecurityNotifier extends Notifier<SecurityState> {
   }
 
   Future<void> init() async {
-    logger.i('🚀 Inicjalizacja SecurityNotifier...');
-
     final localLock = await _checkLocalLockSettings();
     final biometric = await _checkBiometricSettings();
 
@@ -85,8 +83,6 @@ class SecurityNotifier extends Notifier<SecurityState> {
       canUseBiometrics: biometric.canUseBiometrics,
       initialized: true,
     );
-
-    logger.i('✅ SecurityNotifier: init zakończone');
   }
 
   Future<_LocalLockResult> _checkLocalLockSettings() async {
