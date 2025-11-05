@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'constants_dev.dart';
 const apiConstants = ApiConstants();
 
+final bool isProduction = true;
+
 void debugPrintEnv() {
   if (kDebugMode) {
     debugPrint('🧩 Loaded API base URL: ${apiConstants.baseUrl}');
