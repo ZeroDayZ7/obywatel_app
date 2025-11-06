@@ -2,11 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/core/errors/error_boundary.dart' show ErrorBoundary;
+import 'package:obywatel_plus/core/errors/error_boundary.dart'
+    show ErrorBoundary;
 import 'theme/app_theme.dart';
 import 'theme/theme_notifier.dart';
 import 'router/app_router_provider.dart';
-
 
 class ObywatelPlusApp extends ConsumerWidget {
   const ObywatelPlusApp({super.key});

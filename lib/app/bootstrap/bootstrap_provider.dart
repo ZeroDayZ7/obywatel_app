@@ -18,7 +18,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     // 🔹 Wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
       await storage.debugPrintAll();
-      await storage.clearAll();
+      // await storage.clearAll();
     }
 
     // 2️ Inicjalizacja SecurityService, Auth**

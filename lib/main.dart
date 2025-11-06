@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/app_root.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   runZonedGuarded<Future<void>>(
     () async {
+      WidgetsFlutterBinding.ensureInitialized();
       runApp(const ProviderScope(child: AppRoot()));
     },
     (error, stack) {

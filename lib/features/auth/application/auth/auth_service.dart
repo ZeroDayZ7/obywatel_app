@@ -86,15 +86,19 @@ class AuthService {
       final token = await _storage.read(key: StorageKeys.accessToken);
       if (token == null || token.isEmpty) return false;
 
-      final response = await _apiClient.get(ApiEndpoints.userProfile);
+      // Zakomentowane tymczasowo: sprawdzenie tokena z API
+      // final response = await _apiClient.get(ApiEndpoints.userProfile);
+      //
+      // if (response.statusCode == 200) {
+      //   _logger.i('Token valid');
+      //   return true;
+      // }
 
-      if (response.statusCode == 200) {
-        _logger.i('Token valid');
-        return true;
-      }
-
+      _logger.i('Token found, skipping API validation for now');
       // jeśli status 401, można spróbować refresh token
-      return await _tryRefreshToken();
+      // return await _tryRefreshToken();
+
+      return true;
     } catch (e, st) {
       _logger.e('Token validation failed', error: e, stackTrace: st);
       return false;
@@ -102,6 +106,7 @@ class AuthService {
   }
 
   /// Próba odświeżenia tokena
+  // ignore: unused_element
   Future<bool> _tryRefreshToken() async {
     try {
       final refreshToken = await _storage.read(key: 'refreshToken');

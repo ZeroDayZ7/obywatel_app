@@ -81,7 +81,7 @@ CustomTransitionPage _customPage({
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
       const curve = Curves.easeInOut;
       final slideAnimation = Tween<Offset>(
-        begin: const Offset(0.1, 0), // subtelne przesunięcie z prawej
+        begin: const Offset(0.1, 0),
         end: Offset.zero,
       ).animate(CurvedAnimation(parent: animation, curve: curve));
 

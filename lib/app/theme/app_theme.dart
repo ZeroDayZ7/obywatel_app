@@ -4,6 +4,7 @@ import 'extensions/toast_theme.dart';
 
 class AppTheme {
   static final lightTheme = ThemeData(
+    useMaterial3: true,
     brightness: Brightness.light,
     primaryColor: AppColors.primary,
     scaffoldBackgroundColor: AppColors.backgroundLight,
@@ -26,6 +27,7 @@ class AppTheme {
   );
 
   static final darkTheme = ThemeData(
+    useMaterial3: true,
     brightness: Brightness.dark,
     primaryColor: AppColors.primaryDark,
     scaffoldBackgroundColor: AppColors.backgroundDark,
