@@ -1,14 +1,9 @@
-// import 'constants_dev.dart' if (dart.vm.product) 'constants_prod.dart';
-import 'package:flutter/foundation.dart';
-// import 'constants_prod.dart';
-import 'constants_dev.dart';
-const apiConstants = ApiConstants();
+import 'constants_dev.dart' if (dart.vm.product) 'constants_prod.dart';
 
-final bool isProduction = false;
+const bool isProduction = bool.fromEnvironment(
+  'dart.vm.product',
+  defaultValue: false,
+);
 final bool serverOnline = true;
 
-void debugPrintEnv() {
-  if (kDebugMode) {
-    debugPrint('🧩 Loaded API base URL: ${apiConstants.baseUrl}');
-  }
-}
+const apiConstants = ApiConstants();

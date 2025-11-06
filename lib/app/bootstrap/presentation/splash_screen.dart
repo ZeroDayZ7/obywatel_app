@@ -1,8 +1,8 @@
 // lib/features/splash/presentation/splash_screen.dart
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/config/env.dart' show isProduction;
 import 'splash_screen_basic.dart';
 import 'splash_screen_fancy.dart';
-import '../../../app/config/env.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});

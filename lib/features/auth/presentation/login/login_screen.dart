@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import './login_screen_basic.dart';
 import './login_screen_fancy.dart';
-import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/app/config/env.dart'
+    show isProduction, serverOnline;
 
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});

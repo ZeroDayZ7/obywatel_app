@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import 'extensions/toast_theme.dart';
 
 class AppTheme {
   static final lightTheme = ThemeData(
@@ -10,29 +11,32 @@ class AppTheme {
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
     ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
-    ),
     textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: AppColors.textPrimary),
-      bodyMedium: TextStyle(color: AppColors.textSecondary),
+      bodyMedium: TextStyle(color: AppColors.textPrimary),
     ),
+    extensions: [
+      ToastTheme(
+        successColor: Colors.green,
+        errorColor: AppColors.error,
+        infoColor: AppColors.accent,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ],
   );
 
   static final darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: AppColors.primaryDark,
     scaffoldBackgroundColor: AppColors.backgroundDark,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.primaryDark,
-      foregroundColor: Colors.white,
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryDark),
-    ),
-    textTheme: const TextTheme(
-      bodyLarge: TextStyle(color: Colors.white),
-      bodyMedium: TextStyle(color: Colors.white70),
-    ),
+    extensions: [
+      ToastTheme(
+        successColor: Colors.greenAccent.shade400,
+        errorColor: Colors.redAccent,
+        infoColor: Colors.blueAccent.shade200,
+        textStyle: const TextStyle(color: Colors.white, fontSize: 14),
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ],
   );
 }
