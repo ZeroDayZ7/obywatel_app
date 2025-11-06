@@ -45,7 +45,9 @@ class ErrorScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 32),
                 FilledButton.icon(
-                  onPressed: () => context.go('/home'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // zamyka ekran
+                  },
                   icon: const Icon(Icons.home_outlined),
                   label: const Text('Wróć do ekranu głównego'),
                 ),

@@ -5,6 +5,7 @@ class AppRoutes {
   static const login = '/login';
   static const home = '/home';
   static const error = '/error';
+  static const test = '/test';
 
   // Nowe ścieżki dla Settings
   static const settings = '/settings';

@@ -11,14 +11,12 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   static final _homeItems = [
-    {'icon': Icons.person, 'label': 'Profile', 'route': AppRoutes.profile},
     {'icon': Icons.folder, 'label': 'Documents', 'route': AppRoutes.documents},
     {
-      'icon': Icons.notifications,
-      'label': 'Notifications',
-      'route': AppRoutes.notifications,
-    },
-    {'icon': Icons.settings, 'label': 'Settings', 'route': AppRoutes.settings},
+      'icon': Icons.science,
+      'label': 'Test',
+      'route': AppRoutes.test,
+    }, // nowy kafel
   ];
 
   @override

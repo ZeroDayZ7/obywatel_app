@@ -9,6 +9,7 @@ import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
 import 'package:obywatel_plus/features/auth/presentation/pin_verification_screen.dart';
+import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 
@@ -33,6 +34,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.pin, const PinVerificationScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
       _goRouteWithTransition(AppRoutes.error, const ErrorScreen()),
+      _goRouteWithTransition(AppRoutes.test, const TestScreen()),
 
       // Settings
       _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
