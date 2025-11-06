@@ -55,61 +55,55 @@ class MainDrawer extends ConsumerWidget {
       }
     }
 
-    return NavigationDrawer(
-      backgroundColor: Theme.of(context).colorScheme.surface,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/logo.jpg',
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: Colors.blue),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Obywatel+',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
+                const SizedBox(height: 12),
+                const Text(
+                  'Obywatel+',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
 
-        // Elementy nawigacji
-        ...items.map(
-          (item) => NavigationDrawerDestination(
-            icon: Icon(item['icon'] as IconData),
-            label: Text(item['label'] as String),
+          for (final item in items)
+            ListTile(
+              leading: Icon(item['icon'] as IconData),
+              title: Text(item['label'] as String),
+              onTap: () {
+                context.push(item['route'] as String);
+                Navigator.pop(context);
+              },
+            ),
+
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Wyloguj'),
+            onTap: confirmLogout,
           ),
-        ),
-
-        const Divider(),
-
-        NavigationDrawerDestination(
-          icon: const Icon(Icons.logout),
-          label: const Text('Wyloguj'),
-        ),
-      ],
-      onDestinationSelected: (index) {
-        if (index < items.length) {
-          final route = items[index]['route'] as String;
-          context.push(route);
-        } else {
-          confirmLogout();
-        }
-      },
+        ],
+      ),
     );
   }
 }
