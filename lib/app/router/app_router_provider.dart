@@ -12,7 +12,7 @@ import 'package:obywatel_plus/features/auth/presentation/pin_verification_screen
 import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 
-import 'package:obywatel_plus/features/error/presentation/error_screen.dart';
+import 'package:obywatel_plus/core/errors/error_screen.dart';
 
 import 'app_routes.dart';
 import 'redirect_logic.dart';
