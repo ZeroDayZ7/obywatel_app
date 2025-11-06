@@ -2,13 +2,16 @@
 import 'constants_base.dart';
 
 class ApiConstants extends ApiConstantsBase {
+  final String baseUrl;
+  final String defaultEmail;
+  final String defaultPassword;
+  final String appName;
+  final String appDescription;
+
   const ApiConstants()
-    : super(
-        baseUrl: 'http://localhost:8081',
-        pingEndpoint: '/health',
-        defaultEmail: 'user@example.com',
-        defaultPassword: 'Zaq1@wsx',
-        appName: "Obywatel+ Dev",
-        appDescription: "Secure Citizen App Dev",
-      );
+    : baseUrl = 'http://localhost:8081',
+      defaultEmail = 'user@example.com',
+      defaultPassword = 'Zaq1@wsx',
+      appName = "Obywatel+ Dev",
+      appDescription = "Secure Citizen App Dev";
 }
