@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
@@ -8,7 +10,8 @@ import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/settings/presentation/security_setup_screen.dart';
 
 /// 🔑 Stan bezpieczeństwa aplikacji
-class SecurityState {
+@immutable
+class SecurityState extends Equatable {
   final bool hasLocalLock;
   final bool isPinConfigured;
   final bool isBiometricEnabled;
@@ -16,7 +19,7 @@ class SecurityState {
   final bool skipSetup;
   final bool initialized;
 
-  SecurityState({
+  const SecurityState({
     required this.hasLocalLock,
     required this.isPinConfigured,
     required this.isBiometricEnabled,
@@ -25,6 +28,17 @@ class SecurityState {
     required this.initialized,
   });
 
+  /// 🏁 Fabryka stanu początkowego — wygodne domyślne wartości
+  factory SecurityState.initial() => const SecurityState(
+    hasLocalLock: false,
+    isPinConfigured: false,
+    isBiometricEnabled: false,
+    canUseBiometrics: false,
+    skipSetup: false,
+    initialized: false,
+  );
+
+  /// 🔁 Kopia z modyfikacją wybranych pól
   SecurityState copyWith({
     bool? hasLocalLock,
     bool? isPinConfigured,
@@ -43,7 +57,19 @@ class SecurityState {
     );
   }
 
+  /// 💡 Pomocniczy getter
   bool get shouldShowLock => !skipSetup && isPinConfigured && hasLocalLock;
+
+  /// 📦 Equatable używa tej listy do automatycznego porównywania
+  @override
+  List<Object?> get props => [
+    hasLocalLock,
+    isPinConfigured,
+    isBiometricEnabled,
+    canUseBiometrics,
+    skipSetup,
+    initialized,
+  ];
 }
 
 /// 🔐 Notifier bezpieczeństwa
@@ -61,15 +87,7 @@ class SecurityNotifier extends Notifier<SecurityState> {
     pinService = ref.read(pinServiceProvider);
     localAuth = ref.read(localAuthProvider);
 
-    // Zwrócenie początkowego stanu
-    return SecurityState(
-      hasLocalLock: false,
-      isPinConfigured: false,
-      isBiometricEnabled: false,
-      canUseBiometrics: false,
-      skipSetup: false,
-      initialized: false,
-    );
+    return SecurityState.initial();
   }
 
   Future<void> init() async {

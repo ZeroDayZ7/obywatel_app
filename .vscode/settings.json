@@ -19,7 +19,9 @@
     "test": true,
     ".gitattributes": true,
     "pubspec.lock": true,
-    "obywatel_app.code-workspace": true
+    "obywatel_app.code-workspace": true,
+    "LICENSE": true,
+    "devtools_options.yaml": true
     // "android": true
   },
 
@@ -47,7 +49,9 @@
     "obywatel_app.code-workspace": true,
     ".vscode": true,
     "docs": true,
-    "android": true
+    "android": true,
+    "LICENSE": true,
+    "devtools_options.yaml": true
     // "android": true,
   }
 }

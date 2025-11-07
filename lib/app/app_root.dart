@@ -44,6 +44,7 @@ class AppRoot extends ConsumerWidget {
         error: (error, stackTrace) => _buildErrorApp(
           key: const ValueKey('bootstrap_error'),
           error: error.toString(),
+          ref: ref,
         ),
 
         // Success state: Main app with unique key.
@@ -66,7 +67,11 @@ class AppRoot extends ConsumerWidget {
 
   /// Builds a standalone MaterialApp for errors.
   /// Displays error with retry option (professional: user can act).
-  static Widget _buildErrorApp({required Key key, required String error}) {
+  Widget _buildErrorApp({
+    required Key key,
+    required String error,
+    required WidgetRef ref,
+  }) {
     return MaterialApp(
       key: key,
       debugShowCheckedModeBanner: false,
@@ -86,7 +91,6 @@ class AppRoot extends ConsumerWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-
                 const SizedBox(height: 8),
                 Text(
                   error,
@@ -96,9 +100,7 @@ class AppRoot extends ConsumerWidget {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    // Professional: Retry bootstrap (requires Consumer context, but simulate restart).
-                    // In full impl: Use ref.invalidate(bootstrapProvider) if in Consumer.
-                    // For now, placeholder – restart app or retry init.
+                    ref.invalidate(bootstrapProvider);
                   },
                   child: const Text('Spróbuj ponownie'),
                 ),
