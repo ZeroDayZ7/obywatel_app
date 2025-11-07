@@ -7,4 +7,6 @@ class StorageKeys {
   static const biometric = 'biometric';
   static const setupCompleted = 'setup_completed';
   static const localLockEnabled = 'local_lock_enabled';
+  static const isPinConfigured = 'isPinConfigured';
+  static const isBiometricConfigured = 'isBiometricConfigured';
 }

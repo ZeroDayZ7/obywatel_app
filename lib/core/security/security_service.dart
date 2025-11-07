@@ -91,6 +91,22 @@ class SecurityNotifier extends Notifier<SecurityState> {
   }
 
   Future<void> init() async {
+    final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+    final isLocalLockEnabled =
+        sharedPrefs.readBool(StorageKeys.localLockEnabled) ?? false;
+
+    if (isLocalLockEnabled) {
+      // Jeśli ustawiono PIN — pomijamy biometrię
+      state = state.copyWith(
+        hasLocalLock: true,
+        isPinConfigured: true,
+        initialized: true,
+      );
+      logger.d('🔐 PIN aktywny – pomijam inicjalizację biometrii.');
+      return;
+    }
+
+    // Jeśli nie ustawiono PIN-u, sprawdzamy pełne ustawienia
     final localLock = await _checkLocalLockSettings();
     final biometric = await _checkBiometricSettings();
 
@@ -105,26 +121,39 @@ class SecurityNotifier extends Notifier<SecurityState> {
 
   Future<_LocalLockResult> _checkLocalLockSettings() async {
     try {
-      final hasLocalLock = await _readBool(StorageKeys.localLockEnabled);
-      final isPinConfigured = await pinService.hasPin();
-      logger.i(
-        'Sprawdzono lokalne ustawienia: hasLocalLock=$hasLocalLock, '
-        'isPinConfigured=$isPinConfigured',
+      // Get SharedPreferences instance
+      final sharedPrefs = await ref.read(
+        sharedPreferencesServiceProvider.future,
       );
+
+      // Read flags directly as bool
+      final isPinConfigured =
+          sharedPrefs.readBool(StorageKeys.isPinConfigured) ?? false;
+      final isBiometricConfigured =
+          sharedPrefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
+
+      // Determine if any local lock is active
+      final hasLocalLock = isPinConfigured || isBiometricConfigured;
+
+      logger.i(
+        'Checked local settings: hasLocalLock=$hasLocalLock, '
+        'isPinConfigured=$isPinConfigured, isBiometricConfigured=$isBiometricConfigured',
+      );
+
       return _LocalLockResult(hasLocalLock, isPinConfigured);
     } catch (e, st) {
-      logger.e(
-        'Błąd podczas sprawdzania lokalnych ustawień',
-        error: e,
-        stackTrace: st,
-      );
+      logger.e('Error checking local settings', error: e, stackTrace: st);
       return _LocalLockResult(false, false);
     }
   }
 
   Future<_BiometricResult> _checkBiometricSettings() async {
     try {
-      final isBiometricEnabled = await _readBool(StorageKeys.biometric);
+      final sharedPrefs = await ref.read(
+        sharedPreferencesServiceProvider.future,
+      );
+      final isBiometricEnabled =
+          sharedPrefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
       final isBiometricAvailable = await localAuth.isDeviceSupported();
       final available = await localAuth.getAvailableBiometrics();
       final canUseBiometrics = available.isNotEmpty;
@@ -148,30 +177,19 @@ class SecurityNotifier extends Notifier<SecurityState> {
     }
   }
 
-  Future<bool> _readBool(String key) async {
-    try {
-      final value = await secureStorage.read(key: key);
-      return value == 'true';
-    } catch (e, st) {
-      logger.e(
-        'Błąd odczytu bool z SecureStorage: $key',
-        error: e,
-        stackTrace: st,
-      );
-      return false;
-    }
-  }
-
   Future<void> setPin(String pin) async {
     logger.d('Ustawianie PIN...');
     await pinService.setPin(pin);
-    await secureStorage.write(key: StorageKeys.localLockEnabled, value: 'true');
 
+    final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+    await sharedPrefs.writeBool(StorageKeys.localLockEnabled, true);
+    await sharedPrefs.writeBool(StorageKeys.isPinConfigured, true);
     state = state.copyWith(hasLocalLock: true, isPinConfigured: true);
   }
 
   Future<void> completeSetup() async {
-    await secureStorage.write(key: StorageKeys.setupCompleted, value: 'true');
+    final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+    await sharedPrefs.write(StorageKeys.setupCompleted, 'true');
     state = state.copyWith(skipSetup: true);
     logger.i('Setup zakończony');
   }

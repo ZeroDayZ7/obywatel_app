@@ -12,13 +12,17 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   logger.i('🚀 Inicjalizacja aplikacji startuje...');
 
   try {
-    // 1️⃣ Pobranie SecureStorageService z providera
-    final storage = ref.read(secureStorageProvider);
-
     // 🔹 Wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
+      final storage = ref.read(secureStorageProvider);
+      final sharedPrefs = await ref.read(
+        sharedPreferencesServiceProvider.future,
+      );
       await storage.debugPrintAll();
+      await sharedPrefs.debugPrintAll();
+
       // await storage.clearAll();
+      // await sharedPrefs.clearAll();
     }
 
     // 2️ Inicjalizacja SecurityService, Auth**
