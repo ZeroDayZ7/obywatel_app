@@ -21,7 +21,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
-      // await storage.clearAll();
+      // await storage.clearAll(); 
       // await sharedPrefs.clearAll();
     }
 

@@ -15,12 +15,12 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   final shouldShowLock = securityState.shouldShowLock;
   final skipSetup = securityState.skipSetup;
   final initialized = securityState.initialized;
+  // final isSetupInProgress = securityState.isSetupInProgress;
 
   final goingToLogin = path == AppRoutes.login;
   final goingToPin = path == AppRoutes.pin;
   final goingToSetup = path == AppRoutes.securitySetup;
 
-  // Logger wszystkich istotnych wartości
   logger.d(
     '📌 appRedirectLogic: path=$path, isLoggedIn=$isLoggedIn, '
     'shouldShowLock=$shouldShowLock, skipSetup=$skipSetup, initialized=$initialized, '
@@ -28,7 +28,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   );
 
   if (!initialized) {
-    logger.w('⏳ SecurityService nie zainicjalizowany — brak redirectu');
+    logger.w('⏳ Security nie gotowy lub setup w toku — brak redirectu');
     return null;
   }
 
@@ -36,24 +36,22 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
 
   if (!isLoggedIn && !goingToLogin) {
     redirect = AppRoutes.login;
-    logger.i('🚫 Redirect do login, użytkownik niezalogowany');
-  } else if (isLoggedIn && !shouldShowLock && !skipSetup && !goingToSetup) {
+    logger.i('🚫 Redirect do login');
+  } else if (isLoggedIn && !skipSetup && !goingToSetup) {
     redirect = AppRoutes.securitySetup;
-    logger.i('🔐 Redirect do Security Setup — brak ustawionego PIN/biometrii');
+    logger.i('🔐 Redirect do Security Setup');
   } else if (isLoggedIn && shouldShowLock && !goingToPin) {
     redirect = AppRoutes.pin;
-    logger.i('🔒 Redirect do ekranu PIN — wymagana blokada');
+    logger.i('🔒 Redirect do PIN verification');
   } else if (isLoggedIn && goingToLogin) {
     redirect = AppRoutes.home;
-    logger.i(
-      '🏠 Zalogowany użytkownik próbuje wejść na login — redirect do home',
-    );
+    logger.i('🏠 Zalogowany na login — do home');
   }
 
   if (redirect == null) {
-    logger.d('✅ Brak potrzeby redirectu — zostajemy na $path');
+    logger.d('✅ Zostajemy na $path');
   } else {
-    logger.d('➡️ redirect ustawiony na: $redirect');
+    logger.d('➡️ Redirect: $redirect');
   }
 
   return redirect;

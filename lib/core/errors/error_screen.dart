@@ -16,9 +16,9 @@ class ErrorScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -46,7 +46,7 @@ class ErrorScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 FilledButton.icon(
                   onPressed: () {
-                    Navigator.of(context).pop(); // zamyka ekran
+                    Navigator.of(context).pop();
                   },
                   icon: const Icon(Icons.home_outlined),
                   label: const Text('Wróć do ekranu głównego'),

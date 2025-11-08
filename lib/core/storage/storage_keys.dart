@@ -12,6 +12,4 @@ class StorageKeys {
 
   static const pinAttempts = 'pin_attempts';
   static const pinLockUntil = 'pin_lock_until';
-
-
 }

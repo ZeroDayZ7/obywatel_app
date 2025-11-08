@@ -10,10 +10,13 @@ class AppToast {
     BuildContext? context, {
     required String message,
     ToastType type = ToastType.info,
-    Duration duration = const Duration(seconds: 3),
+    Duration duration = const Duration(seconds: 4),
   }) {
     final ctx = context ?? rootNavigatorKey.currentContext;
     if (ctx == null) return;
+
+    // Usuń istniejące snackbary przed pokazaniem nowego
+    ScaffoldMessenger.of(ctx).hideCurrentSnackBar();
 
     final theme = Theme.of(ctx);
     final toastTheme = theme.extension<ToastTheme>()!;
@@ -57,7 +60,7 @@ class AppToast {
   static void showGlobal(
     String message, {
     ToastType type = ToastType.info,
-    Duration duration = const Duration(seconds: 3),
+    Duration duration = const Duration(seconds: 4),
   }) {
     show(null, message: message, type: type, duration: duration);
   }
