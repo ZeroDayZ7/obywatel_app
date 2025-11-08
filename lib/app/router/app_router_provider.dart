@@ -33,12 +33,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
       _goRouteWithTransition(AppRoutes.pin, const PinVerificationScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
-      _goRouteWithTransition(AppRoutes.error, const ErrorScreen()),
       _goRouteWithTransition(AppRoutes.test, const TestScreen()),
-
-      // Settings
       _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
-
       _goRouteWithTransition(
         AppRoutes.securitySetup,
         const SecuritySetupScreen(),
@@ -50,9 +46,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         const NotificationsScreen(),
       ),
     ],
+
+    /// GLOBALNY fallback błędu routingu
+    errorBuilder: (context, state) {
+      debugPrint('⚠️ GoRouter error: ${state.error}');
+      return ErrorScreen(state: state);
+    },
+
+    /// Obsługa przekierowań np. login / logout
     redirect: (context, state) => appRedirectLogic(ref, state),
   );
 });
+
 // Funkcja pomocnicza dla routingu z animacją
 GoRoute _goRouteWithTransition(String path, Widget screen) {
   return GoRoute(

@@ -2,35 +2,48 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart'; // for kDebugMode
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
+/// A service for securely hashing and verifying passwords using Argon2id.
+/// Automatically adjusts parameters depending on whether the app runs
+/// in debug or production mode.
 class HashService {
   final AppLogger _logger;
   final Argon2id _argon2;
   final Random _random;
 
   HashService(this._logger)
-    : _argon2 = Argon2id(
-        memory: 8 * 1024, // 8 MiB → 8 razy mniej pamięci
-        parallelism: 1, // jeden wątek wystarczy
-        iterations: 1, // jedna iteracja
-        hashLength: 16, // hash krótszy, nadal bezpieczny lokalnie
-      ),
+    : _argon2 = kDebugMode
+          ? Argon2id(
+              memory: 4 * 1024, // 4 MiB memory (weak for dev)
+              parallelism: 1,
+              iterations: 1, // super fast for local testing
+              hashLength: 16,
+            )
+          : Argon2id(
+              memory: 64 * 1024, // 64 MiB for production
+              parallelism: 4,
+              iterations: 3, // strong and resistant to brute force
+              hashLength: 32,
+            ),
       _random = Random.secure();
 
+  /// Generates a cryptographically secure random salt.
   List<int> _generateSalt([int length = 16]) =>
       List<int>.generate(length, (_) => _random.nextInt(256));
 
-  /// Hashuje hasło: generuje salt, derivuje key, zwraca base64(salt + hash)
-  /// Loguje entry i ewentualne błędy
+  /// Hashes a password using Argon2id and returns Base64(salt + hash).
+  ///
+  /// Logs progress and errors. Throws [ArgumentError] if password is empty.
   Future<String> hash(String password) async {
     _logger.d(
-      'HashService: Rozpoczynam hashowanie hasła (długość: ${password.length})',
+      'HashService: Starting password hashing (length: ${password.length})',
     );
 
     if (password.isEmpty) {
-      _logger.e('HashService: Próba hashowania pustego hasła!');
-      throw ArgumentError('Hasło nie może być puste!');
+      _logger.e('HashService: Attempted to hash an empty password!');
+      throw ArgumentError('Password cannot be empty!');
     }
 
     try {
@@ -39,40 +52,44 @@ class HashService {
         password: password,
         nonce: salt,
       );
+
       final hashBytes = await secretKey.extractBytes();
-      final result = base64Encode([...salt, ...hashBytes]);
+      final combined = [...salt, ...hashBytes];
+      final result = base64Encode(combined);
 
       _logger.i(
-        'HashService: Hash wygenerowany pomyślnie (długość: ${result.length})',
+        'HashService: Hash generated successfully (length: ${result.length}, mode: ${kDebugMode ? 'debug' : 'production'})',
       );
+
       return result;
     } catch (e, s) {
-      _logger.e(
-        'HashService: Błąd podczas hashowania',
-        error: e,
-        stackTrace: s,
-      );
-      rethrow; // Przekaż error wyżej (np. do UI)
+      _logger.e('HashService: Error during hashing', error: e, stackTrace: s);
+      rethrow;
     }
   }
 
-  /// Weryfikuje hasło: re-derivuje i porównuje z stored
-  /// Loguje entry, warnings i błędy
+  /// Verifies whether a given password matches the stored Base64 hash.
+  ///
+  /// Returns `true` if valid, `false` otherwise. Logs all outcomes.
   Future<bool> verify(String password, String storedHash) async {
     _logger.d(
-      'HashService: Rozpoczynam weryfikację hasła (stored hash długość: ${storedHash.length})',
+      'HashService: Starting password verification (stored hash length: ${storedHash.length})',
     );
 
     if (password.isEmpty || storedHash.isEmpty) {
-      _logger.w('HashService: Puste hasło lub stored hash – odmowa');
+      _logger.w('HashService: Empty password or stored hash – denied');
       return false;
     }
 
     try {
       final decoded = base64Decode(storedHash);
-      if (decoded.length < 32) {
+      final expectedLength = kDebugMode ? 16 + 16 : 16 + 32;
+      // 16 bytes salt + 16 bytes hash (dev)
+      // 16 bytes salt + 32 bytes hash (prod)
+
+      if (decoded.length < expectedLength) {
         _logger.w(
-          'HashService: Invalid stored hash (zbyt krótki: ${decoded.length} bajtów)',
+          'HashService: Invalid stored hash (too short: ${decoded.length} bytes, expected: $expectedLength)',
         );
         return false;
       }
@@ -87,10 +104,15 @@ class HashService {
       final newHash = await secretKey.extractBytes();
 
       final isValid = const ListEquality().equals(newHash, originalHash);
-      _logger.i('HashService: Weryfikacja zakończona (wynik: $isValid)');
+      _logger.i('HashService: Password verification result: $isValid');
+
       return isValid;
     } catch (e, s) {
-      _logger.e('HashService: Błąd verify()', error: e, stackTrace: s);
+      _logger.e(
+        'HashService: Error during verification',
+        error: e,
+        stackTrace: s,
+      );
       return false;
     }
   }

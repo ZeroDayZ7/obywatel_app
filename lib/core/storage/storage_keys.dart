@@ -9,4 +9,9 @@ class StorageKeys {
   static const localLockEnabled = 'local_lock_enabled';
   static const isPinConfigured = 'isPinConfigured';
   static const isBiometricConfigured = 'isBiometricConfigured';
+
+  static const pinAttempts = 'pin_attempts';
+  static const pinLockUntil = 'pin_lock_until';
+
+
 }

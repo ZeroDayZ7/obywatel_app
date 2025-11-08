@@ -4,6 +4,10 @@ const bool isProduction = bool.fromEnvironment(
   'dart.vm.product',
   defaultValue: false,
 );
+
+// import 'constants_dev.dart'
+// import 'constants_prod.dart'
+
 final bool serverOnline = true;
 
 const apiConstants = ApiConstants();

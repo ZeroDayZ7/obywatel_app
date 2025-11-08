@@ -6,36 +6,44 @@ import 'package:obywatel_plus/app/app_root.dart';
 import 'package:obywatel_plus/app/bootstrap/app_observer.dart';
 
 void main() async {
-  BindingBase.debugZoneErrorsAreFatal = true;
+  /// 1️⃣ Konfiguracja globalnego wyświetlania błędów UI (ErrorWidget)
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    if (kDebugMode) {
+      // W debug mode pokazuj szczegóły błędu na ekranie
+      return ErrorWidget(details.exception);
+    }
+    // W produkcji — estetyczny placeholder zamiast crasha
+    return const Scaffold(
+      body: Center(
+        child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16)),
+      ),
+    );
+  };
 
-  /// Główna strefa bezpieczeństwa
-  runZonedGuarded<Future<void>>(
-    () async {
-      WidgetsFlutterBinding.ensureInitialized();
-      final observer = AppObserver();
-      runApp(
-        ProviderScope(
-          observers: kDebugMode ? [observer] : [],
-          child: const AppRoot(),
-        ),
-      );
-    },
-    (error, stack) {
-      _handleGlobalError(error, stack);
-    },
-  );
-
-  /// Błędy frameworka (build, render, widgety)
+  /// 2️⃣ Konfiguracja błędów frameworka Flutter
   FlutterError.onError = _handleFlutterError;
 
-  /// Błędy systemowe i spoza zony (np. z isolate)
+  /// 3️⃣ Błędy spoza głównego isolate
   PlatformDispatcher.instance.onError = (error, stack) {
     _handleGlobalError(error, stack);
     return true;
   };
+
+  /// 4️⃣ Uruchomienie w strefie bezpieczeństwa (catchuje async errors)
+  runZonedGuarded<Future<void>>(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    final observer = AppObserver();
+
+    runApp(
+      ProviderScope(
+        observers: kDebugMode ? [observer] : [],
+        child: const AppRoot(),
+      ),
+    );
+  }, (error, stack) => _handleGlobalError(error, stack));
 }
 
-/// Obsługa błędów globalnych
+/// 🔹 Globalna obsługa błędów runtime (np. async)
 void _handleGlobalError(Object error, StackTrace stack) {
   final type = error.runtimeType;
   if (kDebugMode) {
@@ -43,17 +51,17 @@ void _handleGlobalError(Object error, StackTrace stack) {
     debugPrintStack(stackTrace: stack);
   } else {
     // ignore: todo
-    // TODO: Wysyłanie do Sentry / Crashlytics w trybie produkcyjnym
+    // TODO: wysyłanie do Sentry / Crashlytics / Logger
   }
 }
 
-/// Obsługa błędów frameworka
+/// 🔹 Obsługa błędów Flutter frameworka (build/render/widget)
 void _handleFlutterError(FlutterErrorDetails details) {
   if (kDebugMode) {
-    print('💥 [FlutterError] ${details.exceptionAsString()}');
+    debugPrint('💥 [FlutterError] ${details.exceptionAsString()}');
     debugPrintStack(stackTrace: details.stack);
   } else {
     // ignore: todo
-    // TODO: Raportowanie do zewnętrznego systemu w trybie produkcyjnym
+    // TODO: raportowanie do zewnętrznego systemu w produkcji
   }
 }
