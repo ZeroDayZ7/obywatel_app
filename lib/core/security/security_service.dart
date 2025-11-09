@@ -14,6 +14,7 @@ class SecurityState extends Equatable {
   final bool canUseBiometrics;
   final bool isSetupCompleted;
   final bool isSetupInProgress;
+  final bool pendingUnlock;
   final bool initialized;
 
   const SecurityState({
@@ -23,6 +24,7 @@ class SecurityState extends Equatable {
     required this.canUseBiometrics,
     required this.isSetupCompleted,
     required this.isSetupInProgress,
+    required this.pendingUnlock,
     required this.initialized,
   });
 
@@ -33,6 +35,7 @@ class SecurityState extends Equatable {
     canUseBiometrics: false,
     isSetupCompleted: false,
     isSetupInProgress: false,
+    pendingUnlock: false,
     initialized: false,
   );
 
@@ -43,6 +46,7 @@ class SecurityState extends Equatable {
     bool? canUseBiometrics,
     bool? isSetupCompleted,
     bool? isSetupInProgress,
+    bool? pendingUnlock,
     bool? initialized,
   }) {
     return SecurityState(
@@ -52,6 +56,7 @@ class SecurityState extends Equatable {
       canUseBiometrics: canUseBiometrics ?? this.canUseBiometrics,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
       isSetupInProgress: isSetupInProgress ?? this.isSetupInProgress,
+      pendingUnlock: pendingUnlock ?? this.pendingUnlock,
       initialized: initialized ?? this.initialized,
     );
   }
@@ -61,6 +66,8 @@ class SecurityState extends Equatable {
 
   bool get shouldShowLock =>
       !isSetupInProgress && isPinConfigured && hasLocalLock;
+
+  bool get isUnlocked => pendingUnlock == true && hasLocalLock;
 
   @override
   List<Object?> get props => [
@@ -74,7 +81,7 @@ class SecurityState extends Equatable {
   ];
 }
 
-/// 🔐 Notifier bezpieczeństwa (globalny) – bez late final, read deps w metodach
+/// 🔐 Notifier bezpieczeństwa (globalny)
 class SecurityNotifier extends Notifier<SecurityState> {
   @override
   SecurityState build() {
@@ -182,8 +189,22 @@ class SecurityNotifier extends Notifier<SecurityState> {
 
   Future<void> unlockApp() async {
     final logger = ref.read(appLoggerProvider);
-    state = state.copyWith(hasLocalLock: false);
+    // state = state.copyWith(hasLocalLock: false);
+    state = state.copyWith(pendingUnlock: true);
     logger.i('🔓 Odblokowano.');
+  }
+
+  // Future<void> unlockApp() async {
+  //   final logger = ref.read(appLoggerProvider);
+  //   state = state.copyWith(pendingUnlock: true);
+  //   logger.i('🔓 Odblokowano.');
+  // }
+
+  void confirmUnlock() {
+    if (state.pendingUnlock) {
+      state = state.copyWith(pendingUnlock: false, hasLocalLock: false);
+      ref.read(appLoggerProvider).i('✅ Odblokowano (potwierdzone po dispose)');
+    }
   }
 
   Future<void> lockApp() async {

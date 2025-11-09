@@ -56,6 +56,8 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
         await pinLimiter.reset();
         await securityService.unlockApp();
         state = state.copyWith(isSuccess: true, lockRemaining: null);
+        // await Future.delayed(const Duration(milliseconds: 100));
+      
       } else {
         await pinLimiter.registerFailedAttempt();
         state = state.copyWith(isError: true);
@@ -64,7 +66,6 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
       state = state.copyWith(isError: true);
     } finally {
       state = state.copyWith(isLoading: false);
-      // await Future.delayed(const Duration(milliseconds: 100));
     }
   }
 }

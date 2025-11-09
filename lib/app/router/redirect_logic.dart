@@ -43,6 +43,13 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   } else if (isLoggedIn && shouldShowLock && !goingToPin) {
     redirect = AppRoutes.pin;
     logger.i('🔒 Redirect do PIN verification');
+  } else if (isLoggedIn &&
+      !shouldShowLock &&
+      securityState.isUnlocked &&
+      goingToPin) {
+    Future.delayed(const Duration(milliseconds: 200));
+    redirect = AppRoutes.home;
+    logger.i('🏠 PIN odblokowany – redirect do home');
   } else if (isLoggedIn && goingToLogin) {
     redirect = AppRoutes.home;
     logger.i('🏠 Zalogowany na login — do home');
