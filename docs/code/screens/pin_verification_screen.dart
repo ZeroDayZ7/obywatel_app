@@ -300,7 +300,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
                       child: PinCodeTextField(
                         key: ValueKey<int>(_resetToken),
                         appContext: context,
-                        // autoFocus: true, // autofocus bez FocusNode
+                        autoFocus: true, // autofocus bez FocusNode
                         length: 4,
                         obscureText: true,
                         obscuringCharacter: '●',
