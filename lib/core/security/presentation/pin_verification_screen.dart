@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/core/utils/duration_utils.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/features/auth/application/pin_verification_provider.dart';
+import 'package:obywatel_plus/core/security/pin_verification_provider.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
   const PinVerificationScreen({super.key});

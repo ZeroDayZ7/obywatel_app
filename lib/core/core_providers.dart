@@ -10,4 +10,4 @@ export 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 export 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 export 'package:obywatel_plus/features/auth/application/auth_service_provider.dart';
 export 'package:obywatel_plus/features/auth/application/login_provider.dart';
-export 'package:obywatel_plus/features/auth/application/pin_verification_provider.dart';
+export 'package:obywatel_plus/core/security/pin_verification_provider.dart';
