@@ -12,6 +12,7 @@ import 'package:obywatel_plus/core/security/presentation/pin_verification_screen
 import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
+import 'package:obywatel_plus/app/router/placeholder_screen.dart';
 
 import 'package:obywatel_plus/core/errors/error_screen.dart';
 
@@ -35,18 +36,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
       _goRouteWithTransition(AppRoutes.test, const TestScreen()),
       _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
-      _goRouteWithTransition(
-        AppRoutes.securitySetup,
-        const SecuritySetupScreen(),
-      ),
+      _goRouteWithTransition(AppRoutes.securitySetup, const SecuritySetupScreen()),
       _goRouteWithTransition(AppRoutes.profile, const ProfileScreen()),
       _goRouteWithTransition(AppRoutes.documents, const DocumentsScreen()),
-      _goRouteWithTransition(
-        AppRoutes.notifications,
-        const NotificationsScreen(),
-      ),
-    ],
+      _goRouteWithTransition(AppRoutes.notifications, const NotificationsScreen()),
 
+      // brakujące podstrony (na razie placeholdery)
+      _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
+      _goRouteWithTransition(AppRoutes.chats, const PlaceholderScreen('Czaty')),
+      _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
+      _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
+      _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),
+      _goRouteWithTransition(AppRoutes.store, const PlaceholderScreen('Sklep')),
+      _goRouteWithTransition(AppRoutes.health, const PlaceholderScreen('Zdrowie')),
+      _goRouteWithTransition(AppRoutes.education, const PlaceholderScreen('Edukacja')),
+      _goRouteWithTransition(AppRoutes.games, const PlaceholderScreen('Gry')),
+      _goRouteWithTransition(AppRoutes.videos, const PlaceholderScreen('Wideo')),
+      _goRouteWithTransition(AppRoutes.favorites, const PlaceholderScreen('Ulubione')),
+      _goRouteWithTransition(AppRoutes.help, const PlaceholderScreen('Pomoc')),
+    ],
     /// GLOBALNY fallback błędu routingu
     errorBuilder: (context, state) {
       debugPrint('⚠️ GoRouter error: ${state.error}');

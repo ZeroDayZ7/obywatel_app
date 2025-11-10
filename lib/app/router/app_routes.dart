@@ -8,16 +8,27 @@ class AppRoutes {
   static const test = '/test';
 
   // Nowe ścieżki dla Settings
-  static const settings = '/settings';
-  static const security = 'security';
   static const setPin = 'set_pin';
   static const patternLock = 'pattern_lock';
   static const fingerprint = 'fingerprint';
 
   static const securitySetup = '/security_setup';
 
-  // Nowe ścieżki dla HomeScreen dashboard
+  // Ścieżki dla HomeScreen dashboard
   static const profile = '/profile';
   static const documents = '/documents';
   static const notifications = '/notifications';
+  static const settings = '/settings';
+  static const security = '/security';
+  static const chats = '/chats';
+  static const contacts = '/contacts';
+  static const explore = '/explore';
+  static const payments = '/payments';
+  static const store = '/store';
+  static const health = '/health';
+  static const education = '/education';
+  static const games = '/games';
+  static const videos = '/videos';
+  static const favorites = '/favorites';
+  static const help = '/help';
 }

@@ -1,40 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/main_drawer.dart';
+import 'package:go_router/go_router.dart';
+import 'config/home_menu_items.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static final _menuItems = [
-    {'icon': Icons.message, 'label': 'Czaty', 'color': Color(0xFF00FF88)},
-    {'icon': Icons.contacts, 'label': 'Kontakty', 'color': Color(0xFF00F0FF)},
-    {'icon': Icons.explore, 'label': 'Odkryj', 'color': Color(0xFFFFA500)},
-    {'icon': Icons.person, 'label': 'Ja', 'color': Color(0xFFFF00F5)},
-    {'icon': Icons.folder, 'label': 'Dokumenty', 'color': Color(0xFF5500FF)},
-    {'icon': Icons.payment, 'label': 'Płatności', 'color': Color(0xFFFFD700)},
-    {
-      'icon': Icons.notifications,
-      'label': 'Powiadomienia',
-      'color': Color(0xFFFF0055),
-    },
-    {'icon': Icons.store, 'label': 'Sklep', 'color': Color(0xFF00FFFF)},
-    {
-      'icon': Icons.local_hospital,
-      'label': 'Zdrowie',
-      'color': Color(0xFFFF0099),
-    },
-    {'icon': Icons.school, 'label': 'Edukacja', 'color': Color(0xFF00D4FF)},
-    {'icon': Icons.games, 'label': 'Gry', 'color': Color(0xFFFF6600)},
-    {'icon': Icons.video_call, 'label': 'Wideo', 'color': Color(0xFFFF3366)},
-    {'icon': Icons.favorite, 'label': 'Ulubione', 'color': Color(0xFFAA00FF)},
-    {'icon': Icons.settings, 'label': 'Ustawienia', 'color': Color(0xFF888899)},
-    {'icon': Icons.help, 'label': 'Pomoc', 'color': Color(0xFF88FF00)},
-    {
-      'icon': Icons.security,
-      'label': 'Bezpieczeństwo',
-      'color': Color(0xFF0099FF),
-    },
-  ];
+  static const menuItems = homeMenuItems;
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +148,7 @@ class HomeScreen extends StatelessWidget {
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _menuItems.length,
+                    itemCount: menuItems.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: 16,
@@ -183,10 +156,16 @@ class HomeScreen extends StatelessWidget {
                       childAspectRatio: 0.85,
                     ),
                     itemBuilder: (context, index) {
-                      final item = _menuItems[index];
+                      final item = menuItems[index];
                       final color = item['color'] as Color;
                       return GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          final route = item['route'] as String?;
+                          if (route != null && route.isNotEmpty) {
+                            context.push(route);
+                          }
+                        },
+
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
