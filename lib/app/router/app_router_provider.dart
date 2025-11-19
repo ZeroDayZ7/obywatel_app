@@ -14,6 +14,7 @@ import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
+import 'package:obywatel_plus/features/chat/presentation/chat/screens/user_chat_screen.dart';
 
 import 'package:obywatel_plus/core/errors/error_screen.dart';
 
@@ -45,6 +46,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // brakujące podstrony (na razie placeholdery)
       _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
       _goRouteWithTransition(AppRoutes.chats, const ChatScreen()),
+      _goRouteWithStateBuilder(
+        AppRoutes.chatDetail,
+        (context, state) {
+          final username = state.pathParameters['username']!;
+          return UserChatScreen(username: username);
+        },
+      ),
       _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
       _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
       _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),
@@ -73,6 +81,15 @@ GoRoute _goRouteWithTransition(String path, Widget screen) {
     path: path,
     parentNavigatorKey: _rootNavigatorKey,
     pageBuilder: (context, state) => _customPage(state: state, child: screen),
+  );
+}
+
+GoRoute _goRouteWithStateBuilder(
+    String path, Widget Function(BuildContext, GoRouterState) builder) {
+  return GoRoute(
+    path: path,
+    parentNavigatorKey: _rootNavigatorKey,
+    pageBuilder: (context, state) => _customPage(state: state, child: builder(context, state)),
   );
 }
 

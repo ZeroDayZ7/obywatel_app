@@ -1,6 +1,7 @@
 // lib/features/chat/presentation/chat/widgets/chat_list.dart
 import 'package:flutter/material.dart';
 import 'chat_list_item.dart';
+import 'package:go_router/go_router.dart';
 
 class CyberpunkChatList extends StatelessWidget {
   final List<Map<String, dynamic>> chats;
@@ -21,8 +22,7 @@ class CyberpunkChatList extends StatelessWidget {
           unreadCount: chat['unreadCount'] as int? ?? 0,
           isOnline: chat['isOnline'] as bool? ?? false,
           onTap: () {
-            // np. print lub nawigacja
-            print('Tapped ${chat['username']}');
+            context.push('/chats/${chat['username']}');
           },
         );
       },

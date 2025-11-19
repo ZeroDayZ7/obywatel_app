@@ -1,7 +1,7 @@
 // lib/features/chat/presentation/chat/widgets/chat_app_bar.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import './chat_colors.dart'; // plik z CyberpunkColors
+import 'chat_colors.dart'; // plik z CyberpunkColors
 
 class ChatAppBar extends StatelessWidget {
   const ChatAppBar({super.key});

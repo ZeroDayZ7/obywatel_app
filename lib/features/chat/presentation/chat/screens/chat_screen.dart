@@ -1,9 +1,9 @@
 // lib/features/chat/presentation/chat/screens/chat_screen.dart
 import 'package:flutter/material.dart';
-import '../widgets/chat_app_bar.dart';
-import '../widgets/category_tabs.dart';
-import '../widgets/chat_list.dart';
-import '../widgets/bottom_nav_bar.dart';
+import '../widgets/chat_screen/chat_app_bar.dart';
+import '../widgets/chat_screen/category_tabs.dart';
+import '../widgets/chat_screen/chat_list.dart';
+import '../widgets/chat_screen/bottom_nav_bar.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});

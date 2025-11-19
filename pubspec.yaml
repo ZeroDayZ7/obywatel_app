@@ -58,6 +58,7 @@ dependencies:
   image_picker: ^1.2.1
   video_compress: ^3.1.4
   isolate_manager: ^6.1.2
+  intl: ^0.20.2
 
 dev_dependencies:
   flutter_test:

@@ -21,6 +21,7 @@ class AppRoutes {
   static const settings = '/settings';
   static const security = '/security';
   static const chats = '/chats';
+  static const chatDetail = '/chats/:username';
   static const contacts = '/contacts';
   static const explore = '/explore';
   static const payments = '/payments';
