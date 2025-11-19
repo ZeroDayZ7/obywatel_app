@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/chat/models/chat_message.dart';
-import 'package:obywatel_plus/features/chat/presentation/chat/widgets/user_chat/user_chat_app_bar.dart';
-import 'package:obywatel_plus/features/chat/presentation/chat//widgets/user_chat/message_list.dart';
-import 'package:obywatel_plus/features/chat/presentation/chat//widgets/user_chat/message_input_field.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/user_chat_app_bar.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/message_list.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/message_input_field.dart';
 
 class UserChatScreen extends StatefulWidget {
   final String username;
