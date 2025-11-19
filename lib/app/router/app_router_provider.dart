@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/auth/application/auth_refresh_provider.dart';
 import 'package:obywatel_plus/features/auth/presentation/login/login_screen.dart';
+import 'package:obywatel_plus/features/chat/presentation/chat/screens/chat_screen.dart' show ChatScreen;
 import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
@@ -43,7 +44,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // brakujące podstrony (na razie placeholdery)
       _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
-      _goRouteWithTransition(AppRoutes.chats, const PlaceholderScreen('Czaty')),
+      _goRouteWithTransition(AppRoutes.chats, const ChatScreen()),
       _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
       _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
       _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),
