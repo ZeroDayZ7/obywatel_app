@@ -1,156 +1,82 @@
-import 'package:flutter/cupertino.dart' show CupertinoIcons;
+// lib/features/chat/presentation/chat/screens/chat_screen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:flutter_spinkit/flutter_spinkit.dart';
-// import 'package:cupertino_icons/cupertino_icons.dart';
+import '../widgets/chat_app_bar.dart';
+import '../widgets/category_tabs.dart';
+import '../widgets/chat_list.dart';
+import '../widgets/bottom_nav_bar.dart';
 
-class ChatScreen extends ConsumerWidget {
+class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        title: const Text(
-          'Chats',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        leading: IconButton(
-          icon: const Icon(CupertinoIcons.person_circle, color: Colors.black),
-          onPressed: () {
-            // ignore: todo
-            // TODO: Open profile/settings
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.search, color: Colors.black),
-            onPressed: () {
-              // ignore: todo
-              // TODO: Open search
-            },
-          ),
-          IconButton(
-            icon: const Icon(CupertinoIcons.add_circled, color: Colors.black),
-            onPressed: () {
-              // ignore: todo
-              // TODO: Start new chat
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // 🔹 Placeholder for "Loading Chats"
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: 10, // dummy count for now
-              itemBuilder: (context, index) {
-                return ChatListItem(
-                  username: 'User $index',
-                  lastMessage: 'This is a placeholder message for user $index.',
-                  time: '12:${index}0 PM',
-                  unreadCount: index % 3 == 0 ? index : 0,
-                  onTap: () {
-                    // ignore: todo
-                    // TODO: Navigate to chat conversation
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: Colors.blueAccent,
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_rounded),
-            label: 'Chats',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.group), label: 'Groups'),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
-    );
-  }
+  State<ChatScreen> createState() => _ChatScreenState();
 }
 
-// =======================
-// 🔹 Chat list item widget
-// =======================
-class ChatListItem extends StatelessWidget {
-  final String username;
-  final String lastMessage;
-  final String time;
-  final int unreadCount;
-  final VoidCallback onTap;
+class _ChatScreenState extends State<ChatScreen> {
+  int _currentIndex = 0;
+  String _selectedCategory = 'All';
 
-  const ChatListItem({
-    super.key,
-    required this.username,
-    required this.lastMessage,
-    required this.time,
-    required this.unreadCount,
-    required this.onTap,
-  });
+  // Przykładowe dane czatu
+  final List<Map<String, dynamic>> _chats = List.generate(
+    12,
+    (index) => {
+      'username': 'User ${index + 1}',
+      'lastMessage': [
+        'Hey! How are you doing?',
+        'See you tomorrow at the meeting',
+        'Thanks for the help!',
+        'Can you send me that file?',
+        'Great work on the project!',
+        'Let\'s catch up soon',
+        'Did you see the news?',
+        'Working on it right now',
+        'Perfect, thanks!',
+        'Talk later 👋',
+      ][index % 10],
+      'time': '${12 + index % 12}:${(index * 5) % 60}'.padLeft(2, '0'),
+      'unreadCount': index % 4 == 0 ? index + 1 : 0,
+      'isOnline': index % 3 == 0,
+      'category': index % 2 == 0 ? 'Work' : 'Personal',
+    },
+  );
+
+  List<String> get _categories => ['All', 'Work', 'Personal', 'Groups'];
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      onTap: onTap,
-      leading: CircleAvatar(
-        radius: 28,
-        backgroundColor: Colors.blueGrey.shade100,
-        child: Text(
-          username[0],
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+    // Filtracja czatów wg kategorii
+    final filteredChats = _selectedCategory == 'All'
+        ? _chats
+        : _chats
+              .where((chat) => chat['category'] == _selectedCategory)
+              .toList();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A0E27),
+      body: SafeArea(
+        child: Column(
+          children: [
+            const ChatAppBar(),
+            CategoryTabs(
+              categories: _categories,
+              selectedCategory: _selectedCategory,
+              onCategorySelected: (category) {
+                setState(() {
+                  _selectedCategory = category;
+                });
+              },
+            ),
+            Expanded(child: CyberpunkChatList(chats: filteredChats)),
+          ],
         ),
       ),
-      title: Text(
-        username,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-      ),
-      subtitle: Text(
-        lastMessage,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: Colors.grey.shade600),
-      ),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            time,
-            style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-          ),
-          if (unreadCount > 0)
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                unreadCount.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-            ),
-        ],
+      bottomNavigationBar: CyberpunkBottomNavBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
       ),
     );
   }
