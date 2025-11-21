@@ -1,42 +1,64 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:cryptography/cryptography.dart';
 
 class MessageCryptoService {
   final cipher = AesGcm.with256bits();
-  final secretKey = SecretKey(
-    Uint8List.fromList(List.generate(32, (i) => i)),
-  ); // tymczasowy klucz 32-bajtowy
 
-  MessageCryptoService();
+  // ───────────────────────────────────────────────────
+  // Wspólny klucz wyliczony z Diffie–Hellman (X25519)
+  // ───────────────────────────────────────────────────
+  final SecretKey sharedSecretKey;
+
+  MessageCryptoService({required this.sharedSecretKey});
+
+  // FORMUŁA: version(1B) + nonce(12B) + ciphertext + mac(16B)
+  static const int version = 1;
 
   Future<String> encrypt(Map<String, dynamic> json) async {
     final plainText = utf8.encode(jsonEncode(json));
-    final nonce = cipher.newNonce(); // 12-bajtowy nonce
+
+    final nonce = cipher.newNonce();
+
+    // AAD — chroni metadane
+    final aad = utf8.encode("v$version|msg");
+
     final secretBox = await cipher.encrypt(
       plainText,
-      secretKey: secretKey,
+      secretKey: sharedSecretKey,
       nonce: nonce,
+      aad: aad,
     );
-    // Zwracamy base64: nonce + ciphertext + mac
-    final combined = <int>[];
+
+    final combined = <int>[version];
     combined.addAll(nonce);
     combined.addAll(secretBox.cipherText);
     combined.addAll(secretBox.mac.bytes);
+
     return base64Encode(combined);
   }
 
   Future<Map<String, dynamic>> decrypt(String base64Str) async {
-    final bytes = base64Decode(base64Str);
-    final nonce = bytes.sublist(0, 12);
-    final macBytes = bytes.sublist(bytes.length - 16);
-    final cipherText = bytes.sublist(12, bytes.length - 16);
+    final data = base64Decode(base64Str);
+
+    final messageVersion = data.first;
+    if (messageVersion != version) {
+      throw Exception("Unsupported encryption version: $messageVersion");
+    }
+
+    final nonce = data.sublist(1, 13);
+    final macBytes = data.sublist(data.length - 16);
+    final cipherText = data.sublist(13, data.length - 16);
 
     final secretBox = SecretBox(cipherText, nonce: nonce, mac: Mac(macBytes));
 
-    final decrypted = await cipher.decrypt(secretBox, secretKey: secretKey);
+    final aad = utf8.encode("v$version|msg");
 
-    return jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
+    final decrypted = await cipher.decrypt(
+      secretBox,
+      secretKey: sharedSecretKey,
+      aad: aad,
+    );
+
+    return jsonDecode(utf8.decode(decrypted));
   }
 }
