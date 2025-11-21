@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+enum MessageStatus { sent, delivered, read }
+
 class Message extends Equatable {
   final String id;
   final String chatId;
@@ -7,8 +9,14 @@ class Message extends Equatable {
   final String text;
   final DateTime timestamp;
 
-  /// To pole NIE pochodzi z API – wyliczasz je w kontrolerze.
+  /// Wyliczane lokalnie, nie pochodzi z API
   final bool isMe;
+
+  /// NOWE POLE
+  final MessageStatus status;
+
+  /// Opcjonalne – czy zsynchronizowane z backendem
+  final bool synced;
 
   const Message({
     required this.id,
@@ -17,6 +25,8 @@ class Message extends Equatable {
     required this.text,
     required this.timestamp,
     required this.isMe,
+    required this.status,
+    this.synced = false,
   });
 
   // ============================================================
@@ -30,8 +40,10 @@ class Message extends Equatable {
       text: json['text'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
 
-      /// Jeśli nie podasz currentUserId – domyślnie false
       isMe: currentUserId != null ? json['senderId'] == currentUserId : false,
+
+      status: MessageStatus.values[json['status'] as int],
+      synced: json['synced'] ?? false,
     );
   }
 
@@ -45,11 +57,13 @@ class Message extends Equatable {
       'senderId': senderId,
       'text': text,
       'timestamp': timestamp.toIso8601String(),
+      'status': status.index,
+      'synced': synced,
     };
   }
 
   // ============================================================
-  // Kopiowanie (immutability)
+  // Kopiowanie
   // ============================================================
   Message copyWith({
     String? id,
@@ -58,6 +72,8 @@ class Message extends Equatable {
     String? text,
     DateTime? timestamp,
     bool? isMe,
+    MessageStatus? status,
+    bool? synced,
   }) {
     return Message(
       id: id ?? this.id,
@@ -66,9 +82,20 @@ class Message extends Equatable {
       text: text ?? this.text,
       timestamp: timestamp ?? this.timestamp,
       isMe: isMe ?? this.isMe,
+      status: status ?? this.status,
+      synced: synced ?? this.synced,
     );
   }
 
   @override
-  List<Object?> get props => [id, chatId, senderId, text, timestamp, isMe];
+  List<Object?> get props => [
+    id,
+    chatId,
+    senderId,
+    text,
+    timestamp,
+    isMe,
+    status,
+    synced,
+  ];
 }

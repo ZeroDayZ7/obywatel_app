@@ -2,6 +2,8 @@
 import 'constants_base.dart';
 
 class ApiConstants extends ApiConstantsBase {
+  final bool isProduction = false;
+  final bool serverOnline = true;
   final String baseUrl;
   final String defaultEmail;
   final String defaultPassword;

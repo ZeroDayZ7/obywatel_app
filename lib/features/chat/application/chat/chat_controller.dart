@@ -1,33 +1,27 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:obywatel_plus/features/chat/domain/models/message.dart';
-import 'package:obywatel_plus/features/chat/domain/models/chat.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/message_repository.dart';
-import '../session/session_service.dart';
-import '../message/message_service.dart';
+import 'package:obywatel_plus/features/chat/application/message/message_service.dart';
+// import 'package:obywatel_plus/features/chat/session/session_service.dart';
+import 'package:obywatel_plus/features/chat/crypto/message_crypto_service.dart';
 
-/// Controller odpowiada za pełną logikę:
-/// - nasłuch WebSocket
-/// - szyfrowanie / deszyfrowanie wiadomości
-/// - wysyłanie i odbieranie
-/// - zapis offline + synchronizacja
-/// - stream do UI
 class ChatController {
   final ChatRepository chatRepository;
   final MessageRepository messageRepository;
-  final MessageService messageService;
+  final MessageCryptoService crypto; // <-- tu wstrzykujemy crypto
   final SessionService sessionService;
 
   ChatController({
     required this.chatRepository,
     required this.messageRepository,
-    required this.messageService,
+    required this.crypto,
     required this.sessionService,
   });
 
-  /// Stream wszystkich wiadomości
   final StreamController<List<Message>> _messagesController =
       StreamController.broadcast();
 
@@ -39,21 +33,17 @@ class ChatController {
   // ============================================================
   // INIT
   // ============================================================
-
   Future<void> init(String chatId) async {
-    // Wczytaj wiadomości offline
-    final offlineMessages = await messageRepository.getMessages(chatId);
-    _cachedMessages = offlineMessages;
+    final offline = await messageRepository.getMessages(chatId);
+    _cachedMessages = offline;
     _messagesController.add(_cachedMessages);
 
-    // Połącz WebSocket
     await _connectWebSocket(chatId);
   }
 
   // ============================================================
   // WEBSOCKET
   // ============================================================
-
   Future<void> _connectWebSocket(String chatId) async {
     final token = await sessionService.getToken();
 
@@ -64,67 +54,72 @@ class ChatController {
 
     _socket!.listen(
       (data) async {
-        final decrypted = messageService.decryptMessage(data);
-        final msg = Message.fromJson(decrypted);
+        // 1️⃣ Odszyfrowanie
+        final decrypted = await crypto.decrypt(data);
 
-        // Zapis offline
+        // 2️⃣ Konwersja na Message
+        final msg = Message.fromJson(
+          decrypted,
+          currentUserId: await sessionService.getUserId(),
+        );
+
+        // 3️⃣ Zapis offline
         await messageRepository.saveMessage(msg);
 
-        // Dodanie do cache
+        // 4️⃣ Cache + UI
         _cachedMessages.add(msg);
         _messagesController.add(List.from(_cachedMessages));
       },
+
       onError: (err) => _handleSocketError(chatId, err),
       onDone: () => _handleSocketClosed(chatId),
     );
   }
 
   void _handleSocketClosed(String chatId) {
-    // Auto reconnect po 3s
     Future.delayed(const Duration(seconds: 3), () {
       _connectWebSocket(chatId);
     });
   }
 
   void _handleSocketError(String chatId, dynamic err) {
-    // Możesz dodać logowanie
     _handleSocketClosed(chatId);
   }
 
   // ============================================================
   // WYSYŁANIE WIADOMOŚCI
   // ============================================================
-
   Future<void> sendMessage(String chatId, String text) async {
     final userId = await sessionService.getUserId();
 
-    final message = Message(
+    final msg = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       chatId: chatId,
       senderId: userId,
       text: text,
       timestamp: DateTime.now(),
       isMe: true,
+      status: MessageStatus.sent,
+      synced: false,
     );
 
-    // Szyfrowanie
-    final encrypted = messageService.encryptMessage(message.toJson());
+    // 1️⃣ Szyfrowanie
+    final encrypted = await crypto.encrypt(msg.toJson());
 
-    // Wysłanie WebSocketem
+    // 2️⃣ Wysłanie
     _socket?.add(encrypted);
 
-    // Zapis lokalny
-    await messageRepository.saveMessage(message);
+    // 3️⃣ Zapis lokalny
+    await messageRepository.saveMessage(msg);
 
-    // Odśwież UI
-    _cachedMessages.add(message);
+    // 4️⃣ UI
+    _cachedMessages.add(msg);
     _messagesController.add(List.from(_cachedMessages));
   }
 
   // ============================================================
   // ZAMKNIĘCIE
   // ============================================================
-
   Future<void> dispose() async {
     await _messagesController.close();
     await _socket?.close();

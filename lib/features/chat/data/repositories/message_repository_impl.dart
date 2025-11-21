@@ -14,7 +14,7 @@ class MessageRepositoryImpl implements MessageRepository {
 
   @override
   Future<void> saveMessage(Message message) async {
-    final key = message.id ?? const Uuid().v4();
+    final key = message.id;
 
     final data = {
       'id': key,
