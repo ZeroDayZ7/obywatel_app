@@ -1,13 +1,15 @@
 // lib/core/network/api_endpoints.dart
-import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/app/config/services_config.dart'
+    show ServicesConfig;
 
 class ApiEndpoints {
-  static String get login => '${apiConstants.baseUrl}/auth/login';
-  static String get logout => '${apiConstants.baseUrl}/auth/logout';
-  static String get userProfile => '${apiConstants.baseUrl}/user/profile';
-  static String get fetchConfig => '${apiConstants.baseUrl}/app/config';
-  static String get checkVersion => '${apiConstants.baseUrl}/app/version';
+  static String get login => '${ServicesConfig.authBaseUrl}/auth/login';
+  static String get logout => '${ServicesConfig.authBaseUrl}/auth/logout';
+  static String get userProfile => '${ServicesConfig.authBaseUrl}/user/profile';
+  static String get fetchConfig => '${ServicesConfig.authBaseUrl}/app/config';
+  static String get checkVersion => '${ServicesConfig.authBaseUrl}/app/version';
 
   /// Endpoint do odświeżania tokena
-  static String get refreshToken => '${apiConstants.baseUrl}/auth/refresh';
+  static String get refreshToken =>
+      '${ServicesConfig.authBaseUrl}/auth/refresh';
 }

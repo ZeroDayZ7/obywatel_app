@@ -3,8 +3,8 @@ import 'package:obywatel_plus/core/network/api_client.dart' show ApiClient;
 import 'package:obywatel_plus/features/chat/config/chat_endpoints.dart'
     show ChatEndpoints;
 import 'package:web_socket_channel/web_socket_channel.dart';
-import '../../domain/models/message.dart';
-import '../dto/message_dto.dart';
+import 'package:obywatel_plus/features/chat/domain/models/message.dart';
+import 'package:obywatel_plus/features/chat/data/dto/message_dto.dart';
 
 class ChatApi {
   final ApiClient client;

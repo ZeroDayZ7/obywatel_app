@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import '../storage/secure_storage_service.dart';
@@ -25,7 +26,7 @@ class ApiClient {
 
   void _configureDio() {
     _dio.options
-      ..baseUrl = apiConstants.baseUrl
+      ..baseUrl = ServicesConfig.authBaseUrl
       ..connectTimeout = Duration(seconds: apiConstants.connectTimeoutSeconds)
       ..receiveTimeout = Duration(seconds: apiConstants.receiveTimeoutSeconds)
       ..headers = {'Content-Type': 'application/json'};

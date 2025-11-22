@@ -1,9 +1,8 @@
-// lib/features/auth/data/auth_service.dart
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
 
 class LoginResult {
   final bool success;
@@ -14,18 +13,20 @@ class LoginResult {
 
 class AuthService {
   final ApiClient _apiClient;
-  final SecureStorageService _storage;
   final AppLogger _logger;
+  final SessionService _session;
 
   AuthService({
     required ApiClient apiClient,
-    required SecureStorageService storage,
     required AppLogger logger,
+    required SessionService session,
   }) : _apiClient = apiClient,
-       _storage = storage,
-       _logger = logger;
+       _logger = logger,
+       _session = session;
 
-  /// Logowanie użytkownika
+  // ============================
+  // LOGIN
+  // ============================
   Future<LoginResult> login({
     required String email,
     required String password,
@@ -40,15 +41,15 @@ class AuthService {
 
       final accessToken = response.data[StorageKeys.accessToken] as String?;
       final refreshToken = response.data[StorageKeys.refreshToken] as String?;
+      final userId = response.data[StorageKeys.userId] as String?;
 
       if (accessToken != null && refreshToken != null) {
-        await _storage.write(key: StorageKeys.accessToken, value: accessToken);
-        await _storage.write(
-          key: StorageKeys.refreshToken,
-          value: refreshToken,
+        await _session.startSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          userId: userId,
         );
 
-        _logger.i('Login successful');
         return const LoginResult(success: true);
       }
 
@@ -62,10 +63,12 @@ class AuthService {
     }
   }
 
-  /// Wylogowanie użytkownika
+  // ============================
+  // LOGOUT
+  // ============================
   Future<void> logout() async {
     try {
-      final refreshToken = await _storage.read(key: StorageKeys.refreshToken);
+      final refreshToken = await _session.getRefreshToken();
 
       await _apiClient.post(
         ApiEndpoints.logout,
@@ -75,57 +78,20 @@ class AuthService {
       _logger.w('Logout request failed', error: e, stackTrace: st);
     }
 
-    await _storage.delete(key: StorageKeys.accessToken);
-    await _storage.delete(key: StorageKeys.refreshToken);
-    _logger.i('User logged out');
+    await _session.endSession();
   }
 
-  /// Walidacja tokena przy starcie aplikacji
+  // ============================
+  // TOKEN VALIDATION
+  // ============================
   Future<bool> validateToken() async {
     try {
-      final token = await _storage.read(key: StorageKeys.accessToken);
+      final token = await _session.getAccessToken();
       if (token == null || token.isEmpty) return false;
 
-      // Zakomentowane tymczasowo: sprawdzenie tokena z API
-      // final response = await _apiClient.get(ApiEndpoints.userProfile);
-      //
-      // if (response.statusCode == 200) {
-      //   _logger.i('Token valid');
-      //   return true;
-      // }
-
-      _logger.i('Token found, skipping API validation for now');
-      // jeśli status 401, można spróbować refresh token
-      // return await _tryRefreshToken();
-
-      return true;
+      return true; // w przyszłości możesz dodać refresh
     } catch (e, st) {
       _logger.e('Token validation failed', error: e, stackTrace: st);
-      return false;
-    }
-  }
-
-  /// Próba odświeżenia tokena
-  // ignore: unused_element
-  Future<bool> _tryRefreshToken() async {
-    try {
-      final refreshToken = await _storage.read(key: 'refreshToken');
-      if (refreshToken == null) return false;
-
-      final response = await _apiClient.post(
-        '${ApiEndpoints.login}/refresh',
-        data: {'refreshToken': refreshToken},
-      );
-
-      final newToken = response.data['accessToken'] as String?;
-      if (newToken != null) {
-        await _storage.write(key: 'accessToken', value: newToken);
-        _logger.i('Token refreshed successfully');
-        return true;
-      }
-      return false;
-    } catch (e, st) {
-      _logger.e('Token refresh failed', error: e, stackTrace: st);
       return false;
     }
   }

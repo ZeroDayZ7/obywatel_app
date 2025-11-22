@@ -12,7 +12,7 @@ import 'package:obywatel_plus/features/chat/crypto/message_crypto_service.dart';
 class ChatController {
   final ChatRepository chatRepository;
   final MessageRepository messageRepository;
-  final MessageCryptoService crypto; // <-- tu wstrzykujemy crypto
+  final MessageCryptoService crypto;
   final SessionService sessionService;
 
   ChatController({

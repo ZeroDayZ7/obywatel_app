@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/app/config/env.dart';
@@ -8,7 +9,7 @@ import 'package:obywatel_plus/app/config/env.dart';
 final dioProvider = Provider<Dio>((ref) {
   return Dio(
     BaseOptions(
-      baseUrl: apiConstants.baseUrl,
+      baseUrl: ServicesConfig.authBaseUrl,
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
     ),
