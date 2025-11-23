@@ -5,7 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
+// import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 
 final bootstrapProvider = FutureProvider<void>((ref) async {
   final logger = ref.read(appLoggerProvider);
@@ -21,19 +22,22 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
-      // await storage.clearAll(); 
+      // await storage.clearAll();
       // await sharedPrefs.clearAll();
     }
 
     // 2️ Inicjalizacja SecurityService, Auth**
     final securityService = ref.read(securityServiceProvider.notifier);
-    final authNotifier = ref.read(authProvider.notifier);
+    // 🔹 Inicjalizacja SessionService
+    final sessionService = ref.read(sessionServiceProvider.notifier);
+    // final authNotifier = ref.read(authProvider.notifier);
     // 3️⃣ migracje / wersje
     // final migrationService = ref.read(migrationServiceProvider);
     // final versionService = ref.read(versionServiceProvider);
     await Future.wait([
       securityService.init(),
-      authNotifier.init(),
+      sessionService.init(),
+      // authNotifier.init(),
       // migrationService.run(),
       // versionService.checkForUpdates(),
     ]);

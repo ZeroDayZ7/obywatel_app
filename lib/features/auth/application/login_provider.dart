@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 
 class LoginState {
@@ -39,27 +39,31 @@ class LoginNotifier extends Notifier<LoginState> {
     );
   }
 
-  void setEmail(String value) => state = state.copyWith(email: value);
-  void setPassword(String value) => state = state.copyWith(password: value);
+  void setEmail(String value) {
+    state = state.copyWith(email: value, error: null);
+  }
+
+  void setPassword(String value) {
+    state = state.copyWith(password: value, error: null);
+  }
 
   Future<void> onLogin() async {
     state = state.copyWith(isLoading: true, error: null);
 
-    final authNotifier = ref.read(authProvider.notifier);
+    final authService = ref.read(authServiceProvider);
 
-    try {
-      await authNotifier.login(email: state.email, password: state.password);
+    final result = await authService.login(
+      email: state.email,
+      password: state.password,
+    );
 
-      // Po login sprawdzamy stan authProvider
-      final authState = ref.read(authProvider);
-      if (authState is AsyncError) {
-        state = state.copyWith(error: authState.error.toString());
-      }
-    } catch (e) {
-      state = state.copyWith(error: e.toString());
-    } finally {
-      state = state.copyWith(isLoading: false);
+    if (!result.success) {
+      state = state.copyWith(isLoading: false, error: result.error);
+      return;
     }
+
+    // SessionService ustawi isLoggedIn = true
+    state = state.copyWith(isLoading: false);
   }
 }
 

@@ -1,17 +1,66 @@
+// features/auth/application/session_service.dart
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/core_providers.dart'
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart'
     show secureStorageProvider;
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
-class SessionService {
-  final SecureStorageService _storage;
-  final Ref _ref;
+class SessionService extends Notifier<AuthState> {
+  late final SecureStorageService _storage;
 
-  SessionService(this._ref, this._storage);
+  @override
+  AuthState build() {
+    _storage = ref.read(secureStorageProvider);
+    _restoreSession();
+    return AuthState.initial();
+  }
+
+  /// Asynchroniczna inicjalizacja przy starcie aplikacji
+  Future<void> init() async {
+    final token = await _storage.read(key: StorageKeys.accessToken);
+    final userId = await _storage.read(key: StorageKeys.userId);
+
+    if (token != null && token.isNotEmpty) {
+      state = AuthState(isLoggedIn: true, userId: userId);
+    }
+  }
 
   // ===============================
-  // GETTERY
+  // SESSION RESTORE
+  // ===============================
+
+  Future<void> _restoreSession() async {
+    final token = await _storage.read(key: StorageKeys.accessToken);
+    final userId = await _storage.read(key: StorageKeys.userId);
+
+    if (token != null && token.isNotEmpty) {
+      state = AuthState(isLoggedIn: true, userId: userId);
+    }
+  }
+
+  // ===============================
+  // START SESSION
+  // ===============================
+
+  Future<void> startSession({
+    required String accessToken,
+    required String refreshToken,
+    String? userId,
+  }) async {
+    await _storage.write(key: StorageKeys.accessToken, value: accessToken);
+    await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
+
+    if (userId != null) {
+      await _storage.write(key: StorageKeys.userId, value: userId);
+    }
+
+    state = AuthState(isLoggedIn: true, userId: userId);
+  }
+
+  // ===============================
+  // ACCESSORS
   // ===============================
 
   Future<String?> getAccessToken() =>
@@ -23,67 +72,19 @@ class SessionService {
   Future<String?> getUserId() => _storage.read(key: StorageKeys.userId);
 
   // ===============================
-  // ZAPIS SESJI
+  // END SESSION
   // ===============================
 
-  Future<void> startSession({
-    required String accessToken,
-    required String refreshToken,
-    String? userId,
-  }) async {
-    await _storage.write(key: StorageKeys.accessToken, value: accessToken);
-    await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
-    if (userId != null)
-      await _storage.write(key: StorageKeys.userId, value: userId);
-
-    // aktualizacja stanu logowania w Riverpod
-    _ref.read(isLoggedInProvider.notifier).state = true;
-  }
-
-  Future<void> saveSession({
-    required String accessToken,
-    required String refreshToken,
-    String? userId,
-  }) => startSession(
-    accessToken: accessToken,
-    refreshToken: refreshToken,
-    userId: userId,
-  );
-
-  // ===============================
-  // WALIDACJA SESJI
-  // ===============================
-
-  Future<bool> hasRefreshToken() async {
-    final token = await getRefreshToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  Future<void> restoreSession() async {
-    final token = await getAccessToken();
-    _ref.read(isLoggedInProvider.notifier).state =
-        token != null && token.isNotEmpty;
-  }
-
-  // ===============================
-  // CZYSZCZENIE SESJI
-  // ===============================
-
-  Future<void> endSession() => clearSession();
-
-  Future<void> clearSession() async {
-
-    await authService.logout();
+  Future<void> endSession() async {
     await _storage.delete(key: StorageKeys.accessToken);
     await _storage.delete(key: StorageKeys.refreshToken);
     await _storage.delete(key: StorageKeys.userId);
 
-    _ref.read(isLoggedInProvider.notifier).state = false;
+    state = AuthState.initial();
   }
 }
 
-/// Provider Riverpoda dla SessionService
-final sessionServiceProvider = Provider<SessionService>((ref) {
-  final storage = ref.watch(secureStorageProvider);
-  return SessionService(ref, storage);
-});
+// Provider
+final sessionServiceProvider = NotifierProvider<SessionService, AuthState>(
+  SessionService.new,
+);

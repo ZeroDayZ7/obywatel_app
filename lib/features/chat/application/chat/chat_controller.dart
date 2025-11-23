@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:convert';
 
+import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
 import 'package:obywatel_plus/features/chat/domain/models/message.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/message_repository.dart';
-import 'package:obywatel_plus/features/chat/application/message/message_service.dart';
 // import 'package:obywatel_plus/features/chat/session/session_service.dart';
 import 'package:obywatel_plus/features/chat/crypto/message_crypto_service.dart';
 
