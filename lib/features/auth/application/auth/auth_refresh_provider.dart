@@ -13,7 +13,7 @@ class AuthRefreshListenable extends ChangeNotifier {
   AuthRefreshListenable(Ref ref) {
     _subscription = ref.listen<AuthState>(
       sessionServiceProvider,
-      (_, __) => notifyListeners(),
+      (_, _) => notifyListeners(),
     );
   }
 

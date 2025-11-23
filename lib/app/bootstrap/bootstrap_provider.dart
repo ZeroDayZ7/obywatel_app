@@ -42,7 +42,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       // versionService.checkForUpdates(),
     ]);
     logger.i('🔒 SecureStorage gotowy');
-    logger.i('🔑 AuthProvider zainicjalizowany');
+    logger.i('🔑 sessionService zainicjalizowany');
   } catch (e, st) {
     logger.e(
       '❌ Błąd podczas inicjalizacji aplikacji',

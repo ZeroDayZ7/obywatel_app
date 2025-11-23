@@ -1,12 +1,10 @@
 // features/auth/application/auth_service.dart
 
-import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class LoginResult {
   final bool success;
@@ -95,12 +93,3 @@ class AuthService {
     }
   }
 }
-
-// Provider
-final authServiceProvider = Provider<AuthService>((ref) {
-  return AuthService(
-    apiClient: ref.watch(apiClientProvider),
-    logger: ref.watch(appLoggerProvider),
-    session: ref.watch(sessionServiceProvider.notifier),
-  );
-});
