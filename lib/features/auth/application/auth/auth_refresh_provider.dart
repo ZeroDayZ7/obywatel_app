@@ -2,7 +2,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 /// Adapter - zamienia Riverpodowy Notifier (SessionService)

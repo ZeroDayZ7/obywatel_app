@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HiveStorageService {
   final String boxName;
@@ -44,3 +45,7 @@ class HiveStorageService {
     }
   }
 }
+
+final hiveStorageProvider = Provider<HiveStorageService>((ref) {
+  return HiveStorageService(boxName: 'secureData');
+});

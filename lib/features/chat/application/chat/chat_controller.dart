@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/chat/domain/models/message.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/chat_repository.dart';
 import 'package:obywatel_plus/features/chat/domain/repositories/message_repository.dart';

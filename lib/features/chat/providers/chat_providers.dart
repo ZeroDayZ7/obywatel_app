@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/core_providers.dart' show apiClientProvider;
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 import '../application/session/session_service.dart';
 import '../application/message/message_service.dart';
@@ -27,7 +28,7 @@ final chatApiProvider = Provider<ChatApi>((ref) {
 // REPOSITORIES
 // ==========================================
 final chatRepositoryProvider = Provider<ChatRepository>((ref) {
-  return ChatRepositoryImpl(api: ref.watch(chatApiProvider));
+  return ChatRepositoryImpl(api: ref.watch(chatApiProvider), messageService: null);
 });
 
 final messageRepositoryProvider = Provider<MessageRepository>((ref) {

@@ -1,8 +1,6 @@
 // features/auth/application/session_service.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart'
-    show secureStorageProvider;
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';

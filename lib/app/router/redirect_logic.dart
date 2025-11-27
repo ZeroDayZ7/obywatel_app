@@ -2,7 +2,7 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/features/auth/application/auth/session_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 String? appRedirectLogic(Ref ref, GoRouterState state) {
   final logger = ref.read(appLoggerProvider);

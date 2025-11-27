@@ -1,8 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/core/core_providers.dart'
-    show authServiceProvider;
+import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 
 class LoginState {
   final bool isLoading;
@@ -64,7 +63,6 @@ class LoginNotifier extends Notifier<LoginState> {
       return;
     }
 
-    // SessionService ustawi isLoggedIn = true
     state = state.copyWith(isLoading: false);
   }
 }
