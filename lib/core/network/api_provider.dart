@@ -4,6 +4,7 @@ import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 
 // Provider dla Dio
 final dioProvider = Provider<Dio>((ref) {
@@ -24,7 +25,6 @@ final apiClientProvider = Provider<ApiClient>((ref) {
 
   return ApiClient(
     dio: dio,
-    tokenRefreshDio: Dio(),
     storage: storage,
     logger: logger,
   );

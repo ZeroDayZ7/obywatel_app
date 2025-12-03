@@ -1,5 +1,5 @@
 // lib/features/chat/config/chat_endpoints.dart
-import 'package:obywatel_plus/features/chat/config/chat_config.dart';
+import 'package:obywatel_plus/features/chat/core/chat_config.dart';
 
 class ChatEndpoints {
   static String messages(String chatId) =>

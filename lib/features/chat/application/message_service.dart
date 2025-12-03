@@ -1,6 +1,6 @@
-import 'package:obywatel_plus/features/chat/domain/models/message.dart';
-import 'package:obywatel_plus/features/chat/domain/repositories/message_repository.dart';
-import 'package:obywatel_plus/features/chat/domain/errors/chat_exceptions.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
+import 'package:obywatel_plus/features/chat/domain/message_repository.dart';
+import 'package:obywatel_plus/features/chat/core/chat_exceptions.dart';
 
 class MessageService {
   final MessageRepository messageRepository;

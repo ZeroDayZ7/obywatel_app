@@ -1,15 +1,15 @@
-// lib/features/chat/data/dto/message_dto.dart
-import '../../domain/models/message.dart';
+import '../domain/message.dart';
 
 class MessageDto {
   final String id;
   final String chatId;
   final String senderId;
   final String text;
-  final String timestamp; // w formacie ISO
+  final String timestamp;
 
   final int status;
   final bool synced;
+  final String? imageUrl;
 
   MessageDto({
     required this.id,
@@ -19,6 +19,7 @@ class MessageDto {
     required this.timestamp,
     required this.status,
     required this.synced,
+    required this.imageUrl,
   });
 
   factory MessageDto.fromJson(Map<String, dynamic> json) => MessageDto(
@@ -29,6 +30,7 @@ class MessageDto {
     timestamp: json['timestamp'] as String,
     status: json['status'] as int,
     synced: json['synced'] ?? false,
+    imageUrl: json['imageUrl'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -39,9 +41,10 @@ class MessageDto {
     'timestamp': timestamp,
     'status': status,
     'synced': synced,
+    'imageUrl': imageUrl,
   };
 
-  /// Konwersja do modelu domenowego
+  /// DTO → DOMAIN
   Message toDomain({String? currentUserId}) {
     return Message(
       id: id,
@@ -52,10 +55,11 @@ class MessageDto {
       isMe: currentUserId != null ? senderId == currentUserId : false,
       status: MessageStatus.values[status],
       synced: synced,
+      imageUrl: imageUrl,
     );
   }
 
-  /// Tworzenie DTO z modelu domenowego
+  /// DOMAIN → DTO
   factory MessageDto.fromDomain(Message message) => MessageDto(
     id: message.id,
     chatId: message.chatId,
@@ -64,5 +68,6 @@ class MessageDto {
     timestamp: message.timestamp.toIso8601String(),
     status: message.status.index,
     synced: message.synced,
+    imageUrl: message.imageUrl,
   );
 }

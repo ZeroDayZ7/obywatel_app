@@ -2,6 +2,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+final sharedPreferencesServiceProvider =
+    FutureProvider<SharedPreferencesService>((ref) async {
+      final prefs = await SharedPreferences.getInstance();
+      return SharedPreferencesService(prefs);
+    });
+
 class SharedPreferencesService {
   final SharedPreferences _prefs;
 
@@ -47,9 +53,3 @@ class SharedPreferencesService {
     }
   }
 }
-
-final sharedPreferencesServiceProvider =
-    FutureProvider<SharedPreferencesService>((ref) async {
-      final prefs = await SharedPreferences.getInstance();
-      return SharedPreferencesService(prefs);
-    });

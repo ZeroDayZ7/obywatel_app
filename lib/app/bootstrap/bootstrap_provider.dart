@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_service.dart' show sharedPreferencesServiceProvider;
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 // import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 
@@ -22,8 +24,8 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
-      // await storage.clearAll();
-      // await sharedPrefs.clearAll();
+      await storage.clearAll();
+      await sharedPrefs.clearAll();
     }
 
     // 2️ Inicjalizacja SecurityService, Auth**

@@ -9,13 +9,16 @@ class Message extends Equatable {
   final String text;
   final DateTime timestamp;
 
-  /// Wyliczane lokalnie, nie pochodzi z API
+  /// Optional image (photo, attachment)
+  final String? imageUrl;
+
+  /// Local UI flag
   final bool isMe;
 
-  /// NOWE POLE
+  /// Message sync status
   final MessageStatus status;
 
-  /// Opcjonalne – czy zsynchronizowane z backendem
+  /// Whether the message is synced with backend
   final bool synced;
 
   const Message({
@@ -26,11 +29,12 @@ class Message extends Equatable {
     required this.timestamp,
     required this.isMe,
     required this.status,
+    this.imageUrl,
     this.synced = false,
   });
 
   // ============================================================
-  // JSON → Message
+  // JSON → Domain
   // ============================================================
   factory Message.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
     return Message(
@@ -39,16 +43,15 @@ class Message extends Equatable {
       senderId: json['senderId'] as String,
       text: json['text'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
-
       isMe: currentUserId != null ? json['senderId'] == currentUserId : false,
-
       status: MessageStatus.values[json['status'] as int],
       synced: json['synced'] ?? false,
+      imageUrl: json['imageUrl'] as String?,
     );
   }
 
   // ============================================================
-  // Message → JSON
+  // Domain → JSON
   // ============================================================
   Map<String, dynamic> toJson() {
     return {
@@ -59,11 +62,12 @@ class Message extends Equatable {
       'timestamp': timestamp.toIso8601String(),
       'status': status.index,
       'synced': synced,
+      'imageUrl': imageUrl,
     };
   }
 
   // ============================================================
-  // Kopiowanie
+  // copyWith()
   // ============================================================
   Message copyWith({
     String? id,
@@ -74,6 +78,7 @@ class Message extends Equatable {
     bool? isMe,
     MessageStatus? status,
     bool? synced,
+    String? imageUrl,
   }) {
     return Message(
       id: id ?? this.id,
@@ -84,6 +89,7 @@ class Message extends Equatable {
       isMe: isMe ?? this.isMe,
       status: status ?? this.status,
       synced: synced ?? this.synced,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 
@@ -97,5 +103,6 @@ class Message extends Equatable {
     isMe,
     status,
     synced,
+    imageUrl,
   ];
 }

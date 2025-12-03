@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:obywatel_plus/features/chat/models/chat_message.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 
 class MessageBubble extends StatelessWidget {
-  final ChatMessage message;
+  final Message message;
 
   const MessageBubble({super.key, required this.message});
 

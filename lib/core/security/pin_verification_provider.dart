@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/security/pin_service.dart';
 
 /// State klasy przechowujący informacje o weryfikacji PIN
 class PinVerificationState {

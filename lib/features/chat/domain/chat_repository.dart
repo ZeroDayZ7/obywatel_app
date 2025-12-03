@@ -1,5 +1,5 @@
-import '../models/chat.dart';
-import '../models/message.dart';
+import 'chat.dart';
+import 'message.dart';
 
 abstract class ChatRepository {
   /// Pobiera informacje o czacie (np. nazwa, uczestnicy, avatar).

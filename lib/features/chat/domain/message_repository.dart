@@ -1,4 +1,4 @@
-import '../models/message.dart';
+import 'message.dart';
 
 /// Repository odpowiedzialne WYŁĄCZNIE za warstwę danych lokalnych:
 /// - zapis wiadomości offline

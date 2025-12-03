@@ -2,118 +2,111 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart'; // for kDebugMode
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 
-/// A service for securely hashing and verifying passwords using Argon2id.
-/// Automatically adjusts parameters depending on whether the app runs
-/// in debug or production mode.
+/// A provider that creates a single instance of [HashService] with the app logger.
+/// This ensures that all services in the app use the same [HashService] instance,
+/// rather than creating separate instances manually.
+///
+/// Usage example:
+/// ```dart
+/// final hashService = ref.read(hashServiceProvider);
+/// final hash = await hashService.hash('1234');
+/// final isValid = await hashService.verify('1234', hash);
+/// ```
+final hashServiceProvider = Provider<HashService>((ref) {
+  final logger = ref.read(appLoggerProvider);
+  return HashService(logger);
+});
+
 class HashService {
   final AppLogger _logger;
-  final Argon2id _argon2;
-  final Random _random;
+  static final _random = Random.secure();
 
-  HashService(this._logger)
-    : _argon2 = kDebugMode
-          ? Argon2id(
-              memory: 4 * 1024, // 4 MiB memory (weak for dev)
-              parallelism: 1,
-              iterations: 1, // super fast for local testing
-              hashLength: 16,
-            )
-          : Argon2id(
-              memory: 64 * 1024, // 64 MiB for production
-              parallelism: 4,
-              iterations: 3, // strong and resistant to brute force
-              hashLength: 32,
-            ),
-      _random = Random.secure();
+  HashService(this._logger);
 
-  /// Generates a cryptographically secure random salt.
-  List<int> _generateSalt([int length = 16]) =>
-      List<int>.generate(length, (_) => _random.nextInt(256));
+  static const int saltLength = 16;
 
-  /// Hashes a password using Argon2id and returns Base64(salt + hash).
-  ///
-  /// Logs progress and errors. Throws [ArgumentError] if password is empty.
+  // Finalna i jedyna konfiguracja — PROD (silna)
+  static final _argon = Argon2id(
+    memory: 128 * 1024, // 128MB
+    iterations: 4,
+    parallelism: 4,
+    hashLength: 32, // 32-byte hash (256-bit)
+  );
+
+  /// Tworzy hash hasła (BASE64 URL SAFE)
   Future<String> hash(String password) async {
-    _logger.d(
-      'HashService: Starting password hashing (length: ${password.length})',
+    if (password.isEmpty) throw ArgumentError('Password cannot be empty');
+
+    final salt = List<int>.generate(saltLength, (_) => _random.nextInt(256));
+
+    _logger.d('HashService: Hashing in isolate...');
+
+    final hashBytes = await compute(
+      _computeHashInIsolate,
+      _HashJob(password, salt, _argon),
     );
 
-    if (password.isEmpty) {
-      _logger.e('HashService: Attempted to hash an empty password!');
-      throw ArgumentError('Password cannot be empty!');
-    }
+    final combined = [...salt, ...hashBytes];
 
-    try {
-      final salt = _generateSalt();
-      final secretKey = await _argon2.deriveKeyFromPassword(
-        password: password,
-        nonce: salt,
-      );
-
-      final hashBytes = await secretKey.extractBytes();
-      final combined = [...salt, ...hashBytes];
-      final result = base64Encode(combined);
-
-      _logger.i(
-        'HashService: Hash generated successfully (length: ${result.length}, mode: ${kDebugMode ? 'debug' : 'production'})',
-      );
-
-      return result;
-    } catch (e, s) {
-      _logger.e('HashService: Error during hashing', error: e, stackTrace: s);
-      rethrow;
-    }
+    return base64Url.encode(combined);
   }
 
-  /// Verifies whether a given password matches the stored Base64 hash.
-  ///
-  /// Returns `true` if valid, `false` otherwise. Logs all outcomes.
+  /// Weryfikuje hasło
   Future<bool> verify(String password, String storedHash) async {
-    _logger.d(
-      'HashService: Starting password verification (stored hash length: ${storedHash.length})',
-    );
-
-    if (password.isEmpty || storedHash.isEmpty) {
-      _logger.w('HashService: Empty password or stored hash – denied');
-      return false;
-    }
+    if (password.isEmpty || storedHash.isEmpty) return false;
 
     try {
-      final decoded = base64Decode(storedHash);
-      final expectedLength = kDebugMode ? 16 + 16 : 16 + 32;
-      // 16 bytes salt + 16 bytes hash (dev)
-      // 16 bytes salt + 32 bytes hash (prod)
+      List<int> bytes;
+      try {
+        bytes = base64Url.decode(storedHash);
+      } catch (_) {
+        bytes = base64.decode(storedHash); // support legacy
+      }
 
-      if (decoded.length < expectedLength) {
-        _logger.w(
-          'HashService: Invalid stored hash (too short: ${decoded.length} bytes, expected: $expectedLength)',
-        );
+      const minLength = saltLength + 32; // 16 salt + 32 hash = 48 bajtów
+      if (bytes.length < minLength) {
+        _logger.w('HashService: Hash too short (${bytes.length} bytes)');
         return false;
       }
 
-      final salt = decoded.sublist(0, 16);
-      final originalHash = decoded.sublist(16);
+      final salt = bytes.sublist(0, saltLength);
+      final expectedHash = bytes.sublist(saltLength);
 
-      final secretKey = await _argon2.deriveKeyFromPassword(
-        password: password,
-        nonce: salt,
+      final calculatedHash = await compute(
+        _computeHashInIsolate,
+        _HashJob(password, salt, _argon),
       );
-      final newHash = await secretKey.extractBytes();
 
-      final isValid = const ListEquality().equals(newHash, originalHash);
-      _logger.i('HashService: Password verification result: $isValid');
+      final isValid = const ListEquality().equals(calculatedHash, expectedHash);
 
+      _logger.d('HashService: Verification result: $isValid');
       return isValid;
-    } catch (e, s) {
-      _logger.e(
-        'HashService: Error during verification',
-        error: e,
-        stackTrace: s,
-      );
+    } catch (e, st) {
+      _logger.e('HashService: Verification error', error: e, stackTrace: st);
       return false;
     }
   }
+}
+
+/// --- isolate job ---
+class _HashJob {
+  final String password;
+  final List<int> salt;
+  final Argon2id algorithm;
+
+  _HashJob(this.password, this.salt, this.algorithm);
+}
+
+/// --- isolate function ---
+Future<List<int>> _computeHashInIsolate(_HashJob job) async {
+  final key = await job.algorithm.deriveKeyFromPassword(
+    password: job.password,
+    nonce: job.salt,
+  );
+  return await key.extractBytes();
 }

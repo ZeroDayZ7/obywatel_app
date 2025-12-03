@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/chat/models/chat_message.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 import 'message_bubble.dart';
 import 'date_divider.dart';
 
 class MessageList extends StatelessWidget {
-  final List<ChatMessage> messages;
+  final List<Message> messages;
   final ScrollController controller;
 
   const MessageList({

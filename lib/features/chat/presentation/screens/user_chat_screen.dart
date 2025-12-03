@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/chat/models/chat_message.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/user_chat_app_bar.dart';
 import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/message_list.dart';
 import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/message_input_field.dart';
@@ -14,20 +14,27 @@ class UserChatScreen extends StatefulWidget {
 }
 
 class _UserChatScreenState extends State<UserChatScreen> {
-  final List<ChatMessage> messages = [
-    ChatMessage(
+  final List<Message> messages = [
+    Message(
+      id: "1",
+      chatId: "local",
+      senderId: "me",
       text: "Cześć! Jak się masz?",
       timestamp: DateTime.now().subtract(const Duration(hours: 1)),
       isMe: true,
       status: MessageStatus.read,
+      imageUrl: null,
     ),
-    ChatMessage(
+    Message(
+      id: "2",
+      chatId: "local",
+      senderId: "user2",
       text: "Hej! Wszystko dobrze, a u Ciebie?",
       timestamp: DateTime.now().subtract(const Duration(minutes: 55)),
       isMe: false,
       status: MessageStatus.read,
+      imageUrl: null,
     ),
-    // ... inne wiadomości
   ];
 
   final TextEditingController _controller = TextEditingController();
@@ -35,24 +42,35 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
   void _sendMessage({String? imageUrl}) {
     final text = _controller.text.trim();
+
     if (text.isEmpty && imageUrl == null) return;
-    final newMessage = ChatMessage(
+
+    final newMessage = Message(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      chatId: "local",
+      senderId: "me",
       text: text,
       timestamp: DateTime.now(),
       isMe: true,
       status: MessageStatus.sent,
       imageUrl: imageUrl,
     );
+
     setState(() {
       messages.add(newMessage);
     });
+
     _controller.clear();
+
+    // auto-scroll
     Future.delayed(const Duration(milliseconds: 100), () {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
     });
   }
 
