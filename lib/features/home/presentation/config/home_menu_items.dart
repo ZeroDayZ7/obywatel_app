@@ -16,6 +16,18 @@ const List<Map<String, dynamic>> homeMenuItems = [
     'color': Color(0xFF00F0FF),
   },
   {
+    'icon': Icons.work,
+    'label': 'Praca i Kariera',
+    'route': AppRoutes.workAndCareer,
+    'color': Color(0xFF0077FF),
+  },
+  {
+    'icon': Icons.folder,
+    'label': 'Dokumenty',
+    'route': AppRoutes.documents,
+    'color': Color(0xFF5500FF),
+  },
+  {
     'icon': Icons.explore,
     'label': 'Odkryj',
     'route': AppRoutes.explore,
@@ -26,12 +38,6 @@ const List<Map<String, dynamic>> homeMenuItems = [
     'label': 'Ja',
     'route': AppRoutes.profile,
     'color': Color(0xFFFF00F5),
-  },
-  {
-    'icon': Icons.folder,
-    'label': 'Dokumenty',
-    'route': AppRoutes.documents,
-    'color': Color(0xFF5500FF),
   },
   {
     'icon': Icons.payment,

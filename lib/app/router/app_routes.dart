@@ -16,7 +16,10 @@ class AppRoutes {
 
   // Ścieżki dla HomeScreen dashboard
   static const profile = '/profile';
+
   static const documents = '/documents';
+  static const idCard = '/documents/id_card';
+
   static const notifications = '/notifications';
   static const settings = '/settings';
   static const security = '/security';
@@ -32,4 +35,5 @@ class AppRoutes {
   static const videos = '/videos';
   static const favorites = '/favorites';
   static const help = '/help';
+  static const workAndCareer = '/work_and_career';
 }

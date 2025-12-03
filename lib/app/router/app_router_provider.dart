@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_refresh_provider.dart';
 import 'package:obywatel_plus/features/auth/presentation/login/login_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/chat_screen.dart' show ChatScreen;
-import 'package:obywatel_plus/features/home/presentation/documents_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
@@ -15,6 +14,11 @@ import 'package:obywatel_plus/core/security/presentation/security_setup_screen.d
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/user_chat_screen.dart';
+
+import 'package:obywatel_plus/features/work_and_career/presentation/screens/work_and_career_home.dart';
+
+import 'package:obywatel_plus/features/documents/presentation/screens/documents_home.dart';
+import 'package:obywatel_plus/features/documents/presentation/screens/id_card_screen.dart';
 
 import 'package:obywatel_plus/core/errors/error_screen.dart';
 
@@ -40,19 +44,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
       _goRouteWithTransition(AppRoutes.securitySetup, const SecuritySetupScreen()),
       _goRouteWithTransition(AppRoutes.profile, const ProfileScreen()),
-      _goRouteWithTransition(AppRoutes.documents, const DocumentsScreen()),
+      _documentsRoute(),
       _goRouteWithTransition(AppRoutes.notifications, const NotificationsScreen()),
 
-      // brakujące podstrony (na razie placeholdery)
-      _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
+      _goRouteWithTransition(AppRoutes.workAndCareer, const WorkAndCareerHome()),
+
       _goRouteWithTransition(AppRoutes.chats, const ChatScreen()),
-      _goRouteWithStateBuilder(
-        AppRoutes.chatDetail,
-        (context, state) {
-          final username = state.pathParameters['username']!;
-          return UserChatScreen(username: username);
-        },
-      ),
+      _goRouteWithStateBuilder(AppRoutes.chatDetail, (context, state) {
+        final username = state.pathParameters['username']!;
+        return UserChatScreen(username: username);
+      }),
+      _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
       _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
       _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
       _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),
@@ -64,6 +66,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.favorites, const PlaceholderScreen('Ulubione')),
       _goRouteWithTransition(AppRoutes.help, const PlaceholderScreen('Pomoc')),
     ],
+
     /// GLOBALNY fallback błędu routingu
     errorBuilder: (context, state) {
       debugPrint('⚠️ GoRouter error: ${state.error}');
@@ -75,17 +78,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
-// Funkcja pomocnicza dla routingu z animacją
-GoRoute _goRouteWithTransition(String path, Widget screen) {
+GoRoute _documentsRoute() {
+  return GoRoute(
+    path: AppRoutes.documents,
+    parentNavigatorKey: _rootNavigatorKey,
+    pageBuilder: (context, state) => MaterialPage(child: const DocumentsScreen()),
+    routes: [
+      GoRoute(
+        path: 'id_card',
+        pageBuilder: (context, state) => MaterialPage(child: const IDCardScreen()),
+      ),
+    ],
+  );
+}
+
+// Funkcja pomocnicza dla routingu z animacją i opcjonalnymi nested routes
+GoRoute _goRouteWithTransition(String path, Widget screen, {List<GoRoute>? routes}) {
   return GoRoute(
     path: path,
     parentNavigatorKey: _rootNavigatorKey,
     pageBuilder: (context, state) => _customPage(state: state, child: screen),
+    routes: routes ?? [],
   );
 }
 
-GoRoute _goRouteWithStateBuilder(
-    String path, Widget Function(BuildContext, GoRouterState) builder) {
+GoRoute _goRouteWithStateBuilder(String path, Widget Function(BuildContext, GoRouterState) builder) {
   return GoRoute(
     path: path,
     parentNavigatorKey: _rootNavigatorKey,
@@ -104,10 +121,7 @@ GoRoute _goNestedRoute(String path, Widget screen) {
 }
 
 // Tworzymy CustomTransitionPage dla animacji
-CustomTransitionPage _customPage({
-  required GoRouterState state,
-  required Widget child,
-}) {
+CustomTransitionPage _customPage({required GoRouterState state, required Widget child}) {
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
@@ -118,10 +132,7 @@ CustomTransitionPage _customPage({
         end: Offset.zero,
       ).animate(CurvedAnimation(parent: animation, curve: curve));
 
-      final fadeAnimation = Tween<double>(
-        begin: 0,
-        end: 1,
-      ).animate(CurvedAnimation(parent: animation, curve: curve));
+      final fadeAnimation = Tween<double>(begin: 0, end: 1).animate(CurvedAnimation(parent: animation, curve: curve));
 
       return SlideTransition(
         position: slideAnimation,

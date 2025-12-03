@@ -1,6 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
-
+  "dart.lineLength": 120,
   // (Explorer)
   "files.exclude": {
     ".dart_tool": true,

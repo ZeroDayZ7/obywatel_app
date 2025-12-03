@@ -59,6 +59,7 @@ dependencies:
   video_compress: ^3.1.4
   isolate_manager: ^6.1.2
   intl: ^0.20.2
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:

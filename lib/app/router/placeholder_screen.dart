@@ -15,7 +15,7 @@ class PlaceholderScreen extends StatelessWidget {
       ),
       body: Center(
         child: Text(
-          '$title – w budowie',
+          '$title - w budowie',
           style: const TextStyle(color: Colors.white70),
         ),
       ),

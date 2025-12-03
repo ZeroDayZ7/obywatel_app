@@ -33,3 +33,5 @@ analyzer:
     - .vscode/**
     - scripts/**
     - assets/**
+dart:
+  line-length: 120
