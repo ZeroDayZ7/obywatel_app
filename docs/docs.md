@@ -1,7 +1,7 @@
 adb devices
 
-5200d78bfa479449 device
-310008a89dd353f9 unauthorized
+5200d78bfa479449 device 17
+310008a89dd353f9 unauthorized 16
 
 adb -s 5200d78bfa479449 reverse tcp:8081 tcp:8081
 
@@ -15,5 +15,8 @@ flutter run
 
 adb -s 5200d78bfa479449 shell top
 
+
+// generowanie icon
+dart run flutter_launcher_icons:main
 
 

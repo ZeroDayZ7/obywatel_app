@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <application android:label="Obywatel+"
                  android:name="${applicationName}"
-                 android:icon="@mipmap/ic_launcher">
+                 android:icon="@mipmap/launcher_icon">
         <activity android:name=".MainActivity"
                   android:exported="true"
                   android:launchMode="singleTop"

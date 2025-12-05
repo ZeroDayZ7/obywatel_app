@@ -1,0 +1,28 @@
+flutter_launcher_icons:
+  image_path: "assets/icon/icon.png" # główny obrazek ikony
+
+  android: "launcher_icon" # generuj dla Android
+  min_sdk_android: 21 # minimalny SDK
+  # Jeśli chcesz ikonę adaptacyjną, odkomentuj:
+  # adaptive_icon_background: "assets/icon/background.png"
+  # adaptive_icon_foreground: "assets/icon/foreground.png"
+
+  ios: true # generuj dla iOS
+  remove_alpha_ios: true # usuń kanał alpha dla iOS
+  # Jeśli chcesz wersję dark mode:
+  # image_path_ios_dark_transparent: "assets/icon/icon_dark.png"
+
+  web:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    background_color: "#ffffff" # tło dla web manifestu
+    theme_color: "#1E90FF" # główny kolor motywu web
+
+  windows:
+    generate: true
+    image_path: "assets/icon/icon.png"
+    icon_size: 48 # rozmiar ikony dla Windows
+
+  macos:
+    generate: true
+    image_path: "assets/icon/icon.png"

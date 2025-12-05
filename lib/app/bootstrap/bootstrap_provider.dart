@@ -8,6 +8,8 @@ import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart' show sharedPreferencesServiceProvider;
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:flutter_background/flutter_background.dart';
+
 // import 'package:obywatel_plus/features/auth/application/auth_provider.dart';
 
 final bootstrapProvider = FutureProvider<void>((ref) async {
@@ -15,12 +17,26 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   logger.i('🚀 Inicjalizacja aplikacji startuje...');
 
   try {
+    // 🔹 BACKGROUND MODE — najlepiej na samym początku
+    final androidConfig = FlutterBackgroundAndroidConfig(
+      notificationTitle: "Twoja aplikacja jest aktywna",
+      notificationText: "Działa w tle, aby odbierać powiadomienia i połączenia.",
+      notificationImportance: AndroidNotificationImportance.normal,
+      enableWifiLock: true,
+    );
+
+    final hasPermissions = await FlutterBackground.initialize(androidConfig: androidConfig);
+
+    if (hasPermissions) {
+      await FlutterBackground.enableBackgroundExecution();
+      logger.i('📡 Background mode aktywny');
+    } else {
+      logger.w('⚠️ Brak zgody na background mode');
+    }
     // 🔹 Wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
       final storage = ref.read(secureStorageProvider);
-      final sharedPrefs = await ref.read(
-        sharedPreferencesServiceProvider.future,
-      );
+      final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
@@ -46,11 +62,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     logger.i('🔒 SecureStorage gotowy');
     logger.i('🔑 sessionService zainicjalizowany');
   } catch (e, st) {
-    logger.e(
-      '❌ Błąd podczas inicjalizacji aplikacji',
-      error: e,
-      stackTrace: st,
-    );
+    logger.e('❌ Błąd podczas inicjalizacji aplikacji', error: e, stackTrace: st);
     rethrow;
   }
 
