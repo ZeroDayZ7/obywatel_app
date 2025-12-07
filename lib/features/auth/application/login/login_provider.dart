@@ -9,19 +9,9 @@ class LoginState {
   final String email;
   final String password;
 
-  const LoginState({
-    this.isLoading = false,
-    this.error,
-    this.email = '',
-    this.password = '',
-  });
+  const LoginState({this.isLoading = false, this.error, this.email = '', this.password = ''});
 
-  LoginState copyWith({
-    bool? isLoading,
-    String? error,
-    String? email,
-    String? password,
-  }) {
+  LoginState copyWith({bool? isLoading, String? error, String? email, String? password}) {
     return LoginState(
       isLoading: isLoading ?? this.isLoading,
       error: error ?? this.error,
@@ -34,10 +24,7 @@ class LoginState {
 class LoginNotifier extends Notifier<LoginState> {
   @override
   LoginState build() {
-    return LoginState(
-      email: apiConstants.defaultEmail,
-      password: apiConstants.defaultPassword,
-    );
+    return LoginState(email: apiConstants.defaultEmail, password: apiConstants.defaultPassword);
   }
 
   void setEmail(String value) {
@@ -48,15 +35,12 @@ class LoginNotifier extends Notifier<LoginState> {
     state = state.copyWith(password: value, error: null);
   }
 
-  Future<void> onLogin() async {
+  Future<void> onLogin({required String email, required String password}) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final authService = ref.read(authServiceProvider);
 
-    final result = await authService.login(
-      email: state.email,
-      password: state.password,
-    );
+    final result = await authService.login(email: email, password: password);
 
     if (!result.success) {
       state = state.copyWith(isLoading: false, error: result.error);
@@ -67,6 +51,4 @@ class LoginNotifier extends Notifier<LoginState> {
   }
 }
 
-final loginStateProvider = NotifierProvider<LoginNotifier, LoginState>(
-  LoginNotifier.new,
-);
+final loginStateProvider = NotifierProvider<LoginNotifier, LoginState>(LoginNotifier.new);

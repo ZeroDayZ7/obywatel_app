@@ -8,8 +8,7 @@ import 'package:obywatel_plus/features/auth/application/session/session_service.
 // auth_service_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/core_providers.dart' show appLoggerProvider;
-import 'package:obywatel_plus/core/network/api_provider.dart'
-    show apiClientProvider;
+import 'package:obywatel_plus/core/network/api_provider.dart' show apiClientProvider;
 
 class LoginResult {
   final bool success;
@@ -22,26 +21,17 @@ class AuthService {
   final AppLogger _logger;
   final SessionService _session;
 
-  AuthService({
-    required ApiClient apiClient,
-    required AppLogger logger,
-    required SessionService session,
-  }) : _apiClient = apiClient,
-       _logger = logger,
-       _session = session;
+  AuthService({required ApiClient apiClient, required AppLogger logger, required SessionService session})
+    : _apiClient = apiClient,
+      _logger = logger,
+      _session = session;
 
   // ============================
   // LOGIN
   // ============================
-  Future<LoginResult> login({
-    required String email,
-    required String password,
-  }) async {
+  Future<LoginResult> login({required String email, required String password}) async {
     try {
-      final response = await _apiClient.post(
-        ApiEndpoints.login,
-        data: {'email': email, 'password': password},
-      );
+      final response = await _apiClient.post(ApiEndpoints.login, data: {'email': email, 'password': password});
 
       _logger.i('Login response: ${response.data}');
 
@@ -53,16 +43,12 @@ class AuthService {
         return const LoginResult(success: false, error: 'Missing tokens');
       }
 
-      await _session.startSession(
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        userId: userId,
-      );
+      await _session.startSession(accessToken: accessToken, refreshToken: refreshToken, userId: userId);
 
       return const LoginResult(success: true);
     } catch (e, st) {
       _logger.e('Login failed', error: e, stackTrace: st);
-      return LoginResult(success: false, error: e.toString());
+      return const LoginResult(success: false, error: 'Wystąpił błąd. Spróbuj ponownie.');
     }
   }
 
@@ -73,10 +59,7 @@ class AuthService {
     try {
       final refreshToken = await _session.getRefreshToken();
 
-      await _apiClient.post(
-        ApiEndpoints.logout,
-        data: {StorageKeys.refreshToken: refreshToken},
-      );
+      await _apiClient.post(ApiEndpoints.logout, data: {StorageKeys.refreshToken: refreshToken});
     } catch (e, st) {
       _logger.w('Logout request failed', error: e, stackTrace: st);
     }

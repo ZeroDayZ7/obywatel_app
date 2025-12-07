@@ -5,19 +5,17 @@ import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/network/token_refresh_interceptor.dart';
+import 'package:obywatel_plus/core/network/global_error_interceptor.dart';
 
 class ApiClient {
   final Dio _dio;
   final SecureStorageService _storage;
   final AppLogger _logger;
 
-  ApiClient({
-    required Dio dio,
-    required SecureStorageService storage,
-    required AppLogger logger,
-  }) : _dio = dio,
-       _storage = storage,
-       _logger = logger {
+  ApiClient({required Dio dio, required SecureStorageService storage, required AppLogger logger})
+    : _dio = dio,
+      _storage = storage,
+      _logger = logger {
     _configureDio();
   }
 
@@ -40,9 +38,7 @@ class ApiClient {
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _logger.i(
-            '<-- ${response.statusCode} ${response.requestOptions.path}',
-          );
+          _logger.i('<-- ${response.statusCode} ${response.requestOptions.path}');
           return handler.next(response);
         },
         onError: (error, handler) {
@@ -58,20 +54,18 @@ class ApiClient {
 
     // Dodajemy TokenRefreshInterceptor
     _dio.interceptors.add(TokenRefreshInterceptor(_dio, _storage, _logger));
+    _dio.interceptors.add(GlobalErrorInterceptor());
   }
 
   // --- Metody HTTP ---
   Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
       _dio.get(path, queryParameters: queryParams);
 
-  Future<Response> post(String path, {dynamic data}) =>
-      _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data}) => _dio.post(path, data: data);
 
-  Future<Response> put(String path, {dynamic data}) =>
-      _dio.put(path, data: data);
+  Future<Response> put(String path, {dynamic data}) => _dio.put(path, data: data);
 
-  Future<void> delete(String path, {Object? data}) =>
-      _dio.delete(path, data: data);
+  Future<void> delete(String path, {Object? data}) => _dio.delete(path, data: data);
 
   Future<Response> upload(String path, FormData formData) => _dio.post(
     path,

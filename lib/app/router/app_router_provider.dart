@@ -20,6 +20,9 @@ import 'package:obywatel_plus/features/work_and_career/presentation/screens/work
 import 'package:obywatel_plus/features/documents/presentation/screens/documents_home.dart';
 import 'package:obywatel_plus/features/documents/presentation/screens/id_card_screen.dart';
 
+
+import 'package:obywatel_plus/features/contacts/presentation/contacts_screen.dart';
+
 import 'package:obywatel_plus/core/errors/error_screen.dart';
 
 import 'app_routes.dart';
@@ -37,7 +40,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.home,
     refreshListenable: refreshListenable,
     routes: [
-      _goRouteWithTransition(AppRoutes.login, const LoginScreen()),
+      _goRouteWithTransition(AppRoutes.login, const ProfessionalLoginWidget()),
       _goRouteWithTransition(AppRoutes.pin, const PinVerificationScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
       _goRouteWithTransition(AppRoutes.test, const TestScreen()),
@@ -48,6 +51,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.notifications, const NotificationsScreen()),
 
       _goRouteWithTransition(AppRoutes.workAndCareer, const WorkAndCareerHome()),
+
+      _goRouteWithTransition(AppRoutes.contacts, ContactsScreen()),
 
       _goRouteWithTransition(AppRoutes.chats, const ChatScreen()),
       _goRouteWithStateBuilder(AppRoutes.chatDetail, (context, state) {

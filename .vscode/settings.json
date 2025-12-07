@@ -21,7 +21,8 @@
     "pubspec.lock": true,
     "obywatel_app.code-workspace": true,
     "LICENSE": true,
-    "devtools_options.yaml": true
+    "devtools_options.yaml": true,
+    "flutter_launcher_icons.yaml": true
     // "android": true
   },
 
@@ -51,7 +52,8 @@
     "docs": true,
     "android": true,
     "LICENSE": true,
-    "devtools_options.yaml": true
+    "devtools_options.yaml": true,
+    "flutter_launcher_icons.yaml": true
     // "android": true,
   }
 }
