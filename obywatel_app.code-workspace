@@ -8,6 +8,9 @@
 		},
 		{
 			"path": "../go/services_obywatel_app/auth-service"
+		},
+		{
+			"path": "../go/services_obywatel_app/platform"
 		}
 	],
 	"settings": {
