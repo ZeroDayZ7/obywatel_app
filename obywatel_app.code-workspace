@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../go/http-server-v2"
+		},
+		{
+			"path": "../go/services_obywatel_app/auth-service"
 		}
 	],
 	"settings": {
