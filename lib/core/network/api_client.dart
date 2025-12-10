@@ -35,10 +35,13 @@ class ApiClient {
             options.headers['Authorization'] = 'Bearer $token';
           }
           _logger.i('--> ${options.method} ${options.path}');
+          _logger.i('Request body: ${options.data}');
           return handler.next(options);
         },
         onResponse: (response, handler) {
           _logger.i('<-- ${response.statusCode} ${response.requestOptions.path}');
+          // logowanie całego jsona
+          _logger.i('Response data: ${response.data}');
           return handler.next(response);
         },
         onError: (error, handler) {
@@ -47,6 +50,11 @@ class ApiClient {
             error: error.error,
             stackTrace: error.stackTrace,
           );
+
+          if (error.response != null) {
+            _logger.e('Error response data: ${error.response?.data}');
+          }
+
           return handler.next(error);
         },
       ),

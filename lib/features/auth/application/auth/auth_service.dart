@@ -1,5 +1,6 @@
 // features/auth/application/auth_service.dart
 
+import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
@@ -31,24 +32,42 @@ class AuthService {
   // ============================
   Future<LoginResult> login({required String email, required String password}) async {
     try {
+      // Wyślij request do backendu
       final response = await _apiClient.post(ApiEndpoints.login, data: {'email': email, 'password': password});
 
+      // Log całego response JSON
       _logger.i('Login response: ${response.data}');
 
+      // Pobranie tokenów i userId
       final accessToken = response.data[StorageKeys.accessToken] as String?;
       final refreshToken = response.data[StorageKeys.refreshToken] as String?;
       final userId = response.data[StorageKeys.userId] as String?;
 
-      if (accessToken == null || refreshToken == null) {
-        return const LoginResult(success: false, error: 'Missing tokens');
+      if (accessToken == null || refreshToken == null || userId == null) {
+        return const LoginResult(success: false, error: 'Brak tokenów w odpowiedzi serwera.');
       }
 
+      // Rozpocznij sesję
       await _session.startSession(accessToken: accessToken, refreshToken: refreshToken, userId: userId);
 
       return const LoginResult(success: true);
     } catch (e, st) {
       _logger.e('Login failed', error: e, stackTrace: st);
-      return const LoginResult(success: false, error: 'Wystąpił błąd. Spróbuj ponownie.');
+
+      // Domyślny komunikat błędu
+      String errorMessage = 'Wystąpił błąd. Spróbuj ponownie.';
+
+      // Jeśli Dio zwrócił odpowiedź z backendu, użyj jej komunikatu
+      if (e is DioException && e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['message'] != null) {
+          errorMessage = data['message'];
+        }
+        // opcjonalnie możesz też logować cały JSON błędu
+        _logger.i('Backend error response: $data');
+      }
+
+      return LoginResult(success: false, error: errorMessage);
     }
   }
 
@@ -56,15 +75,26 @@ class AuthService {
   // LOGOUT
   // ============================
   Future<void> logout() async {
+    final refreshToken = await _session.getRefreshToken();
+
     try {
-      final refreshToken = await _session.getRefreshToken();
-
-      await _apiClient.post(ApiEndpoints.logout, data: {StorageKeys.refreshToken: refreshToken});
-    } catch (e, st) {
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        final response = await _apiClient.post(ApiEndpoints.logout, data: {StorageKeys.refreshToken: refreshToken});
+        _logger.i('Logout response: ${response.data}');
+      }
+    } on DioException catch (e, st) {
+      // logujemy błąd, ale nie przerywamy procesu
       _logger.w('Logout request failed', error: e, stackTrace: st);
-    }
 
-    await _session.endSession();
+      if (e.response != null) {
+        _logger.w('Logout response data', error: e.response!.data);
+      }
+    } catch (e, st) {
+      _logger.e('Unexpected error during logout', error: e, stackTrace: st);
+    } finally {
+      // zawsze kończymy sesję lokalnie
+      await _session.endSession();
+    }
   }
 
   // ============================

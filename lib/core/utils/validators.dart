@@ -4,7 +4,7 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'Email jest wymagany';
     }
-    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[a-zA-Z]{2,}$');
     if (!regex.hasMatch(value)) {
       return 'Nieprawidłowy format email';
     }

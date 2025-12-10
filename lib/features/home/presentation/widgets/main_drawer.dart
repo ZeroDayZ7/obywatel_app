@@ -11,16 +11,8 @@ class MainDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final items = [
       {'icon': Icons.person, 'label': 'Moje konto', 'route': AppRoutes.profile},
-      {
-        'icon': Icons.notifications,
-        'label': 'Powiadomienia',
-        'route': AppRoutes.notifications,
-      },
-      {
-        'icon': Icons.settings,
-        'label': 'Ustawienia',
-        'route': AppRoutes.settings,
-      },
+      {'icon': Icons.notifications, 'label': 'Powiadomienia', 'route': AppRoutes.notifications},
+      {'icon': Icons.settings, 'label': 'Ustawienia', 'route': AppRoutes.settings},
     ];
 
     Future<void> confirmLogout() async {
@@ -29,14 +21,9 @@ class MainDrawer extends ConsumerWidget {
         builder: (context) => AlertDialog(
           title: const Text('Wylogowanie'),
           content: const Text('Czy na pewno chcesz się wylogować?'),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Anuluj'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Anuluj')),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
               onPressed: () => Navigator.pop(context, true),
@@ -50,11 +37,6 @@ class MainDrawer extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
 
         await authService.logout();
-
-        // ⛔ NIE robimy już ręcznego context.go(AppRoutes.login)
-        // Router sam przekieruje, bo SessionService zmieniło stan.
-
-        if (context.mounted) Navigator.pop(context);
       }
     }
 
@@ -69,21 +51,12 @@ class MainDrawer extends ConsumerWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/logo.jpg',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.asset('assets/images/logo.jpg', width: 80, height: 80, fit: BoxFit.cover),
                 ),
                 const SizedBox(height: 12),
                 const Text(
                   'Obywatel+',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
@@ -100,11 +73,7 @@ class MainDrawer extends ConsumerWidget {
             ),
 
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.logout),
-            title: const Text('Wyloguj'),
-            onTap: confirmLogout,
-          ),
+          ListTile(leading: const Icon(Icons.logout), title: const Text('Wyloguj'), onTap: confirmLogout),
         ],
       ),
     );
