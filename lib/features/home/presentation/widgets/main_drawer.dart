@@ -37,6 +37,8 @@ class MainDrawer extends ConsumerWidget {
         final authService = ref.read(authServiceProvider);
 
         await authService.logout();
+
+        if (context.mounted) Navigator.of(context).pop();
       }
     }
 

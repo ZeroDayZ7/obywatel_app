@@ -22,6 +22,10 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
   void initState() {
     super.initState();
     final state = ref.read(loginStateProvider);
+
+    Future.microtask(() {
+      ref.read(loginStateProvider.notifier).clearError();
+    });
     _emailController = TextEditingController(text: state.email);
     _passwordController = TextEditingController(text: state.password);
   }
@@ -72,7 +76,9 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                   const SizedBox(height: 60),
                   Text(
                     'Zaloguj się do swojego konta',
-                    style: AppTextStyles.subtitle.copyWith(color: isDark ? const Color.fromARGB(179, 211, 211, 211) : AppColors.textSecondary),
+                    style: AppTextStyles.subtitle.copyWith(
+                      color: isDark ? const Color.fromARGB(179, 211, 211, 211) : AppColors.textSecondary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
@@ -185,7 +191,10 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                           ? const SizedBox(
                               height: 24,
                               width: 24,
-                              child: CircularProgressIndicator(color: Color.fromARGB(255, 221, 221, 221), strokeWidth: 2.5),
+                              child: CircularProgressIndicator(
+                                color: Color.fromARGB(255, 221, 221, 221),
+                                strokeWidth: 2.5,
+                              ),
                             )
                           : const Text('Zaloguj się', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                     ),

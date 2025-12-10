@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,9 +15,7 @@ void main() async {
     }
     // W produkcji — estetyczny placeholder zamiast crasha
     return const Scaffold(
-      body: Center(
-        child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16)),
-      ),
+      body: Center(child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16))),
     );
   };
 
@@ -32,12 +31,15 @@ void main() async {
   /// 4️⃣ Uruchomienie w strefie bezpieczeństwa (catchuje async errors)
   runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
+    await EasyLocalization.ensureInitialized();
     final observer = AppObserver();
 
     runApp(
-      ProviderScope(
-        observers: kDebugMode ? [observer] : [],
-        child: const AppRoot(),
+      EasyLocalization(
+        supportedLocales: const [Locale('pl', 'PL'), Locale('en', 'US')],
+        path: 'assets/translations',
+        fallbackLocale: const Locale('pl', 'PL'),
+        child: ProviderScope(observers: kDebugMode ? [observer] : [], child: const AppRoot()),
       ),
     );
   }, (error, stack) => _handleGlobalError(error, stack));

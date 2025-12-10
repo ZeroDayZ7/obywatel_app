@@ -27,6 +27,12 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
     'goingToLogin=$goingToLogin, goingToPin=$goingToPin, goingToSetup=$goingToSetup',
   );
 
+  // 1️⃣ Najpierw sprawdzamy, czy user jest wylogowany
+  if (!isLoggedIn && !goingToLogin) {
+    logger.i('🚫 User wylogowany — redirect do login');
+    return AppRoutes.login;
+  }
+
   if (!initialized) {
     logger.w('⏳ Security nie gotowy lub setup w toku — brak redirectu');
     return null;
@@ -43,10 +49,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   } else if (isLoggedIn && shouldShowLock && !goingToPin) {
     redirect = AppRoutes.pin;
     logger.i('🔒 Redirect do PIN verification');
-  } else if (isLoggedIn &&
-      !shouldShowLock &&
-      securityState.isUnlocked &&
-      goingToPin) {
+  } else if (isLoggedIn && !shouldShowLock && securityState.isUnlocked && goingToPin) {
     Future.delayed(const Duration(milliseconds: 200));
     redirect = AppRoutes.home;
     logger.i('🏠 PIN odblokowany – redirect do home');

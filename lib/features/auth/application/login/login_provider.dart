@@ -27,6 +27,10 @@ class LoginNotifier extends Notifier<LoginState> {
     return LoginState(email: apiConstants.defaultEmail, password: apiConstants.defaultPassword);
   }
 
+  void clearError() {
+    state = state.copyWith(error: null);
+  }
+
   void setEmail(String value) {
     state = state.copyWith(email: value, error: null);
   }
