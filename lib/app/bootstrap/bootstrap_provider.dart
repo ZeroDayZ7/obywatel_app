@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/lang/language_notifier.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart' show sharedPreferencesServiceProvider;
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
@@ -15,6 +16,9 @@ import 'package:flutter_background/flutter_background.dart';
 final bootstrapProvider = FutureProvider<void>((ref) async {
   final logger = ref.read(appLoggerProvider);
   logger.i('🚀 Inicjalizacja aplikacji startuje...');
+
+  final languageNotifier = ref.read(languageProvider.notifier);
+  languageNotifier.build(); 
 
   try {
     // 🔹 BACKGROUND MODE — najlepiej na samym początku
