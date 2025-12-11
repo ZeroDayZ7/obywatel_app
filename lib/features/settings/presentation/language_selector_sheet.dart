@@ -10,18 +10,23 @@ class LanguageSelectorSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(languageProvider);
+    final currentLocale = ref.watch(languageProvider);
     final notifier = ref.read(languageProvider.notifier);
 
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(LocaleKeys.settings_language.tr(), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(
+            LocaleKeys.settings_language.tr(),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
+
           RadioGroup<String>(
-            groupValue: locale.languageCode,
+            groupValue: currentLocale.languageCode,
             onChanged: (String? value) async {
               if (value != null) {
                 await notifier.setLanguage(value);
@@ -36,7 +41,13 @@ class LanguageSelectorSheet extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: AppLanguages.supported.map((lang) {
-                return RadioListTile<String>(title: Text(lang['name']!), value: lang['code']!);
+                final languageCode = lang.code;
+                final languageName = lang.name;
+
+                return RadioListTile<String>(
+                  title: Text(languageName),
+                  value: languageCode,
+                );
               }).toList(),
             ),
           ),

@@ -36,9 +36,9 @@ void main() async {
 
     runApp(
       EasyLocalization(
-        supportedLocales: const [Locale('pl', 'PL'), Locale('en', 'US')],
+        supportedLocales: const [Locale('pl'), Locale('en')],
         path: 'assets/translations',
-        fallbackLocale: const Locale('pl', 'PL'),
+        fallbackLocale: const Locale('pl'),
         child: ProviderScope(observers: kDebugMode ? [observer] : [], child: const AppRoot()),
       ),
     );

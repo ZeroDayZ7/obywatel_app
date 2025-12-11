@@ -40,8 +40,8 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
-      await storage.clearAll();
-      await sharedPrefs.clearAll();
+      // await storage.clearAll();
+      // await sharedPrefs.clearAll();
     }
 
     // 2️ Inicjalizacja SecurityService, Auth**

@@ -1,8 +1,17 @@
+import 'package:flutter/material.dart';
+
+class AppLanguage {
+  final Locale locale;
+  final String name;
+
+  const AppLanguage(this.locale, this.name);
+
+  String get code => locale.languageCode;
+}
+
 class AppLanguages {
-  // List of all supported languages in the application
-  static const supported = [
-    {'code': 'pl', 'name': 'Polski'}, // Polish
-    {'code': 'en', 'name': 'English'}, // English
-    // Add more languages here if needed
+  static final List<AppLanguage> supported = [
+    const AppLanguage(Locale('pl'), 'Polski'),
+    const AppLanguage(Locale('en'), 'English'),
   ];
 }

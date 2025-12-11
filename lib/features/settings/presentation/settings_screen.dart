@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/features/settings/presentation/language_selector_sheet.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
 import 'theme_selector_sheet.dart';
 import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
@@ -37,7 +38,7 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.language,
               title: LocaleKeys.settings_language.tr(),
               subtitle: LocaleKeys.settings_language.tr(),
-              onTap: () {},
+              onTap: () => _showLanguageSelectorSheet(context, ref),
             ),
             SettingsCard(
               icon: Icons.palette,
@@ -69,6 +70,14 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       isScrollControlled: true,
       builder: (_) => const ThemeSelectorSheet(),
+    );
+  }
+
+  void _showLanguageSelectorSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => const LanguageSelectorSheet(),
     );
   }
 }
