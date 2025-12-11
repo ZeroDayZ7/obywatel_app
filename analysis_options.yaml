@@ -34,4 +34,4 @@ analyzer:
     - scripts/**
     - assets/**
 dart:
-  line-length: 120
+  line-length: 80

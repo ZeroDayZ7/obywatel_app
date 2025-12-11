@@ -1,6 +1,42 @@
 {
-  "hello": "Hello",
-  "login": "Log in",
-  "logout": "Log out",
-  "notifications": "Notifications"
+  "logout": "Logout",
+  "notifications": "Notifications",
+
+  "login": {
+    "title": "Login",
+    "welcome_message": "Log in to your account",
+    "email": "Email address",
+    "password": "Password",
+    "submit": "Login",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account?",
+    "register": "Register",
+    "reset": {
+      "link_sent": "Password reset link has been sent to your email",
+      "title": "Reset password",
+      "description": "Enter the email address associated with your account. We will send you a link to reset your password.",
+      "send_link": "Send link"
+    }
+  },
+
+  "settings": {
+    "title": "Settings",
+    "general": "General settings",
+    "security": "Security",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "light_mode": "Light",
+    "dark_mode": "Dark",
+    "system_default": "System default",
+    "security_pin": "Set PIN",
+    "security_pattern": "Pattern Lock",
+    "security_fingerprint": "Biometrics",
+    "save_pin_success": "PIN saved successfully!",
+    "pin_mismatch": "PINs do not match",
+    "pin_min_digits": "PIN must be at least 4 digits",
+    "cancel": "Cancel",
+    "save": "Save",
+    "skip": "Skip"
+  }
 }

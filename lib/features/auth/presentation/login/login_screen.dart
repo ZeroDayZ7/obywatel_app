@@ -5,6 +5,9 @@ import 'package:obywatel_plus/app/theme/app_text_styles.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
+import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+
 class ProfessionalLoginWidget extends ConsumerStatefulWidget {
   const ProfessionalLoginWidget({super.key});
 
@@ -75,7 +78,7 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                 children: [
                   const SizedBox(height: 60),
                   Text(
-                    'Zaloguj się do swojego konta',
+                    LocaleKeys.login_title.tr(),
                     style: AppTextStyles.subtitle.copyWith(
                       color: isDark ? const Color.fromARGB(179, 211, 211, 211) : AppColors.textSecondary,
                     ),
@@ -122,7 +125,7 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                     obscureText: _obscurePassword,
                     style: TextStyle(color: isDark ? Colors.white : AppColors.textPrimary),
                     decoration: InputDecoration(
-                      labelText: 'Hasło',
+                      labelText: LocaleKeys.login_password.tr(),
                       hintText: '••••••••',
                       prefixIcon: Icon(Icons.lock_outline, color: isDark ? AppColors.accent : AppColors.textSecondary),
                       suffixIcon: IconButton(
@@ -163,7 +166,7 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                     child: TextButton(
                       onPressed: state.isLoading ? null : _handleForgotPassword,
                       child: Text(
-                        'Zapomniałeś hasła?',
+                        LocaleKeys.login_forgot_password.tr(),
                         style: TextStyle(
                           color: isDark ? AppColors.primary : AppColors.accent,
                           fontWeight: FontWeight.w600,
@@ -230,7 +233,7 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Nie masz konta? ',
+                        LocaleKeys.login_no_account.tr(),
                         style: TextStyle(color: isDark ? Colors.white70 : AppColors.textSecondary),
                       ),
                       TextButton(
@@ -238,7 +241,7 @@ class _ProfessionalLoginWidgetState extends ConsumerState<ProfessionalLoginWidge
                           // Nawigacja do ekranu rejestracji
                         },
                         child: Text(
-                          'Zarejestruj się',
+                          LocaleKeys.login_register.tr(),
                           style: TextStyle(
                             color: isDark ? AppColors.primary : AppColors.accent,
                             fontWeight: FontWeight.w600,
@@ -371,7 +374,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
                   width: 20,
                   child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                 )
-              : const Text('Wyślij link'),
+              : Text(LocaleKeys.login_reset_link_sent.tr()),
         ),
       ],
     );

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
 
 const _themeKey = 'theme_mode';
 
@@ -13,41 +13,27 @@ final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(
 
 class ThemeNotifier extends Notifier<ThemeMode> {
   late final AppLogger _logger;
-  SharedPreferences? _prefs;
+  late final SharedPreferencesService _prefs;
 
   @override
   ThemeMode build() {
-    // _logger = sl<AppLogger>();
     _logger = ref.read(appLoggerProvider);
     _logger.i('🎨 ThemeNotifier initialized');
 
-    // wczytaj motyw asynchronicznie po starcie
-    Future.microtask(() async {
-      try {
-        await _loadTheme();
-      } catch (e, s) {
-        _logger.e('⚠️ Failed to load theme', error: e, stackTrace: s);
-      }
+    // Pobieramy SharedPreferencesService z FutureProvider
+    ref.read(sharedPreferencesServiceProvider.future).then((service) {
+      _prefs = service;
+      _loadTheme();
+    }).catchError((e, s) {
+      _logger.e('⚠️ Failed to load theme', error: e, stackTrace: s);
     });
 
     return ThemeMode.system;
   }
 
-  Future<void> _initPrefs() async {
-    _prefs ??= await SharedPreferences.getInstance();
-  }
-
   Future<void> _loadTheme() async {
-    await _initPrefs();
-
-    final themeString = _prefs?.getString(_themeKey);
+    final themeString = _prefs.read(_themeKey);
     _logger.i('🪶 Loaded theme from prefs: $themeString');
-
-    if (themeString == null) {
-      state = ThemeMode.system;
-      await _saveTheme(ThemeMode.system);
-      return;
-    }
 
     switch (themeString) {
       case 'light':
@@ -62,8 +48,7 @@ class ThemeNotifier extends Notifier<ThemeMode> {
   }
 
   Future<void> _saveTheme(ThemeMode mode) async {
-    await _initPrefs();
-    await _prefs?.setString(_themeKey, mode.name);
+    await _prefs.write(_themeKey, mode.name);
     _logger.i('💾 Saved theme: ${mode.name}');
   }
 

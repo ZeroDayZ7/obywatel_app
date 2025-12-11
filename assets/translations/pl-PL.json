@@ -1,6 +1,43 @@
 {
-  "hello": "Cześć",
-  "login": "Zaloguj się",
   "logout": "Wyloguj",
-  "notifications": "Powiadomienia"
+  "notifications": "Powiadomienia",
+
+  "login": {
+    "title": "Zaloguj się",
+    "welcome_message": "Zaloguj się do swojego konta",
+    "email": "Adres email",
+    "password": "Hasło",
+    "submit": "Zaloguj się",
+
+    "forgot_password": "Zapomniałeś hasła?",
+    "no_account": "Nie masz konta?",
+    "register": "Zarejestruj się",
+
+    "reset": {
+      "link_sent": "Link resetujący hasło został wysłany na email",
+      "title": "Resetuj hasło",
+      "description": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
+      "send_link": "Wyślij link"
+    }
+  },
+  "settings": {
+    "title": "Ustawienia",
+    "general": "Ustawienia ogólne",
+    "security": "Bezpieczeństwo",
+    "notifications": "Powiadomienia",
+    "language": "Język",
+    "theme": "Motyw",
+    "light_mode": "Jasny",
+    "dark_mode": "Ciemny",
+    "system_default": "Domyślny systemowy",
+    "security_pin": "Ustaw PIN",
+    "security_pattern": "Pattern Lock",
+    "security_fingerprint": "Biometria",
+    "save_pin_success": "PIN zapisany pomyślnie!",
+    "pin_mismatch": "PINy nie są zgodne",
+    "pin_min_digits": "PIN musi mieć minimum 4 cyfry",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "skip": "Pomiń"
+  }
 }

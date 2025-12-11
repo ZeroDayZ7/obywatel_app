@@ -1,7 +1,0 @@
-presentation/chat/widgets/
-├── chat_app_bar.dart
-├── category_tabs.dart
-├── chat_list.dart
-├── chat_list_item.dart
-├── bottom_nav_bar.dart
-└── scan_line_effect.dart
