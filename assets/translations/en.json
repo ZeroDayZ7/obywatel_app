@@ -38,5 +38,8 @@
     "cancel": "Cancel",
     "save": "Save",
     "skip": "Skip"
+  },
+  "system": {
+    "initialization": "INITIALIZING SYSTEM"
   }
 }

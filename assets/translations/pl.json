@@ -39,5 +39,8 @@
     "cancel": "Anuluj",
     "save": "Zapisz",
     "skip": "Pomiń"
+  },
+  "system": {
+    "initialization": "INICJALIZACJA SYSTEMU"
   }
 }

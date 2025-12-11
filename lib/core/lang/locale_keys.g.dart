@@ -38,5 +38,7 @@ abstract class  LocaleKeys {
   static const settings_save = 'settings.save';
   static const settings_skip = 'settings.skip';
   static const settings = 'settings';
+  static const system_initialization = 'system.initialization';
+  static const system = 'system';
 
 }

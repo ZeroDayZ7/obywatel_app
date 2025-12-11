@@ -2,11 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Flutter Debug (Phone)",
+      "name": "Flutter Build & Install",
       "request": "launch",
       "type": "dart",
-      "deviceId": "5200d78bfa479449",
-      // "preLaunchTask": "adb reverse 8081"
+      "program": "lib/main.dart",
+      "deviceId": "5200d78bfa479449"
+    },
+    {
+      "name": "Flutter Attach",
+      "request": "attach",
+      "type": "dart",
+      "deviceId": "5200d78bfa479449"
     }
   ]
 }

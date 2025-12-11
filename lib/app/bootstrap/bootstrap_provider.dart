@@ -5,9 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // import 'package:obywatel_plus/app/bootstrap/version_service.dart';
 // import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/core/lang/language_notifier.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
-import 'package:obywatel_plus/core/storage/shared_preferences_service.dart' show sharedPreferencesServiceProvider;
+import 'package:obywatel_plus/core/storage/shared_preferences_service.dart'
+    show sharedPreferencesServiceProvider;
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:flutter_background/flutter_background.dart';
 
@@ -17,19 +17,19 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   final logger = ref.read(appLoggerProvider);
   logger.i('🚀 Inicjalizacja aplikacji startuje...');
 
-  final languageNotifier = ref.read(languageProvider.notifier);
-  languageNotifier.build(); 
-
   try {
     // 🔹 BACKGROUND MODE — najlepiej na samym początku
     final androidConfig = FlutterBackgroundAndroidConfig(
       notificationTitle: "Twoja aplikacja jest aktywna",
-      notificationText: "Działa w tle, aby odbierać powiadomienia i połączenia.",
+      notificationText:
+          "Działa w tle, aby odbierać powiadomienia i połączenia.",
       notificationImportance: AndroidNotificationImportance.normal,
       enableWifiLock: true,
     );
 
-    final hasPermissions = await FlutterBackground.initialize(androidConfig: androidConfig);
+    final hasPermissions = await FlutterBackground.initialize(
+      androidConfig: androidConfig,
+    );
 
     if (hasPermissions) {
       await FlutterBackground.enableBackgroundExecution();
@@ -40,7 +40,9 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     // 🔹 Wyczyszczenie wszystkiego (tylko w debugu/testach)
     if (kDebugMode) {
       final storage = ref.read(secureStorageProvider);
-      final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+      final sharedPrefs = await ref.read(
+        sharedPreferencesServiceProvider.future,
+      );
       await storage.debugPrintAll();
       await sharedPrefs.debugPrintAll();
 
@@ -66,7 +68,11 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     logger.i('🔒 SecureStorage gotowy');
     logger.i('🔑 sessionService zainicjalizowany');
   } catch (e, st) {
-    logger.e('❌ Błąd podczas inicjalizacji aplikacji', error: e, stackTrace: st);
+    logger.e(
+      '❌ Błąd podczas inicjalizacji aplikacji',
+      error: e,
+      stackTrace: st,
+    );
     rethrow;
   }
 

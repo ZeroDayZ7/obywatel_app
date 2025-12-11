@@ -22,7 +22,7 @@ class AppRoutes {
 
   static const notifications = '/notifications';
   static const settings = '/settings';
-  static const security = '/security';
+  static const security = 'security';
   static const chats = '/chats';
   static const chatDetail = '/chats/:username';
   static const contacts = '/contacts';

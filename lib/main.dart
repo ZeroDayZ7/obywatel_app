@@ -15,7 +15,9 @@ void main() async {
     }
     // W produkcji — estetyczny placeholder zamiast crasha
     return const Scaffold(
-      body: Center(child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16))),
+      body: Center(
+        child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16)),
+      ),
     );
   };
 
@@ -39,7 +41,12 @@ void main() async {
         supportedLocales: const [Locale('pl'), Locale('en')],
         path: 'assets/translations',
         fallbackLocale: const Locale('pl'),
-        child: ProviderScope(observers: kDebugMode ? [observer] : [], child: const AppRoot()),
+        saveLocale: true,
+        useOnlyLangCode: true,
+        child: ProviderScope(
+          observers: kDebugMode ? [observer] : [],
+          child: const AppRoot(),
+        ),
       ),
     );
   }, (error, stack) => _handleGlobalError(error, stack));
