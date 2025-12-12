@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});

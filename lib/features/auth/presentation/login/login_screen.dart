@@ -6,7 +6,7 @@ import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class ProfessionalLoginWidget extends ConsumerStatefulWidget {
   const ProfessionalLoginWidget({super.key});

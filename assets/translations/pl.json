@@ -71,5 +71,18 @@
   },
   "system": {
     "initialization": "INICJALIZACJA SYSTEMU"
+  },
+  "workAndCareer": {
+    "title": "Praca i Kariera",
+    "job_offers": "Oferty pracy",
+    "my_cv": "Moje CV",
+    "applications": "Aplikacje",
+    "career_advice": "Doradztwo zawodowe",
+    "internships": "Staże i praktyki",
+    "government_support": "Wsparcie państwowe",
+    "employment_map": "Mapa zatrudnienia",
+    "job_offers_subtitle": "Przeglądaj dostępne oferty pracy",
+    "my_cv_subtitle": "Zarządzaj swoim CV",
+    "applications_subtitle": "Twoje aplikacje o pracę"
   }
 }

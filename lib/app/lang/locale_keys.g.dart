@@ -69,5 +69,17 @@ abstract class  LocaleKeys {
   static const homeMenu = 'homeMenu';
   static const system_initialization = 'system.initialization';
   static const system = 'system';
+  static const workAndCareer_title = 'workAndCareer.title';
+  static const workAndCareer_job_offers = 'workAndCareer.job_offers';
+  static const workAndCareer_my_cv = 'workAndCareer.my_cv';
+  static const workAndCareer_applications = 'workAndCareer.applications';
+  static const workAndCareer_career_advice = 'workAndCareer.career_advice';
+  static const workAndCareer_internships = 'workAndCareer.internships';
+  static const workAndCareer_government_support = 'workAndCareer.government_support';
+  static const workAndCareer_employment_map = 'workAndCareer.employment_map';
+  static const workAndCareer_job_offers_subtitle = 'workAndCareer.job_offers_subtitle';
+  static const workAndCareer_my_cv_subtitle = 'workAndCareer.my_cv_subtitle';
+  static const workAndCareer_applications_subtitle = 'workAndCareer.applications_subtitle';
+  static const workAndCareer = 'workAndCareer';
 
 }

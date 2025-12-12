@@ -18,10 +18,10 @@ class AppRoutes {
   static const profile = '/profile';
 
   static const documents = '/documents';
-  static const idCard = '/documents/id_card';
+  static const idCard = 'id_card';
 
   static const notifications = '/notifications';
-// Settings
+  // Settings
   static const settings = '/settings';
   static const settingsSecurity = 'security';
   static const settingsNotifications = 'notifications';
@@ -38,5 +38,13 @@ class AppRoutes {
   static const videos = '/videos';
   static const favorites = '/favorites';
   static const help = '/help';
+  // work_and_career
   static const workAndCareer = '/work_and_career';
+  static const workAndCareerJobOffers = 'job_offers';
+  static const workAndCareerMyCV = 'my_cv';
+  static const workAndCareerApplications = 'applications';
+  static const workAndCareerCareerAdvice = 'career_advice';
+  static const workInternships = 'internships';
+  static const workGovernmentSupport = 'government_support';
+  static const workEmploymentMap = 'employment_map';
 }

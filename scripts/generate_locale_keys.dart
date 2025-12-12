@@ -9,7 +9,7 @@ void main() {
     '-S',
     'assets/translations',
     '-O',
-    'lib/core/lang',
+    'lib/app/lang',
     '-o',
     'locale_keys.g.dart',
     '-f',

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
-import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class MainDrawer extends ConsumerWidget {
   const MainDrawer({super.key});

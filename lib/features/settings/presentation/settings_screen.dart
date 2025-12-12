@@ -6,7 +6,7 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/features/settings/presentation/language_selector_sheet.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
 import 'theme_selector_sheet.dart';
-import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

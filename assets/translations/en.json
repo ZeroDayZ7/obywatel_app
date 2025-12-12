@@ -72,5 +72,18 @@
   },
   "system": {
     "initialization": "SYSTEM INITIALIZATION"
+  },
+  "workAndCareer": {
+    "title": "Work & Career",
+    "job_offers": "Job Offers",
+    "my_cv": "My CV",
+    "applications": "Applications",
+    "career_advice": "Career Advice",
+    "internships": "Internships",
+    "government_support": "Government Support",
+    "employment_map": "Employment Map",
+    "job_offers_subtitle": "Browse available job offers",
+    "my_cv_subtitle": "Manage your CV",
+    "applications_subtitle": "Your job applications"
   }
 }

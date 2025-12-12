@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 /// Główne kafelki menu na ekranie Home.
 final List<Map<String, dynamic>> homeMenuItems = [

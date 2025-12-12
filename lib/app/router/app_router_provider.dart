@@ -15,6 +15,7 @@ import 'package:obywatel_plus/features/settings/presentation/notifications_setti
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/user_chat_screen.dart';
+import 'package:obywatel_plus/features/work_and_career/presentation/screens/job_offers_screen.dart';
 
 import 'package:obywatel_plus/features/work_and_career/presentation/screens/work_and_career_home.dart';
 
@@ -72,7 +73,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _documentsRoute(),
       _goRouteWithTransition(AppRoutes.notifications, const NotificationsScreen()),
 
-      _goRouteWithTransition(AppRoutes.workAndCareer, const WorkAndCareerHome()),
+      _goRouteWithTransition(
+        AppRoutes.workAndCareer,
+        const WorkAndCareerHome(),
+        routes: [
+          _goRouteWithTransition(
+            AppRoutes.workAndCareerJobOffers,
+            const JobOffersScreen(),
+          ),
+          // _goRouteWithTransition(
+          //   AppRoutes.workAndCareerMyCV,
+          //   const MyCVScreen(),
+          // ),
+          // _goRouteWithTransition(
+          //   AppRoutes.workAndCareerApplications,
+          //   const ApplicationsScreen(),
+          // ),
+          // _goRouteWithTransition(
+          //   AppRoutes.workAndCareerCareerAdvice,
+          //   const CareerAdviceScreen(),
+          // ),
+        ],
+      ),
+
 
       _goRouteWithTransition(AppRoutes.contacts, ContactsScreen()),
 
@@ -112,7 +135,7 @@ GoRoute _documentsRoute() {
     pageBuilder: (context, state) => MaterialPage(child: const DocumentsScreen()),
     routes: [
       GoRoute(
-        path: 'id_card',
+        path: AppRoutes.idCard,
         pageBuilder: (context, state) => MaterialPage(child: const IDCardScreen()),
       ),
     ],
