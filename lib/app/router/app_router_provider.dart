@@ -6,11 +6,12 @@ import 'package:obywatel_plus/features/auth/application/auth/auth_refresh_provid
 import 'package:obywatel_plus/features/auth/presentation/login/login_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/chat_screen.dart' show ChatScreen;
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/notifications_screen.dart';
+import 'package:obywatel_plus/features/notifications/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/pin_verification_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/notifications_settings_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/user_chat_screen.dart';
@@ -44,7 +45,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.pin, const PinVerificationScreen()),
       _goRouteWithTransition(AppRoutes.home, const HomeScreen()),
       _goRouteWithTransition(AppRoutes.test, const TestScreen()),
-      _goRouteWithTransition(AppRoutes.settings, const SettingsScreen()),
+      // Settings
+      _goRouteWithTransition(
+        AppRoutes.settings,
+        const SettingsScreen(),
+        routes: [
+          // 🔐 Security
+          GoRoute(
+            path: AppRoutes.settingsSecurity,
+            pageBuilder: (context, state) =>
+                _customPage(state: state, child: const SecuritySetupScreen()),
+          ),
+
+          // 🔔 Notifications
+          GoRoute(
+            path: AppRoutes.settingsNotifications,
+            pageBuilder: (context, state) =>
+                _customPage(state: state, child: const NotificationsSettingsScreen()),
+          ),
+        ],
+      ),
+
+
       _goRouteWithTransition(AppRoutes.securitySetup, const SecuritySetupScreen()),
       _goRouteWithTransition(AppRoutes.profile, const ProfileScreen()),
       _documentsRoute(),
@@ -59,7 +81,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         final username = state.pathParameters['username']!;
         return UserChatScreen(username: username);
       }),
-      _goRouteWithTransition(AppRoutes.security, const PlaceholderScreen('Bezpieczeństwo')),
+      // _goRouteWithTransition(AppRoutes.settingsSecurity, const PlaceholderScreen('Bezpieczeństwo')),
       _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
       _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
       _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),

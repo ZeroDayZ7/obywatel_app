@@ -3,8 +3,18 @@
 // ignore_for_file: constant_identifier_names
 
 abstract class  LocaleKeys {
-  static const logout = 'logout';
-  static const notifications = 'notifications';
+  static const common_logout = 'common.logout';
+  static const common_cancel = 'common.cancel';
+  static const common_save = 'common.save';
+  static const common_skip = 'common.skip';
+  static const common = 'common';
+  static const drawer_my_account = 'drawer.my_account';
+  static const drawer_notifications = 'drawer.notifications';
+  static const drawer_settings = 'drawer.settings';
+  static const drawer_logout = 'drawer.logout';
+  static const drawer_logout_title = 'drawer.logout_title';
+  static const drawer_logout_content = 'drawer.logout_content';
+  static const drawer = 'drawer';
   static const login_title = 'login.title';
   static const login_welcome_message = 'login.welcome_message';
   static const login_email = 'login.email';
@@ -21,10 +31,15 @@ abstract class  LocaleKeys {
   static const login = 'login';
   static const settings_title = 'settings.title';
   static const settings_general = 'settings.general';
+  static const settings_general_subtitle = 'settings.general_subtitle';
   static const settings_security = 'settings.security';
+  static const settings_security_subtitle = 'settings.security_subtitle';
   static const settings_notifications = 'settings.notifications';
+  static const settings_notifications_subtitle = 'settings.notifications_subtitle';
   static const settings_language = 'settings.language';
+  static const settings_language_subtitle = 'settings.language_subtitle';
   static const settings_theme = 'settings.theme';
+  static const settings_theme_subtitle = 'settings.theme_subtitle';
   static const settings_light_mode = 'settings.light_mode';
   static const settings_dark_mode = 'settings.dark_mode';
   static const settings_system_default = 'settings.system_default';
@@ -34,10 +49,24 @@ abstract class  LocaleKeys {
   static const settings_save_pin_success = 'settings.save_pin_success';
   static const settings_pin_mismatch = 'settings.pin_mismatch';
   static const settings_pin_min_digits = 'settings.pin_min_digits';
-  static const settings_cancel = 'settings.cancel';
-  static const settings_save = 'settings.save';
-  static const settings_skip = 'settings.skip';
   static const settings = 'settings';
+  static const homeMenu_chats = 'homeMenu.chats';
+  static const homeMenu_contacts = 'homeMenu.contacts';
+  static const homeMenu_workAndCareer = 'homeMenu.workAndCareer';
+  static const homeMenu_documents = 'homeMenu.documents';
+  static const homeMenu_profile = 'homeMenu.profile';
+  static const homeMenu_payments = 'homeMenu.payments';
+  static const homeMenu_notifications = 'homeMenu.notifications';
+  static const homeMenu_store = 'homeMenu.store';
+  static const homeMenu_health = 'homeMenu.health';
+  static const homeMenu_education = 'homeMenu.education';
+  static const homeMenu_games = 'homeMenu.games';
+  static const homeMenu_videos = 'homeMenu.videos';
+  static const homeMenu_favorites = 'homeMenu.favorites';
+  static const homeMenu_settings = 'homeMenu.settings';
+  static const homeMenu_help = 'homeMenu.help';
+  static const homeMenu_security = 'homeMenu.security';
+  static const homeMenu = 'homeMenu';
   static const system_initialization = 'system.initialization';
   static const system = 'system';
 

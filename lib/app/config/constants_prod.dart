@@ -1,4 +1,4 @@
-// lib/config/constants_dev.dart
+// lib/config/constants_prod.dart
 import 'constants_base.dart';
 
 class ApiConstants extends ApiConstantsBase {

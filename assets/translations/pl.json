@@ -1,18 +1,27 @@
 {
-  "logout": "Wyloguj",
-  "notifications": "Powiadomienia",
-
+  "common": {
+    "logout": "Wyloguj",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "skip": "Pomiń"
+  },
+  "drawer": {
+    "my_account": "Moje konto",
+    "notifications": "Powiadomienia",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj",
+    "logout_title": "Wylogowanie",
+    "logout_content": "Czy na pewno chcesz się wylogować?"
+  },
   "login": {
     "title": "Zaloguj się",
     "welcome_message": "Zaloguj się do swojego konta",
     "email": "Adres email",
     "password": "Hasło",
     "submit": "Zaloguj się",
-
     "forgot_password": "Zapomniałeś hasła?",
     "no_account": "Nie masz konta?",
     "register": "Zarejestruj się",
-
     "reset": {
       "link_sent": "Link resetujący hasło został wysłany na email",
       "title": "Resetuj hasło",
@@ -23,10 +32,15 @@
   "settings": {
     "title": "Ustawienia",
     "general": "Ustawienia ogólne",
+    "general_subtitle": "Podstawowe ustawienia aplikacji",
     "security": "Bezpieczeństwo",
+    "security_subtitle": "Zarządzaj bezpieczeństwem",
     "notifications": "Powiadomienia",
+    "notifications_subtitle": "Zarządzaj swoimi powiadomieniami",
     "language": "Język",
+    "language_subtitle": "Zmień język aplikacji",
     "theme": "Motyw",
+    "theme_subtitle": "Dostosuj wygląd aplikacji",
     "light_mode": "Jasny",
     "dark_mode": "Ciemny",
     "system_default": "Domyślny systemowy",
@@ -35,10 +49,25 @@
     "security_fingerprint": "Biometria",
     "save_pin_success": "PIN zapisany pomyślnie!",
     "pin_mismatch": "PINy nie są zgodne",
-    "pin_min_digits": "PIN musi mieć minimum 4 cyfry",
-    "cancel": "Anuluj",
-    "save": "Zapisz",
-    "skip": "Pomiń"
+    "pin_min_digits": "PIN musi mieć minimum 4 cyfry"
+  },
+  "homeMenu": {
+    "chats": "Czaty",
+    "contacts": "Kontakty",
+    "workAndCareer": "Praca i Kariera",
+    "documents": "Dokumenty",
+    "profile": "Ja",
+    "payments": "Płatności",
+    "notifications": "Powiadomienia",
+    "store": "Sklep",
+    "health": "Zdrowie",
+    "education": "Edukacja",
+    "games": "Gry",
+    "videos": "Wideo",
+    "favorites": "Ulubione",
+    "settings": "Ustawienia",
+    "help": "Pomoc",
+    "security": "Bezpieczeństwo"
   },
   "system": {
     "initialization": "INICJALIZACJA SYSTEMU"

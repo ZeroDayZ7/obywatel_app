@@ -1,45 +1,76 @@
 {
-  "logout": "Logout",
-  "notifications": "Notifications",
+  "common": {
+    "logout": "Logout",
+    "cancel": "Cancel",
+    "save": "Save",
+    "skip": "Skip"
+  },
+  "drawer": {
+    "my_account": "My Account",
+    "notifications": "Notifications",
+    "settings": "Settings",
+    "logout": "Logout",
+    "logout_title": "Logout",
+    "logout_content": "Are you sure you want to log out?"
+  },
 
   "login": {
     "title": "Login",
     "welcome_message": "Log in to your account",
     "email": "Email address",
     "password": "Password",
-    "submit": "Login",
+    "submit": "Log in",
     "forgot_password": "Forgot password?",
     "no_account": "Don't have an account?",
     "register": "Register",
     "reset": {
       "link_sent": "Password reset link has been sent to your email",
-      "title": "Reset password",
-      "description": "Enter the email address associated with your account. We will send you a link to reset your password.",
-      "send_link": "Send link"
+      "title": "Reset Password",
+      "description": "Enter the email associated with your account. We will send you a link to reset your password.",
+      "send_link": "Send Link"
     }
   },
-
   "settings": {
     "title": "Settings",
     "general": "General settings",
+    "general_subtitle": "Basic application preferences",
     "security": "Security",
+    "security_subtitle": "Manage your security options",
     "notifications": "Notifications",
+    "notifications_subtitle": "Manage your notification preferences",
     "language": "Language",
+    "language_subtitle": "Change the app language",
     "theme": "Theme",
+    "theme_subtitle": "Customize the app appearance",
     "light_mode": "Light",
     "dark_mode": "Dark",
     "system_default": "System default",
     "security_pin": "Set PIN",
-    "security_pattern": "Pattern Lock",
-    "security_fingerprint": "Biometrics",
+    "security_pattern": "Pattern lock",
+    "security_fingerprint": "Biometric",
     "save_pin_success": "PIN saved successfully!",
     "pin_mismatch": "PINs do not match",
-    "pin_min_digits": "PIN must be at least 4 digits",
-    "cancel": "Cancel",
-    "save": "Save",
-    "skip": "Skip"
+    "pin_min_digits": "PIN must be at least 4 digits"
+  },
+  "homeMenu": {
+    "chats": "Chats",
+    "contacts": "Contacts",
+    "workAndCareer": "Work & Career",
+    "documents": "Documents",
+    "profile": "Me",
+    "payments": "Payments",
+    "notifications": "Notifications",
+    "store": "Store",
+    "health": "Health",
+    "education": "Education",
+    "games": "Games",
+    "videos": "Videos",
+    "favorites": "Favorites",
+    "settings": "Settings",
+    "help": "Help",
+    "security": "Security"
   },
   "system": {
-    "initialization": "INITIALIZING SYSTEM"
+    "initialization": "SYSTEM INITIALIZATION"
   }
 }

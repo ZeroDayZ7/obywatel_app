@@ -21,8 +21,11 @@ class AppRoutes {
   static const idCard = '/documents/id_card';
 
   static const notifications = '/notifications';
+// Settings
   static const settings = '/settings';
-  static const security = 'security';
+  static const settingsSecurity = 'security';
+  static const settingsNotifications = 'notifications';
+
   static const chats = '/chats';
   static const chatDetail = '/chats/:username';
   static const contacts = '/contacts';

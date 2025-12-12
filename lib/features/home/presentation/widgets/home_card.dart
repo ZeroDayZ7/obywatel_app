@@ -30,10 +30,9 @@ class HomeCard extends StatelessWidget {
           width: double.infinity,
           height: double.infinity,
           padding: const EdgeInsets.all(16),
-          alignment: Alignment.center, // 👈 kluczowe!
+          alignment: Alignment.center,
           child: Column(
-            mainAxisAlignment:
-                MainAxisAlignment.center, // 👈 centralne wyrównanie pionowe
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [

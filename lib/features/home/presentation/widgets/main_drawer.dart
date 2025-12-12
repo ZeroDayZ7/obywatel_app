@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
+import 'package:obywatel_plus/core/lang/locale_keys.g.dart';
 
 class MainDrawer extends ConsumerWidget {
   const MainDrawer({super.key});
@@ -10,24 +12,41 @@ class MainDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = [
-      {'icon': Icons.person, 'label': 'Moje konto', 'route': AppRoutes.profile},
-      {'icon': Icons.notifications, 'label': 'Powiadomienia', 'route': AppRoutes.notifications},
-      {'icon': Icons.settings, 'label': 'Ustawienia', 'route': AppRoutes.settings},
+      {
+        'icon': Icons.person,
+        'labelKey': LocaleKeys.drawer_my_account,
+        'route': AppRoutes.profile,
+      },
+      {
+        'icon': Icons.notifications,
+        'labelKey': LocaleKeys.drawer_notifications,
+        'route': AppRoutes.notifications,
+      },
+      {
+        'icon': Icons.settings,
+        'labelKey': LocaleKeys.drawer_settings,
+        'route': AppRoutes.settings,
+      },
     ];
 
     Future<void> confirmLogout() async {
       final shouldLogout = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Wylogowanie'),
-          content: const Text('Czy na pewno chcesz się wylogować?'),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          title: Text(LocaleKeys.drawer_logout_title.tr()),
+          content: Text(LocaleKeys.drawer_logout_content.tr()),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Anuluj')),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: Text(LocaleKeys.common_cancel.tr()),
+            ),
             FilledButton(
               style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
               onPressed: () => Navigator.pop(context, true),
-              child: const Text('Wyloguj'),
+              child: Text(LocaleKeys.drawer_logout.tr()),
             ),
           ],
         ),
@@ -53,12 +72,21 @@ class MainDrawer extends ConsumerWidget {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.asset('assets/images/logo.jpg', width: 80, height: 80, fit: BoxFit.cover),
+                  child: Image.asset(
+                    'assets/images/logo.jpg',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 const Text(
                   'Obywatel+',
-                  style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -67,7 +95,7 @@ class MainDrawer extends ConsumerWidget {
           for (final item in items)
             ListTile(
               leading: Icon(item['icon'] as IconData),
-              title: Text(item['label'] as String),
+              title: Text((item['labelKey'] as String).tr()),
               onTap: () {
                 context.push(item['route'] as String);
                 Navigator.pop(context);
@@ -75,7 +103,11 @@ class MainDrawer extends ConsumerWidget {
             ),
 
           const Divider(),
-          ListTile(leading: const Icon(Icons.logout), title: const Text('Wyloguj'), onTap: confirmLogout),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: Text(LocaleKeys.drawer_logout.tr()),
+            onTap: confirmLogout,
+          ),
         ],
       ),
     );

@@ -31,19 +31,21 @@ class SettingsScreen extends ConsumerWidget {
             SettingsCard(
               icon: Icons.notifications,
               title: LocaleKeys.settings_notifications.tr(),
-              subtitle: LocaleKeys.settings_notifications.tr(),
-              onTap: () {},
+              subtitle: LocaleKeys.settings_notifications_subtitle.tr(),
+              onTap: () => context.push(
+                '${AppRoutes.settings}/${AppRoutes.settingsNotifications}',
+              ),
             ),
             SettingsCard(
               icon: Icons.language,
               title: LocaleKeys.settings_language.tr(),
-              subtitle: LocaleKeys.settings_language.tr(),
+              subtitle: LocaleKeys.settings_language_subtitle.tr(),
               onTap: () => _showLanguageSelectorSheet(context, ref),
             ),
             SettingsCard(
               icon: Icons.palette,
               title: LocaleKeys.settings_theme.tr(),
-              subtitle: LocaleKeys.settings_theme.tr(),
+              subtitle: LocaleKeys.settings_theme_subtitle.tr(),
               onTap: () => _showThemeSelectorSheet(context, ref),
             ),
             const SizedBox(height: 24),
@@ -55,9 +57,10 @@ class SettingsScreen extends ConsumerWidget {
             SettingsCard(
               icon: Icons.security,
               title: LocaleKeys.settings_security.tr(),
-              subtitle: LocaleKeys.settings_security.tr(),
-              onTap: () =>
-                  context.push('${AppRoutes.settings}/${AppRoutes.security}'),
+              subtitle: LocaleKeys.settings_security_subtitle.tr(),
+              onTap: () => context.push(
+                '${AppRoutes.settings}/${AppRoutes.settingsSecurity}',
+              ),
             ),
           ],
         ),

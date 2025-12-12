@@ -1,5 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/features/home/presentation/widgets/main_app_bar.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/main_drawer.dart';
 import 'package:go_router/go_router.dart';
 import 'config/home_menu_items.dart';
@@ -7,56 +8,10 @@ import 'config/home_menu_items.dart';
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  static const menuItems = homeMenuItems;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF0A0A0F),
-      appBar: AppBar(
-        title: ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
-            colors: [Color(0xFF00F0FF), Color(0xFFFF00F5)],
-          ).createShader(bounds),
-          child: Text(
-            apiConstants.appName,
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 22,
-              letterSpacing: 1,
-              color: Colors.white,
-            ),
-          ),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Color(0xFF0A0A0F),
-        iconTheme: IconThemeData(color: Color(0xFF00F0FF)),
-        actions: [
-          Container(
-            margin: EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Color(0xFF1F1F2E), width: 1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.search, color: Color(0xFF00F0FF), size: 22),
-              onPressed: () {},
-            ),
-          ),
-          Container(
-            margin: EdgeInsets.only(right: 12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Color(0xFF1F1F2E), width: 1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.more_vert, color: Color(0xFF00F0FF), size: 22),
-              onPressed: () {},
-            ),
-          ),
-        ],
-      ),
+      appBar: const HomeAppBar(),
       drawer: const MainDrawer(),
       body: Container(
         decoration: BoxDecoration(
@@ -148,16 +103,17 @@ class HomeScreen extends StatelessWidget {
                   return GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: menuItems.length,
+                    itemCount: homeMenuItems.length,
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: crossAxisCount,
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: 0.85,
                     ),
                     itemBuilder: (context, index) {
-                      final item = menuItems[index];
+                      final item = homeMenuItems[index];
                       final color = item['color'] as Color;
+                      final label = (item['labelKey'] as String).tr();
+
                       return GestureDetector(
                         onTap: () {
                           final route = item['route'] as String?;
@@ -165,7 +121,6 @@ class HomeScreen extends StatelessWidget {
                             context.push(route);
                           }
                         },
-
                         child: Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
@@ -219,7 +174,7 @@ class HomeScreen extends StatelessWidget {
                                   horizontal: 4,
                                 ),
                                 child: Text(
-                                  item['label'] as String,
+                                  label,
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 11,
@@ -245,7 +200,10 @@ class HomeScreen extends StatelessWidget {
               Container(
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Color(0xFF1F1F2E), width: 1),
+                  border: Border.all(
+                    color: Color.fromARGB(255, 31, 46, 36),
+                    width: 1,
+                  ),
                   borderRadius: BorderRadius.circular(8),
                   gradient: LinearGradient(
                     colors: [Color(0xFF0F0F1A), Color(0xFF1A1A2E)],
