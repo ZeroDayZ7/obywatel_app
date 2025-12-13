@@ -32,6 +32,7 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.notifications,
               title: LocaleKeys.settings_notifications.tr(),
               subtitle: LocaleKeys.settings_notifications_subtitle.tr(),
+              showArrow: true,
               onTap: () => context.push(
                 '${AppRoutes.settings}/${AppRoutes.settingsNotifications}',
               ),
@@ -58,6 +59,7 @@ class SettingsScreen extends ConsumerWidget {
               icon: Icons.security,
               title: LocaleKeys.settings_security.tr(),
               subtitle: LocaleKeys.settings_security_subtitle.tr(),
+              showArrow: true,
               onTap: () => context.push(
                 '${AppRoutes.settings}/${AppRoutes.settingsSecurity}',
               ),

@@ -12,6 +12,7 @@ import 'package:obywatel_plus/core/security/presentation/pin_verification_screen
 import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/notifications_settings_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/security_settings_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/user_chat_screen.dart';
@@ -55,7 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.settingsSecurity,
             pageBuilder: (context, state) =>
-                _customPage(state: state, child: const SecuritySetupScreen()),
+                _customPage(state: state, child: const SecuritySettingsScreen()),
           ),
 
           // 🔔 Notifications

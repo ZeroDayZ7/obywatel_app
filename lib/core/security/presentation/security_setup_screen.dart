@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart'; // appLoggerProvider
 import 'package:obywatel_plus/core/security/security_setup_provider.dart';
+import 'package:obywatel_plus/core/widgets/buttons/button.dart';
 
 import '../../../features/settings/presentation/widgets/biometric_tile.dart';
 import '../../../features/settings/presentation/widgets/info_card.dart';
 import '../../../features/settings/presentation/widgets/pin_setup_dialog.dart';
 import '../../../features/settings/presentation/widgets/pin_tile.dart';
-import '../../../features/settings/presentation/widgets/skip_button.dart';
 
 class SecuritySetupScreen extends ConsumerWidget {
   const SecuritySetupScreen({super.key});
@@ -119,8 +120,10 @@ class SecuritySetupScreen extends ConsumerWidget {
             child: const Text('Zakończ konfigurację'),
           ),
           const SizedBox(height: 20),
-          SkipButton(
-            onSkip: () {
+          Button(
+            labelKey: LocaleKeys.common_skip,
+            variant: AppButtonVariant.text,
+            onPressed: () {
               ref.read(securitySetupProvider.notifier).skipSetup();
               if (context.mounted) context.go(AppRoutes.home);
             },

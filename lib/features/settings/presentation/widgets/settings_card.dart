@@ -5,8 +5,16 @@ class SettingsCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool showArrow;
 
-  const SettingsCard({super.key, required this.icon, required this.title, required this.subtitle, required this.onTap});
+  const SettingsCard({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.showArrow = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +26,9 @@ class SettingsCard extends StatelessWidget {
         leading: Icon(icon, color: Colors.blueAccent),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+        trailing: showArrow
+            ? const Icon(Icons.arrow_forward_ios, size: 16)
+            : null,
         onTap: onTap,
       ),
     );

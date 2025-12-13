@@ -44,9 +44,22 @@
     "light_mode": "Jasny",
     "dark_mode": "Ciemny",
     "system_default": "Domyślny systemowy",
-    "security_pin": "Ustaw PIN",
-    "security_pattern": "Pattern Lock",
-    "security_fingerprint": "Biometria",
+
+    "security_pin_section": "PIN",
+    "security_pin": "PIN",
+    "security_pin_enabled": "PIN jest ustawiony",
+    "security_pin_disabled": "PIN nie jest ustawiony",
+    "common_set_pin": "Ustaw PIN",
+    "common_change_pin": "Zmień PIN",
+
+    "security_biometrics_section": "Biometria",
+    "security_biometrics": "Uwierzytelnianie biometryczne",
+    "security_biometrics_subtitle": "Użyj odcisku palca lub twarzy do logowania",
+
+    "security_access_section": "Dostęp i sesje",
+    "security_active_sessions": "Aktywne sesje",
+    "security_emergency_lock": "Tryb awaryjny",
+
     "save_pin_success": "PIN zapisany pomyślnie!",
     "pin_mismatch": "PINy nie są zgodne",
     "pin_min_digits": "PIN musi mieć minimum 4 cyfry"
