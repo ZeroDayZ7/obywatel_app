@@ -98,5 +98,19 @@
     "job_offers_subtitle": "Browse available job offers",
     "my_cv_subtitle": "Manage your CV",
     "applications_subtitle": "Your job applications"
+  },
+  "help": {
+    "title": "Help",
+    "axoai_section": "AxoAI Chat",
+    "axoai_input_hint": "Ask AxoAI a question...",
+    "axoai_send": "Send",
+
+    "contact_section": "Contact Support",
+    "contact_email": "Send an email to support",
+    "contact_phone": "Call our support team",
+    "contact_chat": "Start a chat with support",
+    "contact_chat_subtitle": "Quick answers and help",
+
+    "faq_section": "FAQ / Quick Links"
   }
 }

@@ -5,7 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/core/widgets/buttons/button.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
+import 'package:obywatel_plus/core/widgets/ui/switch.dart';
 
 /// ====================
 /// PROVIDERY DO TESTÓW
@@ -59,19 +60,14 @@ class SecuritySettingsScreen extends ConsumerWidget {
 
           const SizedBox(height: 24),
 
-          _Section(
-            title: LocaleKeys.settings_security_biometrics_section.tr(),
-            children: [
-              _SwitchTile(
-                icon: Icons.fingerprint,
-                title: LocaleKeys.settings_security_biometrics.tr(),
-                subtitle: LocaleKeys.settings_security_biometrics_subtitle.tr(),
-                value: biometricsEnabled,
-                onChanged: (_) {
-                  // 🔧 Tutaj później podłączysz zmianę stanu
-                },
-              ),
-            ],
+          AppSwitch(
+            icon: Icons.fingerprint,
+            title: LocaleKeys.settings_security_biometrics.tr(),
+            subtitle: LocaleKeys.settings_security_biometrics_subtitle.tr(),
+            value: biometricsEnabled,
+            onChanged: (val) {
+              // zmiana stanu providerem
+            },
           ),
 
           const SizedBox(height: 24),
@@ -147,35 +143,6 @@ class _PinStatusTile extends StatelessWidget {
               ? LocaleKeys.settings_security_pin_enabled.tr()
               : LocaleKeys.settings_security_pin_disabled.tr(),
         ),
-      ),
-    );
-  }
-}
-
-class _SwitchTile extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  const _SwitchTile({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.value,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: SwitchListTile(
-        secondary: Icon(icon),
-        title: Text(title),
-        subtitle: Text(subtitle),
-        value: value,
-        onChanged: onChanged,
       ),
     );
   }

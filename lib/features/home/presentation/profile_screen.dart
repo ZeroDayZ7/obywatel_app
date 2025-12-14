@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -27,7 +29,9 @@ class ProfileScreen extends StatelessWidget {
               children: [
                 const CircleAvatar(
                   radius: 50,
-                  backgroundImage: AssetImage('assets/images/avatar_placeholder.png'),
+                  backgroundImage: AssetImage(
+                    'assets/images/avatar_placeholder.png',
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -96,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
                 _ActionButton(
                   icon: Icons.settings,
                   label: 'Settings',
-                  onTap: () => Navigator.pushNamed(context, '/settings'),
+                  onTap: () => context.push(AppRoutes.settings),
                 ),
               ],
             ),

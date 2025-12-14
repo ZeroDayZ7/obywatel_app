@@ -97,5 +97,19 @@
     "job_offers_subtitle": "Przeglądaj dostępne oferty pracy",
     "my_cv_subtitle": "Zarządzaj swoim CV",
     "applications_subtitle": "Twoje aplikacje o pracę"
+  },
+  "help": {
+    "title": "Pomoc",
+    "axoai_section": "Czat AxoAI",
+    "axoai_input_hint": "Zadaj pytanie AxoAI...",
+    "axoai_send": "Wyślij",
+
+    "contact_section": "Kontakt z obsługą",
+    "contact_email": "Wyślij wiadomość e-mail do wsparcia",
+    "contact_phone": "Zadzwoń do naszego działu wsparcia",
+    "contact_chat": "Rozpocznij czat z supportem",
+    "contact_chat_subtitle": "Szybkie odpowiedzi i pomoc",
+
+    "faq_section": "FAQ / Szybkie linki"
   }
 }

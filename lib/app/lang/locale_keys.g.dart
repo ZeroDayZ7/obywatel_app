@@ -90,5 +90,16 @@ abstract class  LocaleKeys {
   static const workAndCareer_my_cv_subtitle = 'workAndCareer.my_cv_subtitle';
   static const workAndCareer_applications_subtitle = 'workAndCareer.applications_subtitle';
   static const workAndCareer = 'workAndCareer';
+  static const help_title = 'help.title';
+  static const help_axoai_section = 'help.axoai_section';
+  static const help_axoai_input_hint = 'help.axoai_input_hint';
+  static const help_axoai_send = 'help.axoai_send';
+  static const help_contact_section = 'help.contact_section';
+  static const help_contact_email = 'help.contact_email';
+  static const help_contact_phone = 'help.contact_phone';
+  static const help_contact_chat = 'help.contact_chat';
+  static const help_contact_chat_subtitle = 'help.contact_chat_subtitle';
+  static const help_faq_section = 'help.faq_section';
+  static const help = 'help';
 
 }

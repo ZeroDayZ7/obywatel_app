@@ -5,7 +5,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart'; // appLoggerProvider
 import 'package:obywatel_plus/core/security/security_setup_provider.dart';
-import 'package:obywatel_plus/core/widgets/buttons/button.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
 
 import '../../../features/settings/presentation/widgets/biometric_tile.dart';
 import '../../../features/settings/presentation/widgets/info_card.dart';

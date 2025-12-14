@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_refresh_provider.dart';
 import 'package:obywatel_plus/features/auth/presentation/login/login_screen.dart';
 import 'package:obywatel_plus/features/chat/presentation/screens/chat_screen.dart' show ChatScreen;
+import 'package:obywatel_plus/features/home/presentation/help_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/home_screen.dart';
 import 'package:obywatel_plus/features/notifications/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/profile_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/pin_verification_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/test_screen.dart';
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
+import 'package:obywatel_plus/features/payments/presentation/payments_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/notifications_settings_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/security_settings_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/settings_screen.dart';
@@ -73,6 +75,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       _goRouteWithTransition(AppRoutes.profile, const ProfileScreen()),
       _documentsRoute(),
       _goRouteWithTransition(AppRoutes.notifications, const NotificationsScreen()),
+      _goRouteWithTransition(AppRoutes.help, const HelpScreen()),
+      _goRouteWithTransition(AppRoutes.payments, const PaymentsScreen()),
 
       _goRouteWithTransition(
         AppRoutes.workAndCareer,
@@ -108,14 +112,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // _goRouteWithTransition(AppRoutes.settingsSecurity, const PlaceholderScreen('Bezpieczeństwo')),
       _goRouteWithTransition(AppRoutes.contacts, const PlaceholderScreen('Kontakty')),
       _goRouteWithTransition(AppRoutes.explore, const PlaceholderScreen('Odkryj')),
-      _goRouteWithTransition(AppRoutes.payments, const PlaceholderScreen('Płatności')),
       _goRouteWithTransition(AppRoutes.store, const PlaceholderScreen('Sklep')),
       _goRouteWithTransition(AppRoutes.health, const PlaceholderScreen('Zdrowie')),
       _goRouteWithTransition(AppRoutes.education, const PlaceholderScreen('Edukacja')),
       _goRouteWithTransition(AppRoutes.games, const PlaceholderScreen('Gry')),
       _goRouteWithTransition(AppRoutes.videos, const PlaceholderScreen('Wideo')),
       _goRouteWithTransition(AppRoutes.favorites, const PlaceholderScreen('Ulubione')),
-      _goRouteWithTransition(AppRoutes.help, const PlaceholderScreen('Pomoc')),
     ],
 
     /// GLOBALNY fallback błędu routingu
