@@ -1,9 +1,10 @@
 import 'dart:async';
-import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/utils/duration_utils.dart';
@@ -16,12 +17,8 @@ class PinVerificationScreen extends ConsumerStatefulWidget {
   ConsumerState<PinVerificationScreen> createState() => _PinScreenState();
 }
 
-class _PinScreenState extends ConsumerState<PinVerificationScreen>
-    with TickerProviderStateMixin {
+class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   late StreamController<ErrorAnimationType> _errorController;
-  late AnimationController _glowController;
-  late AnimationController _scanLineController;
-  late AnimationController _backgroundController;
 
   // Zmiana tego pola wymusi przebudowanie PinCodeTextField (czyści wpis)
   int _resetToken = 0;
@@ -30,21 +27,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
   void initState() {
     super.initState();
     _errorController = StreamController<ErrorAnimationType>();
-
-    _glowController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
-
-    _scanLineController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-
-    _backgroundController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 20),
-    )..repeat();
 
     // Nasłuch stanu PIN (Riverpod). Gdy pojawi się błąd -> resetujemy pole.
     ref.listenManual<PinVerificationState>(pinVerificationProvider, (
@@ -55,10 +37,20 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
 
       if (next.lockRemaining != null) {
         final lockText = formatDuration(next.lockRemaining!);
-        _showMessage('Zbyt wiele prób! Spróbuj za $lockText');
+        _showMessage(
+          tr(
+            LocaleKeys.pinVerification_errors_too_many_attempts,
+            namedArgs: {'time': lockText},
+          ),
+        );
+
         HapticFeedback.mediumImpact();
       } else if (next.isError) {
-        _showMessage('Błędny PIN! Spróbuj ponownie.', isError: true);
+        _showMessage(
+          tr(LocaleKeys.pinVerification_errors_invalid_pin),
+          isError: true,
+        );
+
         HapticFeedback.vibrate();
         _errorController.add(ErrorAnimationType.shake);
         setState(() {
@@ -77,9 +69,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
   @override
   void dispose() {
     _errorController.close();
-    _glowController.dispose();
-    _scanLineController.dispose();
-    _backgroundController.dispose();
     super.dispose();
   }
 
@@ -108,145 +97,56 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
-      body: Stack(
-        children: [
-          // Animated cyberpunk background
-          AnimatedBuilder(
-            animation: _backgroundController,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF0a0e27),
-                      const Color(0xFF1a1a2e),
-                      const Color(0xFF16213e),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    stops: [
-                      0.0,
-                      0.5 +
-                          math.sin(_backgroundController.value * 2 * math.pi) *
-                              0.1,
-                      1.0,
-                    ],
-                  ),
-                ),
-              );
-            },
+      body: Container(
+        // Stałe, proste tło bez animacji
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0a0e27), Color(0xFF1a1a2e), Color(0xFF16213e)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
+        ),
+        child: Stack(
+          children: [
+            // Statyczna siatka (bez animacji)
+            CustomPaint(
+              size: Size(size.width, size.height),
+              painter: CyberGridPainter(),
+            ),
 
-          // Grid pattern overlay
-          CustomPaint(
-            size: Size(size.width, size.height),
-            painter: CyberGridPainter(),
-          ),
-
-          // Scan line effect
-          AnimatedBuilder(
-            animation: _scanLineController,
-            builder: (context, child) {
-              return Positioned(
-                top: size.height * _scanLineController.value,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 2,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        const Color(0xFF00f0ff).withValues(alpha: 0.5),
-                        Colors.transparent,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF00f0ff).withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        spreadRadius: 2,
+            // Brak scan line, brak corner decorations, brak glowing logo
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Proste logo bez glow
+                      Container(
+                        padding: const EdgeInsets.all(30),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(
+                              0xFF00f0ff,
+                            ).withValues(alpha: 0.5),
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.lock_outline,
+                          size: 60,
+                          color: Color(0xFF00f0ff),
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
 
-          // Corner decorations
-          Positioned(
-            top: 40,
-            left: 20,
-            child: _buildCornerDecoration(true, true),
-          ),
-          Positioned(
-            top: 40,
-            right: 20,
-            child: _buildCornerDecoration(true, false),
-          ),
-          Positioned(
-            bottom: 40,
-            left: 20,
-            child: _buildCornerDecoration(false, true),
-          ),
-          Positioned(
-            bottom: 40,
-            right: 20,
-            child: _buildCornerDecoration(false, false),
-          ),
+                      const SizedBox(height: 40),
 
-          // Main content
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Glowing logo/icon
-                    AnimatedBuilder(
-                      animation: _glowController,
-                      builder: (context, child) {
-                        return Container(
-                          padding: const EdgeInsets.all(30),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: const Color(
-                                0xFF00f0ff,
-                              ).withValues(alpha: 0.5),
-                              width: 2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00f0ff).withValues(
-                                  alpha: 0.3 + _glowController.value * 0.3,
-                                ),
-                                blurRadius: 20 + _glowController.value * 20,
-                                spreadRadius: 5 + _glowController.value * 5,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.lock_outline,
-                            size: 60,
-                            color: Color(0xFF00f0ff),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 40),
-
-                    // Title with glitch effect
-                    ShaderMask(
-                      shaderCallback: (bounds) => const LinearGradient(
-                        colors: [Color(0xFF00f0ff), Color(0xFFff00ff)],
-                      ).createShader(bounds),
-                      child: const Text(
-                        "AUTORYZACJA WYMAGANA",
-                        style: TextStyle(
+                      // Tytuł bez glitch (zwykły kolor)
+                      Text(
+                        LocaleKeys.pinVerification_title.tr(),
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 2,
@@ -254,258 +154,179 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen>
                         ),
                         textAlign: TextAlign.center,
                       ),
-                    ),
 
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 10),
 
-                    Text(
-                      "WPROWADŹ KOD DOSTĘPU",
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 3,
-                        color: Colors.white.withValues(alpha: 0.5),
+                      Text(
+                        LocaleKeys.pinVerification_subtitle.tr(),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          letterSpacing: 3,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 50),
+                      const SizedBox(height: 50),
 
-                    // PIN input with cyberpunk styling
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: const Color(0xFF00f0ff).withValues(alpha: 0.3),
-                          width: 1,
-                        ),
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withValues(alpha: 0.4),
-                            Colors.black.withValues(alpha: 0.2),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
+                      // Pole PIN – styl cyberpunk, ale bez dodatkowych animacji
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
                             color: const Color(
                               0xFF00f0ff,
-                            ).withValues(alpha: 0.1),
-                            blurRadius: 20,
-                            spreadRadius: 1,
+                            ).withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.black.withValues(alpha: 0.4),
+                              Colors.black.withValues(alpha: 0.2),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: PinCodeTextField(
+                          key: ValueKey<int>(_resetToken),
+                          appContext: context,
+                          length: 4,
+                          obscureText: true,
+                          obscuringCharacter: '●',
+                          keyboardType: TextInputType.number,
+                          animationType: AnimationType.fade,
+                          errorAnimationController: _errorController,
+                          pinTheme: PinTheme(
+                            shape: PinCodeFieldShape.box,
+                            borderRadius: BorderRadius.circular(12),
+                            fieldHeight: 70,
+                            fieldWidth: 60,
+                            activeColor: const Color(0xFF00f0ff),
+                            selectedColor: const Color(0xFFff00ff),
+                            inactiveColor: state.isError
+                                ? AppColors.error
+                                : Colors.white.withValues(alpha: 0.2),
+                            activeFillColor: Colors.black.withValues(
+                              alpha: 0.5,
+                            ),
+                            selectedFillColor: Colors.black.withValues(
+                              alpha: 0.6,
+                            ),
+                            inactiveFillColor: Colors.black.withValues(
+                              alpha: 0.3,
+                            ),
+                            borderWidth: 2,
+                          ),
+                          textStyle: const TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF00f0ff),
+                          ),
+                          animationDuration: const Duration(milliseconds: 300),
+                          enableActiveFill: true,
+                          onCompleted: (value) {
+                            _verifyPin(value);
+                          },
+                          onChanged: (_) {},
+                        ),
+                      ),
+
+                      const SizedBox(height: 50),
+
+                      // Przycisk odblokowania – prosty, bez animowanego glow
+                      ElevatedButton(
+                        onPressed: state.isLoading
+                            ? null
+                            : () {
+                                // onCompleted w PinCodeTextField już wywołuje weryfikację
+                              },
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 60),
+                          backgroundColor: state.isLoading
+                              ? Colors.grey
+                              : const Color(0xFF00f0ff),
+                          foregroundColor: const Color(0xFF0a0e27),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: state.isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  color: Color(0xFF0a0e27),
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.lock_open, size: 24),
+                                  SizedBox(width: 12),
+                                  Text(
+                                    LocaleKeys.pinVerification_unlock_button
+                                        .tr(),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Anuluj
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          LocaleKeys.common_cancel.tr(),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.5),
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 2,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Info o szyfrowaniu
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.shield_outlined,
+                            size: 16,
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            LocaleKeys.pinVerification_secure_connection.tr(),
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              fontSize: 10,
+                              letterSpacing: 1,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ],
                       ),
-                      child: PinCodeTextField(
-                        key: ValueKey<int>(_resetToken),
-                        appContext: context,
-                        // autoFocus: true, // autofocus bez FocusNode
-                        length: 4,
-                        obscureText: true,
-                        obscuringCharacter: '●',
-                        keyboardType: TextInputType.number,
-                        animationType: AnimationType.fade,
-                        errorAnimationController: _errorController,
-                        pinTheme: PinTheme(
-                          shape: PinCodeFieldShape.box,
-                          borderRadius: BorderRadius.circular(12),
-                          fieldHeight: 70,
-                          fieldWidth: 60,
-                          activeColor: const Color(0xFF00f0ff),
-                          selectedColor: const Color(0xFFff00ff),
-                          inactiveColor: state.isError
-                              ? AppColors.error
-                              : Colors.white.withValues(alpha: 0.2),
-                          activeFillColor: Colors.black.withValues(alpha: 0.5),
-                          selectedFillColor: Colors.black.withValues(
-                            alpha: 0.6,
-                          ),
-                          inactiveFillColor: Colors.black.withValues(
-                            alpha: 0.3,
-                          ),
-                          borderWidth: 2,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF00f0ff),
-                        ),
-                        animationDuration: const Duration(milliseconds: 300),
-                        enableActiveFill: true,
-                        onCompleted: (value) {
-                          _verifyPin(value);
-                        },
-                        onChanged: (_) {},
-                      ),
-                    ),
-
-                    const SizedBox(height: 50),
-
-                    // Unlock button
-                    AnimatedBuilder(
-                      animation: _glowController,
-                      builder: (context, child) {
-                        return Container(
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF00f0ff).withValues(
-                                  alpha: 0.2 + _glowController.value * 0.2,
-                                ),
-                                blurRadius: 15 + _glowController.value * 10,
-                                spreadRadius: 2,
-                              ),
-                            ],
-                          ),
-                          child: ElevatedButton(
-                            onPressed: state.isLoading
-                                ? null
-                                : () {
-                                    // Button nie triggeruje verify (onCompleted robi to automatycznie),
-                                    // ale można dodać logikę, np. reset pola jeśli potrzeba
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: state.isLoading
-                                  ? Colors.grey
-                                  : const Color(0xFF00f0ff),
-                              foregroundColor: const Color(0xFF0a0e27),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 0,
-                            ),
-                            child: state.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      color: Color(0xFF0a0e27),
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(Icons.lock_open, size: 24),
-                                      SizedBox(width: 12),
-                                      Text(
-                                        "ODBLOKUJ DOSTĘP",
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 1.5,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Cancel button
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 30,
-                          vertical: 15,
-                        ),
-                      ),
-                      child: Text(
-                        "ANULUJ",
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 2,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Security info
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.shield_outlined,
-                          size: 16,
-                          color: Colors.white.withValues(alpha: 0.3),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "POŁĄCZENIE ZASZYFROWANE",
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            fontSize: 10,
-                            letterSpacing: 1,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildCornerDecoration(bool isTop, bool isLeft) {
-    return AnimatedBuilder(
-      animation: _glowController,
-      builder: (context, child) {
-        return Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            border: Border(
-              top: isTop
-                  ? BorderSide(
-                      color: const Color(
-                        0xFF00f0ff,
-                      ).withValues(alpha: 0.3 + _glowController.value * 0.2),
-                      width: 2,
-                    )
-                  : BorderSide.none,
-              bottom: !isTop
-                  ? BorderSide(
-                      color: const Color(
-                        0xFF00f0ff,
-                      ).withValues(alpha: 0.3 + _glowController.value * 0.2),
-                      width: 2,
-                    )
-                  : BorderSide.none,
-              left: isLeft
-                  ? BorderSide(
-                      color: const Color(
-                        0xFF00f0ff,
-                      ).withValues(alpha: 0.3 + _glowController.value * 0.2),
-                      width: 2,
-                    )
-                  : BorderSide.none,
-              right: !isLeft
-                  ? BorderSide(
-                      color: const Color(
-                        0xFF00f0ff,
-                      ).withValues(alpha: 0.3 + _glowController.value * 0.2),
-                      width: 2,
-                    )
-                  : BorderSide.none,
-            ),
-          ),
-        );
-      },
     );
   }
 }
@@ -520,12 +341,10 @@ class CyberGridPainter extends CustomPainter {
 
     const gridSize = 40.0;
 
-    // Vertical lines
     for (double x = 0; x < size.width; x += gridSize) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }
 
-    // Horizontal lines
     for (double y = 0; y < size.height; y += gridSize) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }

@@ -111,5 +111,19 @@
     "contact_chat_subtitle": "Szybkie odpowiedzi i pomoc",
 
     "faq_section": "FAQ / Szybkie linki"
+  },
+  "pinVerification": {
+    "title": "AUTORYZACJA WYMAGANA",
+    "subtitle": "WPROWADŹ KOD DOSTĘPU",
+
+    "unlock_button": "ODBLOKUJ DOSTĘP",
+    "cancel": "ANULUJ",
+
+    "secure_connection": "POŁĄCZENIE ZASZYFROWANE",
+
+    "errors": {
+      "too_many_attempts": "Zbyt wiele prób! Spróbuj za {time}",
+      "invalid_pin": "Błędny PIN! Spróbuj ponownie."
+    }
   }
 }

@@ -112,5 +112,19 @@
     "contact_chat_subtitle": "Quick answers and help",
 
     "faq_section": "FAQ / Quick Links"
+  },
+  "pinVerification": {
+    "title": "AUTHORIZATION REQUIRED",
+    "subtitle": "ENTER ACCESS CODE",
+
+    "unlock_button": "UNLOCK ACCESS",
+    "cancel": "CANCEL",
+
+    "secure_connection": "SECURE CONNECTION",
+
+    "errors": {
+      "too_many_attempts": "Too many attempts! Try again in {time}",
+      "invalid_pin": "Invalid PIN! Please try again."
+    }
   }
 }

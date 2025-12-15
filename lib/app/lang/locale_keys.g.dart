@@ -101,5 +101,14 @@ abstract class  LocaleKeys {
   static const help_contact_chat_subtitle = 'help.contact_chat_subtitle';
   static const help_faq_section = 'help.faq_section';
   static const help = 'help';
+  static const pinVerification_title = 'pinVerification.title';
+  static const pinVerification_subtitle = 'pinVerification.subtitle';
+  static const pinVerification_unlock_button = 'pinVerification.unlock_button';
+  static const pinVerification_cancel = 'pinVerification.cancel';
+  static const pinVerification_secure_connection = 'pinVerification.secure_connection';
+  static const pinVerification_errors_too_many_attempts = 'pinVerification.errors.too_many_attempts';
+  static const pinVerification_errors_invalid_pin = 'pinVerification.errors.invalid_pin';
+  static const pinVerification_errors = 'pinVerification.errors';
+  static const pinVerification = 'pinVerification';
 
 }
