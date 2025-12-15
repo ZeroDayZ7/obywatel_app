@@ -15,4 +15,7 @@ class StorageKeys {
   static const userId = 'user_id';
 
   static const language = '_languageKey';
+
+  static const securitySecret = 'security_secret';
+  static const securityConfig = 'security_config';
 }
