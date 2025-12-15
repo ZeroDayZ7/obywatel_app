@@ -282,22 +282,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
 
                       const SizedBox(height: 30),
 
-                      // Anuluj
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          LocaleKeys.common_cancel.tr(),
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.5),
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 2,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
                       // Info o szyfrowaniu
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -330,6 +314,8 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     );
   }
 }
+
+
 
 class CyberGridPainter extends CustomPainter {
   @override
