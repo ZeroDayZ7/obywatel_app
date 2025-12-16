@@ -8,6 +8,11 @@ abstract class  LocaleKeys {
   static const common_save = 'common.save';
   static const common_skip = 'common.skip';
   static const common = 'common';
+  static const force_update_screen_title = 'force_update_screen.title';
+  static const force_update_screen_description = 'force_update_screen.description';
+  static const force_update_screen_update_button = 'force_update_screen.update_button';
+  static const force_update_screen_mandatory_info = 'force_update_screen.mandatory_info';
+  static const force_update_screen = 'force_update_screen';
   static const drawer_my_account = 'drawer.my_account';
   static const drawer_notifications = 'drawer.notifications';
   static const drawer_settings = 'drawer.settings';

@@ -5,6 +5,12 @@
     "save": "Save",
     "skip": "Skip"
   },
+  "force_update_screen": {
+    "title": "Update Required",
+    "description": "To use the {appName} app, you must install the latest version.",
+    "update_button": "Update App",
+    "mandatory_info": "Update is mandatory"
+  },
   "drawer": {
     "my_account": "My Account",
     "notifications": "Notifications",

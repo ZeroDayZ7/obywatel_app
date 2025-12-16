@@ -5,6 +5,12 @@
     "save": "Zapisz",
     "skip": "Pomiń"
   },
+  "force_update_screen": {
+    "title": "Aktualizacja wymagana",
+    "description": "Aby korzystać z aplikacji {appName}, musisz zainstalować najnowszą wersję.",
+    "update_button": "Aktualizuj aplikację",
+    "mandatory_info": "Aktualizacja jest obowiązkowa"
+  },
   "drawer": {
     "my_account": "Moje konto",
     "notifications": "Powiadomienia",
