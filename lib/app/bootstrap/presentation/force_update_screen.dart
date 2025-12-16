@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/config/services_config.dart';
+import 'package:obywatel_plus/app/config/update_links.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/app/config/env.dart';
@@ -63,8 +63,11 @@ class ForceUpdateScreen extends StatelessWidget {
   }
 
   Future<void> _openStore() async {
-    final url = Uri.parse(ServicesConfig.playStoreUrl);
+    final urlString = AppStoreLinks.updateUrl;
 
+    if (urlString.isEmpty) return;
+
+    final url = Uri.parse(urlString);
     await launchUrl(url, mode: LaunchMode.externalApplication);
   }
 }

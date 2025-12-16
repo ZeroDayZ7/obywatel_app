@@ -14,10 +14,7 @@ class ServicesConfig {
   // ==========================================================
   // REST API Endpoints
   // ==========================================================
-  /// Play Store URL for the app
-  static const String playStoreUrl =
-      'https://play.google.com/store/apps/details?id=com.obywatel.app';
-
+  
   /// Authentication service base URL
   /// Used for login, logout, token refresh, etc.
   static String get authBaseUrl => apiConstants.isProduction
