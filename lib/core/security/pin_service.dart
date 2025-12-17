@@ -1,4 +1,3 @@
-// lib/core/security/pin_service.dart
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -6,6 +5,7 @@ import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Provider dla PinService
 final pinServiceProvider = Provider<PinService>((ref) {
   final storage = ref.read(secureStorageProvider);
   final hash = ref.read(hashServiceProvider);
@@ -14,6 +14,16 @@ final pinServiceProvider = Provider<PinService>((ref) {
   return PinService(storage: storage, hashService: hash, logger: logger);
 });
 
+/// Wyjątek dla nieprawidłowego PIN-u
+class PinValidationException implements Exception {
+  final String message;
+  PinValidationException(this.message);
+
+  @override
+  String toString() => 'PinValidationException: $message';
+}
+
+/// Serwis obsługi PIN
 class PinService {
   final SecureStorageService _storage;
   final HashService _hashService;
@@ -27,14 +37,18 @@ class PinService {
        _hashService = hashService,
        _logger = logger;
 
-  /// Ustawia PIN: waliduje (4-6 cyfr), hashuje, zapisuje w secure storage
+  /// Waliduje PIN (4-6 cyfr)
+  void _validatePin(String pin) {
+    if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
+      _logger.w('PinService: Nieprawidłowy PIN – musi być 4-6 cyfr');
+      throw PinValidationException('PIN musi być liczbą 4-6 cyfr');
+    }
+  }
+
+  /// Ustawia PIN: waliduje, hashuje, zapisuje w secure storage
   Future<void> setPin(String pin) async {
     _logger.d('PinService: Ustawianie PIN (długość: ${pin.length})');
-
-    if (pin.isEmpty || !RegExp(r'^\d{4,6}$').hasMatch(pin)) {
-      _logger.w('PinService: Nieprawidłowy PIN – musi być 4-6 cyfr');
-      throw ArgumentError('PIN musi być liczbą 4-6 cyfr, ziomek!');
-    }
+    _validatePin(pin);
 
     try {
       final hashed = await _hashService.hash(pin);
@@ -46,7 +60,7 @@ class PinService {
     }
   }
 
-  /// Sprawdza PIN: czyta z storage, verify z hashem
+  /// Weryfikuje PIN: czyta z storage i sprawdza hash
   Future<bool> verifyPin(String pin) async {
     _logger.d('PinService: Weryfikacja PIN');
 
@@ -61,6 +75,7 @@ class PinService {
         _logger.w('PinService: Brak zapisanego PIN');
         return false;
       }
+
       final isValid = await _hashService.verify(pin, storedHash);
       _logger.i('PinService: Weryfikacja PIN: $isValid');
       return isValid;
@@ -70,7 +85,7 @@ class PinService {
     }
   }
 
-  /// Czy PIN jest ustawiony?
+  /// Sprawdza, czy PIN jest ustawiony
   Future<bool> hasPin() async {
     final storedHash = await _storage.read(key: StorageKeys.pinHash);
     final has = storedHash != null && storedHash.isNotEmpty;
@@ -78,7 +93,7 @@ class PinService {
     return has;
   }
 
-  /// Usuń PIN (np. na skip lub reset)
+  /// Usuwa PIN
   Future<void> deletePin() async {
     await _storage.delete(key: StorageKeys.pinHash);
     _logger.i('PinService: PIN usunięty');
