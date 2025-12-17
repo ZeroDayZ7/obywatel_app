@@ -57,11 +57,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
           _resetToken++; // reset pola i autofocus
         });
       } else if (next.isSuccess) {
-        Future.delayed(const Duration(milliseconds: 300), () {
-          if (mounted) {
-            ref.read(securityServiceProvider.notifier).confirmUnlock();
-          }
-        });
+        debugPrint("PIN poprawny, czekam na redirect routera...");
       }
     });
   }
@@ -314,8 +310,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     );
   }
 }
-
-
 
 class CyberGridPainter extends CustomPainter {
   @override

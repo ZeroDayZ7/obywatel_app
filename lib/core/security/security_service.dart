@@ -7,17 +7,14 @@ import 'package:obywatel_plus/core/security/pin_service.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
-/// 🔑 Stan bezpieczeństwa aplikacji
 @immutable
 class SecurityState extends Equatable {
-  final bool hasLocalLock;
-  final bool isPinConfigured;
-  final bool isBiometricEnabled;
-  final bool canUseBiometrics;
-  final bool isSetupCompleted;
-  final bool isSetupInProgress;
-  final bool pendingUnlock;
-  final bool initialized;
+  final bool hasLocalLock; // Czy ekran blokady jest aktywny?
+  final bool isPinConfigured; // Czy user ustawił PIN?
+  final bool isBiometricEnabled; // Czy włączył biometrię w ustawieniach?
+  final bool canUseBiometrics; // Czy urządzenie obsługuje biometrię?
+  final bool isSetupCompleted; // Czy zakończył wizard powitalny?
+  final bool initialized; // Czy serwis skończył się ładować?
 
   const SecurityState({
     required this.hasLocalLock,
@@ -25,8 +22,6 @@ class SecurityState extends Equatable {
     required this.isBiometricEnabled,
     required this.canUseBiometrics,
     required this.isSetupCompleted,
-    required this.isSetupInProgress,
-    required this.pendingUnlock,
     required this.initialized,
   });
 
@@ -36,8 +31,6 @@ class SecurityState extends Equatable {
     isBiometricEnabled: false,
     canUseBiometrics: false,
     isSetupCompleted: false,
-    isSetupInProgress: false,
-    pendingUnlock: false,
     initialized: false,
   );
 
@@ -47,8 +40,6 @@ class SecurityState extends Equatable {
     bool? isBiometricEnabled,
     bool? canUseBiometrics,
     bool? isSetupCompleted,
-    bool? isSetupInProgress,
-    bool? pendingUnlock,
     bool? initialized,
   }) {
     return SecurityState(
@@ -57,19 +48,13 @@ class SecurityState extends Equatable {
       isBiometricEnabled: isBiometricEnabled ?? this.isBiometricEnabled,
       canUseBiometrics: canUseBiometrics ?? this.canUseBiometrics,
       isSetupCompleted: isSetupCompleted ?? this.isSetupCompleted,
-      isSetupInProgress: isSetupInProgress ?? this.isSetupInProgress,
-      pendingUnlock: pendingUnlock ?? this.pendingUnlock,
       initialized: initialized ?? this.initialized,
     );
   }
 
-  // Backward compat: dla routera
-  bool get skipSetup => isSetupCompleted;
-
+  // Gettery pomocnicze dla Routera
   bool get shouldShowLock =>
-      !isSetupInProgress && isPinConfigured && hasLocalLock;
-
-  bool get isUnlocked => pendingUnlock == true && hasLocalLock;
+      initialized && isSetupCompleted && isPinConfigured && hasLocalLock;
 
   @override
   List<Object?> get props => [
@@ -78,56 +63,51 @@ class SecurityState extends Equatable {
     isBiometricEnabled,
     canUseBiometrics,
     isSetupCompleted,
-    isSetupInProgress,
     initialized,
   ];
 }
 
-/// 🔐 Notifier bezpieczeństwa (globalny)
 class SecurityNotifier extends Notifier<SecurityState> {
   @override
-  SecurityState build() {
-    // Tylko initial state – bez inicjalizacji deps (to w metodach)
-    return SecurityState.initial();
-  }
+  SecurityState build() => SecurityState.initial();
 
   Future<void> init() async {
     final logger = ref.read(appLoggerProvider);
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+
     final setupCompleted =
         sharedPrefs.readBool(StorageKeys.setupCompleted) ?? false;
-    logger.d('🔐 SecurityNotifier.init() start');
 
-    if (setupCompleted) {
-      final pinService = ref.read(pinServiceProvider);
-      final localAuth = ref.read(localAuthProvider);
-      final isPinConfigured = await pinService.hasPin();
-      final isLocalLockEnabled =
-          sharedPrefs.readBool(StorageKeys.localLockEnabled) ?? false;
-      final isBiometricEnabled =
-          sharedPrefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
-      final canUseBiometrics = await _checkBiometricsAvailability(localAuth);
-
-      state = state.copyWith(
-        hasLocalLock:
-            isLocalLockEnabled && (isPinConfigured || isBiometricEnabled),
-        isPinConfigured: isPinConfigured,
-        isBiometricEnabled: isBiometricEnabled,
-        canUseBiometrics: canUseBiometrics,
-        isSetupCompleted: true,
-        initialized: true,
-      );
-      logger.d('🔐 Pełna inicjalizacja: setup zakończony.');
+    if (!setupCompleted) {
+      state = state.copyWith(isSetupCompleted: false, initialized: true);
       return;
     }
 
-    // Setup nieukończony: bez locka
+    final pinService = ref.read(pinServiceProvider);
+    final localAuth = ref.read(localAuthProvider);
+
+    final isPinConfigured = await pinService.hasPin();
+    final isLocalLockEnabled =
+        sharedPrefs.readBool(StorageKeys.localLockEnabled) ?? false;
+    final isBiometricEnabled =
+        sharedPrefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
+    final canUseBiometrics = await _checkBiometricsAvailability(localAuth);
+
+    // LOGIKA STARTOWA: Jeśli PIN jest skonfigurowany i lock włączony -> ZABLOKUJ
+    final shouldLock = isLocalLockEnabled && isPinConfigured;
+
     state = state.copyWith(
-      isSetupCompleted: false,
-      isSetupInProgress: true,
+      hasLocalLock: shouldLock,
+      isPinConfigured: isPinConfigured,
+      isBiometricEnabled: isBiometricEnabled,
+      canUseBiometrics: canUseBiometrics,
+      isSetupCompleted: true,
       initialized: true,
     );
-    logger.d('🔐 Inicjalizacja w trybie setupu (bez locka).');
+
+    logger.i(
+      '🔐 Security Init: Locked=$shouldLock, PinConfigured=$isPinConfigured',
+    );
   }
 
   Future<bool> _checkBiometricsAvailability(
@@ -136,26 +116,22 @@ class SecurityNotifier extends Notifier<SecurityState> {
     try {
       final available = await localAuth.getAvailableBiometrics();
       return available.isNotEmpty;
-    } catch (e) {
-      final logger = ref.read(appLoggerProvider);
-      logger.e('Błąd sprawdzania biometrii', error: e);
+    } catch (_) {
       return false;
     }
   }
 
   Future<void> setPin(String pin) async {
-    final logger = ref.read(appLoggerProvider);
-    logger.d('Ustawianie PIN...');
     final pinService = ref.read(pinServiceProvider);
     await pinService.setPin(pin);
+
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
     await sharedPrefs.writeBool(StorageKeys.isPinConfigured, true);
+
     state = state.copyWith(isPinConfigured: true);
-    logger.i('PIN skonfigurowany (czekaj na completeSetup).');
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
-    final logger = ref.read(appLoggerProvider);
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
     await sharedPrefs.writeBool(StorageKeys.setupCompleted, true);
     await sharedPrefs.writeBool(StorageKeys.localLockEnabled, true);
@@ -165,73 +141,31 @@ class SecurityNotifier extends Notifier<SecurityState> {
     );
 
     state = state.copyWith(
-      hasLocalLock: true,
+      hasLocalLock:
+          true, // Po setupie od razu blokujemy, by user wpisał PIN na próbę
       isBiometricEnabled: enableBiometric,
       isSetupCompleted: true,
-      isSetupInProgress: false,
     );
-    logger.i('🔐 Setup zakończony i lock włączony.');
-    // BEZ invalidate() – stan zaktualizowany, router zareaguje sam
   }
 
   Future<void> skipPinSetup() async {
-    // Dodano async dla await
-    final logger = ref.read(appLoggerProvider);
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
-    await sharedPrefs.writeBool(StorageKeys.setupCompleted, true); // Bez locka
+    await sharedPrefs.writeBool(StorageKeys.setupCompleted, true);
 
-    state = state.copyWith(
-      hasLocalLock: false, // Bez locka po skip
-      isSetupCompleted: true,
-      isSetupInProgress: false,
-    );
-    logger.w('Setup pominięty.');
-    // BEZ invalidate()
+    state = state.copyWith(hasLocalLock: false, isSetupCompleted: true);
   }
 
+  /// ✅ Uproszczone odblokowanie
   Future<void> unlockApp() async {
     final logger = ref.read(appLoggerProvider);
-    // state = state.copyWith(hasLocalLock: false);
-    state = state.copyWith(pendingUnlock: true);
-    logger.i('🔓 Odblokowano.');
-  }
-
-  // Future<void> unlockApp() async {
-  //   final logger = ref.read(appLoggerProvider);
-  //   state = state.copyWith(pendingUnlock: true);
-  //   logger.i('🔓 Odblokowano.');
-  // }
-
-  void confirmUnlock() {
-    if (state.pendingUnlock) {
-      state = state.copyWith(pendingUnlock: false, hasLocalLock: false);
-      ref.read(appLoggerProvider).i('✅ Odblokowano (potwierdzone po dispose)');
-    }
+    state = state.copyWith(hasLocalLock: false);
+    logger.i('🔓 App Unlocked (hasLocalLock: false)');
   }
 
   Future<void> lockApp() async {
-    final logger = ref.read(appLoggerProvider);
-    if (state.skipSetup) {
+    if (state.isSetupCompleted && state.isPinConfigured) {
       state = state.copyWith(hasLocalLock: true);
-    }
-    logger.i('🔒 Zablokowano.');
-  }
-
-  Future<bool> tryBiometricAuth() async {
-    final logger = ref.read(appLoggerProvider);
-    final localAuth = ref.read(localAuthProvider);
-    if (!state.isBiometricEnabled || !state.canUseBiometrics) return false;
-    try {
-      final success = await localAuth.authenticate(
-        localizedReason: 'Odblokuj aplikację',
-        biometricOnly: true,
-      );
-      if (success) await unlockApp();
-      logger.i('Biometria: success=$success');
-      return success;
-    } catch (e, st) {
-      logger.e('Błąd biometrii', error: e, stackTrace: st);
-      return false;
+      ref.read(appLoggerProvider).i('🔒 App Locked');
     }
   }
 }
