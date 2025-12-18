@@ -16,7 +16,7 @@
     "macos": true,
     "web": true,
     "windows": true,
-    "test": true,
+    // "test": true,
     ".gitattributes": true,
     "pubspec.lock": true,
     "obywatel_app.code-workspace": true,

@@ -9,10 +9,11 @@
       "deviceId": "5200d78bfa479449"
     },
     {
-      "name": "Flutter Attach",
-      "request": "attach",
+      "name": "Flutter on Windows",
+      "request": "launch",
       "type": "dart",
-      "deviceId": "5200d78bfa479449"
+      "program": "lib/main.dart",
+      "deviceId": "windows"
     }
   ]
 }
