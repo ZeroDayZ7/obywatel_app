@@ -6,7 +6,7 @@ import 'package:obywatel_plus/core/security/presentation/pin_verification_screen
 import 'package:obywatel_plus/core/security/presentation/security_setup_screen.dart';
 
 final authRoutes = [
-  AppRoutes.login.go(const ProfessionalLoginWidget()),
+  AppRoutes.login.go(const LoginScreen()),
   AppRoutes.pin.go(const PinVerificationScreen()),
   AppRoutes.securitySetup.go(const SecuritySetupScreen()),
 ];

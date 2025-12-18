@@ -13,6 +13,7 @@ class MyCVScreen extends StatelessWidget {
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) {
+              // ignore: todo
               // TODO: podpiąć akcje np. save, sync, export
             },
             itemBuilder: (context) => [
@@ -83,6 +84,7 @@ class MyCVScreen extends StatelessWidget {
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: () {
+                // ignore: todo
                 // TODO: add skill
               },
               child: const Text('Add Skill'),
@@ -99,7 +101,9 @@ class MyCVScreen extends StatelessWidget {
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 2, // TODO: dynamic length
+              itemCount: 2,
+              // ignore: todo
+              // TODO: dynamic length
               itemBuilder: (context, index) {
                 return Card(
                   margin: const EdgeInsets.symmetric(vertical: 6),
@@ -109,6 +113,7 @@ class MyCVScreen extends StatelessWidget {
                     trailing: IconButton(
                       icon: const Icon(Icons.edit),
                       onPressed: () {
+                        // ignore: todo
                         // TODO: edit experience
                       },
                     ),
@@ -118,6 +123,7 @@ class MyCVScreen extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
+                // ignore: todo
                 // TODO: add experience
               },
               child: const Text('Add Experience'),
