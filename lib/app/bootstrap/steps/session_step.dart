@@ -1,7 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/app/bootstrap/bootstrap_step.dart';
+
 import 'package:obywatel_plus/core/core_providers.dart';
-import '../bootstrap_step.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 class SessionStep extends BootstrapStep {
   @override

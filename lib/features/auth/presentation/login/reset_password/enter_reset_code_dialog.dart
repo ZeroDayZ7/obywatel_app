@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class EnterResetCodeDialog extends StatefulWidget {
   const EnterResetCodeDialog({super.key});
@@ -13,7 +15,7 @@ class _EnterResetCodeDialogState extends State<EnterResetCodeDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Wprowadź kod"),
+      title: Text(LocaleKeys.common_enter_code.tr()),
       content: TextField(
         controller: ctrl,
         maxLength: 6,
@@ -24,11 +26,11 @@ class _EnterResetCodeDialogState extends State<EnterResetCodeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Anuluj"),
+          child: Text(LocaleKeys.common_cancel.tr()),
         ),
         ElevatedButton(
           onPressed: () => Navigator.pop(context, ctrl.text),
-          child: const Text("Potwierdź"),
+          child: Text(LocaleKeys.common_confirm.tr()),
         ),
       ],
     );

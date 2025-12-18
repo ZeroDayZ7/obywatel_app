@@ -3,7 +3,38 @@
     "logout": "Logout",
     "cancel": "Cancel",
     "save": "Save",
-    "skip": "Skip"
+    "skip": "Skip",
+    "confirm": "Confirm",
+    "save_password": "Save Password",
+    "email": "Email",
+    "password": "Password",
+    "repeat_password": "Repeat Password",
+    "phone": "Phone",
+    "reset_password": "Reset Password",
+    "enter_code": "Enter Code",
+    "send_code": "Send Code"
+  },
+  "login_screen": {
+    "welcome_back": "Welcome back 👋",
+    "login_to_account": "Log in to your account",
+    "forgot_password": "Forgot password?",
+    "no_account": "Don't have an account? Sign up"
+  },
+  "forgot_password_dialog": {
+    "instruction": "Enter the email address associated with your account. We will send you a link to reset your password.",
+    "link_sent": "A password reset link has been sent to your email"
+  },
+  "new_password_screen": {
+    "title": "Set New Password"
+  },
+  "reset_method_dialog": {
+    "title": "Reset Password",
+    "email_label": "Email",
+    "sms_label": "SMS"
+  },
+  "reset_provider": {
+    "invalid_code": "Invalid code",
+    "unexpected_error": "An unexpected error occurred"
   },
   "force_update_screen": {
     "title": "Update Required",
@@ -19,35 +50,34 @@
     "logout_title": "Logout",
     "logout_content": "Are you sure you want to log out?"
   },
-
   "login": {
-    "title": "Login",
+    "title": "Log In",
     "welcome_message": "Log in to your account",
-    "email": "Email address",
+    "email": "Email Address",
     "password": "Password",
-    "submit": "Log in",
+    "submit": "Log In",
     "forgot_password": "Forgot password?",
     "no_account": "Don't have an account?",
-    "register": "Register",
+    "register": "Sign Up",
     "reset": {
-      "link_sent": "Password reset link has been sent to your email",
+      "link_sent": "A password reset link has been sent to your email",
       "title": "Reset Password",
-      "description": "Enter the email associated with your account. We will send you a link to reset your password.",
+      "description": "Enter the email address associated with your account. We will send you a link to reset your password.",
       "send_link": "Send Link"
     }
   },
   "settings": {
     "title": "Settings",
     "general": "General Settings",
-    "general_subtitle": "Basic application settings",
+    "general_subtitle": "Basic app settings",
     "security": "Security",
-    "security_subtitle": "Manage your security",
+    "security_subtitle": "Manage security",
     "notifications": "Notifications",
     "notifications_subtitle": "Manage your notifications",
     "language": "Language",
-    "language_subtitle": "Change application language",
+    "language_subtitle": "Change app language",
     "theme": "Theme",
-    "theme_subtitle": "Customize application appearance",
+    "theme_subtitle": "Customize app appearance",
     "light_mode": "Light",
     "dark_mode": "Dark",
     "system_default": "System Default",
@@ -65,18 +95,18 @@
 
     "security_access_section": "Access & Sessions",
     "security_active_sessions": "Active Sessions",
-    "security_emergency_lock": "Emergency Lock",
+    "security_emergency_lock": "Emergency Mode",
 
     "save_pin_success": "PIN saved successfully!",
     "pin_mismatch": "PINs do not match",
-    "pin_min_digits": "PIN must be at least 4 digits"
+    "pin_min_digits": "PIN must have at least 4 digits"
   },
   "homeMenu": {
     "chats": "Chats",
     "contacts": "Contacts",
     "workAndCareer": "Work & Career",
     "documents": "Documents",
-    "profile": "Me",
+    "profile": "Profile",
     "payments": "Payments",
     "notifications": "Notifications",
     "store": "Store",
@@ -98,7 +128,7 @@
     "my_cv": "My CV",
     "applications": "Applications",
     "career_advice": "Career Advice",
-    "internships": "Internships",
+    "internships": "Internships & Practices",
     "government_support": "Government Support",
     "employment_map": "Employment Map",
     "job_offers_subtitle": "Browse available job offers",
@@ -115,7 +145,7 @@
     "contact_email": "Send an email to support",
     "contact_phone": "Call our support team",
     "contact_chat": "Start a chat with support",
-    "contact_chat_subtitle": "Quick answers and help",
+    "contact_chat_subtitle": "Quick answers and assistance",
 
     "faq_section": "FAQ / Quick Links"
   },
@@ -130,7 +160,7 @@
 
     "errors": {
       "too_many_attempts": "Too many attempts! Try again in {time}",
-      "invalid_pin": "Invalid PIN! Please try again."
+      "invalid_pin": "Invalid PIN! Try again."
     }
   }
 }

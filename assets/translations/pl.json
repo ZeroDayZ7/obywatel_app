@@ -3,7 +3,38 @@
     "logout": "Wyloguj",
     "cancel": "Anuluj",
     "save": "Zapisz",
-    "skip": "Pomiń"
+    "skip": "Pomiń",
+    "confirm": "Potwierdź",
+    "save_password": "Zapisz hasło",
+    "email": "Email",
+    "password": "Hasło",
+    "repeat_password": "Powtórz hasło",
+    "phone": "Telefon",
+    "reset_password": "Resetuj hasło",
+    "enter_code": "Wprowadź kod",
+    "send_code": "Wyślij kod"
+  },
+  "login_screen": {
+    "welcome_back": "Witaj ponownie 👋",
+    "login_to_account": "Zaloguj się do swojego konta",
+    "forgot_password": "Zapomniałeś hasła?",
+    "no_account": "Nie masz konta? Zarejestruj się"
+  },
+  "forgot_password_dialog": {
+    "instruction": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
+    "link_sent": "Link resetujący hasło został wysłany na email"
+  },
+  "new_password_screen": {
+    "title": "Ustaw nowe hasło"
+  },
+  "reset_method_dialog": {
+    "title": "Reset hasła",
+    "email_label": "Email",
+    "sms_label": "SMS"
+  },
+  "reset_provider": {
+    "invalid_code": "Niepoprawny kod",
+    "unexpected_error": "Wystąpił nieoczekiwany błąd"
   },
   "force_update_screen": {
     "title": "Aktualizacja wymagana",
