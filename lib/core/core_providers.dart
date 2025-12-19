@@ -5,5 +5,4 @@ export 'package:obywatel_plus/core/network/api_provider.dart';
 export 'package:obywatel_plus/core/security/local_auth_provider.dart';
 export 'package:obywatel_plus/core/security/pin_attempt_limiter.dart';
 export 'package:obywatel_plus/core/security/security_service_provider.dart';
-export 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
 export 'package:obywatel_plus/core/security/pin_verification_provider.dart';

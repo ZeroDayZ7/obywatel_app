@@ -40,33 +40,34 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
 
     final pinService = ref.read(pinServiceProvider);
     final pinLimiter = ref.read(pinAttemptLimiterProvider.notifier);
-    final securityService = ref.read(securityServiceProvider.notifier);
+    final securityNotifier = ref.read(securityServiceProvider.notifier);
 
     try {
+      // 1. Sprawdź limit prób
       final limiterState = ref.read(pinAttemptLimiterProvider);
-
       if (limiterState.isLocked) {
         final remaining = limiterState.lockUntil!.difference(DateTime.now());
-        state = state.copyWith(lockRemaining: remaining);
+        state = state.copyWith(isLoading: false, lockRemaining: remaining);
         return;
       }
 
+      // 2. Weryfikacja PIN (hash comparison)
       final isValid = await pinService.verifyPin(pin);
 
       if (isValid) {
         await pinLimiter.reset();
-        await securityService.unlockApp();
-        state = state.copyWith(isSuccess: true, lockRemaining: null);
-        // await Future.delayed(const Duration(milliseconds: 100));
-      
+
+        // 3. Odblokuj aplikację (SecurityState: hasLocalLock -> false)
+        // To wyzwoli AuthRefreshListenable -> Router -> pinLockGuard -> Redirect to Home
+        await securityNotifier.unlockApp();
+
+        state = state.copyWith(isLoading: false, isSuccess: true);
       } else {
         await pinLimiter.registerFailedAttempt();
-        state = state.copyWith(isError: true);
+        state = state.copyWith(isLoading: false, isError: true);
       }
-    } catch (_) {
-      state = state.copyWith(isError: true);
-    } finally {
-      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, isError: true);
     }
   }
 }

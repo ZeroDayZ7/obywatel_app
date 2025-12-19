@@ -3,14 +3,14 @@ import 'package:easy_localization/easy_localization.dart';
 
 enum AppButtonVariant { primary, secondary, text, danger }
 
-class Button extends StatelessWidget {
+class AppButton extends StatelessWidget {
   final String labelKey;
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
   final bool isLoading;
   final bool fullWidth;
 
-  const Button({
+  const AppButton({
     super.key,
     required this.labelKey,
     required this.onPressed,
@@ -34,17 +34,43 @@ class Button extends StatelessWidget {
     switch (variant) {
       case AppButtonVariant.primary:
         return _wrapWidth(
-          ElevatedButton(onPressed: isLoading ? null : onPressed, child: child),
+          ElevatedButton(
+            onPressed: isLoading ? null : onPressed,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Theme.of(context).colorScheme.onPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: child,
+          ),
         );
 
       case AppButtonVariant.secondary:
         return _wrapWidth(
-          OutlinedButton(onPressed: isLoading ? null : onPressed, child: child),
+          OutlinedButton(
+            onPressed: isLoading ? null : onPressed,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Theme.of(context).colorScheme.primary),
+              foregroundColor: Theme.of(context).colorScheme.primary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: child,
+          ),
         );
 
       case AppButtonVariant.text:
         return TextButton(
           onPressed: isLoading ? null : onPressed,
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.primary,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+          ),
           child: child,
         );
 
@@ -55,6 +81,10 @@ class Button extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: child,
           ),

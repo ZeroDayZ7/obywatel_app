@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:obywatel_plus/app/bootstrap/startup_service.dart';
-import '../bootstrap_step.dart';
+import 'package:obywatel_plus/app/bootstrap/bootstrap_step.dart';
+import 'package:obywatel_plus/app/bootstrap/startup_providers.dart';
 
 class StartupStep extends BootstrapStep {
   @override
@@ -8,7 +8,6 @@ class StartupStep extends BootstrapStep {
 
   @override
   Future<void> run(Ref ref) async {
-    // final startup = ref.read(startupServiceProvider);
-    // await startup.run();
+    await ref.read(startupServiceProvider).run(ref);
   }
 }

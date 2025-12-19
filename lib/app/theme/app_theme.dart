@@ -6,22 +6,37 @@ class AppTheme {
   static final lightTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    primaryColor: AppColors.primary,
-    scaffoldBackgroundColor: AppColors.backgroundLight,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.primary,
-      foregroundColor: Colors.white,
+
+    colorScheme: const ColorScheme.light(
+      primary: AppColors.primary,
+      secondary: AppColors.accent,
+      surface: AppColors.backgroundLight,
+      onSurface: AppColors.textPrimary,
+      onSecondary: AppColors.textSecondary,
+      error: AppColors.error,
     ),
+
+    appBarTheme: const AppBarTheme(elevation: 0),
+
     textTheme: const TextTheme(
-      bodyMedium: TextStyle(color: AppColors.textPrimary),
+      headlineMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+      ),
+      bodyMedium: TextStyle(),
+      bodyLarge: TextStyle(),
+      bodySmall: TextStyle(),
+      titleLarge: TextStyle(fontWeight: FontWeight.bold),
     ),
+
     extensions: [
       ToastTheme(
         successColor: Colors.green,
         errorColor: AppColors.error,
         infoColor: AppColors.accent,
         textStyle: const TextStyle(color: Colors.white, fontSize: 14),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
     ],
   );
@@ -29,15 +44,37 @@ class AppTheme {
   static final darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    primaryColor: AppColors.primaryDark,
-    scaffoldBackgroundColor: AppColors.backgroundDark,
+
+    colorScheme: const ColorScheme.dark(
+      primary: Color.fromARGB(255, 226, 226, 226),
+      secondary: Color.fromARGB(255, 92, 92, 92),
+      surface: AppColors.backgroundDark,
+      onSurface: Color.fromARGB(255, 103, 221, 230),
+      onSecondary: Color.fromARGB(255, 211, 211, 211),
+      error: AppColors.error,
+    ),
+
+    appBarTheme: const AppBarTheme(elevation: 0),
+
+    textTheme: const TextTheme(
+      headlineMedium: TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+      ),
+      bodyMedium: TextStyle(),
+      bodyLarge: TextStyle(),
+      bodySmall: TextStyle(),
+      titleLarge: TextStyle(fontWeight: FontWeight.bold),
+    ),
+
     extensions: [
       ToastTheme(
-        successColor: Colors.greenAccent.shade400,
+        successColor: Colors.greenAccent,
         errorColor: Colors.redAccent,
-        infoColor: Colors.blueAccent.shade200,
+        infoColor: Colors.blueAccent,
         textStyle: const TextStyle(color: Colors.white, fontSize: 14),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
       ),
     ],
   );

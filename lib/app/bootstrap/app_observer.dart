@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-// ⚠️ ProviderObserver jest teraz "base", więc twoja klasa też musi być 'base' lub 'final'
 final class AppObserver extends ProviderObserver {
   @override
   void didAddProvider(ProviderObserverContext context, Object? value) {
