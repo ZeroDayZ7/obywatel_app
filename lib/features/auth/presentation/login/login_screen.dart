@@ -21,7 +21,7 @@ class LoginScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  LocaleKeys.login_welcome_message.tr(),
+                  LocaleKeys.login_screen_welcome_back.tr(),
                   style: textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),

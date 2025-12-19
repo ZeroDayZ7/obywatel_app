@@ -1,81 +1,58 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/app_text_styles.dart';
 import 'app_colors.dart';
 import 'extensions/toast_theme.dart';
+import 'extensions/shadow_theme.dart';
 
 class AppTheme {
-  static final lightTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.light,
+  static ThemeData buildTheme(Brightness mode) {
+    final bool isDark = mode == Brightness.dark;
 
-    colorScheme: const ColorScheme.light(
-      primary: AppColors.primary,
-      secondary: AppColors.accent,
-      surface: AppColors.backgroundLight,
-      onSurface: AppColors.textPrimary,
-      onSecondary: AppColors.textSecondary,
-      error: AppColors.error,
-    ),
+    return ThemeData(
+      useMaterial3: true,
+      brightness: mode,
+      appBarTheme: const AppBarTheme(elevation: 0),
+      colorScheme: _colorScheme(isDark),
+      textTheme: _textTheme(isDark),
+      // extensions: [ToastTheme.fromMode(isDark), ShadowTheme.fromMode(isDark)],
+      extensions: [_shadowTheme(isDark), _toastTheme(isDark)],
+    );
+  }
 
-    appBarTheme: const AppBarTheme(elevation: 0),
+  // ---------- Color Scheme ----------
+  static ColorScheme _colorScheme(bool isDark) {
+    return isDark
+        ? const ColorScheme.dark(
+            primary: AppColors.primary,
+            secondary: Color.fromARGB(255, 92, 92, 92),
+            surface: AppColors.backgroundDark,
+            onSurface: Color.fromARGB(255, 103, 221, 230),
+            onSecondary: Color.fromARGB(255, 211, 211, 211),
+            error: AppColors.error,
+          )
+        : const ColorScheme.light(
+            primary: AppColors.primary,
+            secondary: AppColors.accent,
+            surface: AppColors.backgroundLight,
+            onSurface: AppColors.textPrimary,
+            onSecondary: AppColors.textSecondary,
+            error: AppColors.error,
+          );
+  }
 
-    textTheme: const TextTheme(
-      headlineMedium: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: AppColors.textPrimary,
-      ),
-      bodyMedium: TextStyle(),
-      bodyLarge: TextStyle(),
-      bodySmall: TextStyle(),
-      titleLarge: TextStyle(fontWeight: FontWeight.bold),
-    ),
+  // ---------- Text Theme ----------
+  static TextTheme _textTheme(bool isDark) {
+    final color = isDark ? Colors.white : AppColors.textPrimary;
+    final secondary = isDark ? Colors.white70 : AppColors.textSecondary;
 
-    extensions: [
-      ToastTheme(
-        successColor: Colors.green,
-        errorColor: AppColors.error,
-        infoColor: AppColors.accent,
-        textStyle: const TextStyle(color: Colors.white, fontSize: 14),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-    ],
-  );
+    return TextTheme(
+      headlineMedium: AppTextStyles.headline.copyWith(color: color),
+      titleLarge: AppTextStyles.subtitle.copyWith(color: secondary),
+      bodyMedium: AppTextStyles.body.copyWith(color: color),
+      labelLarge: AppTextStyles.button.copyWith(color: Colors.white),
+    );
+  }
 
-  static final darkTheme = ThemeData(
-    useMaterial3: true,
-    brightness: Brightness.dark,
-
-    colorScheme: const ColorScheme.dark(
-      primary: Color.fromARGB(255, 226, 226, 226),
-      secondary: Color.fromARGB(255, 92, 92, 92),
-      surface: AppColors.backgroundDark,
-      onSurface: Color.fromARGB(255, 103, 221, 230),
-      onSecondary: Color.fromARGB(255, 211, 211, 211),
-      error: AppColors.error,
-    ),
-
-    appBarTheme: const AppBarTheme(elevation: 0),
-
-    textTheme: const TextTheme(
-      headlineMedium: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
-      bodyMedium: TextStyle(),
-      bodyLarge: TextStyle(),
-      bodySmall: TextStyle(),
-      titleLarge: TextStyle(fontWeight: FontWeight.bold),
-    ),
-
-    extensions: [
-      ToastTheme(
-        successColor: Colors.greenAccent,
-        errorColor: Colors.redAccent,
-        infoColor: Colors.blueAccent,
-        textStyle: const TextStyle(color: Colors.white, fontSize: 14),
-        borderRadius: BorderRadius.all(Radius.circular(12)),
-      ),
-    ],
-  );
+  static ShadowTheme _shadowTheme(bool isDark) => ShadowTheme.fromMode(isDark);
+  static ToastTheme _toastTheme(bool isDark) => ToastTheme.fromMode(isDark);
 }

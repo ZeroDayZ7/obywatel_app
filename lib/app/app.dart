@@ -21,8 +21,8 @@ class ObywatelPlusApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
 
       // Motywy
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
+      theme: AppTheme.buildTheme(Brightness.light),
+      darkTheme: AppTheme.buildTheme(Brightness.dark),
       themeMode: themeMode,
 
       // Lokalizacje z EasyLocalization

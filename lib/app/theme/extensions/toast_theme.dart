@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/app_colors.dart';
 
 enum ToastType { success, error, info }
 
@@ -16,6 +17,17 @@ class ToastTheme extends ThemeExtension<ToastTheme> {
     required this.textStyle,
     required this.borderRadius,
   });
+
+  /// FABRYKA: tworzy instancję zależnie od trybu jasny/ciemny
+  factory ToastTheme.fromMode(bool isDark) {
+    return ToastTheme(
+      successColor: isDark ? Colors.greenAccent : Colors.green,
+      errorColor: AppColors.error,
+      infoColor: isDark ? Colors.blueAccent : AppColors.accent,
+      textStyle: const TextStyle(color: Colors.white, fontSize: 14),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+    );
+  }
 
   @override
   ToastTheme copyWith({
