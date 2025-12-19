@@ -47,7 +47,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
             children: [
               _PinStatusTile(enabled: pinEnabled),
               const SizedBox(height: 12),
-              Button(
+              AppButton(
                 labelKey: pinEnabled
                     ? LocaleKeys.settings_common_change_pin
                     : LocaleKeys.settings_common_set_pin,

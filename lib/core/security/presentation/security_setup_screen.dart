@@ -119,7 +119,7 @@ class SecuritySetupScreen extends ConsumerWidget {
             child: const Text('Zakończ konfigurację'),
           ),
           const SizedBox(height: 20),
-          Button(
+          AppButton(
             labelKey: LocaleKeys.common_skip,
             variant: AppButtonVariant.text,
             onPressed: () {

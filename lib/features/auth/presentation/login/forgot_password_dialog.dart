@@ -1,10 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
-// Dialog resetowania hasła
 class ForgotPasswordDialog extends StatefulWidget {
   const ForgotPasswordDialog({super.key});
 
@@ -29,18 +27,16 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() => _isLoading = true);
 
-      // Tutaj dodaj logikę resetowania hasła
       await Future.delayed(const Duration(seconds: 2));
 
       if (mounted) {
         setState(() => _isLoading = false);
         Navigator.of(context).pop();
 
-        // Pokaż komunikat sukcesu
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Link resetujący hasło został wysłany na email'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(LocaleKeys.forgot_password_dialog_link_sent.tr()),
+            backgroundColor: Theme.of(context).colorScheme.primary,
           ),
         );
       }
@@ -49,23 +45,17 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
 
     return AlertDialog(
-      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: cs.surface,
       title: Row(
         children: [
-          Icon(
-            Icons.lock_reset,
-            color: isDark ? AppColors.primary : AppColors.accent,
-          ),
+          Icon(Icons.lock_reset, color: cs.primary),
           const SizedBox(width: 12),
           Text(
-            'Resetuj hasło',
-            style: TextStyle(
-              color: isDark ? Colors.white : AppColors.textPrimary,
-            ),
+            LocaleKeys.common_reset_password.tr(),
+            style: TextStyle(color: cs.onSurface),
           ),
         ],
       ),
@@ -73,58 +63,24 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.',
-              style: TextStyle(
-                color: isDark ? Colors.white70 : AppColors.textSecondary,
-                fontSize: 14,
-              ),
+              LocaleKeys.forgot_password_dialog_instruction.tr(),
+              style: TextStyle(color: cs.onSurfaceVariant, fontSize: 14),
             ),
             const SizedBox(height: 20),
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
-              style: TextStyle(
-                color: isDark ? Colors.white : AppColors.textPrimary,
-              ),
+              style: TextStyle(color: cs.onSurface),
               decoration: InputDecoration(
-                labelText: 'Email',
-                hintText: 'twoj@email.com',
-                prefixIcon: Icon(
-                  Icons.email_outlined,
-                  color: isDark ? AppColors.accent : AppColors.textSecondary,
-                ),
-                filled: true,
-                fillColor: isDark
-                    ? AppColors.primaryDark.withValues(alpha: 0.3)
-                    : AppColors.backgroundLight,
+                labelText: LocaleKeys.common_email.tr(),
+                hintText: "email@example.com",
+                prefixIcon: Icon(Icons.email_outlined, color: cs.primary),
+                // filled: true,
+                // fillColor: cs.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark
-                        ? AppColors.primaryDark
-                        : Colors.grey.shade300,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide(
-                    color: isDark ? AppColors.primary : AppColors.accent,
-                    width: 2,
-                  ),
-                ),
-                errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.error),
-                ),
-                labelStyle: TextStyle(
-                  color: isDark ? Colors.white70 : AppColors.textSecondary,
                 ),
               ),
               validator: _validateEmail,
@@ -134,33 +90,18 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text(
-            'Anuluj',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : AppColors.textSecondary,
-            ),
-          ),
+          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          child: Text(LocaleKeys.common_cancel.tr()),
         ),
         ElevatedButton(
           onPressed: _isLoading ? null : _handleResetPassword,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: isDark ? AppColors.primary : AppColors.primaryDark,
-            foregroundColor: const Color.fromARGB(255, 14, 14, 14),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
           child: _isLoading
               ? const SizedBox(
                   height: 20,
                   width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(LocaleKeys.login_reset_link_sent.tr()),
+              : Text(LocaleKeys.common_send_code.tr()),
         ),
       ],
     );

@@ -13,6 +13,12 @@ class _EnterResetCodeDialogState extends State<EnterResetCodeDialog> {
   final ctrl = TextEditingController();
 
   @override
+  void dispose() {
+    ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(LocaleKeys.common_enter_code.tr()),

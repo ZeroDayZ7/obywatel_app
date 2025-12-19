@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
@@ -14,30 +16,34 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Ustaw nowe hasło")),
+      appBar: AppBar(title: Text(LocaleKeys.common_reset_password.tr())),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
             TextField(
               controller: pass,
-              decoration: const InputDecoration(labelText: "Hasło"),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.common_password.tr(),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 20),
             TextField(
               controller: repeat,
-              decoration: const InputDecoration(labelText: "Powtórz hasło"),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.common_repeat_password.tr(),
+              ),
               obscureText: true,
             ),
             const SizedBox(height: 30),
             ElevatedButton(
               onPressed: () {
                 if (pass.text == repeat.text) {
-                  Navigator.pop(context);
+                  Navigator.pop(context, pass.text);
                 }
               },
-              child: const Text("Zapisz hasło"),
+              child: Text(LocaleKeys.common_save_password.tr()),
             ),
           ],
         ),

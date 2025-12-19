@@ -105,7 +105,7 @@ class _HelpScreenState extends ConsumerState<HelpScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Button(
+                    AppButton(
                       labelKey: LocaleKeys.help_axoai_send.tr(),
                       onPressed: _sendMessage,
                       variant: AppButtonVariant.primary,
@@ -167,19 +167,19 @@ class _HelpScreenState extends ConsumerState<HelpScreen> {
             spacing: 12,
             runSpacing: 12,
             children: [
-              Button(
+              AppButton(
                 labelKey: 'How to reset password?',
                 onPressed: () {},
                 variant: AppButtonVariant.secondary,
                 fullWidth: false,
               ),
-              Button(
+              AppButton(
                 labelKey: 'How to set up PIN?',
                 onPressed: () {},
                 variant: AppButtonVariant.secondary,
                 fullWidth: false,
               ),
-              Button(
+              AppButton(
                 labelKey: 'Contact HR department',
                 onPressed: () {},
                 variant: AppButtonVariant.secondary,

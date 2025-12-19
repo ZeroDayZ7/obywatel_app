@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/presentation/login/reset_password/reset_state.dart';
-import 'login_fields.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
+import 'reset_password/reset_state.dart';
 import 'reset_password/reset_provider.dart';
 import 'reset_password/reset_method_dialog.dart';
 import 'reset_password/enter_reset_code_dialog.dart';
@@ -16,24 +19,32 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  void _handleLogin() async {
+    if (_formKey.currentState?.validate() ?? false) {
+      final email = _emailController.text.trim();
+      final password = _passwordController.text;
+
+      // wywołanie logowania w Riverpod notifierze
+      await ref
+          .read(loginStateProvider.notifier)
+          .onLogin(email: email, password: password);
+    }
+  }
 
   Future<void> _handleForgotPassword() async {
-    // 1. KROK: Wybór metody (Email/SMS)
     final method = await showDialog<String>(
       context: context,
       builder: (_) => const ResetMethodDialog(),
     );
 
-    // Jeśli anulowano lub widget nie istnieje - przerywamy
     if (method == null || !mounted) return;
 
-    // Logika (mock) - wysyłanie kodu
     await ref.read(resetPasswordProvider.notifier).chooseMethod(method);
-
-    // Ponowne sprawdzenie mounted po operacji async
     if (!mounted) return;
 
-    // 2. KROK: Wprowadzenie kodu
     final code = await showDialog<String>(
       context: context,
       builder: (_) => const EnterResetCodeDialog(),
@@ -41,13 +52,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
     if (code == null || !mounted) return;
 
-    // Logika (mock) - weryfikacja kodu
     await ref.read(resetPasswordProvider.notifier).verifyCode(code);
-
-    // Po weryfikacji sprawdzamy stan
     final state = ref.read(resetPasswordProvider);
 
-    if (!mounted) return; // Ostatnie sprawdzenie przed nawigacją/snackbar
+    if (!mounted) return;
 
     if (state.status == ResetStatus.codeVerified) {
       Navigator.of(
@@ -57,7 +65,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(state.errorMessage ?? "Wystąpił nieoczekiwany błąd"),
-          backgroundColor: Colors.red,
+          backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
     }
@@ -69,15 +77,53 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       key: _formKey,
       child: Column(
         children: [
-          const LoginEmailField(),
-          const SizedBox(height: 20),
-          const LoginPasswordField(),
+          TextFormField(
+            controller: _emailController,
+            decoration: InputDecoration(
+              labelText: LocaleKeys.common_email.tr(),
+            ),
+            validator: (v) => (v?.isEmpty ?? true) ? 'Wpisz email' : null,
+          ),
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _passwordController,
+            decoration: InputDecoration(
+              labelText: LocaleKeys.common_password.tr(),
+            ),
+            obscureText: true,
+            validator: (v) => (v?.isEmpty ?? true) ? 'Wpisz hasło' : null,
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            labelKey: LocaleKeys.login_submit,
+            onPressed: _handleLogin,
+            variant: AppButtonVariant.primary,
+          ),
+          const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: _handleForgotPassword,
-              child: const Text('Zapomniałeś hasła?'),
+              child: Text(LocaleKeys.login_screen_forgot_password.tr()),
             ),
+          ),
+
+          // <-- TU DODAĆ ERROR MESSAGE
+          Builder(
+            builder: (_) {
+              final state = ref.watch(loginStateProvider);
+              if (state.error == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  state.error!,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class ResetMethodDialog extends StatefulWidget {
   const ResetMethodDialog({super.key});
@@ -15,14 +17,20 @@ class _ResetMethodDialogState extends State<ResetMethodDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Reset hasła"),
+      title: Text(LocaleKeys.common_reset_password.tr()),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SegmentedButton<bool>(
-            segments: const [
-              ButtonSegment(value: true, label: Text("Email")),
-              ButtonSegment(value: false, label: Text("SMS")),
+            segments: [
+              ButtonSegment(
+                value: true,
+                label: Text(LocaleKeys.common_email.tr()),
+              ),
+              ButtonSegment(
+                value: false,
+                label: Text(LocaleKeys.common_phone.tr()),
+              ),
             ],
             selected: {isEmail},
             onSelectionChanged: (v) => setState(() => isEmail = v.first),
@@ -33,26 +41,30 @@ class _ResetMethodDialogState extends State<ResetMethodDialog> {
           if (isEmail)
             TextField(
               controller: emailCtrl,
-              decoration: const InputDecoration(labelText: "Email"),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.common_email.tr(),
+              ),
             )
           else
             TextField(
               controller: phoneCtrl,
-              decoration: const InputDecoration(labelText: "Telefon"),
+              decoration: InputDecoration(
+                labelText: LocaleKeys.common_phone.tr(),
+              ),
             ),
         ],
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("Anuluj"),
+          child: Text(LocaleKeys.common_cancel.tr()),
         ),
         ElevatedButton(
           onPressed: () {
             final result = isEmail ? emailCtrl.text : phoneCtrl.text;
             Navigator.pop(context, result);
           },
-          child: const Text("Wyślij kod"),
+          child: Text(LocaleKeys.common_send_code.tr()),
         ),
       ],
     );

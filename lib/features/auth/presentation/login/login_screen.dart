@@ -1,11 +1,16 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/features/auth/presentation/login/login_form.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
@@ -16,18 +21,16 @@ class LoginScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "Witaj ponownie 👋",
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  LocaleKeys.login_welcome_message.tr(),
+                  style: textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
 
                 const SizedBox(height: 8),
 
                 Text(
-                  "Zaloguj się do swojego konta",
-                  style: Theme.of(context).textTheme.bodyMedium,
+                  LocaleKeys.login_screen_login_to_account.tr(),
+                  style: textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
 
@@ -37,9 +40,14 @@ class LoginScreen extends StatelessWidget {
 
                 const SizedBox(height: 24),
 
-                TextButton(
-                  onPressed: () {},
-                  child: const Text("Nie masz konta? Zarejestruj się"),
+                AppButton(
+                  labelKey: LocaleKeys.login_screen_no_account,
+                  variant: AppButtonVariant.text,
+                  onPressed: () {
+                    // ignore: todo
+                    // TODO: akcja przejścia do rejestracji
+                  },
+                  fullWidth: false,
                 ),
               ],
             ),
