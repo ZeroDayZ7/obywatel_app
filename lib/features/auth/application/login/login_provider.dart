@@ -1,30 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
-
-class LoginState {
-  final bool isLoading;
-  final String? error;
-  final String email;
-  final String password;
-
-  const LoginState({this.isLoading = false, this.error, this.email = '', this.password = ''});
-
-  LoginState copyWith({bool? isLoading, String? error, String? email, String? password}) {
-    return LoginState(
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      email: email ?? this.email,
-      password: password ?? this.password,
-    );
-  }
-}
+import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/features/auth/domain/login_state.dart';
 
 class LoginNotifier extends Notifier<LoginState> {
   @override
   LoginState build() {
-    return LoginState(email: apiConstants.defaultEmail, password: apiConstants.defaultPassword);
+    return LoginState(
+      email: apiConstants.defaultEmail,
+      password: apiConstants.defaultPassword,
+    );
   }
 
   void clearError() {
@@ -39,7 +25,10 @@ class LoginNotifier extends Notifier<LoginState> {
     state = state.copyWith(password: value, error: null);
   }
 
-  Future<void> onLogin({required String email, required String password}) async {
+  Future<void> onLogin({
+    required String email,
+    required String password,
+  }) async {
     state = state.copyWith(isLoading: true, error: null);
 
     final authService = ref.read(authServiceProvider);
@@ -55,4 +44,6 @@ class LoginNotifier extends Notifier<LoginState> {
   }
 }
 
-final loginStateProvider = NotifierProvider<LoginNotifier, LoginState>(LoginNotifier.new);
+final loginNotifierProvider = NotifierProvider<LoginNotifier, LoginState>(
+  LoginNotifier.new,
+);

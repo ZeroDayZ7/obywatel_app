@@ -26,36 +26,43 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Ustaw PIN'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _pinController,
-            keyboardType: TextInputType.number,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'PIN'),
-          ),
-          TextField(
-            controller: _confirmController,
-            keyboardType: TextInputType.number,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Potwierdź PIN'),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(color: Colors.red)),
-          ],
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Anuluj'),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          maxWidth: 400, // maksymalna szerokość dialogu
         ),
-        ElevatedButton(onPressed: _submit, child: const Text('Zapisz')),
-      ],
+        child: AlertDialog(
+          title: const Text('Ustaw PIN'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _pinController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'PIN'),
+              ),
+              TextField(
+                controller: _confirmController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Potwierdź PIN'),
+              ),
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text(_error!, style: const TextStyle(color: Colors.red)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Anuluj'),
+            ),
+            ElevatedButton(onPressed: _submit, child: const Text('Zapisz')),
+          ],
+        ),
+      ),
     );
   }
 }

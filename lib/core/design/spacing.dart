@@ -24,4 +24,6 @@ class Spacing {
 
   /// np. header height / hero padding
   static const xxxl = 32.0;
+
+  static const xxxxl = 40.0;
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/theme/app_text_styles.dart';
+import 'package:obywatel_plus/app/theme/input_decoration_theme.dart';
 import 'app_colors.dart';
 import 'extensions/toast_theme.dart';
 import 'extensions/shadow_theme.dart';
@@ -7,6 +8,7 @@ import 'extensions/shadow_theme.dart';
 class AppTheme {
   static ThemeData buildTheme(Brightness mode) {
     final bool isDark = mode == Brightness.dark;
+    final colorScheme = _colorScheme(isDark);
 
     return ThemeData(
       useMaterial3: true,
@@ -14,7 +16,7 @@ class AppTheme {
       appBarTheme: const AppBarTheme(elevation: 0),
       colorScheme: _colorScheme(isDark),
       textTheme: _textTheme(isDark),
-      // extensions: [ToastTheme.fromMode(isDark), ShadowTheme.fromMode(isDark)],
+      inputDecorationTheme: buildInputDecorationTheme(isDark, colorScheme),
       extensions: [_shadowTheme(isDark), _toastTheme(isDark)],
     );
   }
@@ -26,7 +28,7 @@ class AppTheme {
             primary: AppColors.primary,
             secondary: Color.fromARGB(255, 92, 92, 92),
             surface: AppColors.backgroundDark,
-            onSurface: Color.fromARGB(255, 103, 221, 230),
+            onSurface: Color.fromARGB(255, 255, 255, 255),
             onSecondary: Color.fromARGB(255, 211, 211, 211),
             error: AppColors.error,
           )

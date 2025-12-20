@@ -1,166 +1,183 @@
 {
   "common": {
-    "logout": "Logout",
-    "cancel": "Cancel",
-    "save": "Save",
-    "skip": "Skip",
-    "confirm": "Confirm",
-    "save_password": "Save Password",
+    "logout": "Wyloguj",
+    "cancel": "Anuluj",
+    "save": "Zapisz",
+    "skip": "Pomiń",
+    "confirm": "Potwierdź",
+    "save_password": "Zapisz hasło",
     "email": "Email",
-    "password": "Password",
-    "repeat_password": "Repeat Password",
-    "phone": "Phone",
-    "reset_password": "Reset Password",
-    "enter_code": "Enter Code",
-    "send_code": "Send Code"
+    "password": "Hasło",
+    "repeat_password": "Powtórz hasło",
+    "phone": "Telefon",
+    "reset_password": "Resetuj hasło",
+    "enter_code": "Wprowadź kod",
+    "send_code": "Wyślij kod"
+  },
+  "validators": {
+    "required_email": "Wpisz email",
+    "invalid_email": "Nieprawidłowy format email",
+    "required_password": "Wpisz hasło",
+    "password_min_length": "Hasło musi mieć minimum {min} znaków",
+    "required_pin": "Wpisz PIN",
+    "invalid_pin": "PIN musi być liczbą 4-6 cyfr",
+    "required_field": "Pole wymagane",
+    "invalid_email_or_phone": "Niepoprawny email lub numer telefonu",
+    "required_phone": "Wpisz numer telefonu",
+    "invalid_phone": "Nieprawidłowy format numeru telefonu"
+  },
+  "errors": {
+    "unexpected_error": "Wystąpił nieoczekiwany błąd"
   },
   "login_screen": {
-    "welcome_back": "Welcome back 👋",
-    "login_to_account": "Log in to your account",
-    "forgot_password": "Forgot password?",
-    "no_account": "Don't have an account? Sign up"
+    "welcome_back": "Witaj ponownie 👋",
+    "login_to_account": "Zaloguj się do swojego konta",
+    "forgot_password": "Zapomniałeś hasła?",
+    "no_account": "Nie masz konta? Zarejestruj się"
   },
   "forgot_password_dialog": {
-    "instruction": "Enter the email address associated with your account. We will send you a link to reset your password.",
-    "link_sent": "A password reset link has been sent to your email"
+    "label": "Email lub numer telefonu",
+    "code_sent": "Kod został wysłany. Sprawdź swoją skrzynkę i wpisz kod.",
+    "instruction": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
+    "link_sent": "Link resetujący hasło został wysłany na email"
   },
   "new_password_screen": {
-    "title": "Set New Password"
+    "title": "Ustaw nowe hasło"
   },
   "reset_method_dialog": {
-    "title": "Reset Password",
+    "title": "Reset hasła",
     "email_label": "Email",
     "sms_label": "SMS"
   },
   "reset_provider": {
-    "invalid_code": "Invalid code",
-    "unexpected_error": "An unexpected error occurred"
+    "invalid_code": "Niepoprawny kod",
+    "unexpected_error": "Wystąpił nieoczekiwany błąd"
   },
   "force_update_screen": {
-    "title": "Update Required",
-    "description": "To use the {appName} app, you must install the latest version.",
-    "update_button": "Update App",
-    "mandatory_info": "Update is mandatory"
+    "title": "Aktualizacja wymagana",
+    "description": "Aby korzystać z aplikacji {appName}, musisz zainstalować najnowszą wersję.",
+    "update_button": "Aktualizuj aplikację",
+    "mandatory_info": "Aktualizacja jest obowiązkowa"
   },
   "drawer": {
-    "my_account": "My Account",
-    "notifications": "Notifications",
-    "settings": "Settings",
-    "logout": "Logout",
-    "logout_title": "Logout",
-    "logout_content": "Are you sure you want to log out?"
+    "my_account": "Moje konto",
+    "notifications": "Powiadomienia",
+    "settings": "Ustawienia",
+    "logout": "Wyloguj",
+    "logout_title": "Wylogowanie",
+    "logout_content": "Czy na pewno chcesz się wylogować?"
   },
   "login": {
-    "title": "Log In",
-    "welcome_message": "Log in to your account",
-    "email": "Email Address",
-    "password": "Password",
-    "submit": "Log In",
-    "forgot_password": "Forgot password?",
-    "no_account": "Don't have an account?",
-    "register": "Sign Up",
+    "title": "Zaloguj się",
+    "welcome_message": "Zaloguj się do swojego konta",
+    "email": "Adres email",
+    "password": "Hasło",
+    "submit": "Zaloguj się",
+    "forgot_password": "Zapomniałeś hasła?",
+    "no_account": "Nie masz konta?",
+    "register": "Zarejestruj się",
     "reset": {
-      "link_sent": "A password reset link has been sent to your email",
-      "title": "Reset Password",
-      "description": "Enter the email address associated with your account. We will send you a link to reset your password.",
-      "send_link": "Send Link"
+      "link_sent": "Link resetujący hasło został wysłany na email",
+      "title": "Resetuj hasło",
+      "description": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
+      "send_link": "Wyślij link"
     }
   },
   "settings": {
-    "title": "Settings",
-    "general": "General Settings",
-    "general_subtitle": "Basic app settings",
-    "security": "Security",
-    "security_subtitle": "Manage security",
-    "notifications": "Notifications",
-    "notifications_subtitle": "Manage your notifications",
-    "language": "Language",
-    "language_subtitle": "Change app language",
-    "theme": "Theme",
-    "theme_subtitle": "Customize app appearance",
-    "light_mode": "Light",
-    "dark_mode": "Dark",
-    "system_default": "System Default",
+    "title": "Ustawienia",
+    "general": "Ustawienia ogólne",
+    "general_subtitle": "Podstawowe ustawienia aplikacji",
+    "security": "Bezpieczeństwo",
+    "security_subtitle": "Zarządzaj bezpieczeństwem",
+    "notifications": "Powiadomienia",
+    "notifications_subtitle": "Zarządzaj swoimi powiadomieniami",
+    "language": "Język",
+    "language_subtitle": "Zmień język aplikacji",
+    "theme": "Motyw",
+    "theme_subtitle": "Dostosuj wygląd aplikacji",
+    "light_mode": "Jasny",
+    "dark_mode": "Ciemny",
+    "system_default": "Domyślny systemowy",
 
     "security_pin_section": "PIN",
     "security_pin": "PIN",
-    "security_pin_enabled": "PIN is set",
-    "security_pin_disabled": "PIN is not set",
-    "common_set_pin": "Set PIN",
-    "common_change_pin": "Change PIN",
+    "security_pin_enabled": "PIN jest ustawiony",
+    "security_pin_disabled": "PIN nie jest ustawiony",
+    "common_set_pin": "Ustaw PIN",
+    "common_change_pin": "Zmień PIN",
 
-    "security_biometrics_section": "Biometrics",
-    "security_biometrics": "Biometric Authentication",
-    "security_biometrics_subtitle": "Use fingerprint or face to log in",
+    "security_biometrics_section": "Biometria",
+    "security_biometrics": "Uwierzytelnianie biometryczne",
+    "security_biometrics_subtitle": "Użyj odcisku palca lub twarzy do logowania",
 
-    "security_access_section": "Access & Sessions",
-    "security_active_sessions": "Active Sessions",
-    "security_emergency_lock": "Emergency Mode",
+    "security_access_section": "Dostęp i sesje",
+    "security_active_sessions": "Aktywne sesje",
+    "security_emergency_lock": "Tryb awaryjny",
 
-    "save_pin_success": "PIN saved successfully!",
-    "pin_mismatch": "PINs do not match",
-    "pin_min_digits": "PIN must have at least 4 digits"
+    "save_pin_success": "PIN zapisany pomyślnie!",
+    "pin_mismatch": "PINy nie są zgodne",
+    "pin_min_digits": "PIN musi mieć minimum 4 cyfry"
   },
   "homeMenu": {
-    "chats": "Chats",
-    "contacts": "Contacts",
-    "workAndCareer": "Work & Career",
-    "documents": "Documents",
-    "profile": "Profile",
-    "payments": "Payments",
-    "notifications": "Notifications",
-    "store": "Store",
-    "health": "Health",
-    "education": "Education",
-    "games": "Games",
-    "videos": "Videos",
-    "favorites": "Favorites",
-    "settings": "Settings",
-    "help": "Help",
-    "security": "Security"
+    "chats": "Czaty",
+    "contacts": "Kontakty",
+    "workAndCareer": "Praca i Kariera",
+    "documents": "Dokumenty",
+    "profile": "Ja",
+    "payments": "Płatności",
+    "notifications": "Powiadomienia",
+    "store": "Sklep",
+    "health": "Zdrowie",
+    "education": "Edukacja",
+    "games": "Gry",
+    "videos": "Wideo",
+    "favorites": "Ulubione",
+    "settings": "Ustawienia",
+    "help": "Pomoc",
+    "security": "Bezpieczeństwo"
   },
   "system": {
-    "initialization": "SYSTEM INITIALIZATION"
+    "initialization": "INICJALIZACJA SYSTEMU"
   },
   "workAndCareer": {
-    "title": "Work & Career",
-    "job_offers": "Job Offers",
-    "my_cv": "My CV",
-    "applications": "Applications",
-    "career_advice": "Career Advice",
-    "internships": "Internships & Practices",
-    "government_support": "Government Support",
-    "employment_map": "Employment Map",
-    "job_offers_subtitle": "Browse available job offers",
-    "my_cv_subtitle": "Manage your CV",
-    "applications_subtitle": "Your job applications"
+    "title": "Praca i Kariera",
+    "job_offers": "Oferty pracy",
+    "my_cv": "Moje CV",
+    "applications": "Aplikacje",
+    "career_advice": "Doradztwo zawodowe",
+    "internships": "Staże i praktyki",
+    "government_support": "Wsparcie państwowe",
+    "employment_map": "Mapa zatrudnienia",
+    "job_offers_subtitle": "Przeglądaj dostępne oferty pracy",
+    "my_cv_subtitle": "Zarządzaj swoim CV",
+    "applications_subtitle": "Twoje aplikacje o pracę"
   },
   "help": {
-    "title": "Help",
-    "axoai_section": "AxoAI Chat",
-    "axoai_input_hint": "Ask AxoAI a question...",
-    "axoai_send": "Send",
+    "title": "Pomoc",
+    "axoai_section": "Czat AxoAI",
+    "axoai_input_hint": "Zadaj pytanie AxoAI...",
+    "axoai_send": "Wyślij",
 
-    "contact_section": "Contact Support",
-    "contact_email": "Send an email to support",
-    "contact_phone": "Call our support team",
-    "contact_chat": "Start a chat with support",
-    "contact_chat_subtitle": "Quick answers and assistance",
+    "contact_section": "Kontakt z obsługą",
+    "contact_email": "Wyślij wiadomość e-mail do wsparcia",
+    "contact_phone": "Zadzwoń do naszego działu wsparcia",
+    "contact_chat": "Rozpocznij czat z supportem",
+    "contact_chat_subtitle": "Szybkie odpowiedzi i pomoc",
 
-    "faq_section": "FAQ / Quick Links"
+    "faq_section": "FAQ / Szybkie linki"
   },
   "pinVerification": {
-    "title": "AUTHORIZATION REQUIRED",
-    "subtitle": "ENTER ACCESS CODE",
+    "title": "AUTORYZACJA WYMAGANA",
+    "subtitle": "WPROWADŹ KOD DOSTĘPU",
 
-    "unlock_button": "UNLOCK ACCESS",
-    "cancel": "CANCEL",
+    "unlock_button": "ODBLOKUJ DOSTĘP",
+    "cancel": "ANULUJ",
 
-    "secure_connection": "SECURE CONNECTION",
+    "secure_connection": "POŁĄCZENIE ZASZYFROWANE",
 
     "errors": {
-      "too_many_attempts": "Too many attempts! Try again in {time}",
-      "invalid_pin": "Invalid PIN! Try again."
+      "too_many_attempts": "Zbyt wiele prób! Spróbuj za {time}",
+      "invalid_pin": "Błędny PIN! Spróbuj ponownie."
     }
   }
 }

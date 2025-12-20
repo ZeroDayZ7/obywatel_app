@@ -14,6 +14,21 @@
     "enter_code": "Wprowadź kod",
     "send_code": "Wyślij kod"
   },
+  "validators": {
+    "required_email": "Wpisz email",
+    "invalid_email": "Nieprawidłowy format email",
+    "required_password": "Wpisz hasło",
+    "password_min_length": "Hasło musi mieć minimum {min} znaków",
+    "required_pin": "Wpisz PIN",
+    "invalid_pin": "PIN musi być liczbą 4-6 cyfr",
+    "required_field": "Pole wymagane",
+    "invalid_email_or_phone": "Niepoprawny email lub numer telefonu",
+    "required_phone": "Wpisz numer telefonu",
+    "invalid_phone": "Nieprawidłowy format numeru telefonu"
+  },
+  "errors": {
+    "unexpected_error": "Wystąpił nieoczekiwany błąd"
+  },
   "login_screen": {
     "welcome_back": "Witaj ponownie 👋",
     "login_to_account": "Zaloguj się do swojego konta",
@@ -21,6 +36,8 @@
     "no_account": "Nie masz konta? Zarejestruj się"
   },
   "forgot_password_dialog": {
+    "label": "Email lub numer telefonu",
+    "code_sent": "Kod został wysłany. Sprawdź swoją skrzynkę i wpisz kod.",
     "instruction": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
     "link_sent": "Link resetujący hasło został wysłany na email"
   },
