@@ -21,7 +21,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
-  bool _obscurePassword = true; // <-- stan podglądu hasła
+  bool _obscurePassword = true;
 
   @override
   void initState() {

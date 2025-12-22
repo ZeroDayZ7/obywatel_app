@@ -12,10 +12,13 @@ class ApiClient {
   final SecureStorageService _storage;
   final AppLogger _logger;
 
-  ApiClient({required Dio dio, required SecureStorageService storage, required AppLogger logger})
-    : _dio = dio,
-      _storage = storage,
-      _logger = logger {
+  ApiClient({
+    required Dio dio,
+    required SecureStorageService storage,
+    required AppLogger logger,
+  }) : _dio = dio,
+       _storage = storage,
+       _logger = logger {
     _configureDio();
   }
 
@@ -26,54 +29,60 @@ class ApiClient {
       ..receiveTimeout = Duration(seconds: apiConstants.receiveTimeoutSeconds)
       ..headers = {'Content-Type': 'application/json'};
 
-    // Dodajemy interceptor logowania i auth
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final token = await _storage.read(key: StorageKeys.accessToken);
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          _logger.i('--> ${options.method} ${options.path}');
-          _logger.i('Request body: ${options.data}');
-          return handler.next(options);
-        },
-        onResponse: (response, handler) {
-          _logger.i('<-- ${response.statusCode} ${response.requestOptions.path}');
-          // logowanie całego jsona
-          _logger.i('Response data: ${response.data}');
-          return handler.next(response);
-        },
-        onError: (error, handler) {
-          _logger.e(
-            '<-- ${error.requestOptions.method} ${error.requestOptions.path} FAILED',
-            error: error.error,
-            stackTrace: error.stackTrace,
-          );
+    _dio.interceptors.addAll([
+      _createAuthInterceptor(),
+      _createLoggingInterceptor(),
+      TokenRefreshInterceptor(_dio, _storage, _logger),
+      GlobalErrorInterceptor(),
+    ]);
+  }
 
-          if (error.response != null) {
-            _logger.e('Error response data: ${error.response?.data}');
-          }
-
-          return handler.next(error);
-        },
-      ),
+  Interceptor _createAuthInterceptor() {
+    return InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        final token = await _storage.read(key: StorageKeys.accessToken);
+        if (token != null) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+        return handler.next(options);
+      },
     );
+  }
 
-    // Dodajemy TokenRefreshInterceptor
-    _dio.interceptors.add(TokenRefreshInterceptor(_dio, _storage, _logger));
-    _dio.interceptors.add(GlobalErrorInterceptor());
+  Interceptor _createLoggingInterceptor() {
+    return InterceptorsWrapper(
+      onRequest: (options, handler) {
+        _logger.i('🚀 REQUEST[${options.method}] => PATH: ${options.path}');
+        if (options.data != null) _logger.i('Body: ${options.data}');
+        return handler.next(options);
+      },
+      onResponse: (response, handler) {
+        _logger.i(
+          '✅ RESPONSE[${response.statusCode}] => PATH: ${response.requestOptions.path}',
+        );
+        return handler.next(response);
+      },
+      onError: (err, handler) {
+        _logger.e(
+          '❌ ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
+        );
+        return handler.next(err);
+      },
+    );
   }
 
   // --- Metody HTTP ---
   Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
       _dio.get(path, queryParameters: queryParams);
 
-  Future<Response> post(String path, {dynamic data}) => _dio.post(path, data: data);
+  Future<Response> post(String path, {dynamic data}) =>
+      _dio.post(path, data: data);
 
-  Future<Response> put(String path, {dynamic data}) => _dio.put(path, data: data);
+  Future<Response> put(String path, {dynamic data}) =>
+      _dio.put(path, data: data);
 
-  Future<void> delete(String path, {Object? data}) => _dio.delete(path, data: data);
+  Future<Response> delete(String path, {Object? data}) =>
+      _dio.delete(path, data: data);
 
   Future<Response> upload(String path, FormData formData) => _dio.post(
     path,

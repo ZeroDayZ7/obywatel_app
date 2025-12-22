@@ -25,6 +25,6 @@ class DebugStorageStep implements BootstrapStep {
     // await storage.clearAll();
     // await sharedPrefs.clearAll();
 
-    logger.i('🧪 Debug storage printed');
+    logger.i('🧪 ===== Debug storage printed =====');
   }
 }

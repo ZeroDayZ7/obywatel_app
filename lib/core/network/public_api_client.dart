@@ -36,9 +36,7 @@ class PublicApiClient {
     final resp = await _dio.post(
       path,
       data: data,
-      options: Options(
-        validateStatus: (status) => true,
-      ), // akceptujemy wszystkie statusy
+      options: Options(validateStatus: (status) => true),
     );
     _logger.i('<-- ${resp.statusCode} $path');
     return resp;

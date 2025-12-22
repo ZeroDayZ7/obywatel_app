@@ -6,6 +6,7 @@ class AppRoutes {
   static const home = '/home';
   static const error = '/error';
   static const test = '/test';
+  static const update = '/update';
 
   // Nowe ścieżki dla Settings
   static const setPin = 'set_pin';

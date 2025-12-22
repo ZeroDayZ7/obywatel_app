@@ -1,8 +1,22 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+
+String? forceUpdateGuard(Ref ref, GoRouterState state) {
+  final logger = ref.read(appLoggerProvider);
+  final forceUpdate = ref.read(forceUpdateProvider);
+
+  if (forceUpdate.required) {
+    logger.w('Force update required, redirecting to update screen');
+    if (state.uri.path != AppRoutes.update) {
+      return AppRoutes.update;
+    }
+  }
+  return null;
+}
 
 String? authGuard(Ref ref, GoRouterState state) {
   final isLoggedIn = ref.read(sessionServiceProvider).isLoggedIn;

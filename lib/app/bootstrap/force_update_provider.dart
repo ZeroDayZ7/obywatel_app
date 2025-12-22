@@ -1,14 +1,25 @@
-// lib/app/bootstrap/force_update_provider.dart
+// force_update_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ForceUpdateNotifier extends Notifier<bool> {
-  @override
-  bool build() => false;
+class ForceUpdateData {
+  final bool required;
+  final String windowsUrl;
 
-  void requireUpdate() => state = true;
-  void clear() => state = false;
+  ForceUpdateData({required this.required, this.windowsUrl = ''});
 }
 
-final forceUpdateProvider = NotifierProvider<ForceUpdateNotifier, bool>(
-  ForceUpdateNotifier.new,
-);
+class ForceUpdateNotifier extends Notifier<ForceUpdateData> {
+  @override
+  ForceUpdateData build() => ForceUpdateData(required: false);
+
+  void requireUpdate({String windowsUrl = ''}) {
+    state = ForceUpdateData(required: true, windowsUrl: windowsUrl);
+  }
+
+  void clear() => state = ForceUpdateData(required: false);
+}
+
+final forceUpdateProvider =
+    NotifierProvider<ForceUpdateNotifier, ForceUpdateData>(
+      ForceUpdateNotifier.new,
+    );

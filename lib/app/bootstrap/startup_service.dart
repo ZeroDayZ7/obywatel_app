@@ -28,21 +28,25 @@ class StartupService {
       _logger.i('StartupService: initialization finished');
     } catch (e, st) {
       _logger.e('StartupService failed', error: e, stackTrace: st);
-      // ❗ Celowo nie rzucamy dalej – app ma się uruchomić
     }
   }
 
   Future<void> _checkVersion(Ref ref) async {
     final current = await _versionService.currentVersion();
-    final minimum = await _versionService.fetchMinimumSupportedVersion();
+    final data = await _versionService.fetchVersionData();
 
-    _logger.i('Version check: current=$current, minimum=$minimum');
+    _logger.i('Version check: current=$current, minimum=${data.minVersion}');
 
-    final needsUpdate = _versionService.isBelowMinimum(current, minimum);
+    final needsUpdate = _versionService.isBelowMinimum(
+      current,
+      data.minVersion,
+    );
 
     if (needsUpdate) {
-      ref.read(forceUpdateProvider.notifier).requireUpdate();
-      _logger.w('🚨 Force update required');
+      ref
+          .read(forceUpdateProvider.notifier)
+          .requireUpdate(windowsUrl: data.windowsUrl);
+      _logger.w('🚨 Force update required, windowsUrl=${data.windowsUrl}');
     }
   }
 }

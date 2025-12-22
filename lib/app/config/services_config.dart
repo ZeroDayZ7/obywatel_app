@@ -14,12 +14,17 @@ class ServicesConfig {
   // ==========================================================
   // REST API Endpoints
   // ==========================================================
-  
+
   /// Authentication service base URL
   /// Used for login, logout, token refresh, etc.
   static String get authBaseUrl => apiConstants.isProduction
       ? 'https://api-test.ct8.pl'
       : 'http://localhost:8081';
+
+  /// Version service base URL
+  static String get versionBaseUrl => apiConstants.isProduction
+      ? 'https://api-test.ct8.pl'
+      : 'http://localhost:8085';
 
   /// Chat service REST API base URL
   /// Used for fetching chat history, sending messages via REST, etc.

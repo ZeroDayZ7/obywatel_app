@@ -12,6 +12,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
 
   // Kolejność ma znaczenie!
   final guards = [
+    forceUpdateGuard,
     authGuard,
     securitySetupGuard,
     pinLockGuard,

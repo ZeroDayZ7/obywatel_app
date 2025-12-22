@@ -22,5 +22,5 @@ class ApiEndpoints {
   static String get resetFinal => '${ServicesConfig.authBaseUrl}/auth/reset/final';
 
   // APP CONFIG (PUBLIC)
-  static String get checkVersion => '${ServicesConfig.authBaseUrl}/app/version';
+  static String get checkVersion => '${ServicesConfig.versionBaseUrl}/version';
 }
