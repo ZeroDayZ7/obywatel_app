@@ -41,9 +41,9 @@ class SecureStorageService {
   Future<void> debugPrintAll() async {
     final all = await _storage.readAll();
     if (all.isEmpty) {
-      debugPrint('SecureStorage: no entries.');
+      debugPrint('🟢 ===== SecureStorage: no entries. =====');
     } else {
-      debugPrint('SecureStorage contains ${all.length} entries:');
+      debugPrint('🟢 ===== SecureStorage contains ${all.length} entries =====');
       all.forEach((key, value) {
         debugPrint('$key: $value');
       });

@@ -43,9 +43,9 @@ class SharedPreferencesService {
   Future<void> debugPrintAll() async {
     final keys = _prefs.getKeys();
     if (keys.isEmpty) {
-      debugPrint('🟢 SharedPreferences: no entries.');
+      debugPrint('🟢 ===== SharedPreferences: no entries. =====');
     } else {
-      debugPrint('🟢 SharedPreferences contains ${keys.length} entries:');
+      debugPrint('🟢 ===== SharedPreferences contains ${keys.length} entries =====');
       for (final key in keys) {
         final value = _prefs.get(key);
         debugPrint('• $key: $value');

@@ -72,6 +72,8 @@ dependencies:
   drift: ^2.30.0
   drift_flutter: ^0.2.8
 
+  flutter_root_jailbreak_checker: ^1.0.0
+
 
 dev_dependencies:
   flutter_test:

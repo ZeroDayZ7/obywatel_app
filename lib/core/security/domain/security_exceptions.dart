@@ -1,3 +1,10 @@
+class DeviceNotSecureException implements Exception {
+  const DeviceNotSecureException();
+
+  @override
+  String toString() => 'DEVICE_NOT_SECURE';
+}
+
 class SecurityNotConfiguredException implements Exception {}
 
 class SecurityLockedException implements Exception {
