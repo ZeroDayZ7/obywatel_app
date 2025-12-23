@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/features/auth/domain/login_state.dart';
@@ -7,10 +6,7 @@ import 'package:obywatel_plus/features/auth/domain/login_state.dart';
 class LoginNotifier extends Notifier<LoginState> {
   @override
   LoginState build() {
-    return LoginState(
-      email: apiConstants.defaultEmail,
-      password: apiConstants.defaultPassword,
-    );
+    return LoginState(email: apiConstants.defaultEmail);
   }
 
   void clearError() {
@@ -21,10 +17,7 @@ class LoginNotifier extends Notifier<LoginState> {
     state = state.copyWith(email: value, error: null);
   }
 
-  void setPassword(String value) {
-    state = state.copyWith(password: value, error: null);
-  }
-
+  /// Hasło nie jest przechowywane w stanie
   Future<void> onLogin({
     required String email,
     required String password,

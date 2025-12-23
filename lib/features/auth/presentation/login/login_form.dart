@@ -28,7 +28,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.initState();
     final loginState = ref.read(loginNotifierProvider);
     _emailController = TextEditingController(text: loginState.email);
-    _passwordController = TextEditingController(text: loginState.password);
+    _passwordController = TextEditingController();
   }
 
   @override
@@ -38,15 +38,21 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.dispose();
   }
 
-  void handleLogin() {
+  void handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    ref
+    final password = _passwordController.text;
+
+    // Wywołanie logiki logowania
+    await ref
         .read(loginNotifierProvider.notifier)
-        .onLogin(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+        .onLogin(email: _emailController.text, password: password);
+
+    // 🔹 Nadpisanie hasła zerami
+    _passwordController.text = '000000';
+
+    // 🔒 Wyczyszczenie hasła z kontrolera
+    _passwordController.clear();
   }
 
   void handleForgotPassword() {

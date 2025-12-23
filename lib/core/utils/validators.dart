@@ -35,7 +35,7 @@ class Validators {
     return null;
   }
 
-  /// Walidacja PIN (opcjonalny)
+  /// Walidacja PIN
   static String? validatePin(String? value) {
     if (value == null || value.isEmpty) {
       return LocaleKeys.validators_required_pin.tr();
@@ -46,7 +46,20 @@ class Validators {
     return null;
   }
 
-  /// Możesz tu dorzucać kolejne walidatory np. dla loginu, numeru telefonu itp.
+  /// Walidacja numeru telefonu
+  static String? validatePhone(String? value) {
+    if (value == null || value.isEmpty) {
+      return LocaleKeys.validators_required_phone.tr();
+    }
+
+    final cleaned = value.replaceAll(RegExp(r'\D'), '');
+    if (cleaned.length < 9 || cleaned.length > 15) {
+      return LocaleKeys.validators_invalid_phone.tr();
+    }
+
+    return null;
+  }
+
   /// Sprawdza czy tekst wygląda jak email
   static bool isEmail(String value) {
     return validateEmail(value) == null;
@@ -54,7 +67,6 @@ class Validators {
 
   /// Sprawdza czy tekst wygląda jak numer telefonu (prosta walidacja)
   static bool isPhone(String value) {
-    final cleaned = value.replaceAll(RegExp(r'\D'), '');
-    return cleaned.length >= 9 && cleaned.length <= 15;
+    return validatePhone(value) == null;
   }
 }

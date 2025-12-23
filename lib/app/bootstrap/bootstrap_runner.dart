@@ -17,7 +17,13 @@ class BootstrapRunner {
       }
 
       logger.i('▶️ Running ${step.name}');
-      await step.run(ref);
+      try {
+        await step.run(ref);
+      } catch (e, st) {
+        logger.e('❌ Step ${step.name} failed', error: e, stackTrace: st);
+        // przerwij bootstrap
+        rethrow;
+      }
     }
   }
 }

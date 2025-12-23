@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
-import 'package:obywatel_plus/features/auth/application/auth/reset_password_provider.dart';
+import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_provider.dart';
 import 'package:obywatel_plus/features/auth/domain/reset_state.dart';
 
 class ResetMethodDialog extends ConsumerStatefulWidget {
@@ -89,7 +89,6 @@ class _ResetMethodDialogState extends ConsumerState<ResetMethodDialog> {
                       ? () => notifier.sendResetCode()
                       : null,
                   variant: AppButtonVariant.text,
-                  fullWidth: false,
                 ),
               ],
             )
@@ -131,15 +130,7 @@ class _ResetMethodDialogState extends ConsumerState<ResetMethodDialog> {
                         labelText: LocaleKeys.common_phone.tr(),
                         border: const UnderlineInputBorder(),
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return LocaleKeys.validators_required_phone.tr();
-                        }
-                        if (!Validators.isPhone(value)) {
-                          return LocaleKeys.validators_invalid_phone.tr();
-                        }
-                        return null;
-                      },
+                      validator: Validators.validatePhone,
                       keyboardType: TextInputType.phone,
                     ),
                 ],

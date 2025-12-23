@@ -12,7 +12,7 @@ enum ResetStatus {
 
 class ResetState {
   final ResetStatus status;
-  final String? input; // email lub phone
+  final String? input;
   final bool? isEmail;
   final String? errorMessage;
   final int resendTime;

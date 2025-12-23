@@ -30,7 +30,6 @@ class SecurityIntegrationStep extends BootstrapStep {
       await service.verify(config);
       logger.i('🔒 Device integrity check completed');
     } else {
-      // Na Web lub desktop pomijamy integrację
       logger.i(
         '🔒 SecurityIntegrationStep pominięty (platforma nie wspierana)',
       );

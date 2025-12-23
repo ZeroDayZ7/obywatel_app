@@ -20,5 +20,9 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     SessionStep(),
   ]);
 
-  await runner.run(ref);
+  try {
+    await runner.run(ref);
+  } catch (e) {
+    rethrow;
+  }
 });
