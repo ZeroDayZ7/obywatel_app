@@ -19,6 +19,9 @@
     "invalid_email": "Nieprawidłowy format email",
     "required_password": "Wpisz hasło",
     "password_min_length": "Hasło musi mieć minimum {min} znaków",
+    "password_special_char": "Hasło musi zawierać przynajmniej jeden znak specjalny",
+    "password_letter": "Hasło musi zawierać przynajmniej jedną literę",
+    "password_digit": "Hasło musi zawierać przynajmniej jedną cyfrę",
     "required_pin": "Wpisz PIN",
     "invalid_pin": "PIN musi być liczbą 4-6 cyfr",
     "required_field": "Pole wymagane",
@@ -28,7 +31,8 @@
   },
   "errors": {
     "unexpected_error": "Wystąpił nieoczekiwany błąd",
-    "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania"
+    "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania",
+    "VALIDATION_FAILED": "Nieprawidłowe dane. Sprawdź formularz i spróbuj ponownie."
   },
   "login_screen": {
     "welcome_back": "Witaj ponownie 👋",
@@ -70,6 +74,7 @@
   },
   "login": {
     "title": "Zaloguj się",
+    "welcome_back": "Witaj ponownie 👋",
     "welcome_message": "Zaloguj się do swojego konta",
     "email": "Adres email",
     "password": "Hasło",
@@ -77,6 +82,13 @@
     "forgot_password": "Zapomniałeś hasła?",
     "no_account": "Nie masz konta?",
     "register": "Zarejestruj się",
+    "2fa": {
+      "title": "Weryfikacja 2FA",
+      "subtitle": "Wprowadź kod z aplikacji autoryzującej",
+      "code": "Kod 2FA",
+      "submit": "Zweryfikuj",
+      "invalid_code": "Nieprawidłowy kod 2FA"
+    },
     "reset": {
       "link_sent": "Link resetujący hasło został wysłany na email",
       "title": "Resetuj hasło",

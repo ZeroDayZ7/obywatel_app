@@ -21,6 +21,9 @@ abstract class  LocaleKeys {
   static const validators_invalid_email = 'validators.invalid_email';
   static const validators_required_password = 'validators.required_password';
   static const validators_password_min_length = 'validators.password_min_length';
+  static const validators_password_special_char = 'validators.password_special_char';
+  static const validators_password_letter = 'validators.password_letter';
+  static const validators_password_digit = 'validators.password_digit';
   static const validators_required_pin = 'validators.required_pin';
   static const validators_invalid_pin = 'validators.invalid_pin';
   static const validators_required_field = 'validators.required_field';
@@ -30,12 +33,8 @@ abstract class  LocaleKeys {
   static const validators = 'validators';
   static const errors_unexpected_error = 'errors.unexpected_error';
   static const errors_INVALID_CREDENTIALS = 'errors.INVALID_CREDENTIALS';
+  static const errors_VALIDATION_FAILED = 'errors.VALIDATION_FAILED';
   static const errors = 'errors';
-  static const login_screen_welcome_back = 'login_screen.welcome_back';
-  static const login_screen_login_to_account = 'login_screen.login_to_account';
-  static const login_screen_forgot_password = 'login_screen.forgot_password';
-  static const login_screen_no_account = 'login_screen.no_account';
-  static const login_screen = 'login_screen';
   static const forgot_password_dialog_label = 'forgot_password_dialog.label';
   static const forgot_password_dialog_code_sent = 'forgot_password_dialog.code_sent';
   static const forgot_password_dialog_instruction = 'forgot_password_dialog.instruction';
@@ -63,6 +62,7 @@ abstract class  LocaleKeys {
   static const drawer_logout_content = 'drawer.logout_content';
   static const drawer = 'drawer';
   static const login_title = 'login.title';
+  static const login_welcome_back = 'login.welcome_back';
   static const login_welcome_message = 'login.welcome_message';
   static const login_email = 'login.email';
   static const login_password = 'login.password';
@@ -70,6 +70,12 @@ abstract class  LocaleKeys {
   static const login_forgot_password = 'login.forgot_password';
   static const login_no_account = 'login.no_account';
   static const login_register = 'login.register';
+  static const login_2fa_title = 'login.2fa.title';
+  static const login_2fa_subtitle = 'login.2fa.subtitle';
+  static const login_2fa_code = 'login.2fa.code';
+  static const login_2fa_submit = 'login.2fa.submit';
+  static const login_2fa_invalid_code = 'login.2fa.invalid_code';
+  static const login_2fa = 'login.2fa';
   static const login_reset_link_sent = 'login.reset.link_sent';
   static const login_reset_title = 'login.reset.title';
   static const login_reset_description = 'login.reset.description';

@@ -7,14 +7,23 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-// auth_service_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/core_providers.dart' show appLoggerProvider;
 
 class LoginResult {
   final bool success;
   final String? error;
-  const LoginResult({required this.success, this.error});
+  final bool twoFaRequired;
+  final String? accessToken;
+  final String? refreshToken;
+
+  const LoginResult({
+    required this.success,
+    this.error,
+    this.twoFaRequired = false,
+    this.accessToken,
+    this.refreshToken,
+  });
 }
 
 class AuthService {
@@ -46,6 +55,10 @@ class AuthService {
 
       // Log całego response JSON
       _logger.i('Login response: ${response.data}');
+
+      if (response.data['2fa_required'] == true) {
+        return const LoginResult(success: true, twoFaRequired: true);
+      }
 
       // Pobranie tokenów i userId
       final accessToken = response.data[StorageKeys.accessToken] as String?;
@@ -118,7 +131,7 @@ class AuthService {
   }
 
   // ============================
-  // TOKEN VALIDATION (simple)
+  // TOKEN VALIDATION
   // ============================
   Future<bool> validateToken() async {
     try {
@@ -128,6 +141,55 @@ class AuthService {
     } catch (e, st) {
       _logger.e('Token validation failed', error: e, stackTrace: st);
       return false;
+    }
+  }
+
+  // ============================
+  // Verify Two Fa
+  // ============================
+  Future<LoginResult> verifyTwoFa({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.twoFaVerify,
+        data: {'email': email, 'code': code},
+      );
+
+      final accessToken = response.data[StorageKeys.accessToken] as String?;
+      final refreshToken = response.data[StorageKeys.refreshToken] as String?;
+      final userId = response.data[StorageKeys.userId] as String?;
+
+      if (accessToken == null || refreshToken == null || userId == null) {
+        return const LoginResult(
+          success: false,
+          error: 'Brak tokenów w odpowiedzi serwera.',
+        );
+      }
+
+      await _session.startSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        userId: userId,
+      );
+
+      return LoginResult(
+        success: true,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+    } catch (e, st) {
+      _logger.e('2FA verification failed', error: e, stackTrace: st);
+
+      String errorMessage = 'Wystąpił błąd. Spróbuj ponownie.';
+      if (e is DioException && e.response != null) {
+        final data = e.response!.data;
+        if (data is Map && data['code'] != null) {
+          errorMessage = 'errors.${data['code']}';
+        }
+      }
+      return LoginResult(success: false, error: errorMessage);
     }
   }
 }

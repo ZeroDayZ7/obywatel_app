@@ -21,7 +21,7 @@ class LoginScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  LocaleKeys.login_screen_welcome_back.tr(),
+                  LocaleKeys.login_welcome_back.tr(),
                   style: textTheme.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -29,7 +29,7 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 8),
 
                 Text(
-                  LocaleKeys.login_screen_login_to_account.tr(),
+                  LocaleKeys.login_welcome_message.tr(),
                   style: textTheme.bodyMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -41,7 +41,7 @@ class LoginScreen extends StatelessWidget {
                 const SizedBox(height: 24),
 
                 AppButton(
-                  labelKey: LocaleKeys.login_screen_no_account,
+                  labelKey: LocaleKeys.login_no_account,
                   variant: AppButtonVariant.text,
                   onPressed: () {
                     // ignore: todo

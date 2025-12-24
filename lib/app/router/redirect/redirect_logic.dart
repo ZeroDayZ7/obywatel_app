@@ -16,6 +16,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
     authGuard,
     securitySetupGuard,
     pinLockGuard,
+    twoFaGuard,
   ];
 
   for (final guard in guards) {

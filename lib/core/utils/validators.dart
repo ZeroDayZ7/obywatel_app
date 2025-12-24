@@ -27,12 +27,32 @@ class Validators {
     if (value == null || value.isEmpty) {
       return LocaleKeys.validators_required_password.tr();
     }
+
     if (value.length < minLength) {
       return LocaleKeys.validators_password_min_length.tr(
         namedArgs: {'min': minLength.toString()},
       );
     }
-    return null;
+
+    // sprawdzenie litery
+    final letterRegex = RegExp(r'[A-Za-z]');
+    if (!letterRegex.hasMatch(value)) {
+      return LocaleKeys.validators_password_letter.tr();
+    }
+
+    // sprawdzenie cyfry
+    final digitRegex = RegExp(r'\d');
+    if (!digitRegex.hasMatch(value)) {
+      return LocaleKeys.validators_password_digit.tr();
+    }
+
+    // sprawdzenie znaku specjalnego
+    final specialCharRegex = RegExp(r'[!@#\$&*~]');
+    if (!specialCharRegex.hasMatch(value)) {
+      return LocaleKeys.validators_password_special_char.tr();
+    }
+
+    return null; // wszystko OK
   }
 
   /// Walidacja PIN
@@ -58,6 +78,17 @@ class Validators {
     }
 
     return null;
+  }
+
+  /// Walidacja 2FA kodu (6-cyfrowy)
+  static String? validateTwoFaCode(String? value) {
+    if (value == null || value.isEmpty) {
+      return LocaleKeys.validators_required_field.tr();
+    }
+    if (value.length != 6 || int.tryParse(value) == null) {
+      return LocaleKeys.login_2fa_invalid_code.tr();
+    }
+    return null; // wszystko OK
   }
 
   /// Sprawdza czy tekst wygląda jak email

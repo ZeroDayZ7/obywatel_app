@@ -3,6 +3,7 @@ class AppRoutes {
   static const splash = '/splash';
   static const pin = '/pin';
   static const login = '/login';
+  static const twoFaVerify = '/2fa';
   static const home = '/home';
   static const error = '/error';
   static const test = '/test';

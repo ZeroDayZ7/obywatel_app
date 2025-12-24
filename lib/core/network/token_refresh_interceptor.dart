@@ -27,6 +27,8 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         err.requestOptions.path == ApiEndpoints.login ||
         err.requestOptions.path == ApiEndpoints.register ||
         err.requestOptions.path == ApiEndpoints.refreshToken ||
+        err.requestOptions.path == ApiEndpoints.twoFaVerify ||
+        err.requestOptions.path == ApiEndpoints.twoFaResend ||
         err.requestOptions.path == ApiEndpoints.logout) {
       return handler.next(err);
     }

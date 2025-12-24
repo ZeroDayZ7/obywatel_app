@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 String? forceUpdateGuard(Ref ref, GoRouterState state) {
@@ -28,6 +29,23 @@ String? authGuard(Ref ref, GoRouterState state) {
   if (isLoggedIn && goingToLogin) {
     return AppRoutes.home;
   }
+  return null;
+}
+
+String? twoFaGuard(Ref ref, GoRouterState state) {
+  final loginState = ref.read(loginNotifierProvider);
+  final goingTo2Fa = state.uri.path == AppRoutes.twoFaVerify;
+
+  // Jeśli 2FA wymagane i user nie jest na ekranie 2FA → redirect na /2fa
+  if (loginState.twoFaRequired && !goingTo2Fa) {
+    return AppRoutes.twoFaVerify;
+  }
+
+  // Jeśli 2FA zweryfikowane, a user próbuje wejść na /2fa → redirect do home
+  if (!loginState.twoFaRequired && goingTo2Fa) {
+    return AppRoutes.home;
+  }
+
   return null;
 }
 

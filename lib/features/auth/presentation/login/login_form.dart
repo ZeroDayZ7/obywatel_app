@@ -49,7 +49,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         .onLogin(email: _emailController.text, password: password);
 
     // 🔹 Nadpisanie hasła zerami
-    _passwordController.text = '000000';
+    // _passwordController.text = '000000';
 
     // 🔒 Wyczyszczenie hasła z kontrolera
     _passwordController.clear();
@@ -112,7 +112,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           Align(
             alignment: Alignment.centerRight,
             child: AppButton(
-              labelKey: LocaleKeys.login_screen_forgot_password,
+              labelKey: LocaleKeys.login_forgot_password,
               onPressed: handleForgotPassword,
               variant: AppButtonVariant.text,
               fullWidth: false,

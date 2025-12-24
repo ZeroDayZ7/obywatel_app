@@ -33,7 +33,37 @@ class LoginNotifier extends Notifier<LoginState> {
       return;
     }
 
-    state = state.copyWith(isLoading: false);
+    // Ustawiamy finalny stan tylko raz, bez dead code
+    state = state.copyWith(
+      isLoading: false,
+      twoFaRequired: result.twoFaRequired,
+    );
+  }
+
+  Future<LoginResult> verifyTwoFa({
+    required String email,
+    required String code,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      final result = await authService.verifyTwoFa(email: email, code: code);
+
+      if (!result.success) {
+        state = state.copyWith(isLoading: false, error: result.error);
+        return result;
+      }
+
+      state = state.copyWith(isLoading: false, twoFaRequired: false);
+      return result;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Wystąpił błąd. Spróbuj ponownie.',
+      );
+      return const LoginResult(success: false);
+    }
   }
 }
 
