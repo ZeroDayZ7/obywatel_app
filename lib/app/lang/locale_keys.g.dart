@@ -29,6 +29,7 @@ abstract class  LocaleKeys {
   static const validators_invalid_phone = 'validators.invalid_phone';
   static const validators = 'validators';
   static const errors_unexpected_error = 'errors.unexpected_error';
+  static const errors_INVALID_CREDENTIALS = 'errors.INVALID_CREDENTIALS';
   static const errors = 'errors';
   static const login_screen_welcome_back = 'login_screen.welcome_back';
   static const login_screen_login_to_account = 'login_screen.login_to_account';

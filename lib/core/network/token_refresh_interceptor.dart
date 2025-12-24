@@ -24,11 +24,12 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     // 1️⃣ Warunek refresh
     if (err.response?.statusCode != 401 ||
+        err.requestOptions.path == ApiEndpoints.login ||
+        err.requestOptions.path == ApiEndpoints.register ||
         err.requestOptions.path == ApiEndpoints.refreshToken ||
         err.requestOptions.path == ApiEndpoints.logout) {
       return handler.next(err);
     }
-
     _logger.i('🔒 401 detected → trying refresh token');
 
     try {

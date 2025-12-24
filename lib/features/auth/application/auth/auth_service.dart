@@ -76,8 +76,8 @@ class AuthService {
       // Jeśli Dio zwrócił odpowiedź z backendu, użyj jej komunikatu
       if (e is DioException && e.response != null) {
         final data = e.response!.data;
-        if (data is Map && data['message'] != null) {
-          errorMessage = data['message'];
+        if (data is Map && data['code'] != null) {
+          errorMessage = 'errors.${data['code']}';
         }
         // opcjonalnie możesz też logować cały JSON błędu
         _logger.i('Backend error response: $data');

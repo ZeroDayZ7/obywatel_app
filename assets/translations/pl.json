@@ -27,7 +27,8 @@
     "invalid_phone": "Nieprawidłowy format numeru telefonu"
   },
   "errors": {
-    "unexpected_error": "Wystąpił nieoczekiwany błąd"
+    "unexpected_error": "Wystąpił nieoczekiwany błąd",
+    "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania"
   },
   "login_screen": {
     "welcome_back": "Witaj ponownie 👋",
