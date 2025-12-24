@@ -1,7 +1,7 @@
 // test/mocks/version_service_mocks.dart
 
 import 'package:mocktail/mocktail.dart';
-import 'package:obywatel_plus/core/network/public_api_client.dart';
+import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 // Mock dla PublicApiClient

@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
-import 'package:obywatel_plus/core/network/public_api_client.dart';
-import 'package:obywatel_plus/core/network/public_api_provider.dart';
-import '../../domain/reset_state.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/core/network/public_client.dart';
+import 'package:obywatel_plus/features/auth/domain/reset_state.dart';
 
 // Provider dla ResetNotifier
 final resetServiceProvider = NotifierProvider<ResetNotifier, ResetState>(

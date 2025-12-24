@@ -1,13 +1,11 @@
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 
-class ApiClient {
+class PublicApiClient {
   final Dio dio;
-  final SecureStorageService storage;
   final AppLogger logger;
 
-  ApiClient({required this.dio, required this.storage, required this.logger});
+  PublicApiClient({required this.dio, required this.logger});
 
   Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
       dio.get(path, queryParameters: queryParams);
@@ -20,10 +18,4 @@ class ApiClient {
 
   Future<Response> delete(String path, {Object? data}) =>
       dio.delete(path, data: data);
-
-  Future<Response> upload(String path, FormData formData) => dio.post(
-    path,
-    data: formData,
-    options: Options(headers: {'Content-Type': 'multipart/form-data'}),
-  );
 }

@@ -12,7 +12,7 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
 GoRouter createRouter({required Ref ref, required List<GoRoute> routes}) {
-  final refreshListenable = ref.read(authRefreshListenableProvider);
+  final refreshListenable = ref.watch(authRefreshListenableProvider);
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,

@@ -69,6 +69,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         children: [
           TextFormField(
             controller: _emailController,
+            enabled: !loginState.isLoading,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_email.tr(),
             ),
@@ -77,6 +78,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
+            enabled: !loginState.isLoading,
+            keyboardType: TextInputType.visiblePassword,
+            autocorrect: false,
+            enableSuggestions: false,
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_password.tr(),
@@ -97,9 +102,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           const SizedBox(height: 24),
           AppButton(
             labelKey: LocaleKeys.login_submit,
-            onPressed: handleLogin,
+            onPressed: loginState.isLoading ? null : handleLogin,
             variant: AppButtonVariant.primary,
+            fullWidth: true,
+            isLoading: loginState.isLoading,
           ),
+
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,

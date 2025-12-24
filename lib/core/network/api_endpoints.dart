@@ -1,26 +1,16 @@
 // lib/core/network/api_endpoints.dart
-import 'package:obywatel_plus/app/config/services_config.dart'
-    show ServicesConfig;
 
 class ApiEndpoints {
   // AUTH
-  static String get login => '${ServicesConfig.authBaseUrl}/auth/login';
-  static String get logout => '${ServicesConfig.authBaseUrl}/auth/logout';
-  static String get userProfile => '${ServicesConfig.authBaseUrl}/user/profile';
-  static String get fetchConfig => '${ServicesConfig.authBaseUrl}/app/config';
+  static String get login => '/auth/login';
+  static String get logout => '/auth/logout';
+  static String get userProfile => '/user/profile';
+  static String get fetchConfig => '/app/config';
+  static String get refreshToken => '/auth/refresh';
+  static String get reset => '/auth/reset/send';
+  static String get verifyResetCode => '/auth/reset/verify';
+  static String get resetFinal => '/auth/reset/final';
 
-  /// Endpoint do odświeżania tokena
-  static String get refreshToken => '${ServicesConfig.authBaseUrl}/auth/refresh';
-
-  /// Endpoint do wysyłania kodu resetu
-  static String get reset => '${ServicesConfig.authBaseUrl}/auth/reset/send';
-
-  /// Endpoint do weryfikacji kodu resetu
-  static String get verifyResetCode => '${ServicesConfig.authBaseUrl}/auth/reset/verify';
-
-  /// Endpoint do finalnego resetu hasła
-  static String get resetFinal => '${ServicesConfig.authBaseUrl}/auth/reset/final';
-
-  // APP CONFIG (PUBLIC)
-  static String get checkVersion => '${ServicesConfig.versionBaseUrl}/version';
+  // PUBLIC
+  static String get checkVersion => '/version';
 }

@@ -4,12 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 // auth_service_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/core_providers.dart' show appLoggerProvider;
-import 'package:obywatel_plus/core/network/api_provider.dart' show apiClientProvider;
 
 class LoginResult {
   final bool success;
@@ -22,18 +22,27 @@ class AuthService {
   final AppLogger _logger;
   final SessionService _session;
 
-  AuthService({required ApiClient apiClient, required AppLogger logger, required SessionService session})
-    : _apiClient = apiClient,
-      _logger = logger,
-      _session = session;
+  AuthService({
+    required ApiClient apiClient,
+    required AppLogger logger,
+    required SessionService session,
+  }) : _apiClient = apiClient,
+       _logger = logger,
+       _session = session;
 
   // ============================
   // LOGIN
   // ============================
-  Future<LoginResult> login({required String email, required String password}) async {
+  Future<LoginResult> login({
+    required String email,
+    required String password,
+  }) async {
     try {
       // Wyślij request do backendu
-      final response = await _apiClient.post(ApiEndpoints.login, data: {'email': email, 'password': password});
+      final response = await _apiClient.post(
+        ApiEndpoints.login,
+        data: {'email': email, 'password': password},
+      );
 
       // Log całego response JSON
       _logger.i('Login response: ${response.data}');
@@ -44,11 +53,18 @@ class AuthService {
       final userId = response.data[StorageKeys.userId] as String?;
 
       if (accessToken == null || refreshToken == null || userId == null) {
-        return const LoginResult(success: false, error: 'Brak tokenów w odpowiedzi serwera.');
+        return const LoginResult(
+          success: false,
+          error: 'Brak tokenów w odpowiedzi serwera.',
+        );
       }
 
       // Rozpocznij sesję
-      await _session.startSession(accessToken: accessToken, refreshToken: refreshToken, userId: userId);
+      await _session.startSession(
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        userId: userId,
+      );
 
       return const LoginResult(success: true);
     } catch (e, st) {
@@ -79,7 +95,10 @@ class AuthService {
 
     try {
       if (refreshToken != null && refreshToken.isNotEmpty) {
-        final response = await _apiClient.post(ApiEndpoints.logout, data: {StorageKeys.refreshToken: refreshToken});
+        final response = await _apiClient.post(
+          ApiEndpoints.logout,
+          data: {StorageKeys.refreshToken: refreshToken},
+        );
         _logger.i('Logout response: ${response.data}');
       }
     } on DioException catch (e, st) {
@@ -92,8 +111,9 @@ class AuthService {
     } catch (e, st) {
       _logger.e('Unexpected error during logout', error: e, stackTrace: st);
     } finally {
-      // zawsze kończymy sesję lokalnie
+      // kończymy sesję lokalnie
       await _session.endSession();
+      _logger.w('kończymy sesję lokalnie');
     }
   }
 

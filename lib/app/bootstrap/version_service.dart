@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:obywatel_plus/core/network/public_api_client.dart';
+import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 
