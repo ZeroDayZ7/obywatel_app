@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -8,21 +6,23 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 class TokenRefreshInterceptor extends QueuedInterceptor {
-  final Dio _dio;
+  final Dio _dio; // Klient główny (do ponowienia zapytania)
   final SecureStorageService _storage;
   final AppLogger _logger;
   final SessionService _sessionService;
+  final Dio _refreshClient; // 1. Nowe pole: dedykowany klient
 
   TokenRefreshInterceptor(
     this._dio,
     this._storage,
     this._logger,
     this._sessionService,
+    this._refreshClient, // Wstrzyknięcie
   );
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    // 1️⃣ Warunek refresh
+    // Warunki pominięcia refreshu
     if (err.response?.statusCode != 401 ||
         err.requestOptions.path == ApiEndpoints.login ||
         err.requestOptions.path == ApiEndpoints.register ||
@@ -32,6 +32,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         err.requestOptions.path == ApiEndpoints.logout) {
       return handler.next(err);
     }
+
     _logger.i('🔒 401 detected → trying refresh token');
 
     try {
@@ -40,21 +41,8 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         throw Exception('No refresh token');
       }
 
-      // 2️⃣ 🔥 OSOBNY DIO TYLKO DO REFRESH
-      final refreshDio = Dio(
-        BaseOptions(
-          baseUrl: ServicesConfig.authBaseUrl,
-          connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
-          receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
-          headers: {'Content-Type': 'application/json'},
-        ),
-      );
-
-      // (opcjonalnie) minimalne logowanie
-      // refreshDio.interceptors.add(LogInterceptor(requestBody: true));
-
-      // 3️⃣ Request refresh
-      final response = await refreshDio.post(
+      // 2. Używamy wstrzykniętego klienta zamiast tworzyć 'new Dio()'
+      final response = await _refreshClient.post(
         ApiEndpoints.refreshToken,
         data: {'refresh_token': refreshToken},
       );
@@ -63,7 +51,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         throw Exception('Refresh failed with ${response.statusCode}');
       }
 
-      // 4️⃣ Zapis nowych tokenów
+      // Zapis nowych tokenów
       final newAccessToken = response.data[StorageKeys.accessToken];
       final newRefreshToken = response.data[StorageKeys.refreshToken];
 
@@ -78,7 +66,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
 
       _logger.i('🔓 Token refreshed → retrying original request');
 
-      // 5️⃣ Ponów oryginalne zapytanie
+      // Ponów oryginalne zapytanie używając głównego klienta (_dio)
       final requestOptions = err.requestOptions;
       requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 
@@ -86,10 +74,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
       return handler.resolve(retryResponse);
     } catch (e, stack) {
       _logger.e('❌ Refresh failed → logout', error: e, stackTrace: stack);
-
-      // 6️⃣ TU: global logout
       await _sessionService.endSession();
-
       return handler.next(err);
     }
   }

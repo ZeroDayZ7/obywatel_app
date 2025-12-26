@@ -13,8 +13,8 @@ class ApiEndpoints {
   static String get resetFinal => '/auth/reset/final';
 
   // 2FA
-  static String get twoFaVerify => '/auth/2fa/verify';
-  static String get twoFaResend => '/auth/2fa/resend';
+  static String get twoFaVerify => '/auth/2fa-verify';
+  static String get twoFaResend => '/auth/2fa-resend';
 
   // PUBLIC
   static String get checkVersion => '/version';

@@ -1,108 +1,115 @@
-// lib/features/auth/application/two_fa/two_fa_provider.dart
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/two_fa_state.dart';
 
-class TwoFaNotifier extends Notifier<TwoFaState> {
+final twoFaNotifierProvider =
+    NotifierProvider<TwoFaNotifier, AsyncValue<TwoFaUiState>>(
+      TwoFaNotifier.new,
+    );
+
+class TwoFaNotifier extends Notifier<AsyncValue<TwoFaUiState>> {
   late final ApiClient _apiClient;
   late final AppLogger _logger;
 
-  /// Email użytkownika, wymagany do weryfikacji
-  String? _email;
-
   @override
-  TwoFaState build() {
-    return const TwoFaState();
+  AsyncValue<TwoFaUiState> build() {
+    _apiClient = ref.read(apiClientProvider);
+    _logger = ref.read(appLoggerProvider);
+
+    return const AsyncData(TwoFaUiState());
   }
 
-  void setEmail(String email) {
-    _email = email;
-  }
+  Future<void> verifyCode(String code) async {
+    final loginAsync = ref.read(loginNotifierProvider);
+    final loginState = loginAsync.value?.login;
 
-  void setError(String message) {
-    state = state.copyWith(error: message);
-  }
+    if (loginState == null) return;
 
-  /// Weryfikacja kodu 2FA
-  Future<TwoFaState> verifyCode(String code) async {
-    if (_email == null) {
-      state = state.copyWith(error: 'Email is not set');
-      return state;
-    }
+    final previous = state.value ?? const TwoFaUiState();
 
-    state = state.copyWith(isLoading: true, error: null);
+    state = const AsyncLoading();
 
     try {
       final response = await _apiClient.post(
         ApiEndpoints.twoFaVerify,
-        data: {'email': _email, 'code': code},
+        data: {
+          'email': loginState.email,
+          'code': code,
+          'token': loginState.twoFaToken,
+        },
       );
 
-      // zakładamy, że backend zwraca success: true/false
       final success = response.data['success'] as bool? ?? false;
 
       if (!success) {
-        state = state.copyWith(
-          isLoading: false,
-          error: response.data['message'] ?? 'Verification failed',
+        state = AsyncData(
+          previous.copyWith(
+            errorKey: response.data['code'] ?? 'TWO_FA_INVALID',
+          ),
         );
-        return state;
+        return;
       }
 
-      state = state.copyWith(isLoading: false, isVerified: true, error: null);
-      return state;
-    } catch (e, st) {
-      _logger.e('2FA verification failed', error: e, stackTrace: st);
-      state = state.copyWith(
-        isLoading: false,
-        error: 'Unexpected error occurred',
+      // 🔥 zamiast wywoływać login(), startujemy sesję
+      final sessionService = ref.read(sessionServiceProvider.notifier);
+      await sessionService.startSession(
+        accessToken: response.data['access_token'],
+        refreshToken: response.data['refresh_token'],
+        userId: response.data['user_id']?.toString(),
       );
-      return state;
+
+      final loginNotifier = ref.read(loginNotifierProvider.notifier);
+      loginNotifier.clearTwoFaRequired();
+
+      state = const AsyncData(TwoFaUiState());
+    } on DioException catch (e, st) {
+      final code = e.response?.data is Map ? e.response?.data['code'] : null;
+
+      _logger.e('2FA verify failed', error: e, stackTrace: st);
+
+      state = AsyncData(previous.copyWith(errorKey: code ?? 'UNKNOWN_ERROR'));
+    } catch (e, st) {
+      _logger.e('2FA verify failed', error: e, stackTrace: st);
+
+      state = AsyncData(previous.copyWith(errorKey: 'UNKNOWN_ERROR'));
     }
   }
 
-  /// Wyślij ponownie kod 2FA
   Future<void> resendCode() async {
-    if (_email == null) return;
+    final loginAsync = ref.read(loginNotifierProvider);
+    final loginState = loginAsync.value?.login;
 
-    if (state.resendCooldown > 0) return; // cooldown active
+    if (loginState == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    final previous = state.value ?? const TwoFaUiState();
+
+    state = const AsyncLoading();
 
     try {
-      await _apiClient.post(ApiEndpoints.twoFaResend, data: {'email': _email});
+      await _apiClient.post(
+        ApiEndpoints.twoFaResend,
+        data: {'email': loginState.email},
+      );
 
-      // przykładowy cooldown 30s
-      state = state.copyWith(isLoading: false, resendCooldown: 30);
-
-      // start cooldown timer
-      _startCooldownTimer();
+      state = AsyncData(previous.copyWith(errorKey: null));
     } catch (e, st) {
-      _logger.e('Resend 2FA code failed', error: e, stackTrace: st);
-      state = state.copyWith(isLoading: false, error: 'Failed to resend code');
+      _logger.e('Resend 2FA failed', error: e, stackTrace: st);
+
+      state = AsyncData(previous.copyWith(errorKey: 'TWO_FA_RESEND_FAILED'));
     }
   }
 
-  void _startCooldownTimer() {
-    const tick = Duration(seconds: 1);
-    Future.doWhile(() async {
-      if (state.resendCooldown <= 0) return false;
-      await Future.delayed(tick);
-      state = state.copyWith(resendCooldown: state.resendCooldown - 1);
-      return true;
-    });
-  }
+  void clearError() {
+    final current = state.value;
+    if (current == null) return;
 
-  /// Inicjalizacja dependencji
-  void init({required ApiClient apiClient, required AppLogger logger}) {
-    _apiClient = apiClient;
-    _logger = logger;
+    state = AsyncData(current.copyWith(errorKey: null));
   }
 }
-
-/// Provider 2FA
-final twoFaProvider = NotifierProvider<TwoFaNotifier, TwoFaState>(
-  () => TwoFaNotifier(),
-);

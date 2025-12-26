@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obywatel_plus/core/errors/error_message.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/features/auth/application/login/two_fa_provider.dart';
 
@@ -19,29 +17,12 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
-  bool _isLoading = false;
-
-  void _submitCode() async {
+  Future<void> _submitCode() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
     final code = _codeController.text;
-    final email = ref.read(loginNotifierProvider).email;
-
-    // Wywołanie logiki weryfikacji 2FA w LoginNotifier
-    final result = await ref
-        .read(loginNotifierProvider.notifier)
-        .verifyTwoFa(email: email, code: code);
-
-    setState(() => _isLoading = false);
-
-    if (!result.success) {
-      ref
-          .read(twoFaProvider.notifier)
-          .setError(result.error ?? 'Unknown error');
-      return;
-    }
+    await ref.read(twoFaNotifierProvider.notifier).verifyCode(code);
+    _codeController.clear();
   }
 
   @override
@@ -52,7 +33,9 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final twoFaState = ref.watch(twoFaProvider);
+    final twoFaAsync = ref.watch(twoFaNotifierProvider);
+
+    final isLoading = twoFaAsync is AsyncLoading;
 
     return Scaffold(
       appBar: AppBar(title: Text(LocaleKeys.login_2fa_title.tr())),
@@ -79,18 +62,13 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
                     ),
                     validator: Validators.validateTwoFaCode,
                   ),
-                  // Tutaj pokazujemy błąd, jeśli istnieje
-                  if (twoFaState.error != null) ...[
-                    const SizedBox(height: 8),
-                    ErrorMessage(message: twoFaState.error!),
-                  ],
                   const SizedBox(height: 24),
                   AppButton(
                     labelKey: LocaleKeys.login_2fa_submit,
-                    onPressed: _isLoading ? null : _submitCode,
+                    onPressed: isLoading ? null : _submitCode,
                     variant: AppButtonVariant.primary,
                     fullWidth: true,
-                    isLoading: _isLoading,
+                    isLoading: isLoading,
                   ),
                 ],
               ),

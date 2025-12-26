@@ -1,27 +1,23 @@
 class LoginState {
-  final bool isLoading;
-  final String? error;
   final String email;
   final bool twoFaRequired;
+  final String? twoFaToken;
 
   const LoginState({
-    this.isLoading = false,
-    this.error,
     this.email = '',
     this.twoFaRequired = false,
+    this.twoFaToken,
   });
 
   LoginState copyWith({
-    bool? isLoading,
-    String? error,
     String? email,
     bool? twoFaRequired,
+    String? twoFaToken,
   }) {
     return LoginState(
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
       email: email ?? this.email,
       twoFaRequired: twoFaRequired ?? this.twoFaRequired,
+      twoFaToken: twoFaToken ?? this.twoFaToken,
     );
   }
 }

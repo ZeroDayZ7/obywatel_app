@@ -1,3 +1,56 @@
+### 1️⃣ `NotifierProvider<Notifier, State>` (TwoFa / Login nowo)
+
+- **Stan**: przechowujesz w nim własny obiekt stanu (`LoginState`, `TwoFaState`) z polami jak `isLoading`, `errorMessage`, `data`.
+- **UI**: obserwuje `ref.watch(provider)` i od razu może użyć np. `isLoading` do przycisku, `errorMessage` do pokazywania błędu.
+- **Zalety**:
+
+  - Masz pełną kontrolę nad tym, co jest w stanie.
+  - Możesz ustawiać różne pola niezależnie (`state = state.copyWith(...)`).
+  - Łatwo pokazać loading przy jednym przycisku i error w komponencie.
+
+- **Kiedy używać**:
+
+  - Gdy chcesz mieć **kontrolę nad polami UI**, np. loading przycisku, błędy walidacyjne, dane do formularza.
+  - Gdy akcje są zależne od wielu pól, nie tylko od samej odpowiedzi async.
+
+---
+
+### 2️⃣ `AsyncNotifierProvider` / `AsyncValue<State>` (AsyncValue<LoginState>)
+
+- **Stan**: automatycznie zarządza `loading`, `data` i `error`.
+- **UI**: używasz `.when(loading: ..., data: ..., error: ...)`.
+- **Zalety**:
+
+  - Proste dla **czystych akcji async**, które zwracają dane.
+  - Nie musisz sam ustawiać `isLoading`.
+
+- **Wady**:
+
+  - Trudniej **pokazać loading tylko przy jednym przycisku** i zachować resztę formularza aktywną.
+  - Trudniej **mieszkać dane async i inne pola stanu** w jednym miejscu.
+
+- **Kiedy używać**:
+
+  - Gdy masz **proste fetchowanie danych**: np. pobranie listy, jeden endpoint, cały ekran czeka na wynik.
+  - Gdy UI **nie potrzebuje kontroli poszczególnych pól**.
+
+---
+
+💡 **Podsumowanie dla Twojego przypadku**:
+
+- Dla logowania i 2FA **lepiej używać zwykłego `NotifierProvider` z własnym stanem**, bo chcesz:
+
+  - pokazać loading tylko na przycisku,
+  - wyświetlić backendowy błąd w komponencie `ErrorMessage`,
+  - zachować wartości pól formularza niezależnie od async.
+
+- `AsyncValue` jest fajny do:
+
+  - pełnoekranowego fetchowania list / danych (np. lista powiadomień, lista użytkowników),
+  - gdzie cały ekran czeka na wynik i nie musisz kontrolować każdego pola UI.
+
+---
+
 ### **Tabela Riverpod 3.0 – kiedy czego używać**
 
 | Typ Provider / Notifier                        | Co przechowuje / robi                                                       | Kiedy używać                                                                                               | Jak używać / przykłady                                                                           |

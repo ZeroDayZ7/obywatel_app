@@ -1,28 +1,9 @@
-// lib\features\auth\domain\two_fa_state.dart
-class TwoFaState {
-  final bool isLoading;
-  final String? error;
-  final bool isVerified;
-  final int resendCooldown;
+class TwoFaUiState {
+  final String? errorKey;
 
-  const TwoFaState({
-    this.isLoading = false,
-    this.error,
-    this.isVerified = false,
-    this.resendCooldown = 0,
-  });
+  const TwoFaUiState({this.errorKey});
 
-  TwoFaState copyWith({
-    bool? isLoading,
-    String? error,
-    bool? isVerified,
-    int? resendCooldown,
-  }) {
-    return TwoFaState(
-      isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
-      isVerified: isVerified ?? this.isVerified,
-      resendCooldown: resendCooldown ?? this.resendCooldown,
-    );
+  TwoFaUiState copyWith({String? errorKey}) {
+    return TwoFaUiState(errorKey: errorKey);
   }
 }

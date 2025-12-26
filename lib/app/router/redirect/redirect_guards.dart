@@ -21,20 +21,30 @@ String? forceUpdateGuard(Ref ref, GoRouterState state) {
 
 String? authGuard(Ref ref, GoRouterState state) {
   final isLoggedIn = ref.read(sessionServiceProvider).isLoggedIn;
-  final goingToLogin = state.uri.path == AppRoutes.login;
+  final path = state.uri.path;
 
-  if (!isLoggedIn && !goingToLogin) {
+  // Zezwól na /2fa
+  if (!isLoggedIn && path != AppRoutes.login && path != AppRoutes.twoFaVerify) {
     return AppRoutes.login;
   }
-  if (isLoggedIn && goingToLogin) {
+
+  if (isLoggedIn && path == AppRoutes.login) {
     return AppRoutes.home;
   }
+
   return null;
 }
 
 String? twoFaGuard(Ref ref, GoRouterState state) {
-  final loginState = ref.read(loginNotifierProvider);
+  final loginAsync = ref.read(loginNotifierProvider);
+
+  // Jeśli stan jest niezaładowany lub error, traktujemy jak niezalogowany
+  final loginState = loginAsync.value?.login;
+
   final goingTo2Fa = state.uri.path == AppRoutes.twoFaVerify;
+
+  // Brak loginState → nie przekierowujemy dalej (możesz też redirect na login)
+  if (loginState == null) return null;
 
   // Jeśli 2FA wymagane i user nie jest na ekranie 2FA → redirect na /2fa
   if (loginState.twoFaRequired && !goingTo2Fa) {

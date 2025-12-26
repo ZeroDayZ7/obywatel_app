@@ -8,7 +8,8 @@ import 'package:obywatel_plus/core/network/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/token_refresh_interceptor.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
-enum DioProfile { public, authenticated }
+// 1. Dodajemy profil 'refreshToken'
+enum DioProfile { public, authenticated, refreshToken }
 
 class DioFactory {
   static Dio create({
@@ -16,11 +17,14 @@ class DioFactory {
     required AppLogger logger,
     SecureStorageService? storage,
     SessionService? sessionService,
+    Dio? refreshClient, // 2. Opcjonalny klient do wstrzyknięcia
   }) {
-    // Dynamiczny baseUrl w zależności od profilu
+    // 3. Konfiguracja Base URL
     final String baseUrl = switch (profile) {
       DioProfile.public => ServicesConfig.versionBaseUrl,
-      DioProfile.authenticated => ServicesConfig.authBaseUrl,
+      // Refresh token uderza w ten sam endpoint co Auth
+      DioProfile.authenticated ||
+      DioProfile.refreshToken => ServicesConfig.authBaseUrl,
     };
 
     final dio = Dio(
@@ -32,24 +36,35 @@ class DioFactory {
       ),
     );
 
-    // Wspólne interceptory dla obu profili
+    // Wspólne interceptory (logowanie, błędy)
     dio.interceptors.add(_createLoggingInterceptor(logger));
     dio.interceptors.add(GlobalErrorInterceptor());
 
-    // Tylko dla authenticated – auth + refresh token
+    // 4. Logika dla Authenticated - tu wstrzykujemy refreshClient
     if (profile == DioProfile.authenticated &&
         storage != null &&
-        sessionService != null) {
+        sessionService != null &&
+        refreshClient != null) {
+      // Wymagamy refreshClienta
+
       dio.interceptors.add(_createAuthInterceptor(storage));
+
       dio.interceptors.add(
-        TokenRefreshInterceptor(dio, storage, logger, sessionService),
+        TokenRefreshInterceptor(
+          dio,
+          storage,
+          logger,
+          sessionService,
+          refreshClient, // Przekazujemy instancję
+        ),
       );
     }
+
+    // Profil 'refreshToken' nie dostaje żadnych dodatkowych interceptorów auth/refresh!
 
     return dio;
   }
 
-  /// Dodaje Bearer token do requestów
   static Interceptor _createAuthInterceptor(SecureStorageService storage) {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
@@ -62,8 +77,8 @@ class DioFactory {
     );
   }
 
-  /// Spójne logowanie dla całej apki
   static Interceptor _createLoggingInterceptor(AppLogger logger) {
+    // ... bez zmian ...
     return InterceptorsWrapper(
       onRequest: (options, handler) {
         logger.i('➡️ ${options.method} ${options.uri}');

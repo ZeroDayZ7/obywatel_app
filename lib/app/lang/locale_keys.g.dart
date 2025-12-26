@@ -32,8 +32,12 @@ abstract class  LocaleKeys {
   static const validators_invalid_phone = 'validators.invalid_phone';
   static const validators = 'validators';
   static const errors_unexpected_error = 'errors.unexpected_error';
+  static const errors_CONNECTION_ERROR = 'errors.CONNECTION_ERROR';
+  static const errors_SERVER_ERROR = 'errors.SERVER_ERROR';
   static const errors_INVALID_CREDENTIALS = 'errors.INVALID_CREDENTIALS';
   static const errors_VALIDATION_FAILED = 'errors.VALIDATION_FAILED';
+  static const errors_UNKNOWN_BUSINESS = 'errors.UNKNOWN_BUSINESS';
+  static const errors_UNKNOWN_ERROR = 'errors.UNKNOWN_ERROR';
   static const errors = 'errors';
   static const forgot_password_dialog_label = 'forgot_password_dialog.label';
   static const forgot_password_dialog_code_sent = 'forgot_password_dialog.code_sent';

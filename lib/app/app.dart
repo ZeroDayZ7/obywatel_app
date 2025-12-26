@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/core/errors/global_error_listener.dart';
 
 import 'router/app_router_provider.dart';
 import 'theme/app_theme.dart';
@@ -32,6 +33,9 @@ class ObywatelPlusApp extends ConsumerWidget {
 
       // Router
       routerConfig: router,
+      builder: (context, child) {
+        return GlobalErrorListener(child: child!);
+      },
     );
   }
 }

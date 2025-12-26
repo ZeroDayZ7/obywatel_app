@@ -1,8 +1,7 @@
-// Twój plik z LoginForm (np. login_form.dart)
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:obywatel_plus/core/errors/error_message.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
@@ -20,14 +19,14 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
-
   bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
-    final loginState = ref.read(loginNotifierProvider);
-    _emailController = TextEditingController(text: loginState.email);
+    final loginAsync = ref.read(loginNotifierProvider);
+    final email = loginAsync.value?.login.email ?? '';
+    _emailController = TextEditingController(text: email);
     _passwordController = TextEditingController();
   }
 
@@ -38,20 +37,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.dispose();
   }
 
-  void handleLogin() async {
+  Future<void> handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final password = _passwordController.text;
-
-    // Wywołanie logiki logowania
     await ref
         .read(loginNotifierProvider.notifier)
-        .onLogin(email: _emailController.text, password: password);
+        .login(
+          email: _emailController.text,
+          password: _passwordController.text,
+        );
 
-    // 🔹 Nadpisanie hasła zerami
-    // _passwordController.text = '000000';
-
-    // 🔒 Wyczyszczenie hasła z kontrolera
     _passwordController.clear();
   }
 
@@ -61,7 +56,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    final loginState = ref.watch(loginNotifierProvider);
+    final loginAsync = ref.watch(loginNotifierProvider);
+
+    // Określenie stanu ładowania
+    final isLoading = loginAsync.isLoading;
 
     return Form(
       key: _formKey,
@@ -69,16 +67,18 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         children: [
           TextFormField(
             controller: _emailController,
-            enabled: !loginState.isLoading,
+            enabled: !isLoading,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_email.tr(),
             ),
             validator: Validators.validateEmail,
+            keyboardType: TextInputType.emailAddress,
+            inputFormatters: [LengthLimitingTextInputFormatter(40)],
           ),
           const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
-            enabled: !loginState.isLoading,
+            enabled: !isLoading,
             keyboardType: TextInputType.visiblePassword,
             autocorrect: false,
             enableSuggestions: false,
@@ -90,24 +90,22 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
                   color: Theme.of(context).iconTheme.color,
                 ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+                onPressed: () => setState(() {
+                  _obscurePassword = !_obscurePassword;
+                }),
               ),
             ),
             validator: Validators.validatePassword,
+            inputFormatters: [LengthLimitingTextInputFormatter(40)],
           ),
           const SizedBox(height: 24),
           AppButton(
             labelKey: LocaleKeys.login_submit,
-            onPressed: loginState.isLoading ? null : handleLogin,
+            onPressed: isLoading ? null : handleLogin,
             variant: AppButtonVariant.primary,
             fullWidth: true,
-            isLoading: loginState.isLoading,
+            isLoading: isLoading,
           ),
-
           const SizedBox(height: 16),
           Align(
             alignment: Alignment.centerRight,
@@ -118,9 +116,6 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               fullWidth: false,
             ),
           ),
-          // Wyświetlenie error message
-          if (loginState.error != null)
-            ErrorMessage(message: loginState.error!),
         ],
       ),
     );

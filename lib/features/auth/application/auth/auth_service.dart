@@ -14,6 +14,7 @@ class LoginResult {
   final bool success;
   final String? error;
   final bool twoFaRequired;
+  final String? twoFaToken;
   final String? accessToken;
   final String? refreshToken;
 
@@ -21,6 +22,7 @@ class LoginResult {
     required this.success,
     this.error,
     this.twoFaRequired = false,
+    this.twoFaToken,
     this.accessToken,
     this.refreshToken,
   });
@@ -38,66 +40,53 @@ class AuthService {
   }) : _apiClient = apiClient,
        _logger = logger,
        _session = session;
-
   // ============================
   // LOGIN
   // ============================
+
   Future<LoginResult> login({
     required String email,
     required String password,
   }) async {
-    try {
-      // Wyślij request do backendu
-      final response = await _apiClient.post(
-        ApiEndpoints.login,
-        data: {'email': email, 'password': password},
+    // Wysyłamy request – jeśli coś pójdzie nie tak, Dio rzuci wyjątek
+    final response = await _apiClient.post(
+      ApiEndpoints.login,
+      data: {'email': email, 'password': password},
+    );
+
+    _logger.i('Login response: ${response.data}');
+
+    // Obsługa 2FA
+    if (response.data['2fa_required'] == true) {
+      return LoginResult(
+        success: true,
+        twoFaRequired: true,
+        twoFaToken: response.data['two_fa_token'] as String?,
       );
-
-      // Log całego response JSON
-      _logger.i('Login response: ${response.data}');
-
-      if (response.data['2fa_required'] == true) {
-        return const LoginResult(success: true, twoFaRequired: true);
-      }
-
-      // Pobranie tokenów i userId
-      final accessToken = response.data[StorageKeys.accessToken] as String?;
-      final refreshToken = response.data[StorageKeys.refreshToken] as String?;
-      final userId = response.data[StorageKeys.userId] as String?;
-
-      if (accessToken == null || refreshToken == null || userId == null) {
-        return const LoginResult(
-          success: false,
-          error: 'Brak tokenów w odpowiedzi serwera.',
-        );
-      }
-
-      // Rozpocznij sesję
-      await _session.startSession(
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        userId: userId,
-      );
-
-      return const LoginResult(success: true);
-    } catch (e, st) {
-      _logger.e('Login failed', error: e, stackTrace: st);
-
-      // Domyślny komunikat błędu
-      String errorMessage = 'Wystąpił błąd. Spróbuj ponownie.';
-
-      // Jeśli Dio zwrócił odpowiedź z backendu, użyj jej komunikatu
-      if (e is DioException && e.response != null) {
-        final data = e.response!.data;
-        if (data is Map && data['code'] != null) {
-          errorMessage = 'errors.${data['code']}';
-        }
-        // opcjonalnie możesz też logować cały JSON błędu
-        _logger.i('Backend error response: $data');
-      }
-
-      return LoginResult(success: false, error: errorMessage);
     }
+
+    // Pobranie tokenów i userId
+    final accessToken = response.data[StorageKeys.accessToken] as String?;
+    final refreshToken = response.data[StorageKeys.refreshToken] as String?;
+    final userId = response.data[StorageKeys.userId] as String?;
+
+    if (accessToken == null || refreshToken == null || userId == null) {
+      // Rzucamy wyjątek, jeśli odpowiedź nie zawiera tokenów
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        type: DioExceptionType.badResponse,
+        error: "Invalid response format: missing tokens",
+      );
+    }
+
+    await _session.startSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: userId,
+    );
+
+    return const LoginResult(success: true);
   }
 
   // ============================
@@ -150,11 +139,12 @@ class AuthService {
   Future<LoginResult> verifyTwoFa({
     required String email,
     required String code,
+    required String token,
   }) async {
     try {
       final response = await _apiClient.post(
         ApiEndpoints.twoFaVerify,
-        data: {'email': email, 'code': code},
+        data: {'email': email, 'code': code, 'token': token},
       );
 
       final accessToken = response.data[StorageKeys.accessToken] as String?;

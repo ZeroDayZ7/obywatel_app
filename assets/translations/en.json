@@ -31,8 +31,12 @@
   },
   "errors": {
     "unexpected_error": "Wystąpił nieoczekiwany błąd",
+    "CONNECTION_ERROR": "Brak połączenia z internetem",
+    "SERVER_ERROR": "Błąd serwera. Spróbuj ponownie później.",
     "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania",
-    "VALIDATION_FAILED": "Nieprawidłowe dane. Sprawdź formularz i spróbuj ponownie."
+    "VALIDATION_FAILED": "Nieprawidłowe dane. Sprawdź formularz i spróbuj ponownie.",
+    "UNKNOWN_BUSINESS": "Wystąpił błąd. Spróbuj ponownie.",
+    "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd"
   },
   "forgot_password_dialog": {
     "label": "Email lub numer telefonu",

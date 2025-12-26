@@ -19,27 +19,40 @@ class AppButton extends StatelessWidget {
     this.fullWidth = false,
   });
 
+  static const double _buttonHeight = 52.0;
+  static const double _loaderSize = 24.0;
+
   @override
   Widget build(BuildContext context) {
     final label = labelKey.tr();
 
-    final Widget child = isLoading
-        ? const SizedBox(
-            width: 20,
-            height: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
+    final Widget content = isLoading
+        ? SizedBox(
+            width: _loaderSize,
+            height: _loaderSize,
+            child: CircularProgressIndicator(
+              strokeWidth: 2.5,
+              valueColor: AlwaysStoppedAnimation<Color>(_loaderColor(context)),
+            ),
           )
         : Text(label);
 
+    final Widget child = Center(child: content);
+
     switch (variant) {
       case AppButtonVariant.primary:
-        return _wrapWidth(
+        return _buildFullWidthAwareButton(
+          context,
           ElevatedButton(
             onPressed: isLoading ? null : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Theme.of(context).colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              minimumSize: Size(
+                fullWidth ? double.infinity : 88,
+                _buttonHeight,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -49,13 +62,18 @@ class AppButton extends StatelessWidget {
         );
 
       case AppButtonVariant.secondary:
-        return _wrapWidth(
+        return _buildFullWidthAwareButton(
+          context,
           OutlinedButton(
             onPressed: isLoading ? null : onPressed,
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: Theme.of(context).colorScheme.primary),
               foregroundColor: Theme.of(context).colorScheme.primary,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              minimumSize: Size(
+                fullWidth ? double.infinity : 88,
+                _buttonHeight,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -65,23 +83,44 @@ class AppButton extends StatelessWidget {
         );
 
       case AppButtonVariant.text:
+        // WAŻNE: TextButton IGNORUJE fullWidth – zawsze jest wąski
         return TextButton(
           onPressed: isLoading ? null : onPressed,
           style: TextButton.styleFrom(
+            // Nie używamy minimumSize z double.infinity
+            minimumSize: const Size(48, 48), // minimalny touch target
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            tapTargetSize:
+                MaterialTapTargetSize.shrinkWrap, // mniejszy obszar dotyku
             foregroundColor: Theme.of(context).colorScheme.primary,
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
           ),
-          child: child,
+          child: isLoading
+              ? SizedBox(
+                  width: _loaderSize,
+                  height: _loaderSize,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                )
+              : Text(label),
         );
 
       case AppButtonVariant.danger:
-        return _wrapWidth(
+        return _buildFullWidthAwareButton(
+          context,
           ElevatedButton(
             onPressed: isLoading ? null : onPressed,
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
               foregroundColor: Theme.of(context).colorScheme.onError,
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              minimumSize: Size(
+                fullWidth ? double.infinity : 88,
+                _buttonHeight,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -92,8 +131,20 @@ class AppButton extends StatelessWidget {
     }
   }
 
-  Widget _wrapWidth(Widget button) {
+  // Pomocnicza metoda – tylko dla przycisków, które wspierają fullWidth
+  Widget _buildFullWidthAwareButton(BuildContext context, Widget button) {
     if (!fullWidth) return button;
     return SizedBox(width: double.infinity, child: button);
+  }
+
+  Color _loaderColor(BuildContext context) {
+    switch (variant) {
+      case AppButtonVariant.primary:
+      case AppButtonVariant.danger:
+        return Theme.of(context).colorScheme.onPrimary;
+      case AppButtonVariant.secondary:
+      case AppButtonVariant.text:
+        return Theme.of(context).colorScheme.primary;
+    }
   }
 }
