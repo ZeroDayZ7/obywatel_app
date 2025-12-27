@@ -17,9 +17,7 @@ class SecuritySetupScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final setupAsync = ref.watch(securitySetupProvider);
-    final logger = ref.read(
-      appLoggerProvider,
-    ); // Sync read, zakładam Provider<AppLogger>
+    final logger = ref.watch(appLoggerProvider);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,

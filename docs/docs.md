@@ -18,3 +18,4 @@ adb -s 5200d78bfa479449 shell top
 # Generate app icons
 
 dart run flutter_launcher_icons:main
+dart run build_runner build --delete-conflicting-outputs

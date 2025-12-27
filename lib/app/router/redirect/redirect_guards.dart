@@ -60,6 +60,7 @@ String? securitySetupGuard(Ref ref, GoRouterState state) {
   final security = ref.read(securityServiceProvider);
   final authState = ref.read(authControllerProvider);
   final goingToSetup = state.uri.path == AppRoutes.securitySetup;
+  if (!security.initialized) return null;
 
   // Jeśli nie jesteśmy w pełni zalogowani, ten guard nas nie dotyczy
   if (authState.status != AuthStatus.authenticated) return null;

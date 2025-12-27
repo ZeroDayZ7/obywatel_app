@@ -15,9 +15,8 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     SecurityIntegrationStep(),
 
     StartupStep(),
-
-    SecurityStep(),
     SessionStep(),
+    SecurityStep(),
   ]);
 
   try {

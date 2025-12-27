@@ -9,9 +9,10 @@ import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/widgets/grid_painter.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:obywatel_plus/core/core_providers.dart';
 import 'package:obywatel_plus/core/utils/duration_utils.dart';
 import '../../../app/theme/app_colors.dart';
+import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
+import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
   const PinVerificationScreen({super.key});
@@ -22,8 +23,6 @@ class PinVerificationScreen extends ConsumerStatefulWidget {
 
 class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   late StreamController<ErrorAnimationType> _errorController;
-
-  // Zmiana tego pola wymusi przebudowanie PinCodeTextField (czyści wpis)
   int _resetToken = 0;
 
   @override
@@ -31,41 +30,43 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     super.initState();
     _errorController = StreamController<ErrorAnimationType>.broadcast();
 
-    // Nasłuch stanu PIN (Riverpod). Gdy pojawi się błąd -> resetujemy pole.
+    // Listener stanu PIN
     ref.listenManual<PinVerificationState>(pinVerificationProvider, (
       previous,
       next,
     ) {
       if (!mounted) return;
 
-      if (next.lockRemaining != null) {
-        final lockText = formatDuration(next.lockRemaining!);
-
-        ref
-            .read(globalNotificationProvider.notifier)
-            .show(
-              LocaleKeys.pinVerification_errors_too_many_attempts,
-              type: NotificationType.warning,
-              namedArgs: {'time': lockText},
-            );
-
-        HapticFeedback.mediumImpact();
-      } else if (next.isError) {
-        ref
-            .read(globalNotificationProvider.notifier)
-            .show(
-              LocaleKeys.pinVerification_errors_invalid_pin, // Klucz tłumaczeń
-              type: NotificationType.error,
-            );
-
-        HapticFeedback.vibrate();
-        _errorController.add(ErrorAnimationType.shake);
-        setState(() {
-          _resetToken++; // reset pola i autofocus
-        });
-      } else if (next.isSuccess) {
-        debugPrint("PIN poprawny, czekam na redirect routera...");
-      }
+      next.maybeWhen(
+        locked: (remaining) {
+          final lockText = formatDuration(remaining);
+          ref
+              .read(globalNotificationProvider.notifier)
+              .show(
+                LocaleKeys.pinVerification_errors_too_many_attempts,
+                type: NotificationType.warning,
+                namedArgs: {'time': lockText},
+              );
+          HapticFeedback.mediumImpact();
+        },
+        error: () {
+          ref
+              .read(globalNotificationProvider.notifier)
+              .show(
+                LocaleKeys.pinVerification_errors_invalid_pin,
+                type: NotificationType.error,
+              );
+          HapticFeedback.vibrate();
+          _errorController.add(ErrorAnimationType.shake);
+          setState(() {
+            _resetToken++;
+          });
+        },
+        success: () {
+          debugPrint("PIN poprawny, czekam na redirect routera...");
+        },
+        orElse: () {},
+      );
     });
   }
 
@@ -76,10 +77,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   }
 
   void _verifyPin(String pin) {
-    final state = ref.read(pinVerificationProvider);
-    if (!state.isLoading) {
-      ref.read(pinVerificationProvider.notifier).verifyPin(ref: ref, pin: pin);
-    }
+    ref.read(pinVerificationProvider.notifier).verifyPin(pin);
   }
 
   @override
@@ -87,9 +85,13 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     final state = ref.watch(pinVerificationProvider);
     final size = MediaQuery.of(context).size;
 
+    // Sprawdzanie loading/error
+    final isLoading = state.maybeWhen(loading: () => true, orElse: () => false);
+
+    final isError = state.maybeWhen(error: () => true, orElse: () => false);
+
     return Scaffold(
       body: Container(
-        // Stałe, proste tło bez animacji
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0a0e27), Color(0xFF1a1a2e), Color(0xFF16213e)],
@@ -99,26 +101,20 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         ),
         child: Stack(
           children: [
-            // Statyczna siatka (bez animacji)
             CustomPaint(
               size: Size(size.width, size.height),
               painter: CyberGridPainter(),
             ),
-
-            // Brak scan line, brak corner decorations, brak glowing logo
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 400,
-                    ), // kluczowa linia – ogranicza szerokość na dużych ekranach
+                    constraints: const BoxConstraints(maxWidth: 400),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Proste logo bez glow
                           Container(
                             padding: const EdgeInsets.all(30),
                             decoration: BoxDecoration(
@@ -136,10 +132,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                               color: Color(0xFF00f0ff),
                             ),
                           ),
-
                           const SizedBox(height: 40),
-
-                          // Tytuł bez glitch (zwykły kolor)
                           Text(
                             LocaleKeys.pinVerification_title.tr(),
                             style: const TextStyle(
@@ -150,9 +143,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                             ),
                             textAlign: TextAlign.center,
                           ),
-
                           const SizedBox(height: 10),
-
                           Text(
                             LocaleKeys.pinVerification_subtitle.tr(),
                             style: TextStyle(
@@ -162,10 +153,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                               color: Colors.white.withValues(alpha: 0.5),
                             ),
                           ),
-
                           const SizedBox(height: 50),
-
-                          // Pole PIN – styl cyberpunk, ale bez dodatkowych animacji
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
@@ -201,7 +189,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                                 fieldWidth: 60,
                                 activeColor: const Color(0xFF00f0ff),
                                 selectedColor: const Color(0xFFff00ff),
-                                inactiveColor: state.isError
+                                inactiveColor: isError
                                     ? AppColors.error
                                     : Colors.white.withValues(alpha: 0.2),
                                 activeFillColor: Colors.black.withValues(
@@ -224,25 +212,16 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                                 milliseconds: 300,
                               ),
                               enableActiveFill: true,
-                              onCompleted: (value) {
-                                _verifyPin(value);
-                              },
+                              onCompleted: _verifyPin,
                               onChanged: (_) {},
                             ),
                           ),
-
                           const SizedBox(height: 50),
-
-                          // Przycisk odblokowania – prosty, bez animowanego glow
                           ElevatedButton(
-                            onPressed: state.isLoading
-                                ? null
-                                : () {
-                                    // onCompleted w PinCodeTextField już wywołuje weryfikację
-                                  },
+                            onPressed: isLoading ? null : () {},
                             style: ElevatedButton.styleFrom(
                               minimumSize: const Size(double.infinity, 60),
-                              backgroundColor: state.isLoading
+                              backgroundColor: isLoading
                                   ? Colors.grey
                                   : const Color(0xFF00f0ff),
                               foregroundColor: const Color(0xFF0a0e27),
@@ -251,7 +230,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                               ),
                               elevation: 0,
                             ),
-                            child: state.isLoading
+                            child: isLoading
                                 ? const SizedBox(
                                     height: 20,
                                     width: 20,
@@ -263,12 +242,12 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                                 : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.lock_open, size: 24),
-                                      SizedBox(width: 12),
+                                      const Icon(Icons.lock_open, size: 24),
+                                      const SizedBox(width: 12),
                                       Text(
                                         LocaleKeys.pinVerification_unlock_button
                                             .tr(),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 1.5,
@@ -277,10 +256,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                                     ],
                                   ),
                           ),
-
                           const SizedBox(height: 30),
-
-                          // Info o szyfrowaniu
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
