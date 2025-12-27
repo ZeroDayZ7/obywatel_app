@@ -26,7 +26,7 @@ class SecurityState extends Equatable {
   });
 
   factory SecurityState.initial() => const SecurityState(
-    hasLocalLock: false,
+    hasLocalLock: true,
     isPinConfigured: false,
     isBiometricEnabled: false,
     canUseBiometrics: false,

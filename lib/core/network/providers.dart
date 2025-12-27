@@ -28,7 +28,7 @@ final authDioProvider = Provider<Dio>((ref) {
     profile: DioProfile.authenticated,
     logger: ref.watch(appLoggerProvider),
     storage: ref.watch(secureStorageProvider),
-    sessionService: ref.watch(sessionServiceProvider.notifier),
+    sessionService: ref.watch(sessionServiceProvider),
     refreshClient: refreshDio,
   );
 });

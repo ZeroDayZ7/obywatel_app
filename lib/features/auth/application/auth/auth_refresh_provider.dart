@@ -3,25 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/security/security_service.dart';
 import 'package:obywatel_plus/core/security/security_service_provider.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart'; // NOWY IMPORT
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
-import 'package:obywatel_plus/features/auth/domain/login_state_ui.dart';
 
 class AuthRefreshListenable extends ChangeNotifier {
   AuthRefreshListenable(Ref ref) {
-    // 1. Nasłuchuj zmian w sesji
-    ref.listen<AuthState>(sessionServiceProvider, (_, _) => notifyListeners());
+    // 1. Zmiany w głównym stanie autoryzacji (Login -> 2FA -> Authenticated -> Logout)
+    ref.listen<AuthState>(authControllerProvider, (_, _) => notifyListeners());
 
-    // 2. Nasłuchuj zmian w bezpieczeństwie
+    // 2. Zmiany w bezpieczeństwie (Blokada PIN, zakończenie setupu)
     ref.listen<SecurityState>(
       securityServiceProvider,
-      (_, _) => notifyListeners(),
-    );
-
-    // 3. Nasłuchuj tylko faktycznych zmian w LoginState (AsyncValue.value)
-    ref.listen<AsyncValue<LoginUiState>>(
-      loginNotifierProvider,
       (_, _) => notifyListeners(),
     );
   }

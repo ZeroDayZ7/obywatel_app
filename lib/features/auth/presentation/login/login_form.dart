@@ -5,7 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/reset_method_dialog.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
@@ -24,9 +24,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   @override
   void initState() {
     super.initState();
-    final loginAsync = ref.read(loginNotifierProvider);
-    final email = loginAsync.value?.login.email ?? '';
-    _emailController = TextEditingController(text: email);
+    final authState = ref.read(authControllerProvider);
+    _emailController = TextEditingController(text: authState.email ?? '');
     _passwordController = TextEditingController();
   }
 
@@ -41,13 +40,12 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     if (!_formKey.currentState!.validate()) return;
 
     await ref
-        .read(loginNotifierProvider.notifier)
-        .login(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
+        .read(authControllerProvider.notifier)
+        .login(_emailController.text.trim(), _passwordController.text.trim());
 
-    _passwordController.clear();
+    if (mounted) {
+      _passwordController.clear();
+    }
   }
 
   void handleForgotPassword() {
@@ -56,10 +54,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
   @override
   Widget build(BuildContext context) {
-    final loginAsync = ref.watch(loginNotifierProvider);
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
 
-    // Określenie stanu ładowania
-    final isLoading = loginAsync.isLoading;
 
     return Form(
       key: _formKey,
@@ -111,7 +108,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             alignment: Alignment.centerRight,
             child: AppButton(
               labelKey: LocaleKeys.login_forgot_password,
-              onPressed: handleForgotPassword,
+              onPressed: isLoading ? null : handleForgotPassword,
               variant: AppButtonVariant.text,
               fullWidth: false,
             ),

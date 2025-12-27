@@ -32,9 +32,9 @@ class HashService {
 
   // Finalna i jedyna konfiguracja — PROD (silna)
   static final _argon = Argon2id(
-    memory: 128 * 1024, // 128MB
-    iterations: 4,
-    parallelism: 4,
+    memory: 1 * 1024, // 128MB
+    iterations: 1,
+    parallelism: 1,
     hashLength: 32, // 32-byte hash (256-bit)
   );
 

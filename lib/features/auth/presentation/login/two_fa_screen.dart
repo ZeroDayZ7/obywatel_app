@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/features/auth/application/login/two_fa_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
 class TwoFaScreen extends ConsumerStatefulWidget {
   const TwoFaScreen({super.key});
@@ -20,9 +22,12 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
   Future<void> _submitCode() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final code = _codeController.text;
-    await ref.read(twoFaNotifierProvider.notifier).verifyCode(code);
-    _codeController.clear();
+    final code = _codeController.text.trim();
+    await ref.read(authControllerProvider.notifier).verifyTwoFa(code);
+
+    if (mounted) {
+      _codeController.clear();
+    }
   }
 
   @override
@@ -33,9 +38,18 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final twoFaAsync = ref.watch(twoFaNotifierProvider);
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
 
-    final isLoading = twoFaAsync is AsyncLoading;
+    ref.listen(authControllerProvider, (previous, next) {
+      if (next.error != null) {
+        final errorMsg = next.error.toString().replaceAll('Exception: ', '');
+        ref
+            .read(globalNotificationProvider.notifier)
+            .show(errorMsg.tr(), type: NotificationType.error);
+        ref.read(authControllerProvider.notifier).clearError();
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(LocaleKeys.login_2fa_title.tr())),
@@ -56,6 +70,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
                   const SizedBox(height: 24),
                   TextFormField(
                     controller: _codeController,
+                    enabled: !isLoading,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: LocaleKeys.login_2fa_code.tr(),
@@ -69,6 +84,17 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
                     variant: AppButtonVariant.primary,
                     fullWidth: true,
                     isLoading: isLoading,
+                  ),
+                  const SizedBox(height: 16),
+                  AppButton(
+                    labelKey: LocaleKeys.common_cancel,
+                    onPressed: isLoading
+                        ? null
+                        : () => ref
+                              .read(authControllerProvider.notifier)
+                              .logout(),
+                    variant: AppButtonVariant.text,
+                    fullWidth: true,
                   ),
                 ],
               ),

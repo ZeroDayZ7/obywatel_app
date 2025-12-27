@@ -1,88 +1,43 @@
-// features/auth/application/session_service.dart
-
+// features/auth/application/session/session_service.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
-class SessionService extends Notifier<AuthState> {
-  late final SecureStorageService _storage;
+class SessionService {
+  final SecureStorageService _storage;
 
-  @override
-  AuthState build() {
-    _storage = ref.read(secureStorageProvider);
-    _restoreSession();
-    return AuthState.initial();
-  }
+  SessionService(this._storage);
 
-  /// Asynchroniczna inicjalizacja przy starcie aplikacji
-  Future<void> init() async {
+  /// Czy użytkownik ma zapisane tokeny? (Start aplikacji)
+  Future<bool> hasSession() async {
     final token = await _storage.read(key: StorageKeys.accessToken);
-    final userId = await _storage.read(key: StorageKeys.userId);
-
-    if (token != null && token.isNotEmpty) {
-      state = AuthState(isLoggedIn: true, userId: userId);
-    }
+    return token != null && token.isNotEmpty;
   }
 
-  // ===============================
-  // SESSION RESTORE
-  // ===============================
-
-  Future<void> _restoreSession() async {
-    final token = await _storage.read(key: StorageKeys.accessToken);
-    final userId = await _storage.read(key: StorageKeys.userId);
-
-    if (token != null && token.isNotEmpty) {
-      state = AuthState(isLoggedIn: true, userId: userId);
-    }
+  Future<String?> getUserId() async {
+    return _storage.read(key: StorageKeys.userId);
   }
 
-  // ===============================
-  // START SESSION
-  // ===============================
-
-  Future<void> startSession({
+  /// Zapisz nową sesję
+  Future<void> saveSession({
     required String accessToken,
     required String refreshToken,
-    String? userId,
+    required String userId,
   }) async {
     await _storage.write(key: StorageKeys.accessToken, value: accessToken);
     await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
-
-    if (userId != null) {
-      await _storage.write(key: StorageKeys.userId, value: userId);
-    }
-
-    state = AuthState(isLoggedIn: true, userId: userId);
+    await _storage.write(key: StorageKeys.userId, value: userId);
   }
 
-  // ===============================
-  // ACCESSORS
-  // ===============================
-
-  Future<String?> getAccessToken() =>
-      _storage.read(key: StorageKeys.accessToken);
-
-  Future<String?> getRefreshToken() =>
-      _storage.read(key: StorageKeys.refreshToken);
-
-  Future<String?> getUserId() => _storage.read(key: StorageKeys.userId);
-
-  // ===============================
-  // END SESSION
-  // ===============================
-
-  Future<void> endSession() async {
+  /// Wyczyść sesję (Logout)
+  Future<void> clearSession() async {
     await _storage.delete(key: StorageKeys.accessToken);
     await _storage.delete(key: StorageKeys.refreshToken);
     await _storage.delete(key: StorageKeys.userId);
-
-    state = AuthState.initial();
+    // Opcjonalnie: nie czyścimy PINu tutaj, tylko tokeny
   }
 }
 
-// Provider
-final sessionServiceProvider = NotifierProvider<SessionService, AuthState>(
-  SessionService.new,
-);
+final sessionServiceProvider = Provider<SessionService>((ref) {
+  return SessionService(ref.watch(secureStorageProvider));
+});

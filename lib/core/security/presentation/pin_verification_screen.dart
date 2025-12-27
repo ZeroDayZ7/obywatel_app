@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/widgets/grid_painter.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
@@ -27,7 +29,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    _errorController = StreamController<ErrorAnimationType>();
+    _errorController = StreamController<ErrorAnimationType>.broadcast();
 
     // Nasłuch stanu PIN (Riverpod). Gdy pojawi się błąd -> resetujemy pole.
     ref.listenManual<PinVerificationState>(pinVerificationProvider, (
@@ -38,19 +40,23 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
 
       if (next.lockRemaining != null) {
         final lockText = formatDuration(next.lockRemaining!);
-        _showMessage(
-          tr(
-            LocaleKeys.pinVerification_errors_too_many_attempts,
-            namedArgs: {'time': lockText},
-          ),
-        );
+
+        ref
+            .read(globalNotificationProvider.notifier)
+            .show(
+              LocaleKeys.pinVerification_errors_too_many_attempts,
+              type: NotificationType.warning,
+              namedArgs: {'time': lockText},
+            );
 
         HapticFeedback.mediumImpact();
       } else if (next.isError) {
-        _showMessage(
-          tr(LocaleKeys.pinVerification_errors_invalid_pin),
-          isError: true,
-        );
+        ref
+            .read(globalNotificationProvider.notifier)
+            .show(
+              LocaleKeys.pinVerification_errors_invalid_pin, // Klucz tłumaczeń
+              type: NotificationType.error,
+            );
 
         HapticFeedback.vibrate();
         _errorController.add(ErrorAnimationType.shake);
@@ -67,18 +73,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   void dispose() {
     _errorController.close();
     super.dispose();
-  }
-
-  void _showMessage(String text, {bool isError = false}) {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.clearSnackBars();
-    messenger.showSnackBar(
-      SnackBar(
-        backgroundColor: isError ? AppColors.error : Colors.blueAccent,
-        content: Text(text, style: const TextStyle(color: Colors.white)),
-        duration: const Duration(seconds: 2),
-      ),
-    );
   }
 
   void _verifyPin(String pin) {

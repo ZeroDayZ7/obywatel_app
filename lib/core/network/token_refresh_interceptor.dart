@@ -74,7 +74,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
       return handler.resolve(retryResponse);
     } catch (e, stack) {
       _logger.e('❌ Refresh failed → logout', error: e, stackTrace: stack);
-      await _sessionService.endSession();
+      await _sessionService.clearSession();
       return handler.next(err);
     }
   }

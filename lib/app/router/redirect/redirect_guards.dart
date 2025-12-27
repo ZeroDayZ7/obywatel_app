@@ -1,93 +1,76 @@
+// lib/app/router/redirect_guards.dart
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import 'package:obywatel_plus/features/auth/application/login/login_provider.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 String? forceUpdateGuard(Ref ref, GoRouterState state) {
-  final logger = ref.read(appLoggerProvider);
   final forceUpdate = ref.read(forceUpdateProvider);
-
-  if (forceUpdate.required) {
-    logger.w('Force update required, redirecting to update screen');
-    if (state.uri.path != AppRoutes.update) {
-      return AppRoutes.update;
-    }
+  if (forceUpdate.required && state.uri.path != AppRoutes.update) {
+    return AppRoutes.update;
   }
   return null;
 }
 
 String? authGuard(Ref ref, GoRouterState state) {
-  final isLoggedIn = ref.read(sessionServiceProvider).isLoggedIn;
-  final path = state.uri.path;
+  final authState = ref.read(authControllerProvider);
+  final securityState = ref.read(securityServiceProvider);
 
-  // Zezwól na /2fa
-  if (!isLoggedIn && path != AppRoutes.login && path != AppRoutes.twoFaVerify) {
-    return AppRoutes.login;
+  // 1. BLOKADA INITIAL: Jeśli system się ładuje, nie pozwól na żaden redirect.
+  // GoRouter zostanie na obecnym ekranie (np. Splash) dopóki status się nie zmieni.
+  if (authState.status == AuthStatus.initial) return null;
+
+  final isLogin = state.uri.path == AppRoutes.login;
+  final is2Fa = state.uri.path == AppRoutes.twoFaVerify;
+  final isPin = state.uri.path == AppRoutes.pin;
+
+  if (authState.isLoading) return null;
+
+  // 2. NIEZALOGOWANY
+  if (authState.status == AuthStatus.unauthenticated) {
+    return isLogin ? null : AppRoutes.login;
   }
 
-  if (isLoggedIn && path == AppRoutes.login) {
-    return AppRoutes.home;
+  // 3. WYMAGANE 2FA
+  if (authState.status == AuthStatus.twoFaRequired) {
+    return is2Fa ? null : AppRoutes.twoFaVerify;
+  }
+
+  // 4. ZALOGOWANY
+  if (authState.status == AuthStatus.authenticated) {
+    // KLUCZOWE: Jeśli mamy skonfigurowany PIN i aplikacja powinna być zablokowana
+    if (securityState.isPinConfigured && securityState.shouldShowLock) {
+      return isPin ? null : AppRoutes.pin;
+    }
+
+    // Jeśli wszystko OK, a próbujemy wejść na login/pin -> Home
+    if (isLogin || is2Fa || isPin) {
+      return AppRoutes.home;
+    }
   }
 
   return null;
 }
 
-String? twoFaGuard(Ref ref, GoRouterState state) {
-  final loginAsync = ref.read(loginNotifierProvider);
-
-  // Jeśli stan jest niezaładowany lub error, traktujemy jak niezalogowany
-  final loginState = loginAsync.value?.login;
-
-  final goingTo2Fa = state.uri.path == AppRoutes.twoFaVerify;
-
-  // Brak loginState → nie przekierowujemy dalej (możesz też redirect na login)
-  if (loginState == null) return null;
-
-  // Jeśli 2FA wymagane i user nie jest na ekranie 2FA → redirect na /2fa
-  if (loginState.twoFaRequired && !goingTo2Fa) {
-    return AppRoutes.twoFaVerify;
-  }
-
-  // Jeśli 2FA zweryfikowane, a user próbuje wejść na /2fa → redirect do home
-  if (!loginState.twoFaRequired && goingTo2Fa) {
-    return AppRoutes.home;
-  }
-
-  return null;
-}
-
+// Ten guard sprawdzamy PO authGuard, więc user jest na pewno authenticated
 String? securitySetupGuard(Ref ref, GoRouterState state) {
   final security = ref.read(securityServiceProvider);
+  final authState = ref.read(authControllerProvider);
   final goingToSetup = state.uri.path == AppRoutes.securitySetup;
 
-  // Jeśli setup nieukończony -> wymuś setup
-  if (security.initialized && !security.isSetupCompleted && !goingToSetup) {
-    return AppRoutes.securitySetup;
+  // Jeśli nie jesteśmy w pełni zalogowani, ten guard nas nie dotyczy
+  if (authState.status != AuthStatus.authenticated) return null;
+
+  // Jeśli setup nieukończony -> wymuś ekran setupu
+  if (security.initialized && !security.isSetupCompleted) {
+    return goingToSetup ? null : AppRoutes.securitySetup;
   }
 
-  // Jeśli setup ukończony a user próbuje wejść na setup (np. przyciskiem wstecz) -> Home
+  // Jeśli setup ukończony, a user próbuje wejść na setup -> Home
   if (security.isSetupCompleted && goingToSetup) {
-    return AppRoutes.home;
-  }
-
-  return null;
-}
-
-String? pinLockGuard(Ref ref, GoRouterState state) {
-  final security = ref.read(securityServiceProvider);
-  final goingToPin = state.uri.path == AppRoutes.pin;
-
-  // 1. Aplikacja wymaga blokady -> idź do PIN
-  if (security.shouldShowLock && !goingToPin) {
-    return AppRoutes.pin;
-  }
-
-  // 2. Aplikacja NIE wymaga blokady, ale jesteśmy na PIN -> idź do Home
-  // To jest kluczowa poprawka!
-  if (!security.shouldShowLock && goingToPin) {
     return AppRoutes.home;
   }
 
