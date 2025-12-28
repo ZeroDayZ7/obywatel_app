@@ -40,7 +40,7 @@ class PinService {
   /// Waliduje PIN (4-6 cyfr)
   void _validatePin(String pin) {
     if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
-      _logger.w('PinService: Nieprawidłowy PIN – musi być 4-6 cyfr');
+      _logger.w('PinService: Nieprawidłowy PIN - musi być 4-6 cyfr');
       throw PinValidationException('PIN musi być liczbą 4-6 cyfr');
     }
   }

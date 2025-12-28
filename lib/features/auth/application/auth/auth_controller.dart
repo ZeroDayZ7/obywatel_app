@@ -1,6 +1,6 @@
 // features/auth/application/auth/auth_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/core_providers.dart'; // dla securityService
+import 'package:obywatel_plus/core/security/security/security_notifier.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';

@@ -1,6 +1,7 @@
-// lib/core/errors/global_error_provider.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/app_exception.dart';
 
 class GlobalNotificationNotifier extends Notifier<AppNotification?> {
   @override
@@ -17,8 +18,18 @@ class GlobalNotificationNotifier extends Notifier<AppNotification?> {
       namedArgs: namedArgs,
     );
 
-    // Szybki reset, aby umożliwić ponowne wywołanie tego samego błędu
+    // Reset stanu po 100ms, żeby można było pokazać ten sam komunikat ponownie
     Future.delayed(const Duration(milliseconds: 100), () => state = null);
+  }
+
+  void showFromError(Object error) {
+    if (error is AppException) {
+      show(error.messageKey, type: NotificationType.error);
+    } else if (error is DioException) {
+      show('errors.network', type: NotificationType.error);
+    } else {
+      show('errors.unknown', type: NotificationType.error);
+    }
   }
 }
 

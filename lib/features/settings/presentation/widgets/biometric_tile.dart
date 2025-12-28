@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class BiometricTile extends StatelessWidget {
   final bool enabled;
-  final VoidCallback onSetup;
+  final VoidCallback? onSetup;
 
   const BiometricTile({
     required this.enabled,

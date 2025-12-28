@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/security/security/security_notifier.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 

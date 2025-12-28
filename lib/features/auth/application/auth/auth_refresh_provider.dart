@@ -1,8 +1,9 @@
 // lib/features/auth/application/auth/auth_refresh_provider.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/security/security_service.dart';
-import 'package:obywatel_plus/core/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security/security_notifier.dart';
+import 'package:obywatel_plus/core/security/security/security_state.dart';
+
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart'; // NOWY IMPORT
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/bootstrap/bootstrap_step.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-import '../bootstrap_step.dart';
+import 'package:obywatel_plus/core/security/security/security_notifier.dart';
 
 class SecurityStep extends BootstrapStep {
   @override

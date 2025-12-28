@@ -92,6 +92,6 @@ class PinAttemptLimiter extends Notifier<PinAttemptState> {
 
 /// AutoDispose provider dla PinAttemptLimiter
 final pinAttemptLimiterProvider =
-    NotifierProvider.autoDispose<PinAttemptLimiter, PinAttemptState>(
+    NotifierProvider<PinAttemptLimiter, PinAttemptState>(
       PinAttemptLimiter.new,
     );
