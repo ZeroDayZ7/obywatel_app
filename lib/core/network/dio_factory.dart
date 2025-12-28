@@ -38,7 +38,7 @@ class DioFactory {
 
     // Wspólne interceptory (logowanie, błędy)
     dio.interceptors.add(_createLoggingInterceptor(logger));
-    dio.interceptors.add(GlobalErrorInterceptor());
+    dio.interceptors.add(GlobalErrorInterceptor(logger: logger));
 
     // 4. Logika dla Authenticated - tu wstrzykujemy refreshClient
     if (profile == DioProfile.authenticated &&

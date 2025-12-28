@@ -19,39 +19,41 @@ String? authGuard(Ref ref, GoRouterState state) {
   final authState = ref.read(authControllerProvider);
   final securityState = ref.read(securityServiceProvider);
 
-  // 1. BLOKADA INITIAL: Jeśli system się ładuje, nie pozwól na żaden redirect.
-  // GoRouter zostanie na obecnym ekranie (np. Splash) dopóki status się nie zmieni.
-  if (authState.status == AuthStatus.initial) return null;
-
   final isLogin = state.uri.path == AppRoutes.login;
   final is2Fa = state.uri.path == AppRoutes.twoFaVerify;
   final isPin = state.uri.path == AppRoutes.pin;
 
-  if (authState.isLoading) return null;
+  // 1️⃣ Jeśli system się ładuje (authenticating lub initial), nie robimy redirectu
+  if (authState.maybeMap(
+    initial: (_) => true,
+    authenticating: (_) => true,
+    orElse: () => false,
+  )) {
+    return null;
+  }
 
-  // 2. NIEZALOGOWANY
-  if (authState.status == AuthStatus.unauthenticated) {
+  // 2️⃣ Niezalogowany
+  if (authState.maybeMap(unauthenticated: (_) => true, orElse: () => false)) {
     return isLogin ? null : AppRoutes.login;
   }
 
-  // 3. WYMAGANE 2FA
-  if (authState.status == AuthStatus.twoFaRequired) {
+  // 3️⃣ Wymagane 2FA
+  if (authState.maybeMap(twoFaRequired: (_) => true, orElse: () => false)) {
     return is2Fa ? null : AppRoutes.twoFaVerify;
   }
 
-  // 4. ZALOGOWANY
-  if (authState.status == AuthStatus.authenticated) {
-    // KLUCZOWE: Jeśli mamy skonfigurowany PIN i aplikacja powinna być zablokowana
+  // 4️⃣ Zalogowany
+  if (authState.maybeMap(authenticated: (_) => true, orElse: () => false)) {
+    // Jeśli PIN jest skonfigurowany i aplikacja powinna być zablokowana
     if (securityState.isPinConfigured && securityState.shouldShowLock) {
       return isPin ? null : AppRoutes.pin;
     }
 
-    // Jeśli wszystko OK, a próbujemy wejść na login/pin -> Home
-    if (isLogin || is2Fa || isPin) {
-      return AppRoutes.home;
-    }
+    // Jeśli wszystko OK, a próbujemy wejść na login/2FA/pin -> Home
+    if (isLogin || is2Fa || isPin) return AppRoutes.home;
   }
 
+  // 5️⃣ Domyślnie brak redirectu
   return null;
 }
 
@@ -60,20 +62,27 @@ String? securitySetupGuard(Ref ref, GoRouterState state) {
   final security = ref.read(securityServiceProvider);
   final authState = ref.read(authControllerProvider);
   final goingToSetup = state.uri.path == AppRoutes.securitySetup;
+
+  // Jeśli security nie zainicjalizowane, nie robimy nic
   if (!security.initialized) return null;
 
-  // Jeśli nie jesteśmy w pełni zalogowani, ten guard nas nie dotyczy
-  if (authState.status != AuthStatus.authenticated) return null;
+  // Ten guard dotyczy tylko pełnej autoryzacji
+  final isAuthenticated = authState.maybeMap(
+    authenticated: (_) => true,
+    orElse: () => false,
+  );
+  if (!isAuthenticated) return null;
 
-  // Jeśli setup nieukończony -> wymuś ekran setupu
-  if (security.initialized && !security.isSetupCompleted) {
+  // Setup nieukończony -> wymuś ekran setupu
+  if (!security.isSetupCompleted) {
     return goingToSetup ? null : AppRoutes.securitySetup;
   }
 
-  // Jeśli setup ukończony, a user próbuje wejść na setup -> Home
+  // Setup ukończony -> nie pozwól wracać na setup
   if (security.isSetupCompleted && goingToSetup) {
     return AppRoutes.home;
   }
 
+  // Domyślnie brak redirectu
   return null;
 }

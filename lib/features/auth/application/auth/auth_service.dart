@@ -1,5 +1,3 @@
-// features/auth/application/auth/auth_service.dart
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -7,22 +5,7 @@ import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-
-class AuthResponse {
-  final bool twoFaRequired;
-  final String? twoFaToken; // Temp token
-  final String? accessToken;
-  final String? refreshToken;
-  final String? userId;
-
-  AuthResponse({
-    this.twoFaRequired = false,
-    this.twoFaToken,
-    this.accessToken,
-    this.refreshToken,
-    this.userId,
-  });
-}
+import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
 class AuthService {
   final ApiClient _apiClient;
@@ -32,74 +15,76 @@ class AuthService {
     : _apiClient = apiClient,
       _logger = logger;
 
-  /// Logowanie: zwraca dane LUB rzuca wyjątek z komunikatem z backendu
+  /// Logowanie: zwraca AuthResponse (2FA lub success)
+  /// 🔥 UWAGA: Usunięto try-catch. Błędy DioException lecą do AuthController.
   Future<AuthResponse> login(String email, String password) async {
-    try {
-      final response = await _apiClient.post(
-        ApiEndpoints.login,
-        data: {'email': email, 'password': password},
-      );
-      final data = response.data;
+    final response = await _apiClient.post(
+      ApiEndpoints.login,
+      data: {'email': email, 'password': password},
+    );
 
-      // Scenariusz 1: 2FA wymagane
-      if (data['2fa_required'] == true) {
-        return AuthResponse(
-          twoFaRequired: true,
-          twoFaToken: data['two_fa_token'],
-        );
+    final data = response.data;
+
+    // 2FA required
+    if (data['2fa_required'] == true) {
+      final token = data['two_fa_token']?.toString();
+      if (token == null) {
+        throw Exception('errors.INVALID_2FA_TOKEN');
       }
-
-      // Scenariusz 2: Sukces (zwraca tokeny bezpośrednio)
-      return AuthResponse(
-        accessToken: data[StorageKeys.accessToken],
-        refreshToken: data[StorageKeys.refreshToken],
-        userId: data['user_id']?.toString(), // Zabezpieczenie rzutowania
-      );
-    } on DioException catch (e) {
-      throw _parseError(e);
+      return AuthResponse.twoFaRequired(twoFaToken: token);
     }
+
+    // Successful login
+    final accessToken = data['access_token']?.toString();
+    final refreshToken = data['refresh_token']?.toString();
+    final userId = data['user_id']?.toString();
+
+    if (accessToken == null || refreshToken == null || userId == null) {
+      throw Exception('errors.INVALID_LOGIN_RESPONSE');
+    }
+
+    return AuthResponse.success(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: userId,
+    );
   }
 
+  /// Weryfikacja 2FA
   Future<AuthResponse> verifyTwoFa(
     String email,
     String code,
     String tempToken,
   ) async {
-    try {
-      final response = await _apiClient.post(
-        ApiEndpoints.twoFaVerify,
-        data: {'email': email, 'code': code, 'token': tempToken},
-      );
-      final data = response.data;
+    final response = await _apiClient.post(
+      ApiEndpoints.twoFaVerify,
+      data: {'email': email, 'code': code, 'token': tempToken},
+    );
 
-      return AuthResponse(
-        accessToken: data[StorageKeys.accessToken],
-        refreshToken: data[StorageKeys.refreshToken],
-        userId: data['user_id']?.toString(),
-      );
-    } on DioException catch (e) {
-      throw _parseError(e);
+    final data = response.data;
+
+    final accessToken = data[StorageKeys.accessToken]?.toString();
+    final refreshToken = data[StorageKeys.refreshToken]?.toString();
+    final userId = data[StorageKeys.userId]?.toString();
+
+    if (accessToken == null || refreshToken == null || userId == null) {
+      throw Exception('errors.INVALID_2FA_RESPONSE');
     }
+
+    return AuthResponse.success(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      userId: userId,
+    );
   }
 
+  /// Logout
   Future<void> logout() async {
     try {
       await _apiClient.post(ApiEndpoints.logout);
     } catch (e) {
       _logger.w('Logout API failed, forcing local logout');
     }
-  }
-
-  /// Wyciąga wiadomość błędu z backendu (kluczowe dla naprawy buga)
-  Exception _parseError(DioException e) {
-    if (e.response?.data != null && e.response!.data is Map) {
-      final data = e.response!.data as Map;
-      // Backend zwraca: { "code": "INVALID_CREDENTIALS", "message": "..." }
-      // Priorytet dla 'code' (do tłumaczeń), potem 'message'
-      final msg = data['code'] ?? data['message'] ?? 'errors.UNKNOWN_ERROR';
-      return Exception(msg);
-    }
-    return Exception('errors.CONNECTION_ERROR');
   }
 }
 

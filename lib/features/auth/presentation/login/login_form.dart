@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/reset_method_dialog.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
@@ -17,16 +19,22 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
+
+  // ✅ CHANGE: UI owns its controllers – NOT auth state
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
+
   bool _obscurePassword = true;
 
   @override
   void initState() {
     super.initState();
-    final authState = ref.read(authControllerProvider);
-    _emailController = TextEditingController(text: authState.email ?? '');
-    _passwordController = TextEditingController();
+
+  final defaultEmail = apiConstants.isProduction ? '' : apiConstants.defaultEmail;
+  final defaultPassword = apiConstants.isProduction ? '' : apiConstants.defaultPassword;
+
+  _emailController = TextEditingController(text: defaultEmail);
+  _passwordController = TextEditingController(text: defaultPassword);
   }
 
   @override
@@ -36,32 +44,39 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.dispose();
   }
 
-  Future<void> handleLogin() async {
+  Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
+    // ✅ CHANGE: UI tylko wysyła intencję (command)
     await ref
         .read(authControllerProvider.notifier)
         .login(_emailController.text.trim(), _passwordController.text.trim());
 
+    // UX: czyścimy hasło po próbie
     if (mounted) {
       _passwordController.clear();
     }
   }
 
-  void handleForgotPassword() {
+  void _handleForgotPassword() {
     showDialog(context: context, builder: (_) => const ResetMethodDialog());
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final isLoading = authState.isLoading;
 
+    // ✅ CHANGE: loading wyciągany Z FLOW STATE, nie z helpera
+    final isLoading = authState.maybeWhen(
+      authenticating: () => true,
+      orElse: () => false,
+    );
 
     return Form(
       key: _formKey,
       child: Column(
         children: [
+          /// EMAIL
           TextFormField(
             controller: _emailController,
             enabled: !isLoading,
@@ -72,7 +87,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             keyboardType: TextInputType.emailAddress,
             inputFormatters: [LengthLimitingTextInputFormatter(40)],
           ),
+
           const SizedBox(height: 16),
+
+          /// PASSWORD
           TextFormField(
             controller: _passwordController,
             enabled: !isLoading,
@@ -85,7 +103,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: Theme.of(context).iconTheme.color,
+                  color: Theme.of(
+                    context,
+                  ).iconTheme.color, // <- wymuszenie koloru
                 ),
                 onPressed: () => setState(() {
                   _obscurePassword = !_obscurePassword;
@@ -95,20 +115,26 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             validator: Validators.validatePassword,
             inputFormatters: [LengthLimitingTextInputFormatter(40)],
           ),
+
           const SizedBox(height: 24),
+
+          /// LOGIN BUTTON
           AppButton(
             labelKey: LocaleKeys.login_submit,
-            onPressed: isLoading ? null : handleLogin,
+            onPressed: isLoading ? null : _handleLogin,
             variant: AppButtonVariant.primary,
             fullWidth: true,
             isLoading: isLoading,
           ),
+
           const SizedBox(height: 16),
+
+          /// FORGOT PASSWORD
           Align(
             alignment: Alignment.centerRight,
             child: AppButton(
               labelKey: LocaleKeys.login_forgot_password,
-              onPressed: isLoading ? null : handleForgotPassword,
+              onPressed: isLoading ? null : _handleForgotPassword,
               variant: AppButtonVariant.text,
               fullWidth: false,
             ),

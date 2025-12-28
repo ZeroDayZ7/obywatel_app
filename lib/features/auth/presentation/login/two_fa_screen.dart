@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 class TwoFaScreen extends ConsumerStatefulWidget {
   const TwoFaScreen({super.key});
@@ -25,9 +26,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     final code = _codeController.text.trim();
     await ref.read(authControllerProvider.notifier).verifyTwoFa(code);
 
-    if (mounted) {
-      _codeController.clear();
-    }
+    if (mounted) _codeController.clear();
   }
 
   @override
@@ -41,13 +40,13 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
 
-    ref.listen(authControllerProvider, (previous, next) {
-      if (next.error != null) {
-        final errorMsg = next.error.toString().replaceAll('Exception: ', '');
+    // Global notification on errorCode
+    ref.listen<AuthState>(authControllerProvider, (prev, next) {
+      final error = next.errorCode;
+      if (error != null) {
         ref
             .read(globalNotificationProvider.notifier)
-            .show(errorMsg.tr(), type: NotificationType.error);
-        ref.read(authControllerProvider.notifier).clearError();
+            .show(error.tr(), type: NotificationType.error);
       }
     });
 

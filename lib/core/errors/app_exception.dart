@@ -1,10 +1,11 @@
 // lib/core/errors/app_exception.dart
 import 'package:dio/dio.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 
 enum ErrorType { business, system, critical }
 
 class AppException implements Exception {
-  final String messageKey; // np. 'login_2fa_invalid_code'
+  final String messageKey;
   final ErrorType type;
 
   AppException({required this.messageKey, required this.type});
@@ -16,7 +17,7 @@ class AppException implements Exception {
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.connectionError) {
         return AppException(
-          messageKey: 'errors_CONNECTION_ERROR',
+          messageKey: LocaleKeys.errors_CONNECTION_ERROR,
           type: ErrorType.system,
         );
       }
@@ -27,7 +28,7 @@ class AppException implements Exception {
       // Błędy serwera
       if (statusCode >= 500) {
         return AppException(
-          messageKey: 'errors_SERVER_ERROR',
+          messageKey: LocaleKeys.errors_SERVER_ERROR,
           type: ErrorType.system,
         );
       }
@@ -35,14 +36,13 @@ class AppException implements Exception {
       // Błędy biznesowe (400/422/404)
       if (statusCode >= 400 && statusCode < 500) {
         if (data is Map && data['code'] != null) {
-          // Tutaj backend zwraca dokładny kod, który odpowiada kluczowi w LocaleKeys
           return AppException(
-            messageKey: data['code'], // np. 'login_2fa_invalid_code'
+            messageKey: 'errors.${data['code']}',
             type: ErrorType.business,
           );
         }
         return AppException(
-          messageKey: 'errors_UNKNOWN_BUSINESS',
+          messageKey: LocaleKeys.errors_UNKNOWN_BUSINESS,
           type: ErrorType.business,
         );
       }
@@ -50,7 +50,7 @@ class AppException implements Exception {
 
     // Fallback
     return AppException(
-      messageKey: 'errors_UNKNOWN_ERROR',
+      messageKey: LocaleKeys.errors_unexpected_error,
       type: ErrorType.system,
     );
   }

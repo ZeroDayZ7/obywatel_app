@@ -1,54 +1,43 @@
-// features/auth/domain/auth_state.dart
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-enum AuthStatus {
-  initial,        // Stan początkowy (nieużywany obecnie)
-  unauthenticated, // 1. Start / Wylogowany
-  authenticating, // 2. Kręci się spinner
-  twoFaRequired, // 3. Wymagany kod 2FA
-  authenticated, // 4. Zalogowany (sesja aktywna)
+part 'auth_state.freezed.dart';
+
+@freezed
+sealed class AuthState with _$AuthState {
+  /// App start / session not checked yet
+  const factory AuthState.initial() = _Initial;
+
+  /// User is logged out
+  const factory AuthState.unauthenticated() = _Unauthenticated;
+
+  /// Login / refresh / verify in progress
+  const factory AuthState.authenticating() = _Authenticating;
+
+  /// 2FA required after correct credentials
+  const factory AuthState.twoFaRequired({
+    required String email,
+    required String tempToken,
+  }) = _TwoFaRequired;
+
+  /// Fully authenticated session
+  const factory AuthState.authenticated({required String userId}) =
+      _Authenticated;
+
+  /// Error state (optional – często lepiej przez global error handler)
+  const factory AuthState.error({required String code}) = _Error;
 }
 
-class AuthState extends Equatable {
-  final AuthStatus status;
-  final String? email; // Przechowujemy email potrzebny do 2FA
-  final String? tempToken; // Token tymczasowy dla 2FA
-  final String? userId; // ID usera po zalogowaniu
-  final Object? error; // Błąd (np. "Złe hasło")
+/// ✅ Enterprise getter / helper
+extension AuthStateX on AuthState {
+  bool get isLoading =>
+      maybeMap(authenticating: (_) => true, orElse: () => false);
 
-  const AuthState({
-    this.status = AuthStatus.unauthenticated,
-    this.email,
-    this.tempToken,
-    this.userId,
-    this.error,
-  });
+  String? get email =>
+      maybeMap(twoFaRequired: (state) => state.email, orElse: () => null);
 
-  // Helpery dla UI
-  bool get isLoading => status == AuthStatus.authenticating;
-  bool get isTwoFa => status == AuthStatus.twoFaRequired;
-  bool get isAuthenticated => status == AuthStatus.authenticated;
+  String? get tempToken =>
+      maybeMap(twoFaRequired: (state) => state.tempToken, orElse: () => null);
 
-  AuthState copyWith({
-    AuthStatus? status,
-    String? email,
-    String? tempToken,
-    String? userId,
-    Object? error,
-  }) {
-    return AuthState(
-      status: status ?? this.status,
-      email: email ?? this.email,
-      tempToken: tempToken ?? this.tempToken,
-      userId: userId ?? this.userId,
-      error:
-          error, // null nie resetuje, trzeba jawnie null'ować w logice jeśli chcemy
-    );
-  }
-
-  // Metoda do czyszczenia błędu bez zmiany reszty
-  AuthState clearError() => copyWith(error: null);
-
-  @override
-  List<Object?> get props => [status, email, tempToken, userId, error];
+  String? get errorCode =>
+      maybeMap(error: (state) => state.code, orElse: () => null);
 }

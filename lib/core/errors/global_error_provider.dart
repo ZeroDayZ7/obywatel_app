@@ -26,7 +26,8 @@ class GlobalNotificationNotifier extends Notifier<AppNotification?> {
     if (error is AppException) {
       show(error.messageKey, type: NotificationType.error);
     } else if (error is DioException) {
-      show('errors.network', type: NotificationType.error);
+      final appException = AppException.fromDio(error);
+      show(appException.messageKey, type: NotificationType.error);
     } else {
       show('errors.unknown', type: NotificationType.error);
     }

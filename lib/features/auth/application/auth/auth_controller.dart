@@ -1,11 +1,16 @@
-// features/auth/application/auth/auth_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/theme/theme_notifier.dart';
+import 'package:obywatel_plus/core/errors/app_exception.dart';
+import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_notifier.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
 class AuthController extends Notifier<AuthState> {
+  late final Ref _ref;
   late final AuthService _authService;
   late final SessionService _sessionService;
 
@@ -14,111 +19,122 @@ class AuthController extends Notifier<AuthState> {
     _authService = ref.read(authServiceProvider);
     _sessionService = ref.read(sessionServiceProvider);
 
-    // Inicjalizacja: sprawdzamy czy user ma tokeny
-    _checkSession();
-
-    return const AuthState(status: AuthStatus.initial);
+    _restoreSession();
+    return const AuthState.initial();
   }
 
-  Future<void> _checkSession() async {
+  Future<void> _restoreSession() async {
     final hasSession = await _sessionService.hasSession();
-    if (hasSession) {
-      final userId = await _sessionService.getUserId();
 
-      // ZANIM ustawisz stan na authenticated, upewnij się,
-      // że SecurityNotifier jest zainicjalizowany
-      await ref.read(securityServiceProvider.notifier).init();
-
-      state = AuthState(status: AuthStatus.authenticated, userId: userId);
-    } else {
-      // Jeśli nie ma sesji, dopiero teraz pozwalamy wejść na login
-      state = const AuthState(status: AuthStatus.unauthenticated);
+    if (!hasSession) {
+      state = const AuthState.unauthenticated();
+      return;
     }
+
+    final userId = await _sessionService.getUserId();
+
+    if (userId == null) {
+      state = const AuthState.unauthenticated();
+      return;
+    }
+
+    await ref.read(securityServiceProvider.notifier).init();
+    state = AuthState.authenticated(userId: userId);
   }
 
-  /// Krok 1: Logowanie Email/Hasło
   Future<void> login(String email, String password) async {
-    // Resetujemy błędy, ustawiamy loading
-    state = state.copyWith(status: AuthStatus.authenticating, error: null);
+    state = const AuthState.authenticating();
 
     try {
       final result = await _authService.login(email, password);
 
-      if (result.twoFaRequired) {
-        // Przechodzimy do 2FA - nie zapisujemy jeszcze tokenów trwałych!
-        state = state.copyWith(
-          status: AuthStatus.twoFaRequired,
-          email: email,
-          tempToken: result.twoFaToken,
-        );
-      } else {
-        // Sukces bez 2FA
-        await _finalizeLogin(result);
-      }
+      result.map(
+        twoFaRequired: (r) {
+          state = AuthState.twoFaRequired(
+            email: email,
+            tempToken: r.twoFaToken,
+          );
+        },
+        success: (r) async {
+          await _sessionService.saveSession(
+            accessToken: r.accessToken,
+            refreshToken: r.refreshToken,
+            userId: r.userId,
+          );
+          await ref.read(securityServiceProvider.notifier).init();
+          state = AuthState.authenticated(userId: r.userId);
+        },
+      );
     } catch (e) {
-      // Błąd trafia do stanu -> UI wyświetli Toast
-      state = state.copyWith(status: AuthStatus.unauthenticated, error: e);
+      // Enterprise: mapujemy wszystkie błędy do AppException
+      ref
+          .read(globalNotificationProvider.notifier)
+          .showFromError(e is AppException ? e : AppException.fromDio(e));
+      state = const AuthState.unauthenticated();
     }
   }
 
-  /// Krok 2: Weryfikacja kodu 2FA
   Future<void> verifyTwoFa(String code) async {
-    state = state.copyWith(status: AuthStatus.authenticating, error: null);
+    final currentEmail = state.email;
+    final currentToken = state.tempToken;
+
+    if (currentEmail == null || currentToken == null) {
+      ref
+          .read(globalNotificationProvider.notifier)
+          .show('errors.SESSION_EXPIRED', type: NotificationType.error);
+      return;
+    }
+
+    state = const AuthState.authenticating();
 
     try {
-      if (state.email == null || state.tempToken == null) {
-        throw Exception('errors.SESSION_EXPIRED');
-      }
-
       final result = await _authService.verifyTwoFa(
-        state.email!,
+        currentEmail,
         code,
-        state.tempToken!,
+        currentToken,
       );
 
-      await _finalizeLogin(result);
+      result.map(
+        twoFaRequired: (_) {
+          state = AuthState.twoFaRequired(
+            email: currentEmail,
+            tempToken: currentToken,
+          );
+        },
+        success: (r) async {
+          await _sessionService.saveSession(
+            accessToken: r.accessToken,
+            refreshToken: r.refreshToken,
+            userId: r.userId,
+          );
+          await ref.read(securityServiceProvider.notifier).init();
+          state = AuthState.authenticated(userId: r.userId);
+        },
+      );
     } catch (e) {
-      // Przy błędzie wracamy do 2FA, nie wylogowujemy całkowicie
-      state = state.copyWith(status: AuthStatus.twoFaRequired, error: e);
+      state = AuthState.twoFaRequired(
+        email: currentEmail,
+        tempToken: currentToken,
+      );
+      ref
+          .read(globalNotificationProvider.notifier)
+          .showFromError(e is AppException ? e : AppException.fromDio(e));
     }
-  }
-
-  /// Krok 3: Finalizacja (Zapis tokenów + Security Check)
-  Future<void> _finalizeLogin(AuthResponse result) async {
-    if (result.accessToken == null) throw Exception('errors.UNKNOWN_ERROR');
-
-    // 1. Zapisz sesję
-    await _sessionService.saveSession(
-      accessToken: result.accessToken!,
-      refreshToken: result.refreshToken!,
-      userId: result.userId ?? '',
-    );
-
-    // 2. Zainicjuj logikę PINu/Biometrii
-    // SecurityService sprawdzi czy PIN jest ustawiony i wymusi blokadę
-    await ref.read(securityServiceProvider.notifier).init();
-
-    // 3. Zmień stan na Zalogowany
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      userId: result.userId,
-      email: null, // Wyczyść dane wrażliwe z pamięci
-      tempToken: null,
-    );
   }
 
   Future<void> logout() async {
-    await _authService.logout();
+    // Wyczyść sesję w storage
     await _sessionService.clearSession();
-    state = const AuthState(status: AuthStatus.unauthenticated);
-  }
 
-  void setError(String messageKey) {
-    state = state.copyWith(error: messageKey);
-  }
+    // Resetujemy wszystkie zależne providery
+    _ref.invalidate(securityServiceProvider);
+    _ref.invalidate(globalNotificationProvider);
+    _ref.invalidate(themeProvider);
+    _ref.invalidate(authControllerProvider);
+    _ref.invalidate(sessionServiceProvider);
 
-  void clearError() {
-    state = state.copyWith(error: null);
+    // Ustawiamy stan auth
+    state = const AuthState.unauthenticated();
   }
 }
 
