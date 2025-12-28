@@ -34,7 +34,6 @@ class SessionService {
     await _storage.delete(key: StorageKeys.accessToken);
     await _storage.delete(key: StorageKeys.refreshToken);
     await _storage.delete(key: StorageKeys.userId);
-    // Opcjonalnie: nie czyścimy PINu tutaj, tylko tokeny
   }
 }
 

@@ -7,11 +7,10 @@ import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 class AuthController extends Notifier<AuthState> {
-  late final Ref _ref;
   late final AuthService _authService;
   late final SessionService _sessionService;
 
@@ -117,15 +116,15 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    await _authService.logout();
     // Wyczyść sesję w storage
     await _sessionService.clearSession();
 
     // Resetujemy wszystkie zależne providery
-    _ref.invalidate(securityServiceProvider);
-    _ref.invalidate(globalNotificationProvider);
-    _ref.invalidate(themeProvider);
-    _ref.invalidate(authControllerProvider);
-    _ref.invalidate(sessionServiceProvider);
+    ref.invalidate(securityServiceProvider);
+    ref.invalidate(globalNotificationProvider);
+    ref.invalidate(themeProvider);
+    ref.invalidate(sessionServiceProvider);
 
     // Ustawiamy stan auth
     state = const AuthState.unauthenticated();
