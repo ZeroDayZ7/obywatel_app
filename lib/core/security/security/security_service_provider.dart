@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
-
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
@@ -38,10 +37,10 @@ class SecurityNotifier extends Notifier<SecurityState> {
         sharedPrefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
     final canUseBiometrics = await _checkBiometricsAvailability(localAuth);
 
-    final shouldLock = isLocalLockEnabled && isPinConfigured;
+    final isLocked = isLocalLockEnabled && isPinConfigured;
 
     state = state.copyWith(
-      hasLocalLock: shouldLock,
+      hasLocalLock: isLocked,
       isPinConfigured: isPinConfigured,
       isBiometricEnabled: isBiometricEnabled,
       canUseBiometrics: canUseBiometrics,
@@ -50,7 +49,7 @@ class SecurityNotifier extends Notifier<SecurityState> {
     );
 
     logger.i(
-      '🔐 Security Init: Locked=$shouldLock, PinConfigured=$isPinConfigured',
+      '🔐 Security Init: Locked=$isLocked, PinConfigured=$isPinConfigured',
     );
   }
 

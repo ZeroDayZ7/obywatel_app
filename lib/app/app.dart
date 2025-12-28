@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_provider.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
+// import 'package:obywatel_plus/app/bootstrap/presentation/force_update_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/errors/global_error_listener.dart';
@@ -43,8 +44,8 @@ class ObywatelPlusApp extends ConsumerWidget {
 
           blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
 
-          forceUpdate: () => const SplashScreen(), // router przełączy
-          // forceUpdate: (_) => const ForceUpdateScreen(),
+          forceUpdate: () => const SplashScreen(),
+          // forceUpdate: () => const ForceUpdateScreen(),
           unauthenticated: () => app,
           lockedPin: () => app,
           authorized: () => app,

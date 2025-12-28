@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+
 import 'redirect_guards.dart';
 
 String? appRedirectLogic(Ref ref, GoRouterState state) {
@@ -11,11 +12,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   logger.d('Redirect check for: ${state.uri.path}');
 
   // Kolejność ma znaczenie!
-  final guards = [
-    forceUpdateGuard,
-    authGuard,
-    securitySetupGuard,    
-  ];
+  final guards = [authGuard, securitySetupGuard];
 
   for (final guard in guards) {
     final redirect = guard(ref, state);

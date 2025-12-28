@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 
-enum AppButtonVariant { primary, secondary, text, danger }
+enum AppButtonVariant { primary, secondary, text, danger, textDanger }
 
 class AppButton extends StatelessWidget {
   final String labelKey;
@@ -108,6 +108,31 @@ class AppButton extends StatelessWidget {
               : Text(label),
         );
 
+      case AppButtonVariant.textDanger:
+        return TextButton(
+          onPressed: isLoading ? null : onPressed,
+          style: TextButton.styleFrom(
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            foregroundColor: Theme.of(
+              context,
+            ).colorScheme.error, // czerwony tekst
+          ),
+          child: isLoading
+              ? SizedBox(
+                  width: _loaderSize,
+                  height: _loaderSize,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Theme.of(context).colorScheme.error,
+                    ),
+                  ),
+                )
+              : Text(label),
+        );
+
       case AppButtonVariant.danger:
         return _buildFullWidthAwareButton(
           context,
@@ -145,6 +170,8 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.secondary:
       case AppButtonVariant.text:
         return Theme.of(context).colorScheme.primary;
+      case AppButtonVariant.textDanger:
+        return Theme.of(context).colorScheme.error;
     }
   }
 }

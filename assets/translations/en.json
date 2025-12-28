@@ -14,6 +14,16 @@
     "enter_code": "Wprowadź kod",
     "send_code": "Wyślij kod"
   },
+  "security_setup": {
+    "additional_security": "Dodatkowe zabezpieczenie",
+    "pin_or_biometric": "Ustaw PIN lub biometrię...",
+    "finish_setup": "Zakończ konfigurację",
+    "security_settings": "Ustawienia bezpieczeństwa",
+    "retry": "Spróbuj ponownie",
+    "pin_set": "PIN ustawiony",
+    "set_pin": "Ustaw PIN",
+    "set": "Ustaw"
+  },
   "validators": {
     "required_email": "Wpisz email",
     "invalid_email": "Nieprawidłowy format email",

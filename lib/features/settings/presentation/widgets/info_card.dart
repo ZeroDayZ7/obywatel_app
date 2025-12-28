@@ -1,15 +1,16 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/theme/app_colors.dart';
 
 class InfoCard extends StatelessWidget {
-  final String title;
-  final String description;
+  final String titleKey;
+  final String descriptionKey;
   final IconData? icon;
 
   const InfoCard({
     super.key,
-    required this.title,
-    required this.description,
+    required this.titleKey,
+    required this.descriptionKey,
     this.icon,
   });
 
@@ -42,7 +43,7 @@ class InfoCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    titleKey.tr(),
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
@@ -50,7 +51,7 @@ class InfoCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    description,
+                    descriptionKey.tr(),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: isDark ? Colors.white70 : Colors.black54,
                     ),

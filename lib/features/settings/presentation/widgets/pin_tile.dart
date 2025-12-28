@@ -1,4 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
 
 class PinTile extends StatelessWidget {
   final bool pinSet;
@@ -10,10 +13,16 @@ class PinTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       leading: const Icon(Icons.lock),
-      title: Text(pinSet ? 'PIN ustawiony' : 'Ustaw PIN'),
-      trailing: ElevatedButton(
+      title: Text(
+        pinSet
+            ? LocaleKeys.security_setup_pin_set.tr()
+            : LocaleKeys.security_setup_set_pin.tr(),
+      ),
+      trailing: AppButton(
+        labelKey: LocaleKeys.security_setup_set.tr(),
         onPressed: pinSet ? null : onSetup,
-        child: const Text('Ustaw'),
+        variant: AppButtonVariant.text,
+        fullWidth: false,
       ),
     );
   }

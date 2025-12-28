@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/widgets/ui/button.dart';
 
 class RetryView extends StatelessWidget {
   final VoidCallback onRetry;
@@ -8,9 +10,11 @@ class RetryView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: ElevatedButton(
+      child: AppButton(
+        labelKey: LocaleKeys.security_setup_retry,
         onPressed: onRetry,
-        child: const Text('Spróbuj ponownie'),
+        variant: AppButtonVariant.primary,
+        fullWidth: false,
       ),
     );
   }

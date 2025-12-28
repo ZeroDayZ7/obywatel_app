@@ -12,7 +12,6 @@ sealed class AppInitStatus with _$AppInitStatus {
 
   const factory AppInitStatus.authorized() = _Authorized;
 
-  /// Wymagana aktualizacja (platforma decyduje jak)
   const factory AppInitStatus.forceUpdate() = _ForceUpdate;
 
   const factory AppInitStatus.blocked({String? reason}) = _Blocked;

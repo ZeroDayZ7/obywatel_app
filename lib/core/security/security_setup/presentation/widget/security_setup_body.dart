@@ -16,13 +16,14 @@ class SecuritySetupBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final asyncState = ref.watch(securitySetupProvider);
     return SingleChildScrollView(
       child: Column(
         children: [
           const InfoCard(
             icon: Icons.security,
-            title: 'Dodatkowe zabezpieczenie',
-            description: 'Ustaw PIN lub biometrię...',
+            titleKey: LocaleKeys.security_setup_additional_security,
+            descriptionKey: LocaleKeys.security_setup_pin_or_biometric,
           ),
           const SizedBox(height: 30),
 
@@ -42,22 +43,25 @@ class SecuritySetupBody extends ConsumerWidget {
 
           const SizedBox(height: 40),
 
-          ElevatedButton(
-            onPressed: state.canFinish
+          AppButton(
+            labelKey: LocaleKeys.security_setup_finish_setup,
+            onPressed: state.canFinish && asyncState is! AsyncLoading
                 ? () async {
                     await ref
                         .read(securitySetupProvider.notifier)
                         .completeSetup();
                   }
                 : null,
-            child: const Text('Zakończ konfigurację'),
+            isLoading: asyncState is AsyncLoading,
+            fullWidth: false,
+            variant: AppButtonVariant.primary,
           ),
 
           const SizedBox(height: 20),
 
           AppButton(
             labelKey: LocaleKeys.common_skip,
-            variant: AppButtonVariant.text,
+            variant: AppButtonVariant.textDanger,
             onPressed: () {
               ref.read(securitySetupProvider.notifier).skipSetup();
             },

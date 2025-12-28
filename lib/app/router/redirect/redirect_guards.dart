@@ -1,20 +1,10 @@
 // lib/app/router/redirect_guards.dart
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
-
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
-
-String? forceUpdateGuard(Ref ref, GoRouterState state) {
-  final forceUpdate = ref.read(forceUpdateProvider);
-  if (forceUpdate.required && state.uri.path != AppRoutes.update) {
-    return AppRoutes.update;
-  }
-  return null;
-}
 
 String? authGuard(Ref ref, GoRouterState state) {
   final authState = ref.read(authControllerProvider);

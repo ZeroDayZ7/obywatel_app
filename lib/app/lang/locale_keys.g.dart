@@ -17,6 +17,15 @@ abstract class  LocaleKeys {
   static const common_enter_code = 'common.enter_code';
   static const common_send_code = 'common.send_code';
   static const common = 'common';
+  static const security_setup_additional_security = 'security_setup.additional_security';
+  static const security_setup_pin_or_biometric = 'security_setup.pin_or_biometric';
+  static const security_setup_finish_setup = 'security_setup.finish_setup';
+  static const security_setup_security_settings = 'security_setup.security_settings';
+  static const security_setup_retry = 'security_setup.retry';
+  static const security_setup_pin_set = 'security_setup.pin_set';
+  static const security_setup_set_pin = 'security_setup.set_pin';
+  static const security_setup_set = 'security_setup.set';
+  static const security_setup = 'security_setup';
   static const validators_required_email = 'validators.required_email';
   static const validators_invalid_email = 'validators.invalid_email';
   static const validators_required_password = 'validators.required_password';
