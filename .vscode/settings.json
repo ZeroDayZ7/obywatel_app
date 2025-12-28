@@ -1,6 +1,22 @@
 {
   "java.configuration.updateBuildConfiguration": "automatic",
   "dart.lineLength": 80,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always",
+      "source.fixAll": "always"
+    },
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.selectionHighlight": false
+  },
+  "dart.analysisExcludedFolders": ["build", ".dart_tool"],
+  "dart.updateImportsOnRename": true,
+  "dart.completeFunctionCalls": true,
   // (Explorer)
   "files.exclude": {
     ".dart_tool": true,

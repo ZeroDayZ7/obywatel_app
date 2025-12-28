@@ -1,8 +1,12 @@
 // lib/app/app.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/bootstrap/app_init_provider.dart';
+import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
+import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
+import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/core/errors/global_error_listener.dart';
 
 import 'router/app_router_provider.dart';
@@ -16,25 +20,35 @@ class ObywatelPlusApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
     final router = ref.watch(appRouterProvider);
+    final status = ref.watch(appInitProvider);
 
     return MaterialApp.router(
       title: apiConstants.appName,
       debugShowCheckedModeBanner: false,
 
-      // Motywy
       theme: AppTheme.buildTheme(Brightness.light),
       darkTheme: AppTheme.buildTheme(Brightness.dark),
       themeMode: themeMode,
 
-      // Lokalizacje z EasyLocalization
       locale: context.locale,
       supportedLocales: context.supportedLocales,
       localizationsDelegates: context.localizationDelegates,
 
-      // Router
       routerConfig: router,
+
       builder: (context, child) {
-        return GlobalErrorListener(child: child!);
+        final app = GlobalErrorListener(child: child!);
+        return status.when(
+          loading: () => const SplashScreen(),
+
+          blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
+
+          forceUpdate: () => const SplashScreen(), // router przełączy
+          // forceUpdate: (_) => const ForceUpdateScreen(),
+          unauthenticated: () => app,
+          lockedPin: () => app,
+          authorized: () => app,
+        );
       },
     );
   }

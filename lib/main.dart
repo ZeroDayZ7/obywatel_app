@@ -3,7 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/app_root.dart';
+import 'package:obywatel_plus/app/app.dart';
 import 'package:obywatel_plus/app/bootstrap/app_observer.dart';
 
 void main() async {
@@ -45,7 +45,7 @@ void main() async {
         useOnlyLangCode: true,
         child: ProviderScope(
           observers: kDebugMode ? [observer] : [],
-          child: const AppRoot(),
+          child: const ObywatelPlusApp(),
         ),
       ),
     );
