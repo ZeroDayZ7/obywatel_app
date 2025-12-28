@@ -35,9 +35,9 @@ class AuthService {
     }
 
     // Successful login
-    final accessToken = data['access_token']?.toString();
-    final refreshToken = data['refresh_token']?.toString();
-    final userId = data['user_id']?.toString();
+    final accessToken = data[StorageKeys.accessToken]?.toString();
+    final refreshToken = data[StorageKeys.refreshToken]?.toString();
+    final userId = data[StorageKeys.userId]?.toString();
 
     if (accessToken == null || refreshToken == null || userId == null) {
       throw Exception('errors.INVALID_LOGIN_RESPONSE');
@@ -68,7 +68,7 @@ class AuthService {
     final userId = data[StorageKeys.userId]?.toString();
 
     if (accessToken == null || refreshToken == null || userId == null) {
-      throw Exception('errors.INVALID_2FA_RESPONSE');
+      throw Exception('errors.INVALID_2FA');
     }
 
     return AuthResponse.success(

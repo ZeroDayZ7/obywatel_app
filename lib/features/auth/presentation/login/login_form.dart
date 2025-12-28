@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
-import 'package:obywatel_plus/features/auth/presentation/reset_password/reset_method_dialog.dart';
 
 class LoginForm extends ConsumerStatefulWidget {
   const LoginForm({super.key});
@@ -30,11 +30,15 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   void initState() {
     super.initState();
 
-  final defaultEmail = apiConstants.isProduction ? '' : apiConstants.defaultEmail;
-  final defaultPassword = apiConstants.isProduction ? '' : apiConstants.defaultPassword;
+    final defaultEmail = apiConstants.isProduction
+        ? ''
+        : apiConstants.defaultEmail;
+    final defaultPassword = apiConstants.isProduction
+        ? ''
+        : apiConstants.defaultPassword;
 
-  _emailController = TextEditingController(text: defaultEmail);
-  _passwordController = TextEditingController(text: defaultPassword);
+    _emailController = TextEditingController(text: defaultEmail);
+    _passwordController = TextEditingController(text: defaultPassword);
   }
 
   @override
@@ -59,7 +63,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   }
 
   void _handleForgotPassword() {
-    showDialog(context: context, builder: (_) => const ResetMethodDialog());
+    context.push('/reset-password');
   }
 
   @override

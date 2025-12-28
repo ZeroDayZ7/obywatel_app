@@ -1,8 +1,10 @@
 // lib/app/router/app_routes.dart
 class AppRoutes {
   static const splash = '/splash';
+  static const initial = '/initial';
   static const pin = '/pin';
   static const login = '/login';
+  static const resetPassword = '/reset-password';
   static const twoFaVerify = '/2fa';
   static const home = '/home';
   static const error = '/error';

@@ -47,3 +47,17 @@ final apiClientProvider = Provider<ApiClient>((ref) {
     logger: ref.watch(appLoggerProvider),
   );
 });
+
+final resetDioProvider = Provider<Dio>((ref) {
+  return DioFactory.create(
+    profile: DioProfile.noAuthAuth, // nowy profil
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+final resetApiClientProvider = Provider<PublicApiClient>((ref) {
+  return PublicApiClient(
+    dio: ref.watch(resetDioProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+});

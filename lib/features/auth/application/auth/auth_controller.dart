@@ -1,9 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/theme/theme_notifier.dart';
 import 'package:obywatel_plus/core/errors/app_exception.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
-import 'package:obywatel_plus/core/security/security/security_notifier.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
@@ -56,11 +57,6 @@ class AuthController extends Notifier<AuthState> {
           );
         },
         success: (r) async {
-          await _sessionService.saveSession(
-            accessToken: r.accessToken,
-            refreshToken: r.refreshToken,
-            userId: r.userId,
-          );
           await ref.read(securityServiceProvider.notifier).init();
           state = AuthState.authenticated(userId: r.userId);
         },
@@ -81,7 +77,10 @@ class AuthController extends Notifier<AuthState> {
     if (currentEmail == null || currentToken == null) {
       ref
           .read(globalNotificationProvider.notifier)
-          .show('errors.SESSION_EXPIRED', type: NotificationType.error);
+          .show(
+            LocaleKeys.errors_SESSION_EXPIRED,
+            type: NotificationType.error,
+          );
       return;
     }
 
@@ -102,11 +101,6 @@ class AuthController extends Notifier<AuthState> {
           );
         },
         success: (r) async {
-          await _sessionService.saveSession(
-            accessToken: r.accessToken,
-            refreshToken: r.refreshToken,
-            userId: r.userId,
-          );
           await ref.read(securityServiceProvider.notifier).init();
           state = AuthState.authenticated(userId: r.userId);
         },

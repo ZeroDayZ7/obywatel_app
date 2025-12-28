@@ -34,9 +34,13 @@
     "CONNECTION_ERROR": "Brak połączenia z internetem",
     "SERVER_ERROR": "Błąd serwera. Spróbuj ponownie później.",
     "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania",
+    "INVALID_2FA": "Nieprawidłowy kod 2FA",
     "VALIDATION_FAILED": "Nieprawidłowe dane. Sprawdź formularz i spróbuj ponownie.",
     "UNKNOWN_BUSINESS": "Wystąpił błąd. Spróbuj ponownie.",
-    "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd"
+    "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd",
+    "SESSION_EXPIRED": "Sesja wygasła. Zaloguj się ponownie.",
+    "EMAIL_IS_SEND_IF_EXISTS": "Jeśli konto istnieje, kod resetu został wysłany na podany email.",
+    "TOO_MANY_REQUESTS": "Zbyt wiele prób. Spróbuj ponownie później."
   },
   "forgot_password_dialog": {
     "label": "Email lub numer telefonu",
@@ -44,13 +48,14 @@
     "instruction": "Podaj adres email powiązany z Twoim kontem. Wyślemy Ci link do resetowania hasła.",
     "link_sent": "Link resetujący hasło został wysłany na email"
   },
-  "new_password_screen": {
-    "title": "Ustaw nowe hasło"
-  },
-  "reset_method_dialog": {
+  "reset_password": {
     "title": "Reset hasła",
+    "new_password": "Nowe hasło",
     "email_label": "Email",
-    "sms_label": "SMS"
+    "sms_label": "SMS",
+    "success_message": "Hasło zostało pomyślnie zresetowane",
+    "resend": "Wyślij ponownie",
+    "resend_in": "Wyślij ponownie za {seconds}s"
   },
   "reset_provider": {
     "invalid_code": "Niepoprawny kod",

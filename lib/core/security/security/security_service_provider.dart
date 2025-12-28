@@ -6,6 +6,8 @@ import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
 final securityServiceProvider =
     NotifierProvider<SecurityNotifier, SecurityState>(SecurityNotifier.new);
@@ -73,13 +75,30 @@ class SecurityNotifier extends Notifier<SecurityState> {
     state = state.copyWith(isPinConfigured: true);
   }
 
-  Future<void> completeSetup({bool enableBiometric = false}) async {
+  Future<void> completeSetup({
+    bool enableBiometric = false,
+    AuthResponse? auth,
+  }) async {
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+
     await sharedPrefs.writeBool(StorageKeys.setupCompleted, true);
     await sharedPrefs.writeBool(StorageKeys.localLockEnabled, true);
     await sharedPrefs.writeBool(
       StorageKeys.isBiometricConfigured,
       enableBiometric,
+    );
+
+    auth?.when(
+      twoFaRequired: (_) {},
+      success: (accessToken, refreshToken, userId) async {
+        await ref
+            .read(sessionServiceProvider)
+            .saveSession(
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+              userId: userId,
+            );
+      },
     );
 
     state = state.copyWith(

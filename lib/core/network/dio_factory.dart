@@ -9,7 +9,7 @@ import 'package:obywatel_plus/core/network/token_refresh_interceptor.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
 // 1. Dodajemy profil 'refreshToken'
-enum DioProfile { public, authenticated, refreshToken }
+enum DioProfile { public, authenticated, refreshToken, noAuthAuth }
 
 class DioFactory {
   static Dio create({
@@ -25,6 +25,7 @@ class DioFactory {
       // Refresh token uderza w ten sam endpoint co Auth
       DioProfile.authenticated ||
       DioProfile.refreshToken => ServicesConfig.authBaseUrl,
+      DioProfile.noAuthAuth => ServicesConfig.authBaseUrl,
     };
 
     final dio = Dio(

@@ -16,7 +16,7 @@ GoRouter createRouter({required Ref ref, required List<GoRoute> routes}) {
 
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.initial,
     refreshListenable: refreshListenable,
     routes: routes,
     redirect: (context, state) => appRedirectLogic(ref, state),

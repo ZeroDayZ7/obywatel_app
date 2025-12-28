@@ -19,3 +19,4 @@ adb -s 5200d78bfa479449 shell top
 
 dart run flutter_launcher_icons:main
 dart run build_runner build --delete-conflicting-outputs
+dart run scripts/generate_locale_keys.dart

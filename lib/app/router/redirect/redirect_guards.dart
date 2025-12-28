@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/core/security/security/security_notifier.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
@@ -23,6 +24,8 @@ String? authGuard(Ref ref, GoRouterState state) {
   final is2Fa = state.uri.path == AppRoutes.twoFaVerify;
   final isPin = state.uri.path == AppRoutes.pin;
 
+  final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
+
   // 1️⃣ Jeśli system się ładuje (authenticating lub initial), nie robimy redirectu
   if (authState.maybeMap(
     initial: (_) => true,
@@ -32,9 +35,14 @@ String? authGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
+  // PIN skonfigurowany i lock włączony → jeśli nie jesteśmy na pin screen, redirect
+  if (securityState.isPinConfigured && securityState.shouldShowLock) {
+    return isPin ? null : AppRoutes.pin;
+  }
+
   // 2️⃣ Niezalogowany
   if (authState.maybeMap(unauthenticated: (_) => true, orElse: () => false)) {
-    return isLogin ? null : AppRoutes.login;
+    return publicRoutes.contains(state.uri.path) ? null : AppRoutes.login;
   }
 
   // 3️⃣ Wymagane 2FA
@@ -44,12 +52,14 @@ String? authGuard(Ref ref, GoRouterState state) {
 
   // 4️⃣ Zalogowany
   if (authState.maybeMap(authenticated: (_) => true, orElse: () => false)) {
-    // Jeśli PIN jest skonfigurowany i aplikacja powinna być zablokowana
-    if (securityState.isPinConfigured && securityState.shouldShowLock) {
-      return isPin ? null : AppRoutes.pin;
+    // Setup PIN nieukończony → idź na setup
+    if (!securityState.isSetupCompleted) {
+      return state.uri.path == AppRoutes.securitySetup
+          ? null
+          : AppRoutes.securitySetup;
     }
 
-    // Jeśli wszystko OK, a próbujemy wejść na login/2FA/pin -> Home
+    // Jeśli próbujemy wejść na login/2FA/pin → Home
     if (isLogin || is2Fa || isPin) return AppRoutes.home;
   }
 
@@ -74,7 +84,7 @@ String? securitySetupGuard(Ref ref, GoRouterState state) {
   if (!isAuthenticated) return null;
 
   // Setup nieukończony -> wymuś ekran setupu
-  if (!security.isSetupCompleted) {
+  if (!security.shouldShowLock) {
     return goingToSetup ? null : AppRoutes.securitySetup;
   }
 

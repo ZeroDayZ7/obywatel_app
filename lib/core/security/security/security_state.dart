@@ -25,7 +25,7 @@ sealed class SecurityState with _$SecurityState {
   /// Ustawiamy hasLocalLock na TRUE, aby aplikacja domyślnie była "bezpieczna"
   /// zanim zdążymy odczytać dysk. To zapobiega mignięciu Home.
   factory SecurityState.initial() => const SecurityState(
-    hasLocalLock: true,
+    hasLocalLock: false,
     isPinConfigured: false,
     isBiometricEnabled: false,
     canUseBiometrics: false,

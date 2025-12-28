@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
-import 'package:obywatel_plus/core/security/security/security_notifier.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'security_setup_state.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
