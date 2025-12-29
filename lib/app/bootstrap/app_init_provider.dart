@@ -4,7 +4,7 @@ import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_logic.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/security/application/device_integrity_facade.dart';
+import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';

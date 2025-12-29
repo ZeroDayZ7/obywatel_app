@@ -6,8 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/security/application/device_integrity_service.dart';
-import 'package:obywatel_plus/core/security/application/security_integrity_config.dart';
+import 'package:obywatel_plus/core/security/device_integrity/device_integrity_service.dart';
+import 'package:obywatel_plus/core/security/device_integrity/security_integrity_config.dart';
 import 'package:obywatel_plus/core/security/domain/security_exceptions.dart';
 
 /// INTERFEJS - to rozwiązuje błąd "Undefined class" w startup_task.dart
@@ -21,6 +21,7 @@ final deviceIntegrityServiceProvider = Provider<IDeviceIntegrityFacade>((ref) {
   return DeviceIntegrityFacade(logger: logger);
 });
 
+/// IMPLEMENTACJA
 /// IMPLEMENTACJA
 class DeviceIntegrityFacade implements IDeviceIntegrityFacade {
   final AppLogger logger;
@@ -37,11 +38,15 @@ class DeviceIntegrityFacade implements IDeviceIntegrityFacade {
     try {
       final service = DeviceIntegrityService();
 
-      // Używamy stałej konfiguracji lub pobranej z Env
-      const config = SecurityIntegrityConfig(
+      // Dynamiczna konfiguracja bezpieczeństwa
+      final config = SecurityIntegrityConfig(
         blockRooted: true,
         blockEmulator: true,
-        blockDeveloperMode: false,
+        // Developer Mode zazwyczaj zostawiamy na false w dev,
+        // ale możesz tu użyć kReleaseMode jeśli chcesz blokować w produkcji
+        blockDeveloperMode: kReleaseMode,
+        // W wersji 2.1.5 sprawdzanie debuggera i Fridy wpada pod tę flagę
+        blockDangerousApps: true,
       );
 
       await service.verify(config);
@@ -49,10 +54,11 @@ class DeviceIntegrityFacade implements IDeviceIntegrityFacade {
       logger.i('🔒 Device integrity check passed');
       return true;
     } on DeviceNotSecureException {
-      logger.w('❌ Device integrity failed – device not secure');
+      logger.w('❌ Device integrity failed – security violation detected');
       return false;
     } catch (e, s) {
       logger.e('❌ Device integrity unexpected error', error: e, stackTrace: s);
+      // W systemach krytycznych błąd sprawdzania traktujemy jako brak bezpieczeństwa
       return false;
     }
   }

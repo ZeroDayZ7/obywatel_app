@@ -495,10 +495,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_root_jailbreak_checker
-      sha256: "2a1fd41e1b1541b6f82ddc8ed8963a8de4ec7763e2dae8bddb7a64cab469c0d8"
+      sha256: "924f86b0beb862118c37f9c927d5373ea96209043c08d8341f8fe60c5c7d4861"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "2.1.5"
   flutter_secure_storage:
     dependency: "direct main"
     description:
