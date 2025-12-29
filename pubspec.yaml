@@ -75,7 +75,7 @@ dependencies:
   json_annotation: ^4.9.0
 
   flutter_root_jailbreak_checker: ^1.0.0
-
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -85,7 +85,6 @@ dev_dependencies:
   mocktail: ^1.0.4
   freezed: ^3.2.3
   json_serializable: ^6.11.2
-
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -105,3 +104,13 @@ flutter:
     - assets/icon/
     - assets/translations/
     - assets/keys/
+
+flutter_native_splash:
+  color: "#0A1AFF"
+  image: assets/splash/logo.png
+
+  android_12:
+    color: "#0A1AFF"
+    image: assets/splash/logo.png
+
+  fullscreen: true
