@@ -131,14 +131,14 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String userId)?  authenticated,TResult Function( String code)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String userId,  String? accessToken,  String? refreshToken)?  authenticated,TResult Function( String code)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _Authenticated() when authenticated != null:
-return authenticated(_that.userId);case _Error() when error != null:
+return authenticated(_that.userId,_that.accessToken,_that.refreshToken);case _Error() when error != null:
 return error(_that.code);case _:
   return orElse();
 
@@ -157,14 +157,14 @@ return error(_that.code);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String userId)  authenticated,required TResult Function( String code)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String userId,  String? accessToken,  String? refreshToken)  authenticated,required TResult Function( String code)  error,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Unauthenticated():
 return unauthenticated();case _Authenticating():
 return authenticating();case _TwoFaRequired():
 return twoFaRequired(_that.email,_that.tempToken);case _Authenticated():
-return authenticated(_that.userId);case _Error():
+return authenticated(_that.userId,_that.accessToken,_that.refreshToken);case _Error():
 return error(_that.code);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -179,14 +179,14 @@ return error(_that.code);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String userId)?  authenticated,TResult? Function( String code)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String userId,  String? accessToken,  String? refreshToken)?  authenticated,TResult? Function( String code)?  error,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _Authenticated() when authenticated != null:
-return authenticated(_that.userId);case _Error() when error != null:
+return authenticated(_that.userId,_that.accessToken,_that.refreshToken);case _Error() when error != null:
 return error(_that.code);case _:
   return null;
 
@@ -363,10 +363,13 @@ as String,
 
 
 class _Authenticated implements AuthState {
-  const _Authenticated({required this.userId});
+  const _Authenticated({required this.userId, this.accessToken, this.refreshToken});
   
 
  final  String userId;
+ final  String? accessToken;
+// Tymczasowy schowek w RAM
+ final  String? refreshToken;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -378,16 +381,16 @@ _$AuthenticatedCopyWith<_Authenticated> get copyWith => __$AuthenticatedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticated&&(identical(other.userId, userId) || other.userId == userId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticated&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,userId);
+int get hashCode => Object.hash(runtimeType,userId,accessToken,refreshToken);
 
 @override
 String toString() {
-  return 'AuthState.authenticated(userId: $userId)';
+  return 'AuthState.authenticated(userId: $userId, accessToken: $accessToken, refreshToken: $refreshToken)';
 }
 
 
@@ -398,7 +401,7 @@ abstract mixin class _$AuthenticatedCopyWith<$Res> implements $AuthStateCopyWith
   factory _$AuthenticatedCopyWith(_Authenticated value, $Res Function(_Authenticated) _then) = __$AuthenticatedCopyWithImpl;
 @useResult
 $Res call({
- String userId
+ String userId, String? accessToken, String? refreshToken
 });
 
 
@@ -415,10 +418,12 @@ class __$AuthenticatedCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? userId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? accessToken = freezed,Object? refreshToken = freezed,}) {
   return _then(_Authenticated(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,accessToken: freezed == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
+as String?,refreshToken: freezed == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

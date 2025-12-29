@@ -20,8 +20,11 @@ sealed class AuthState with _$AuthState {
   }) = _TwoFaRequired;
 
   /// Fully authenticated session
-  const factory AuthState.authenticated({required String userId}) =
-      _Authenticated;
+  const factory AuthState.authenticated({
+    required String userId,
+    String? accessToken,
+    String? refreshToken,
+  }) = _Authenticated;
 
   /// Error state (optional – często lepiej przez global error handler)
   const factory AuthState.error({required String code}) = _Error;
