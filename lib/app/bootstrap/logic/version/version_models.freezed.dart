@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'version_state.dart';
+part of 'version_models.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -205,12 +205,12 @@ return $default(_that.minVersion,_that.latestVersion,_that.forceUpdate);case _:
 @JsonSerializable()
 
 class _VersionState implements VersionState {
-  const _VersionState({required this.minVersion, required this.latestVersion, required this.forceUpdate});
+  const _VersionState({this.minVersion = '0.0.0', this.latestVersion = '0.0.0', this.forceUpdate = false});
   factory _VersionState.fromJson(Map<String, dynamic> json) => _$VersionStateFromJson(json);
 
-@override final  String minVersion;
-@override final  String latestVersion;
-@override final  bool forceUpdate;
+@override@JsonKey() final  String minVersion;
+@override@JsonKey() final  String latestVersion;
+@override@JsonKey() final  bool forceUpdate;
 
 /// Create a copy of VersionState
 /// with the given fields replaced by the non-null parameter values.

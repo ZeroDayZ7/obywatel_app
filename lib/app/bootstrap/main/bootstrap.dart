@@ -4,7 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/bootstrap/app_observer.dart';
+import 'package:obywatel_plus/app/bootstrap/main/app_observer.dart';
 
 /// Funkcja inicjalizująca całą infrastrukturę aplikacji przed jej uruchomieniem.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {

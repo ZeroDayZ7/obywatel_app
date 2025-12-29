@@ -1,52 +1,48 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// startup_runner.dart
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
-import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 
-import 'startup_task.dart';
 import 'tasks.dart';
 
 class StartupRunner {
-  final Ref ref;
+  final List<StartupTask> tasks;
+  final AppLogger logger;
 
-  // Lista zadań w ścisłej kolejności
-  final List<StartupTask> _tasks = [
-    StorageInitTask(), // 1. Dysk
-    SecurityInitTask(), // 2. Bezpieczeństwo
-    DeviceIntegrityTask(), // 3. Root check
-    VersionCheckTask(), // 4. API check
-  ];
-
-  StartupRunner(this.ref);
+  StartupRunner({required this.tasks, required this.logger});
 
   Future<AppInitStatus> run() async {
-    final logger = ref.read(appLoggerProvider);
     logger.i('🚀 StartupRunner: Starting bootstrap sequence...');
 
-    final stopwatch = Stopwatch()..start();
-
-    for (final task in _tasks) {
-      final taskStart = stopwatch.elapsedMilliseconds;
+    for (final task in tasks) {
       try {
-        // Uruchomienie zadania
-        final result = await task.initialize(ref);
+        // Logujemy start każdego zadania, by wiedzieć gdzie proces "wisi"
+        logger.i('⏳ Task [${task.name}] starting...');
 
-        final taskDuration = stopwatch.elapsedMilliseconds - taskStart;
-        logger.d('   ✅ Task [${task.name}] finished in ${taskDuration}ms');
+        final result = await task.initialize();
 
-        // Jeśli zadanie zwróciło status -> przerywamy (błąd lub blokada)
         if (result != null) {
-          logger.w('   ⛔ Startup halted by [${task.name}]: $result');
+          logger.w(
+            '⚠️ Task [${task.name}] returned non-null status: $result. Aborting sequence.',
+          );
           return result;
         }
+
+        logger.i('✅ Task [${task.name}] completed successfully.');
       } catch (e, st) {
-        logger.e('   💥 Task [${task.name}] CRASHED', error: e, stackTrace: st);
-        return AppInitStatus.blocked(reason: 'Init failed at ${task.name}: $e');
+        // CRITICAL: Logowanie do systemów zewnętrznych (Sentry/Crashlytics)
+        // powinno odbywać się wewnątrz loggera.
+        logger.e(
+          '💥 CRITICAL FAILURE: Task [${task.name}] crashed',
+          error: e,
+          stackTrace: st,
+        );
+
+        // Zwracamy stan zablokowany, co pozwoli UI pokazać ErrorApp
+        return AppInitStatus.blocked(reason: 'task_failed_${task.name}');
       }
     }
 
-    logger.i(
-      '🚀 StartupRunner: Sequence completed in ${stopwatch.elapsedMilliseconds}ms',
-    );
+    logger.i('🎉 StartupRunner: All tasks finished. App authorized.');
     return const AppInitStatus.authorized();
   }
 }

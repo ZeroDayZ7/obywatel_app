@@ -1,77 +1,91 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
-import 'package:obywatel_plus/app/bootstrap/version_notifier.dart';
+import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
 import 'package:obywatel_plus/core/security/application/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
 
-// 1️⃣ Inicjalizacja Storage (musi być pierwsza)
+// 1. Storage Init - używa konkretnych serwisów (bo to warstwa core/infra)
 class StorageInitTask implements StartupTask {
+  final SecureStorageService storage;
+  final SharedPreferencesService prefs;
+
+  StorageInitTask({required this.storage, required this.prefs});
+
   @override
   String get name => 'Storage & Prefs';
 
   @override
-  Future<AppInitStatus?> initialize(Ref ref) async {
-    // Rozgrzewanie instancji (AsyncProvider / FutureProvider)
-    final storage = ref.read(secureStorageProvider);
-    final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
+  Future<AppInitStatus?> initialize() async {
+    // Logowanie zawartości tylko w trybie debug
+    if (kDebugMode) {
+      await storage.debugPrintAll();
+      await prefs.debugPrintAll();
 
-    // Opcjonalne: debug printy (z Twojego kodu)
-    await storage.debugPrintAll();
-    await sharedPrefs.debugPrintAll();
+      // JEŚLI CHCESZ CZYŚCIĆ PAMIĘĆ PRZY KAŻDYM RESTARCIE (tylko w dev):
+      // Odkomentuj poniższe linie, gdy resetujesz bazę
+      // await storage.clearAll();
+      // await prefs.clearAll(); // Poprawiono z sharedPrefs na prefs
+    }
 
-    // await storage.clearAll();
-    // await sharedPrefs.clearAll();
-
-    return null; // OK
+    return null;
   }
 }
 
-// 2️⃣ Inicjalizacja Security (musi być po Storage, bo czyta z niego klucze)
+// 2. Security Init - teraz operuje na interfejsie klasy SecurityService
 class SecurityInitTask implements StartupTask {
+  // Zakładamy, że SecurityNotifier implementuje ten interfejs
+  final ISecurityService securityService;
+
+  SecurityInitTask(this.securityService);
+
   @override
   String get name => 'Security Service';
 
   @override
-  Future<AppInitStatus?> initialize(Ref ref) async {
-    final security = ref.read(securityServiceProvider.notifier);
-    await security.init();
-    return null; // OK
+  Future<AppInitStatus?> initialize() async {
+    await securityService.init();
+    return null;
   }
 }
 
-// 3️⃣ Sprawdzenie integralności urządzenia
+// 3. Device Integrity - operuje na interfejsie/fasadzie
 class DeviceIntegrityTask implements StartupTask {
+  final IDeviceIntegrityFacade deviceIntegrity;
+
+  DeviceIntegrityTask(this.deviceIntegrity);
+
   @override
   String get name => 'Device Integrity';
 
   @override
-  Future<AppInitStatus?> initialize(Ref ref) async {
-    final deviceService = ref.read(deviceIntegrityServiceProvider);
-
-    // [cite: 14] Sprawdzenie Root/Jailbreak
-    if (!await deviceService.isDeviceAllowed()) {
+  Future<AppInitStatus?> initialize() async {
+    if (!await deviceIntegrity.isDeviceAllowed()) {
       return const AppInitStatus.blocked(reason: 'device_integrity');
     }
-    return null; // OK
+    return null;
   }
 }
 
 // 4️⃣ Sprawdzenie wersji (Force Update)
 class VersionCheckTask implements StartupTask {
+  final IVersionFacade version; // Zmienione na IVersionFacade
+
+  VersionCheckTask(this.version);
+
   @override
   String get name => 'Version Check';
 
   @override
-  Future<AppInitStatus?> initialize(Ref ref) async {
-    final versionState = ref.read(versionNotifierProvider);
+  Future<AppInitStatus?> initialize() async {
+    // Najpierw wymuszamy pobranie danych z API
+    await version.check();
 
-    // [cite: 15] Jeśli wymuszona aktualizacja -> przerywamy bootstrap
-    if (versionState.forceUpdate) {
+    if (version.forceUpdate) {
       return const AppInitStatus.forceUpdate();
     }
-    return null; // OK
+    return null;
   }
 }

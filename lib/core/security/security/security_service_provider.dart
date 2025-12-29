@@ -8,13 +8,22 @@ import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
+/// Interfejs dla celów Dependency Inversion (używany w StartupTask)
+abstract interface class ISecurityService {
+  Future<void> init();
+  Future<void> lockApp();
+  Future<void> unlockApp();
+}
+
 final securityServiceProvider =
     NotifierProvider<SecurityNotifier, SecurityState>(SecurityNotifier.new);
 
-class SecurityNotifier extends Notifier<SecurityState> {
+class SecurityNotifier extends Notifier<SecurityState>
+    implements ISecurityService {
   @override
   SecurityState build() => SecurityState.initial();
 
+  @override
   Future<void> init() async {
     final logger = ref.read(appLoggerProvider);
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
@@ -114,12 +123,14 @@ class SecurityNotifier extends Notifier<SecurityState> {
     state = state.copyWith(hasLocalLock: false, isSetupCompleted: true);
   }
 
+  @override
   Future<void> unlockApp() async {
     final logger = ref.read(appLoggerProvider);
     state = state.copyWith(hasLocalLock: false);
     logger.i('🔓 App Unlocked (hasLocalLock: false)');
   }
 
+  @override
   Future<void> lockApp() async {
     if (state.isSetupCompleted && state.isPinConfigured) {
       state = state.copyWith(hasLocalLock: true);

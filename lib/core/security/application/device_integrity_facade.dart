@@ -1,3 +1,5 @@
+// lib/core/security/application/device_integrity_facade.dart
+
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -8,19 +10,25 @@ import 'package:obywatel_plus/core/security/application/device_integrity_service
 import 'package:obywatel_plus/core/security/application/security_integrity_config.dart';
 import 'package:obywatel_plus/core/security/domain/security_exceptions.dart';
 
-/// Provider używany w AppInitNotifier
-final deviceIntegrityServiceProvider = Provider<DeviceIntegrityFacade>((ref) {
+/// INTERFEJS - to rozwiązuje błąd "Undefined class" w startup_task.dart
+abstract interface class IDeviceIntegrityFacade {
+  Future<bool> isDeviceAllowed();
+}
+
+/// PROVIDER - zwraca interfejs, a nie konkretną klasę
+final deviceIntegrityServiceProvider = Provider<IDeviceIntegrityFacade>((ref) {
   final logger = ref.read(appLoggerProvider);
   return DeviceIntegrityFacade(logger: logger);
 });
 
-class DeviceIntegrityFacade {
+/// IMPLEMENTACJA
+class DeviceIntegrityFacade implements IDeviceIntegrityFacade {
   final AppLogger logger;
 
   DeviceIntegrityFacade({required this.logger});
 
+  @override
   Future<bool> isDeviceAllowed() async {
-    // 🌐 Web / desktop — pomijamy
     if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
       logger.i('🔒 Device integrity check skipped (unsupported platform)');
       return true;
@@ -28,6 +36,8 @@ class DeviceIntegrityFacade {
 
     try {
       final service = DeviceIntegrityService();
+
+      // Używamy stałej konfiguracji lub pobranej z Env
       const config = SecurityIntegrityConfig(
         blockRooted: true,
         blockEmulator: true,
