@@ -7,6 +7,11 @@ import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 
+// ============================================================
+// 1. INSTANCJE DIO (WARSTWA NISKOKOPOZIOMOWA)
+// ============================================================
+
+/// Klient służący WYŁĄCZNIE do odświeżania tokena (bez interceptora refreshu, aby uniknąć pętli)
 final refreshDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.refreshToken,
@@ -14,6 +19,7 @@ final refreshDioProvider = Provider<Dio>((ref) {
   );
 });
 
+/// Klient publiczny (np. pobieranie wersji aplikacji) - nie wymaga logowania
 final publicDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.public,
@@ -21,6 +27,15 @@ final publicDioProvider = Provider<Dio>((ref) {
   );
 });
 
+/// Klient do operacji związanych z resetem hasła / auth bez tokena (profil noAuthAuth)
+final resetDioProvider = Provider<Dio>((ref) {
+  return DioFactory.create(
+    profile: DioProfile.noAuthAuth,
+    logger: ref.watch(appLoggerProvider),
+  );
+});
+
+/// GŁÓWNY KLIENT AUTORYZOWANY - posiada interceptory Auth i Refresh (Mutex)
 final authDioProvider = Provider<Dio>((ref) {
   final refreshDio = ref.watch(refreshDioProvider);
 
@@ -29,10 +44,15 @@ final authDioProvider = Provider<Dio>((ref) {
     logger: ref.watch(appLoggerProvider),
     storage: ref.watch(secureStorageProvider),
     sessionService: ref.watch(sessionServiceProvider),
-    refreshClient: refreshDio,
+    refreshClient: refreshDio, // Przekazujemy dedykowany klient do odświeżania
   );
 });
 
+// ============================================================
+// 2. API CLIENTS (WARSTWA ABSTRAKCJI)
+// ============================================================
+
+/// Klient API dla endpointów publicznych
 final publicApiClientProvider = Provider<PublicApiClient>((ref) {
   return PublicApiClient(
     dio: ref.watch(publicDioProvider),
@@ -40,6 +60,7 @@ final publicApiClientProvider = Provider<PublicApiClient>((ref) {
   );
 });
 
+/// Klient API dla endpointów wymagających autoryzacji (JWT)
 final apiClientProvider = Provider<ApiClient>((ref) {
   return ApiClient(
     dio: ref.watch(authDioProvider),
@@ -48,13 +69,7 @@ final apiClientProvider = Provider<ApiClient>((ref) {
   );
 });
 
-final resetDioProvider = Provider<Dio>((ref) {
-  return DioFactory.create(
-    profile: DioProfile.noAuthAuth, // nowy profil
-    logger: ref.watch(appLoggerProvider),
-  );
-});
-
+/// Klient API specyficzny dla procesów resetowania/odzyskiwania konta
 final resetApiClientProvider = Provider<PublicApiClient>((ref) {
   return PublicApiClient(
     dio: ref.watch(resetDioProvider),

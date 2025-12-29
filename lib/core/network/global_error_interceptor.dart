@@ -8,12 +8,13 @@ class GlobalErrorInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Logujemy odpowiedź backendu do debugowania
-    logger.i('💥 Dio error response: ${err.response?.data}');
-    logger.i('💥 Status code: ${err.response?.statusCode}');
-    logger.i('💥 Request path: ${err.requestOptions.path}');
+    // Logujemy tylko ogólne informacje.
+    // Szczegóły (zmaskowane!) wypisze nam LoggingInterceptor.
+    logger.e('💥 Global Error Handler: [${err.type}] ${err.message}');
 
-    // Nie mapujemy błędu tutaj – zostanie zmapowany dopiero w AppException.fromDio
+    // Tutaj możesz dodać logikę analityczną (np. wysyłkę do Sentry/Crashlytics)
+    // ale bez wysyłania wrażliwych danych z err.response?.data
+
     handler.next(err);
   }
 }

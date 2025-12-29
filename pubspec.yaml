@@ -76,6 +76,7 @@ dependencies:
 
   flutter_root_jailbreak_checker: ^1.0.0
   flutter_native_splash: ^2.4.7
+  crypto: ^3.0.7
 
 dev_dependencies:
   flutter_test:
