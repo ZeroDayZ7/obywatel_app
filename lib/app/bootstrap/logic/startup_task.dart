@@ -26,8 +26,9 @@ class StorageInitTask implements StartupTask {
 
       // JEŚLI CHCESZ CZYŚCIĆ PAMIĘĆ PRZY KAŻDYM RESTARCIE (tylko w dev):
       // Odkomentuj poniższe linie, gdy resetujesz bazę
-      // await storage.clearAll();
-      // await prefs.clearAll(); // Poprawiono z sharedPrefs na prefs
+
+      await storage.clearAll();
+      await prefs.clearAll();
     }
 
     return null;

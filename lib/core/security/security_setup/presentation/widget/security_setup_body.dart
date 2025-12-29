@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/security/security_setup/presentation/widget/pin_setup_dialog.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_notifier.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/widgets/ui/button.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/biometric_tile.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/info_card.dart';
-import 'package:obywatel_plus/features/settings/presentation/widgets/pin_setup_dialog.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/pin_tile.dart';
 
 class SecuritySetupBody extends ConsumerWidget {
@@ -74,8 +74,8 @@ class SecuritySetupBody extends ConsumerWidget {
   Future<void> _setupPin(BuildContext context, WidgetRef ref) async {
     final pin = await showDialog<String>(
       context: context,
-      builder: (_) =>
-          const Dialog(child: SingleChildScrollView(child: PinSetupDialog())),
+      builder: (_) => const PinSetupDialog(),
+      barrierColor: Colors.black.withValues(alpha: 0.7),
     );
 
     if (pin == null || pin.isEmpty) return;

@@ -26,7 +26,7 @@ String? authGuard(Ref ref, GoRouterState state) {
   }
 
   // PIN skonfigurowany i lock włączony → jeśli nie jesteśmy na pin screen, redirect
-  if (securityState.isPinConfigured && securityState.shouldShowLock) {
+  if (securityState.shouldShowLock) {
     return isPin ? null : AppRoutes.pin;
   }
 
@@ -63,26 +63,25 @@ String? securitySetupGuard(Ref ref, GoRouterState state) {
   final authState = ref.read(authControllerProvider);
   final goingToSetup = state.uri.path == AppRoutes.securitySetup;
 
-  // Jeśli security nie zainicjalizowane, nie robimy nic
   if (!security.initialized) return null;
 
-  // Ten guard dotyczy tylko pełnej autoryzacji
   final isAuthenticated = authState.maybeMap(
     authenticated: (_) => true,
     orElse: () => false,
   );
   if (!isAuthenticated) return null;
 
-  // Setup nieukończony -> wymuś ekran setupu
-  if (!security.shouldShowLock) {
+  // KLUCZOWA ZMIANA:
+  // Jeśli setup NIE jest ukończony, wymuś ekran setupu.
+  // Jeśli jest ukończony, pozwól iść dalej (niezależnie od shouldShowLock).
+  if (!security.isSetupCompleted) {
     return goingToSetup ? null : AppRoutes.securitySetup;
   }
 
-  // Setup ukończony -> nie pozwól wracać na setup
+  // Jeśli setup ukończony, a użytkownik pcha się na setup -> powrót do Home
   if (security.isSetupCompleted && goingToSetup) {
     return AppRoutes.home;
   }
 
-  // Domyślnie brak redirectu
   return null;
 }

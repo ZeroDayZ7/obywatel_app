@@ -25,6 +25,8 @@ abstract class  LocaleKeys {
   static const security_setup_pin_set = 'security_setup.pin_set';
   static const security_setup_set_pin = 'security_setup.set_pin';
   static const security_setup_set = 'security_setup.set';
+  static const security_setup_processing = 'security_setup.processing';
+  static const security_setup_wait_moment = 'security_setup.wait_moment';
   static const security_setup = 'security_setup';
   static const validators_required_email = 'validators.required_email';
   static const validators_invalid_email = 'validators.invalid_email';
@@ -35,6 +37,8 @@ abstract class  LocaleKeys {
   static const validators_password_digit = 'validators.password_digit';
   static const validators_required_pin = 'validators.required_pin';
   static const validators_invalid_pin = 'validators.invalid_pin';
+  static const validators_pin_length = 'validators.pin_length';
+  static const validators_pin_too_simple = 'validators.pin_too_simple';
   static const validators_required_field = 'validators.required_field';
   static const validators_invalid_email_or_phone = 'validators.invalid_email_or_phone';
   static const validators_required_phone = 'validators.required_phone';

@@ -22,7 +22,9 @@
     "retry": "Spróbuj ponownie",
     "pin_set": "PIN ustawiony",
     "set_pin": "Ustaw PIN",
-    "set": "Ustaw"
+    "set": "Ustaw",
+    "processing": "Zabezpieczanie aplikacji...",
+    "wait_moment": "To może potrwać kilka sekund"
   },
   "validators": {
     "required_email": "Wpisz email",
@@ -34,6 +36,8 @@
     "password_digit": "Hasło musi zawierać przynajmniej jedną cyfrę",
     "required_pin": "Wpisz PIN",
     "invalid_pin": "PIN musi być liczbą 4-6 cyfr",
+    "pin_length": "PIN musi mieć od 4 do 6 cyfr",
+    "pin_too_simple": "PIN jest zbyt prosty",
     "required_field": "Pole wymagane",
     "invalid_email_or_phone": "Niepoprawny email lub numer telefonu",
     "required_phone": "Wpisz numer telefonu",

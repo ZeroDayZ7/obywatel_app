@@ -7,12 +7,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
+import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
+import 'package:obywatel_plus/core/utils/duration_utils.dart';
 import 'package:obywatel_plus/core/widgets/grid_painter.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:obywatel_plus/core/utils/duration_utils.dart';
-import '../../../app/theme/app_colors.dart';
-import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
-import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
+
+import '../../../../app/theme/app_colors.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
   const PinVerificationScreen({super.key});

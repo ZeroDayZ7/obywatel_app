@@ -34,9 +34,18 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   Future<void> setPin(String pin) async {
     final current = state.requireValue;
 
-    await ref.read(securityServiceProvider.notifier).setPin(pin);
+    // 1. Ustawiamy stan na loading, co automatycznie pokaże spinner w UI
+    state = const AsyncLoading();
 
-    state = AsyncValue.data(current.copyWith(pinSet: true));
+    try {
+      // 2. Wywołujemy serwis (który w środku odpala Isolate)
+      await ref.read(securityServiceProvider.notifier).setPin(pin);
+
+      // 3. Wracamy do danych z zaktualizowanym statusem
+      state = AsyncValue.data(current.copyWith(pinSet: true));
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> enableBiometric() async {
@@ -63,8 +72,6 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     await ref
         .read(securityServiceProvider.notifier)
         .completeSetup(enableBiometric: enableBiometric);
-
-    ref.invalidate(securityServiceProvider);
   }
 
   void skipSetup() {

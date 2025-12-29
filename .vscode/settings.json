@@ -6,7 +6,7 @@
     "source.fixAll": "explicit"
   },
   "[dart]": {
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "editor.codeActionsOnSave": {
       "source.organizeImports": "always",
       "source.fixAll": "always"
@@ -38,7 +38,9 @@
     "obywatel_app.code-workspace": true,
     "LICENSE": true,
     "devtools_options.yaml": true,
-    "flutter_launcher_icons.yaml": true
+    "flutter_launcher_icons.yaml": true,
+    "**/*.freezed.dart": true,
+    "**/*.g.dart": true
     // "android": true
   },
 
@@ -69,7 +71,9 @@
     "android": true,
     "LICENSE": true,
     "devtools_options.yaml": true,
-    "flutter_launcher_icons.yaml": true
+    "flutter_launcher_icons.yaml": true,
+    "**/*.freezed.dart": true,
+    "**/*.g.dart": true
     // "android": true,
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/core_providers.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
@@ -20,12 +21,13 @@ final securityServiceProvider =
 
 class SecurityNotifier extends Notifier<SecurityState>
     implements ISecurityService {
+  AppLogger get _logger => ref.read(appLoggerProvider);
+
   @override
   SecurityState build() => SecurityState.initial();
 
   @override
   Future<void> init() async {
-    final logger = ref.read(appLoggerProvider);
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
 
     final setupCompleted =
@@ -57,9 +59,8 @@ class SecurityNotifier extends Notifier<SecurityState>
       initialized: true,
     );
 
-    logger.i(
-      '🔐 Security Init: Locked=$isLocked, PinConfigured=$isPinConfigured',
-    );
+    _logger.i('🔐 Security Init: Done');
+    debugSecurityState();
   }
 
   Future<bool> _checkBiometricsAvailability(
@@ -110,31 +111,54 @@ class SecurityNotifier extends Notifier<SecurityState>
     );
 
     state = state.copyWith(
-      hasLocalLock: true,
+      hasLocalLock: false,
+      isPinConfigured: true,
       isBiometricEnabled: enableBiometric,
       isSetupCompleted: true,
     );
+
+    debugSecurityState();
   }
 
+  // W SecurityNotifier:
   Future<void> skipPinSetup() async {
     final sharedPrefs = await ref.read(sharedPreferencesServiceProvider.future);
-    await sharedPrefs.writeBool(StorageKeys.setupCompleted, true);
 
-    state = state.copyWith(hasLocalLock: false, isSetupCompleted: true);
+    // Zapisujemy, że setup jest SKOŃCZONY (użytkownik podjął decyzję o pominięciu)
+    await sharedPrefs.writeBool(StorageKeys.setupCompleted, true);
+    // Zapisujemy, że blokada jest WYŁĄCZONA
+    await sharedPrefs.writeBool(StorageKeys.localLockEnabled, false);
+
+    state = state.copyWith(
+      hasLocalLock: false,
+      isSetupCompleted: true,
+      isPinConfigured: false, // Ważne: upewniamy się, że stan wie o braku PINu
+    );
   }
 
   @override
   Future<void> unlockApp() async {
-    final logger = ref.read(appLoggerProvider);
     state = state.copyWith(hasLocalLock: false);
-    logger.i('🔓 App Unlocked (hasLocalLock: false)');
+    _logger.i('🔓 App Unlocked'); // Używasz gettera
   }
 
   @override
   Future<void> lockApp() async {
     if (state.isSetupCompleted && state.isPinConfigured) {
       state = state.copyWith(hasLocalLock: true);
-      ref.read(appLoggerProvider).i('🔒 App Locked');
+      _logger.i('🔒 App Locked');
     }
+  }
+
+  void debugSecurityState() {
+    final s = state;
+    _logger.d('''
+--- SECURITY STATE ---
+Initialized:    ${s.initialized}
+Setup Done:     ${s.isSetupCompleted}
+PIN Set:        ${s.isPinConfigured}
+Local Lock:     ${s.hasLocalLock}
+>>> SHOW LOCK:  ${s.shouldShowLock}
+----------------------''', module: 'Security');
   }
 }

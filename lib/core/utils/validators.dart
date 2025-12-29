@@ -54,17 +54,38 @@ class Validators {
 
     return null; // wszystko OK
   }
-
+  
   /// Walidacja PIN
   static String? validatePin(String? value) {
     if (value == null || value.isEmpty) {
       return LocaleKeys.validators_required_pin.tr();
     }
-    if (value.length < 4 || value.length > 6 || int.tryParse(value) == null) {
+
+    // Tylko cyfry
+    if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
       return LocaleKeys.validators_invalid_pin.tr();
     }
+
+    // Długość 4-6
+    if (value.length < 4 || value.length > 6) {
+      return LocaleKeys.validators_pin_length.tr();
+    }
+
+    // Proste sekwencje do zablokowania
+    const simplePins = [
+      '0000', '1111', '2222', '3333', '4444', '5555',
+      '6666', '7777', '8888', '9999',
+      '1234', '2345', '3456', '4567', '5678', '6789', '7890',
+      '0123', '0987', '9876', '8765', '7654', '6543', '5432', '4321'
+    ];
+
+    if (simplePins.contains(value)) {
+      return LocaleKeys.validators_pin_too_simple.tr();
+    }
+
     return null;
   }
+
 
   /// Walidacja numeru telefonu
   static String? validatePhone(String? value) {
