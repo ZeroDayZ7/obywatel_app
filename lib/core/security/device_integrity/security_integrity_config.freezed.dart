@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SecurityIntegrityConfig {
 
- bool get blockRooted; bool get blockEmulator; bool get blockDeveloperMode; bool get blockDangerousApps;
+ bool get blockRooted; bool get blockEmulator; bool get blockDeveloperMode; bool get blockDangerousApps; String? get expectedPackageHash;
 /// Create a copy of SecurityIntegrityConfig
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $SecurityIntegrityConfigCopyWith<SecurityIntegrityConfig> get copyWith => _$Secu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps)&&(identical(other.expectedPackageHash, expectedPackageHash) || other.expectedPackageHash == expectedPackageHash));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps);
+int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps,expectedPackageHash);
 
 @override
 String toString() {
-  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps)';
+  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps, expectedPackageHash: $expectedPackageHash)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $SecurityIntegrityConfigCopyWith<$Res>  {
   factory $SecurityIntegrityConfigCopyWith(SecurityIntegrityConfig value, $Res Function(SecurityIntegrityConfig) _then) = _$SecurityIntegrityConfigCopyWithImpl;
 @useResult
 $Res call({
- bool blockRooted, bool blockEmulator, bool blockDeveloperMode, bool blockDangerousApps
+ bool blockRooted, bool blockEmulator, bool blockDeveloperMode, bool blockDangerousApps, String? expectedPackageHash
 });
 
 
@@ -62,13 +62,14 @@ class _$SecurityIntegrityConfigCopyWithImpl<$Res>
 
 /// Create a copy of SecurityIntegrityConfig
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? blockRooted = null,Object? blockEmulator = null,Object? blockDeveloperMode = null,Object? blockDangerousApps = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? blockRooted = null,Object? blockEmulator = null,Object? blockDeveloperMode = null,Object? blockDangerousApps = null,Object? expectedPackageHash = freezed,}) {
   return _then(_self.copyWith(
 blockRooted: null == blockRooted ? _self.blockRooted : blockRooted // ignore: cast_nullable_to_non_nullable
 as bool,blockEmulator: null == blockEmulator ? _self.blockEmulator : blockEmulator // ignore: cast_nullable_to_non_nullable
 as bool,blockDeveloperMode: null == blockDeveloperMode ? _self.blockDeveloperMode : blockDeveloperMode // ignore: cast_nullable_to_non_nullable
 as bool,blockDangerousApps: null == blockDangerousApps ? _self.blockDangerousApps : blockDangerousApps // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,expectedPackageHash: freezed == expectedPackageHash ? _self.expectedPackageHash : expectedPackageHash // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -150,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps,  String? expectedPackageHash)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SecurityIntegrityConfig() when $default != null:
-return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps);case _:
+return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps,_that.expectedPackageHash);case _:
   return orElse();
 
 }
@@ -171,10 +172,10 @@ return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps,  String? expectedPackageHash)  $default,) {final _that = this;
 switch (_that) {
 case _SecurityIntegrityConfig():
-return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps);}
+return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps,_that.expectedPackageHash);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -188,10 +189,10 @@ return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool blockRooted,  bool blockEmulator,  bool blockDeveloperMode,  bool blockDangerousApps,  String? expectedPackageHash)?  $default,) {final _that = this;
 switch (_that) {
 case _SecurityIntegrityConfig() when $default != null:
-return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps);case _:
+return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_that.blockDangerousApps,_that.expectedPackageHash);case _:
   return null;
 
 }
@@ -203,13 +204,14 @@ return $default(_that.blockRooted,_that.blockEmulator,_that.blockDeveloperMode,_
 
 
 class _SecurityIntegrityConfig extends SecurityIntegrityConfig {
-  const _SecurityIntegrityConfig({this.blockRooted = true, this.blockEmulator = true, this.blockDeveloperMode = false, this.blockDangerousApps = true}): super._();
+  const _SecurityIntegrityConfig({this.blockRooted = true, this.blockEmulator = true, this.blockDeveloperMode = false, this.blockDangerousApps = true, this.expectedPackageHash}): super._();
   
 
 @override@JsonKey() final  bool blockRooted;
 @override@JsonKey() final  bool blockEmulator;
 @override@JsonKey() final  bool blockDeveloperMode;
 @override@JsonKey() final  bool blockDangerousApps;
+@override final  String? expectedPackageHash;
 
 /// Create a copy of SecurityIntegrityConfig
 /// with the given fields replaced by the non-null parameter values.
@@ -221,16 +223,16 @@ _$SecurityIntegrityConfigCopyWith<_SecurityIntegrityConfig> get copyWith => __$S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps)&&(identical(other.expectedPackageHash, expectedPackageHash) || other.expectedPackageHash == expectedPackageHash));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps);
+int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps,expectedPackageHash);
 
 @override
 String toString() {
-  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps)';
+  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps, expectedPackageHash: $expectedPackageHash)';
 }
 
 
@@ -241,7 +243,7 @@ abstract mixin class _$SecurityIntegrityConfigCopyWith<$Res> implements $Securit
   factory _$SecurityIntegrityConfigCopyWith(_SecurityIntegrityConfig value, $Res Function(_SecurityIntegrityConfig) _then) = __$SecurityIntegrityConfigCopyWithImpl;
 @override @useResult
 $Res call({
- bool blockRooted, bool blockEmulator, bool blockDeveloperMode, bool blockDangerousApps
+ bool blockRooted, bool blockEmulator, bool blockDeveloperMode, bool blockDangerousApps, String? expectedPackageHash
 });
 
 
@@ -258,13 +260,14 @@ class __$SecurityIntegrityConfigCopyWithImpl<$Res>
 
 /// Create a copy of SecurityIntegrityConfig
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? blockRooted = null,Object? blockEmulator = null,Object? blockDeveloperMode = null,Object? blockDangerousApps = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? blockRooted = null,Object? blockEmulator = null,Object? blockDeveloperMode = null,Object? blockDangerousApps = null,Object? expectedPackageHash = freezed,}) {
   return _then(_SecurityIntegrityConfig(
 blockRooted: null == blockRooted ? _self.blockRooted : blockRooted // ignore: cast_nullable_to_non_nullable
 as bool,blockEmulator: null == blockEmulator ? _self.blockEmulator : blockEmulator // ignore: cast_nullable_to_non_nullable
 as bool,blockDeveloperMode: null == blockDeveloperMode ? _self.blockDeveloperMode : blockDeveloperMode // ignore: cast_nullable_to_non_nullable
 as bool,blockDangerousApps: null == blockDangerousApps ? _self.blockDangerousApps : blockDangerousApps // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,expectedPackageHash: freezed == expectedPackageHash ? _self.expectedPackageHash : expectedPackageHash // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

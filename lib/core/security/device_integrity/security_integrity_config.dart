@@ -12,6 +12,7 @@ sealed class SecurityIntegrityConfig with _$SecurityIntegrityConfig {
     @Default(true) bool blockEmulator,
     @Default(false) bool blockDeveloperMode,
     @Default(true) bool blockDangerousApps,
+    String? expectedPackageHash,
   }) = _SecurityIntegrityConfig;
 
   const SecurityIntegrityConfig._();

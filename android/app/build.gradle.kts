@@ -31,12 +31,23 @@ android {
     }
 
     buildTypes {
-        release {
-            // isMinifyEnabled = false
-            // isShrinkResources = false
-            signingConfig = signingConfigs.getByName("debug")
+            release {
+                // Włącza obfuskację kodu (Minification)
+                isMinifyEnabled = true
+                
+                // Usuwa nieużywane zasoby (obrazy, stringi itp.)
+                isShrinkResources = true
+                
+                // Wskazuje pliki z regułami ochrony kodu
+                proguardFiles(
+                    getDefaultProguardFile("proguard-android-optimize.txt"),
+                    "proguard-rules.pro"
+                )
+
+                // UWAGA: Przed publikacją zmień na signingConfigs.release!
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
-    }
 }
 
 flutter {

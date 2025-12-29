@@ -40,13 +40,15 @@ class DeviceIntegrityFacade implements IDeviceIntegrityFacade {
 
       // Dynamiczna konfiguracja bezpieczeństwa
       final config = SecurityIntegrityConfig(
-        blockRooted: true,
-        blockEmulator: true,
-        // Developer Mode zazwyczaj zostawiamy na false w dev,
-        // ale możesz tu użyć kReleaseMode jeśli chcesz blokować w produkcji
-        blockDeveloperMode: kReleaseMode,
-        // W wersji 2.1.5 sprawdzanie debuggera i Fridy wpada pod tę flagę
-        blockDangerousApps: true,
+        blockRooted: kReleaseMode, // Blokuj root tylko w produkcji
+        blockEmulator: kReleaseMode, // Blokuj emulator tylko w produkcji
+        blockDeveloperMode:
+            kReleaseMode, // Blokuj tryb programisty tylko w produkcji
+        blockDangerousApps:
+            kReleaseMode, // Blokuj Fridę/Xposed tylko w produkcji
+        expectedPackageHash: kReleaseMode
+            ? 'v7N8xP9qW2zL5mR1tK0jY4uS6bX3cA8vE9nG2fD4hI1=' // Przykład Base64
+            : null, // Tutaj wpiszemy certyfikat przed publikacją
       );
 
       await service.verify(config);
