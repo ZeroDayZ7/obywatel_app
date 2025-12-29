@@ -6,6 +6,7 @@ abstract class  LocaleKeys {
   static const common_logout = 'common.logout';
   static const common_cancel = 'common.cancel';
   static const common_save = 'common.save';
+  static const common_next = 'common.next';
   static const common_skip = 'common.skip';
   static const common_confirm = 'common.confirm';
   static const common_save_password = 'common.save_password';
@@ -28,6 +29,13 @@ abstract class  LocaleKeys {
   static const security_setup_processing = 'security_setup.processing';
   static const security_setup_wait_moment = 'security_setup.wait_moment';
   static const security_setup = 'security_setup';
+  static const pin_dialog_enter_4_digits = 'pin_dialog.enter_4_digits';
+  static const pin_dialog_repeat_4_digits = 'pin_dialog.repeat_4_digits';
+  static const pin_dialog_set_pin_title = 'pin_dialog.set_pin_title';
+  static const pin_dialog_repeat_pin_title = 'pin_dialog.repeat_pin_title';
+  static const pin_dialog_pin_must_be_4_digits = 'pin_dialog.pin_must_be_4_digits';
+  static const pin_dialog_pin_not_identical = 'pin_dialog.pin_not_identical';
+  static const pin_dialog = 'pin_dialog';
   static const validators_required_email = 'validators.required_email';
   static const validators_invalid_email = 'validators.invalid_email';
   static const validators_required_password = 'validators.required_password';
@@ -178,9 +186,9 @@ abstract class  LocaleKeys {
   static const help_faq_section = 'help.faq_section';
   static const help = 'help';
   static const pinVerification_title = 'pinVerification.title';
+  static const pinVerification_system_locked = 'pinVerification.system_locked';
   static const pinVerification_subtitle = 'pinVerification.subtitle';
   static const pinVerification_unlock_button = 'pinVerification.unlock_button';
-  static const pinVerification_cancel = 'pinVerification.cancel';
   static const pinVerification_secure_connection = 'pinVerification.secure_connection';
   static const pinVerification_errors_too_many_attempts = 'pinVerification.errors.too_many_attempts';
   static const pinVerification_errors_invalid_pin = 'pinVerification.errors.invalid_pin';

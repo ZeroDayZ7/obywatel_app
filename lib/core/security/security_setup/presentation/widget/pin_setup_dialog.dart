@@ -74,8 +74,8 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                     const SizedBox(height: Spacing.sm),
                     Text(
                       _isConfirmStage
-                          ? "Powtórz PIN"
-                          : LocaleKeys.security_setup_set_pin.tr(),
+                          ? LocaleKeys.pin_dialog_repeat_pin_title.tr()
+                          : LocaleKeys.pin_dialog_set_pin_title.tr(),
                       style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
@@ -89,20 +89,21 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                       // Używamy ValueKey, aby Flutter wiedział, że to "nowe" pole przy zmianie etapu
                       key: ValueKey(_isConfirmStage ? 'confirm' : 'setup'),
                       labelText: _isConfirmStage
-                          ? "Powtórz 4 cyfry"
-                          : "Wpisz 4 cyfry",
+                          ? LocaleKeys.pin_dialog_repeat_4_digits.tr()
+                          : LocaleKeys.pin_dialog_enter_4_digits.tr(),
                       keyboardType: TextInputType.number,
                       obscureText: _isObscured,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(4), // Tylko 4 cyfry
+                        LengthLimitingTextInputFormatter(4),
                       ],
                       validator: (value) {
                         if (value == null || value.length < 4) {
-                          return "PIN musi mieć 4 cyfry";
+                          return LocaleKeys.pin_dialog_pin_must_be_4_digits
+                              .tr();
                         }
                         if (_isConfirmStage && value != _firstPin) {
-                          return "PIN-y nie są identyczne";
+                          return LocaleKeys.pin_dialog_pin_not_identical.tr();
                         }
                         return null;
                       },
@@ -125,7 +126,6 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                             variant: AppButtonVariant.text,
                             onPressed: () {
                               if (_isConfirmStage) {
-                                // Cofnij do pierwszego kroku
                                 setState(() {
                                   _isConfirmStage = false;
                                   _confirmController.clear();
@@ -141,7 +141,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                           child: AppButton(
                             labelKey: _isConfirmStage
                                 ? LocaleKeys.common_save
-                                : "Dalej",
+                                : LocaleKeys.common_next,
                             variant: AppButtonVariant.primary,
                             onPressed: _onNext,
                           ),

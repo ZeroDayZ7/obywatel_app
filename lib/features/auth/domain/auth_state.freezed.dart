@@ -368,7 +368,6 @@ class _Authenticated implements AuthState {
 
  final  String userId;
  final  String? accessToken;
-// Tymczasowy schowek w RAM
  final  String? refreshToken;
 
 /// Create a copy of AuthState

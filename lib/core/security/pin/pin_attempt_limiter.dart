@@ -1,33 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
-/// Represents the current state of PIN attempts and lock status.
-class PinAttemptState {
-  /// Number of failed PIN attempts.
-  final int attempts;
-
-  /// Timestamp until which the PIN entry is locked.
-  final DateTime? lockUntil;
-
-  const PinAttemptState({this.attempts = 0, this.lockUntil});
-
-  /// Returns true if the user is currently locked out.
-  bool get isLocked => lockUntil != null && DateTime.now().isBefore(lockUntil!);
-}
-
-/// A Riverpod notifier that manages PIN attempt state and automatic lockouts.
-class PinAttemptLimiter extends Notifier<PinAttemptState> {
+class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
   late final SecureStorageService _storage;
 
   @override
-  PinAttemptState build() {
+  Future<PinAttemptState> build() async {
     _storage = ref.read(secureStorageProvider);
-    _loadState();
-    return const PinAttemptState();
+    return _loadFromStorage();
   }
 
-  Future<void> _loadState() async {
+  Future<PinAttemptState> _loadFromStorage() async {
     final attemptsStr = await _storage.read(key: StorageKeys.pinAttempts);
     final lockMillisStr = await _storage.read(key: StorageKeys.pinLockUntil);
 
@@ -40,27 +27,14 @@ class PinAttemptLimiter extends Notifier<PinAttemptState> {
         lockUntil = DateTime.fromMillisecondsSinceEpoch(millis);
       }
     }
-
-    state = PinAttemptState(attempts: attempts, lockUntil: lockUntil);
-  }
-
-  Future<void> _saveState() async {
-    await _storage.write(
-      key: StorageKeys.pinAttempts,
-      value: state.attempts.toString(),
-    );
-    if (state.lockUntil != null) {
-      await _storage.write(
-        key: StorageKeys.pinLockUntil,
-        value: state.lockUntil!.millisecondsSinceEpoch.toString(),
-      );
-    } else {
-      await _storage.delete(key: StorageKeys.pinLockUntil);
-    }
+    return PinAttemptState(attempts: attempts, lockUntil: lockUntil);
   }
 
   Future<void> registerFailedAttempt() async {
-    final nextAttempts = state.attempts + 1;
+    // Pobieramy aktualny stan (jeśli załadowany)
+    final currentState = state.value ?? const PinAttemptState();
+
+    final nextAttempts = currentState.attempts + 1;
     final lockDuration = _getLockDuration(nextAttempts);
 
     DateTime? lockUntil;
@@ -68,30 +42,46 @@ class PinAttemptLimiter extends Notifier<PinAttemptState> {
       lockUntil = DateTime.now().add(lockDuration);
     }
 
-    state = PinAttemptState(attempts: nextAttempts, lockUntil: lockUntil);
-    await _saveState();
+    final newState = currentState.copyWith(
+      attempts: nextAttempts,
+      lockUntil: lockUntil,
+    );
+
+    // Aktualizujemy stan i zapisujemy
+    state = AsyncData(newState);
+    await _saveToStorage(newState);
   }
 
   Future<void> reset() async {
-    state = const PinAttemptState();
-    await _saveState();
+    const newState = PinAttemptState();
+    state = const AsyncData(newState);
+    await _saveToStorage(newState);
+  }
+
+  Future<void> _saveToStorage(PinAttemptState data) async {
+    await _storage.write(
+      key: StorageKeys.pinAttempts,
+      value: data.attempts.toString(),
+    );
+    if (data.lockUntil != null) {
+      await _storage.write(
+        key: StorageKeys.pinLockUntil,
+        value: data.lockUntil!.millisecondsSinceEpoch.toString(),
+      );
+    } else {
+      await _storage.delete(key: StorageKeys.pinLockUntil);
+    }
   }
 
   Duration _getLockDuration(int attempts) {
-    const baseAttempts = 3;
-    const baseDuration = 60;
-
-    if (attempts <= baseAttempts) return Duration.zero;
-
-    final lockCount = attempts - baseAttempts;
-    final seconds = baseDuration * (1 << (lockCount - 1));
-
+    if (attempts < 3) return Duration.zero;
+    final lockCount = attempts - 2;
+    final seconds = 60 * (1 << (lockCount - 1));
     return Duration(seconds: seconds);
   }
 }
 
-/// AutoDispose provider dla PinAttemptLimiter
 final pinAttemptLimiterProvider =
-    NotifierProvider<PinAttemptLimiter, PinAttemptState>(
+    AsyncNotifierProvider<PinAttemptLimiter, PinAttemptState>(
       PinAttemptLimiter.new,
     );

@@ -3,6 +3,7 @@
     "logout": "Wyloguj",
     "cancel": "Anuluj",
     "save": "Zapisz",
+    "next": "Dalej",
     "skip": "Pomiń",
     "confirm": "Potwierdź",
     "save_password": "Zapisz hasło",
@@ -25,6 +26,14 @@
     "set": "Ustaw",
     "processing": "Zabezpieczanie aplikacji...",
     "wait_moment": "To może potrwać kilka sekund"
+  },
+  "pin_dialog": {
+    "enter_4_digits": "Wpisz 4 cyfry",
+    "repeat_4_digits": "Powtórz 4 cyfry",
+    "set_pin_title": "Ustaw PIN",
+    "repeat_pin_title": "Powtórz PIN",
+    "pin_must_be_4_digits": "PIN musi mieć 4 cyfry",
+    "pin_not_identical": "PIN-y nie są identyczne"
   },
   "validators": {
     "required_email": "Wpisz email",
@@ -198,13 +207,10 @@
   },
   "pinVerification": {
     "title": "AUTORYZACJA WYMAGANA",
+    "system_locked": "SYSTEM ZABLOKOWANY",
     "subtitle": "WPROWADŹ KOD DOSTĘPU",
-
     "unlock_button": "ODBLOKUJ DOSTĘP",
-    "cancel": "ANULUJ",
-
     "secure_connection": "POŁĄCZENIE ZASZYFROWANE",
-
     "errors": {
       "too_many_attempts": "Zbyt wiele prób! Spróbuj za {time}",
       "invalid_pin": "Błędny PIN! Spróbuj ponownie."

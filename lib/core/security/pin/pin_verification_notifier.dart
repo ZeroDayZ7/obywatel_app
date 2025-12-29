@@ -1,37 +1,83 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
+import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
+import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 
 class PinVerificationNotifier extends Notifier<PinVerificationState> {
+  Timer? _lockoutTimer;
+
   @override
-  PinVerificationState build() => const PinVerificationState.idle();
+  PinVerificationState build() {
+    // Słuchamy zmian w limiterze. Gdy tylko dane się załadują (AsyncData)
+    // i okaże się, że jest blokada, odpalany timer.
+    ref.listen<AsyncValue<PinAttemptState>>(pinAttemptLimiterProvider, (
+      prev,
+      next,
+    ) {
+      next.whenData((data) {
+        if (data.isLocked && _lockoutTimer == null) {
+          _startLockoutTimer(data.lockUntil!);
+        }
+      });
+    });
+
+    ref.onDispose(() => _lockoutTimer?.cancel());
+    return const PinVerificationState.idle();
+  }
+
+  void _startLockoutTimer(DateTime lockUntil) {
+    _lockoutTimer?.cancel();
+    _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      final now = DateTime.now();
+      final remaining = lockUntil.difference(now);
+
+      if (remaining.isNegative || remaining.inSeconds <= 0) {
+        timer.cancel();
+        _lockoutTimer = null;
+        await ref.read(pinAttemptLimiterProvider.notifier).reset();
+        state = const PinVerificationState.idle();
+      } else {
+        state = PinVerificationState.locked(remaining: remaining);
+      }
+    });
+  }
 
   Future<void> verifyPin(String pin) async {
-    state = const PinVerificationState.loading();
+    // 1. Pobieramy aktualną wartość limitera (musi być załadowana)
+    final limiterAsync = ref.read(pinAttemptLimiterProvider);
 
-    final pinService = ref.read(pinServiceProvider);
-    final limiter = ref.read(pinAttemptLimiterProvider.notifier);
-    final security = ref.read(securityServiceProvider.notifier);
+    // Jeśli dane jeszcze się ładują, nie pozwalamy na weryfikację
+    if (limiterAsync.isLoading) return;
 
-    final lock = ref.read(pinAttemptLimiterProvider);
-    if (lock.isLocked) {
-      state = PinVerificationState.locked(
-        remaining: lock.lockUntil!.difference(DateTime.now()),
-      );
+    final limiterData = limiterAsync.value;
+    if (limiterData != null && limiterData.isLocked) {
+      _startLockoutTimer(limiterData.lockUntil!);
       return;
     }
 
-    final isValid = await pinService.verifyPin(pin);
+    state = const PinVerificationState.loading();
+    final isValid = await ref.read(pinServiceProvider).verifyPin(pin);
 
     if (isValid) {
-      await limiter.reset();
-      await security.unlockApp();
+      await ref.read(pinAttemptLimiterProvider.notifier).reset();
+      await ref.read(securityServiceProvider.notifier).unlockApp();
       state = const PinVerificationState.success();
     } else {
-      await limiter.registerFailedAttempt();
-      state = const PinVerificationState.error();
+      await ref
+          .read(pinAttemptLimiterProvider.notifier)
+          .registerFailedAttempt();
+
+      // Po nieudanej próbie sprawdzamy ponownie, czy wskoczyła blokada
+      final updatedLimiter = ref.read(pinAttemptLimiterProvider).value;
+      if (updatedLimiter != null && updatedLimiter.isLocked) {
+        _startLockoutTimer(updatedLimiter.lockUntil!);
+      } else {
+        state = const PinVerificationState.error();
+      }
     }
   }
 }

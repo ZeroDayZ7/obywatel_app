@@ -1,7 +1,7 @@
 // lib/core/errors/global_error_listener.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 
 import 'global_error_provider.dart';
@@ -57,7 +57,7 @@ class GlobalErrorListener extends ConsumerWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                notification.messageKey.tr(),
+                notification.messageKey.tr(namedArgs: notification.namedArgs),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
