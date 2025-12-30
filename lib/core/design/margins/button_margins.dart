@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../spacing.dart';
+
+import '../tokens/spacing.dart';
 
 class ButtonMargins {
   static const small = EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.sm);

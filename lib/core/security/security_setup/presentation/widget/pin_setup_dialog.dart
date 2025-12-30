@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/design/border_radius.dart';
-import 'package:obywatel_plus/core/design/layout_tokens.dart';
 import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
-import 'package:obywatel_plus/core/design/spacing.dart';
-import 'package:obywatel_plus/core/widgets/ui/button.dart';
-import 'package:obywatel_plus/core/widgets/ui/text_field.dart';
+import 'package:obywatel_plus/core/design/tokens/border_radius.dart';
+import 'package:obywatel_plus/core/design/tokens/layout_tokens.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/text_field.dart';
 
 class PinSetupDialog extends StatefulWidget {
   const PinSetupDialog({super.key});

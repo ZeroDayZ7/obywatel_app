@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/widgets/grid_painter.dart';
+import 'package:obywatel_plus/core/design/widgets/grid_painter.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});

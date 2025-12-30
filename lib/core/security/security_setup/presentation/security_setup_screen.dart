@@ -4,7 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/design/layout_tokens.dart';
+import 'package:obywatel_plus/core/design/tokens/layout_tokens.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/retry_view.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/security_setup_body.dart';

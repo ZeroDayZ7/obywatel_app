@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../spacing.dart';
+
+import '../tokens/spacing.dart';
 
 class CardMargins {
   static const all = EdgeInsets.all(Spacing.lg); // 16px

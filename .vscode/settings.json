@@ -73,7 +73,8 @@
     "devtools_options.yaml": true,
     "flutter_launcher_icons.yaml": true,
     "**/*.freezed.dart": true,
-    "**/*.g.dart": true
+    "**/*.g.dart": true,
+    "**/*.txt": true
     // "android": true,
   }
 }

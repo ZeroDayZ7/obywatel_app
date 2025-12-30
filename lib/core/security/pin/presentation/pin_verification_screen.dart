@@ -3,13 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/design/widgets/grid_painter.dart';
+import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/lockout_overlay.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/pin_input_view.dart';
-import 'package:obywatel_plus/core/widgets/grid_painter.dart';
-import 'package:obywatel_plus/core/widgets/responsive_content_wrapper.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {

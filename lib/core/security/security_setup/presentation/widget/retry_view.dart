@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/widgets/ui/button.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 
 class RetryView extends StatelessWidget {
   final VoidCallback onRetry;

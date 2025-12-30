@@ -21,14 +21,14 @@ class StorageInitTask implements StartupTask {
   Future<AppInitStatus?> initialize() async {
     // Logowanie zawartości tylko w trybie debug
     if (kDebugMode) {
-      await storage.debugPrintAll();
-      await prefs.debugPrintAll();
-
       // JEŚLI CHCESZ CZYŚCIĆ PAMIĘĆ PRZY KAŻDYM RESTARCIE (tylko w dev):
       // Odkomentuj poniższe linie, gdy resetujesz bazę
 
       // await storage.clearAll();
       // await prefs.clearAll();
+
+      await storage.debugPrintAll();
+      await prefs.debugPrintAll();
     }
 
     return null;

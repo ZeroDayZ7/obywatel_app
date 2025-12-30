@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/design/layout_tokens.dart';
-import 'package:obywatel_plus/core/design/spacing.dart';
+import 'package:obywatel_plus/core/design/tokens/layout_tokens.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
+
 import 'login_form.dart';
 
 class ProfessionalLoginWidget extends ConsumerWidget {
