@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/main/app_observer.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Funkcja inicjalizująca całą infrastrukturę aplikacji przed jej uruchomieniem.
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
@@ -34,6 +36,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
 
+    final rawPrefs = await SharedPreferences.getInstance();
+    final sharedService = SharedPreferencesService(rawPrefs);
+
     final observer = AppObserver();
 
     runApp(
@@ -44,6 +49,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
         saveLocale: true,
         useOnlyLangCode: true,
         child: ProviderScope(
+          overrides: [
+            activePrefsProvider.overrideWithValue(sharedService),
+          ],
           observers: kDebugMode ? [observer] : [],
           child: await builder(),
         ),

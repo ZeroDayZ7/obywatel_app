@@ -12,58 +12,45 @@ final themeProvider = NotifierProvider<ThemeNotifier, ThemeMode>(
 );
 
 class ThemeNotifier extends Notifier<ThemeMode> {
-  late final AppLogger _logger;
-  late final SharedPreferencesService _prefs;
+  AppLogger get _logger => ref.read(appLoggerProvider);
+
+  /// Synchroniczny dostęp do serwisu SharedPreferences
+  SharedPreferencesService get _prefs => ref.read(activePrefsProvider);
 
   @override
   ThemeMode build() {
-    _logger = ref.read(appLoggerProvider);
-    _logger.i('🎨 ThemeNotifier initialized');
-
-    // Pobieramy SharedPreferencesService z FutureProvider
-    ref.read(sharedPreferencesServiceProvider.future).then((service) {
-      _prefs = service;
-      _loadTheme();
-    }).catchError((e, s) {
-      _logger.e('⚠️ Failed to load theme', error: e, stackTrace: s);
-    });
-
+    // Inicjalizujemy stan motywu od razu podczas budowania notifiera.
+    // Skoro bootstrap został ukończony, serwis jest dostępny synchronicznie.
+    try {
+      final saved = _prefs.read(_themeKey);
+      if (saved != null) {
+        return ThemeMode.values.firstWhere(
+          (mode) => mode.name == saved,
+          orElse: () => ThemeMode.system,
+        );
+      }
+    } catch (e, s) {
+      _logger.e('Failed to load initial theme', error: e, stackTrace: s);
+    }
     return ThemeMode.system;
   }
 
-  Future<void> _loadTheme() async {
-    final themeString = _prefs.read(_themeKey);
-    _logger.i('🪶 Loaded theme from prefs: $themeString');
+  /// Prywatna metoda aktualizująca stan i zapisująca go na dysku
+  Future<void> _updateTheme(ThemeMode mode) async {
+    // 1. Najpierw aktualizujemy stan w RAM (UI reaguje natychmiast)
+    state = mode;
 
-    switch (themeString) {
-      case 'light':
-        state = ThemeMode.light;
-        break;
-      case 'dark':
-        state = ThemeMode.dark;
-        break;
-      default:
-        state = ThemeMode.system;
+    try {
+      // 2. Asynchronicznie zapisujemy zmianę na dysku
+      await _prefs.write(_themeKey, mode.name);
+      _logger.i('Theme persisted: ${mode.name}');
+    } catch (e, s) {
+      _logger.e('Failed to save theme', error: e, stackTrace: s);
     }
   }
 
-  Future<void> _saveTheme(ThemeMode mode) async {
-    await _prefs.write(_themeKey, mode.name);
-    _logger.i('💾 Saved theme: ${mode.name}');
-  }
-
-  Future<void> setLight() async {
-    state = ThemeMode.light;
-    await _saveTheme(state);
-  }
-
-  Future<void> setDark() async {
-    state = ThemeMode.dark;
-    await _saveTheme(state);
-  }
-
-  Future<void> setSystem() async {
-    state = ThemeMode.system;
-    await _saveTheme(state);
-  }
+  // Publiczne API
+  Future<void> setLight() => _updateTheme(ThemeMode.light);
+  Future<void> setDark() => _updateTheme(ThemeMode.dark);
+  Future<void> setSystem() => _updateTheme(ThemeMode.system);
 }

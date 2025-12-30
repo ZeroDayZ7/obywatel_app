@@ -25,8 +25,7 @@ class AppInitNotifier extends Notifier<AppInitStatus> {
     final logger = ref.read(appLoggerProvider);
 
     try {
-      // Rozwiązanie błędu FutureProvider: czekamy na zainicjalizowanie SharedPreferences
-      final prefs = await ref.read(sharedPreferencesServiceProvider.future);
+      final prefs = ref.read(activePrefsProvider);
       final storage = ref.read(secureStorageProvider);
 
       final runner = StartupRunner(

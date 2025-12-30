@@ -128,8 +128,19 @@
     "general_subtitle": "Podstawowe ustawienia aplikacji",
     "security": "Bezpieczeństwo",
     "security_subtitle": "Zarządzaj bezpieczeństwem",
+
     "notifications": "Powiadomienia",
     "notifications_subtitle": "Zarządzaj swoimi powiadomieniami",
+    "notifications_settings": {
+      "title": "Ustawienia powiadomień",
+      "app_notifications": "Powiadomienia aplikacji",
+      "sound": "Dźwięk",
+      "vibration": "Wibracje",
+      "email": "Powiadomienia e-mail",
+      "sms": "Powiadomienia SMS",
+      "not_available": "Niedostępne na tym urządzeniu"
+    },
+
     "language": "Język",
     "language_subtitle": "Zmień język aplikacji",
     "theme": "Motyw",

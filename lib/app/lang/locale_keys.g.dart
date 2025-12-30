@@ -120,6 +120,14 @@ abstract class  LocaleKeys {
   static const settings_security_subtitle = 'settings.security_subtitle';
   static const settings_notifications = 'settings.notifications';
   static const settings_notifications_subtitle = 'settings.notifications_subtitle';
+  static const settings_notifications_settings_title = 'settings.notifications_settings.title';
+  static const settings_notifications_settings_app_notifications = 'settings.notifications_settings.app_notifications';
+  static const settings_notifications_settings_sound = 'settings.notifications_settings.sound';
+  static const settings_notifications_settings_vibration = 'settings.notifications_settings.vibration';
+  static const settings_notifications_settings_email = 'settings.notifications_settings.email';
+  static const settings_notifications_settings_sms = 'settings.notifications_settings.sms';
+  static const settings_notifications_settings_not_available = 'settings.notifications_settings.not_available';
+  static const settings_notifications_settings = 'settings.notifications_settings';
   static const settings_language = 'settings.language';
   static const settings_language_subtitle = 'settings.language_subtitle';
   static const settings_theme = 'settings.theme';

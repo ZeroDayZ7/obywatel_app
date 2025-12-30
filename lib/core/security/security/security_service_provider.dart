@@ -19,34 +19,35 @@ final securityServiceProvider =
 
 class SecurityNotifier extends Notifier<SecurityState>
     implements ISecurityService {
-  // Clean Getters
+  // Clean Getters - teraz synchroniczne
   AppLogger get _logger => ref.read(appLoggerProvider);
   PinService get _pinService => ref.read(pinServiceProvider);
   LocalAuthentication get _localAuth => ref.read(localAuthProvider);
-  Future<SharedPreferencesService> get _prefs =>
-      ref.read(sharedPreferencesServiceProvider.future);
+
+  // POPRAWKA: Pobieramy gotowy serwis synchronicznie
+  SharedPreferencesService get _prefs => ref.read(activePrefsProvider);
 
   @override
   SecurityState build() => SecurityState.initial();
 
   @override
   Future<void> init() async {
-    // Musimy "rozpakować" Future z gettera na początku metody
-    final prefs = await _prefs;
+    // Odczyt z SharedPreferencesService jest teraz synchroniczny
+    final setupCompleted = _prefs.readBool(StorageKeys.setupCompleted) ?? false;
 
-    final setupCompleted = prefs.readBool(StorageKeys.setupCompleted) ?? false;
     if (!setupCompleted) {
       state = state.copyWith(isSetupCompleted: false, initialized: true);
       return;
     }
 
+    // PIN Service zazwyczaj operuje na SecureStorage, więc tu zostaje await
     final isPinConfigured = await _pinService.hasPin();
-    final isLocalLockEnabled =
-        prefs.readBool(StorageKeys.localLockEnabled) ?? false;
-    final isBiometricEnabled =
-        prefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
 
-    // Używamy gettera _localAuth wewnątrz metody pomocniczej
+    final isLocalLockEnabled =
+        _prefs.readBool(StorageKeys.localLockEnabled) ?? false;
+    final isBiometricEnabled =
+        _prefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
+
     final canUseBiometrics = await _checkBiometricsAvailability();
 
     state = state.copyWith(
@@ -59,23 +60,23 @@ class SecurityNotifier extends Notifier<SecurityState>
     );
 
     _logger.i('🔐 Security Init: Done');
-    debugSecurityState();
   }
 
   Future<void> setPin(String pin) async {
     await _pinService.setPin(pin);
-    final prefs = await _prefs;
-    await prefs.writeBool(StorageKeys.isPinConfigured, true);
+    // Zapisujemy na dysk, ale dostęp do _prefs jest natychmiastowy
+    await _prefs.writeBool(StorageKeys.isPinConfigured, true);
 
     state = state.copyWith(isPinConfigured: true);
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
-    final prefs = await _prefs;
-
-    await prefs.writeBool(StorageKeys.setupCompleted, true);
-    await prefs.writeBool(StorageKeys.localLockEnabled, true);
-    await prefs.writeBool(StorageKeys.isBiometricConfigured, enableBiometric);
+    // Wykonujemy serie zapisów asynchronicznych
+    await Future.wait([
+      _prefs.writeBool(StorageKeys.setupCompleted, true),
+      _prefs.writeBool(StorageKeys.localLockEnabled, true),
+      _prefs.writeBool(StorageKeys.isBiometricConfigured, enableBiometric),
+    ]);
 
     state = state.copyWith(
       hasLocalLock: false,
@@ -89,10 +90,10 @@ class SecurityNotifier extends Notifier<SecurityState>
   }
 
   Future<void> skipPinSetup() async {
-    final prefs = await _prefs;
-
-    await prefs.writeBool(StorageKeys.setupCompleted, true);
-    await prefs.writeBool(StorageKeys.localLockEnabled, false);
+    await Future.wait([
+      _prefs.writeBool(StorageKeys.setupCompleted, true),
+      _prefs.writeBool(StorageKeys.localLockEnabled, false),
+    ]);
 
     state = state.copyWith(
       hasLocalLock: false,
@@ -101,7 +102,6 @@ class SecurityNotifier extends Notifier<SecurityState>
     );
   }
 
-  // Pomocnicza metoda używa teraz gettera klasy
   Future<bool> _checkBiometricsAvailability() async {
     try {
       final available = await _localAuth.getAvailableBiometrics();

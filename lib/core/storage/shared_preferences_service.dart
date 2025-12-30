@@ -1,12 +1,11 @@
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-final sharedPreferencesServiceProvider =
-    FutureProvider<SharedPreferencesService>((ref) async {
-      final prefs = await SharedPreferences.getInstance();
-      return SharedPreferencesService(prefs);
-    });
+// To jest placeholder na gotowy serwis, żeby nie pisać wszędzie "await"
+final activePrefsProvider = Provider<SharedPreferencesService>((ref) {
+  throw UnimplementedError('Pamiętaj o override w bootstrapie!');
+});
 
 class SharedPreferencesService {
   final SharedPreferences _prefs;
@@ -45,7 +44,9 @@ class SharedPreferencesService {
     if (keys.isEmpty) {
       debugPrint('🟢 ===== SharedPreferences: no entries. =====');
     } else {
-      debugPrint('🟢 ===== SharedPreferences contains ${keys.length} entries =====');
+      debugPrint(
+        '🟢 ===== SharedPreferences contains ${keys.length} entries =====',
+      );
       for (final key in keys) {
         final value = _prefs.get(key);
         debugPrint('• $key: $value');
