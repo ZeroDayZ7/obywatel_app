@@ -126,8 +126,14 @@
     "title": "Ustawienia",
     "general": "Ustawienia ogólne",
     "general_subtitle": "Podstawowe ustawienia aplikacji",
-    "security": "Bezpieczeństwo",
-    "security_subtitle": "Zarządzaj bezpieczeństwem",
+    "security": {
+      "title": "Bezpieczeństwo",
+      "subtitle": "Zarządzaj bezpieczeństwem",
+      "emergency_lock": "Blokada awaryjna",
+      "emergency_lock_description": "Ta operacja natychmiastowo zablokuje Twoje konto, wyloguje wszystkie urządzenia i zawiesi certyfikaty.",
+      "emergency_lock_slider": "Przesuń, aby zablokować",
+      "emergency_lock_cancel": "Anuluj"
+    },
 
     "notifications": "Powiadomienia",
     "notifications_subtitle": "Zarządzaj swoimi powiadomieniami",
@@ -162,7 +168,6 @@
 
     "security_access_section": "Dostęp i sesje",
     "security_active_sessions": "Aktywne sesje",
-    "security_emergency_lock": "Tryb awaryjny",
 
     "save_pin_success": "PIN zapisany pomyślnie!",
     "pin_mismatch": "PINy nie są zgodne",

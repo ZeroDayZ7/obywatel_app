@@ -116,8 +116,13 @@ abstract class  LocaleKeys {
   static const settings_title = 'settings.title';
   static const settings_general = 'settings.general';
   static const settings_general_subtitle = 'settings.general_subtitle';
+  static const settings_security_title = 'settings.security.title';
+  static const settings_security_subtitle = 'settings.security.subtitle';
+  static const settings_security_emergency_lock = 'settings.security.emergency_lock';
+  static const settings_security_emergency_lock_description = 'settings.security.emergency_lock_description';
+  static const settings_security_emergency_lock_slider = 'settings.security.emergency_lock_slider';
+  static const settings_security_emergency_lock_cancel = 'settings.security.emergency_lock_cancel';
   static const settings_security = 'settings.security';
-  static const settings_security_subtitle = 'settings.security_subtitle';
   static const settings_notifications = 'settings.notifications';
   static const settings_notifications_subtitle = 'settings.notifications_subtitle';
   static const settings_notifications_settings_title = 'settings.notifications_settings.title';
@@ -146,7 +151,6 @@ abstract class  LocaleKeys {
   static const settings_security_biometrics_subtitle = 'settings.security_biometrics_subtitle';
   static const settings_security_access_section = 'settings.security_access_section';
   static const settings_security_active_sessions = 'settings.security_active_sessions';
-  static const settings_security_emergency_lock = 'settings.security_emergency_lock';
   static const settings_save_pin_success = 'settings.save_pin_success';
   static const settings_pin_mismatch = 'settings.pin_mismatch';
   static const settings_pin_min_digits = 'settings.pin_min_digits';

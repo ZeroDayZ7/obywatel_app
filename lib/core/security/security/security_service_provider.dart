@@ -111,6 +111,19 @@ class SecurityNotifier extends Notifier<SecurityState>
     }
   }
 
+  Future<void> toggleBiometrics(bool enabled) async {
+    _logger.i(
+      'DEBUG: Kliknięto switch biometrii! Nowa wartość: $enabled',
+    ); // <--- DODAJ TO
+    try {
+      await _prefs.writeBool(StorageKeys.isBiometricConfigured, enabled);
+      state = state.copyWith(isBiometricEnabled: enabled);
+      _logger.i('Biometrics toggled: $enabled');
+    } catch (e, s) {
+      _logger.e('Failed to toggle biometrics', error: e, stackTrace: s);
+    }
+  }
+
   @override
   Future<void> unlockApp() async {
     state = state.copyWith(hasLocalLock: false);

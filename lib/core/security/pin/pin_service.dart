@@ -1,9 +1,9 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/crypto/hash_service.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/core/crypto/hash_service.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Provider dla PinService
 final pinServiceProvider = Provider<PinService>((ref) {
@@ -94,8 +94,8 @@ class PinService {
   }
 
   /// Usuwa PIN
-  Future<void> deletePin() async {
+  Future<void> removePin() async {
     await _storage.delete(key: StorageKeys.pinHash);
-    _logger.i('PinService: PIN usunięty');
+    _logger.i('PinService: PIN został usunięty z pamięci bezpiecznej');
   }
 }

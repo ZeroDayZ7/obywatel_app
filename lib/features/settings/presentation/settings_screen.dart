@@ -1,12 +1,14 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/features/settings/presentation/language_selector_sheet.dart';
-import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
-import 'theme_selector_sheet.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
+import 'package:obywatel_plus/features/settings/presentation/sheets/language_selector_sheet.dart';
+import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
+
+import 'sheets/theme_selector_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -19,7 +21,7 @@ class SettingsScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: ScreenMargins.all,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,13 +53,13 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              LocaleKeys.settings_security.tr(),
+              LocaleKeys.settings_security_title.tr(),
               style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             SettingsCard(
               icon: Icons.security,
-              title: LocaleKeys.settings_security.tr(),
+              title: LocaleKeys.settings_security_title.tr(),
               subtitle: LocaleKeys.settings_security_subtitle.tr(),
               showArrow: true,
               onTap: () => context.push(
