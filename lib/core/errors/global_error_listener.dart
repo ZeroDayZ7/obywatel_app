@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/notifications/feedback_service.dart';
+import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 
 import 'global_error_provider.dart';
 
@@ -14,10 +16,29 @@ class GlobalErrorListener extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     ref.listen<AppNotification?>(globalNotificationProvider, (previous, next) {
       if (next != null) {
+        // 1. Najpierw wywołaj efekt fizyczny (wibracja/dźwięk)
+        _triggerFeedback(ref, next.type);
+
+        // 2. Potem pokaż UI (SnackBar)
         _showAdaptiveSnackBar(context, next);
       }
     });
     return child;
+  }
+
+  // PRYWATNA METODA DO MAPOWANIA I URUCHAMIANIA FEEDBACKU
+  void _triggerFeedback(WidgetRef ref, NotificationType type) {
+    final feedbackService = ref.read(feedbackServiceProvider);
+
+    // Mapujemy typ powiadomienia na typ fizycznego feedbacku
+    final feedbackType = switch (type) {
+      NotificationType.error => FeedbackType.error,
+      NotificationType.warning => FeedbackType.warning,
+      NotificationType.success => FeedbackType.success,
+      NotificationType.info => FeedbackType.info,
+    };
+
+    feedbackService.trigger(feedbackType);
   }
 
   void _showAdaptiveSnackBar(
