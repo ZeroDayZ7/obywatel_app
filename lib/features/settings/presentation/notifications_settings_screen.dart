@@ -10,10 +10,10 @@ class NotificationsSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Słuchamy stanu możliwości urządzenia (async)
     final capsAsync = ref.watch(deviceCapabilitiesProvider);
-
+    // Słuchamy aktualnego stanu ustawień (przebuduje UI przy zmianie switcha)
     final settings = ref.watch(notificationSettingsProvider);
-    final notifier = ref.read(notificationSettingsProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -22,7 +22,7 @@ class NotificationsSettingsScreen extends ConsumerWidget {
       ),
       body: capsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => const Center(child: Text("Błąd ładowania")),
+        error: (_, __) => Center(child: Text(LocaleKeys.errors_general.tr())),
         data: (caps) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -32,14 +32,19 @@ class NotificationsSettingsScreen extends ConsumerWidget {
                     .tr(),
               ),
               value: settings.appNotifications,
-              onChanged: notifier.toggleApp,
+              // Używamy ref.read wewnątrz funkcji anonimowej dla akcji
+              onChanged: (val) => ref
+                  .read(notificationSettingsProvider.notifier)
+                  .toggleApp(val),
             ),
             SwitchListTile(
               title: Text(
                 LocaleKeys.settings_notifications_settings_sound.tr(),
               ),
               value: settings.sound,
-              onChanged: notifier.toggleSound,
+              onChanged: (val) => ref
+                  .read(notificationSettingsProvider.notifier)
+                  .toggleSound(val),
             ),
             SwitchListTile(
               title: Text(
@@ -48,9 +53,12 @@ class NotificationsSettingsScreen extends ConsumerWidget {
                     ? null
                     : const TextStyle(color: Colors.grey),
               ),
-              // Jeśli urządzenie nie ma wibracji, switch jest wyłączony i nieaktywny
               value: caps.hasVibration && settings.vibration,
-              onChanged: caps.hasVibration ? notifier.toggleVibration : null,
+              onChanged: caps.hasVibration
+                  ? (val) => ref
+                        .read(notificationSettingsProvider.notifier)
+                        .toggleVibration(val)
+                  : null,
               subtitle: !caps.hasVibration
                   ? Text(
                       LocaleKeys.settings_notifications_settings_not_available
@@ -65,12 +73,16 @@ class NotificationsSettingsScreen extends ConsumerWidget {
                 LocaleKeys.settings_notifications_settings_email.tr(),
               ),
               value: settings.email,
-              onChanged: notifier.toggleEmail,
+              onChanged: (val) => ref
+                  .read(notificationSettingsProvider.notifier)
+                  .toggleEmail(val),
             ),
             SwitchListTile(
               title: Text(LocaleKeys.settings_notifications_settings_sms.tr()),
               value: settings.sms,
-              onChanged: notifier.toggleSms,
+              onChanged: (val) => ref
+                  .read(notificationSettingsProvider.notifier)
+                  .toggleSms(val),
             ),
           ],
         ),

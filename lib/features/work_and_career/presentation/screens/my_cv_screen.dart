@@ -1,6 +1,7 @@
-// lib/features/work_and_career/presentation/screens/my_cv_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 
@@ -9,190 +10,122 @@ class MyCVScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Uzyskujemy dostęp do serwisu feedbacku
-    final feedback = ref.read(feedbackServiceProvider);
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My CV'),
+        title: const Text('Feedback & Notification Test'),
         backgroundColor: Colors.blueGrey[900],
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'export') {
-                feedback.trigger(FeedbackType.info);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'save_local',
-                child: Text('Save Locally'),
-              ),
-              const PopupMenuItem(
-                value: 'sync_server',
-                child: Text('Sync with Server'),
-              ),
-              const PopupMenuItem(value: 'export', child: Text('Export CV')),
-            ],
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      body: Padding(
+        padding: const EdgeInsets.all(24),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ----------------- Personal Info -----------------
-            const Text(
-              'Personal Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Full Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              decoration: const InputDecoration(
-                labelText: 'Phone',
-                border: OutlineInputBorder(),
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ----------------- Skills -----------------
-            const Text(
-              'Skills',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: List.generate(
-                3,
-                (index) => Chip(
-                  label: Text('Skill ${index + 1}'),
-                  backgroundColor: Colors.blueGrey[100],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () {
-                feedback.trigger(FeedbackType.info);
-              },
-              child: const Text('Add Skill'),
-            ),
-
-            const SizedBox(height: 24),
-
-            // ----------------- Experience -----------------
-            const Text(
-              'Experience',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 8),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 2,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  child: ListTile(
-                    title: Text('Job Title ${index + 1}'),
-                    subtitle: Text('Company ${index + 1} | 2021-2023'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.edit),
-                      onPressed: () {
-                        feedback.trigger(FeedbackType.info);
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-            ElevatedButton(
-              onPressed: () {
-                feedback.trigger(FeedbackType.info);
-              },
-              child: const Text('Add Experience'),
-            ),
-
+            const Icon(Icons.vibration, size: 64, color: Colors.blueGrey),
             const SizedBox(height: 32),
 
-            // ----------------- Enterprise Actions (Testowanie) -----------------
-            const Divider(),
-            const Text(
-              'Feedback Testing',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            // 1. TEST SUKCESU - Usuwamy 'const' sprzed AppNotification
+            _TestButton(
+              label: 'Test Success',
+              color: Colors.green,
+              icon: Icons.check_circle,
+              onPressed: () {
+                ref
+                    .read(globalNotificationProvider.notifier)
+                    .show(
+                      // USUNIĘTO 'const'
+                      AppNotification(
+                        messageKey: 'Zapytanie wysłane pomyślnie!',
+                        type: NotificationType.success,
+                      ),
+                    );
+              },
             ),
+
             const SizedBox(height: 16),
 
-            // Przycisk krytyczny
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () => feedback.trigger(FeedbackType.securityAlert),
-                icon: const Icon(Icons.security, color: Colors.red),
-                label: const Text('TRIGGER SECURITY ALERT'),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-              ),
+            // 2. TEST BŁĘDU
+            _TestButton(
+              label: 'Test Error',
+              color: Colors.red,
+              icon: Icons.error,
+              onPressed: () {
+                ref
+                    .read(globalNotificationProvider.notifier)
+                    .show(
+                      // USUNIĘTO 'const'
+                      AppNotification(
+                        messageKey: 'Błąd połączenia z serwerem',
+                        type: NotificationType.error,
+                      ),
+                    );
+              },
             ),
 
             const SizedBox(height: 16),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      feedback.trigger(FeedbackType.success);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Saved Locally!')),
-                      );
-                    },
-                    icon: const Icon(Icons.save),
-                    label: const Text('Success'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      feedback.trigger(FeedbackType.error);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Sync Error!'),
-                          backgroundColor: Colors.red,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.cloud_upload),
-                    label: const Text('Error'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red.shade50,
-                      foregroundColor: Colors.red,
-                    ),
-                  ),
-                ),
-              ],
+            // 3. TEST WARNING
+            _TestButton(
+              label: 'Test Warning',
+              color: Colors.orange,
+              icon: Icons.warning,
+              onPressed: () {
+                ref
+                    .read(globalNotificationProvider.notifier)
+                    .show(
+                      // USUNIĘTO 'const'
+                      AppNotification(
+                        messageKey: 'Twoja sesja wkrótce wygaśnie',
+                        type: NotificationType.warning,
+                      ),
+                    );
+              },
+            ),
+
+            const Divider(height: 64),
+
+            TextButton.icon(
+              onPressed: () => ref
+                  .read(feedbackServiceProvider)
+                  .trigger(FeedbackType.securityAlert),
+              icon: const Icon(Icons.security, color: Colors.red),
+              label: const Text('Direct Security Haptic (No UI)'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TestButton extends StatelessWidget {
+  final String label;
+  final Color color;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _TestButton({
+    required this.label,
+    required this.color,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 55,
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        onPressed: onPressed,
+        icon: Icon(icon),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
       ),
     );
   }

@@ -63,7 +63,9 @@
     "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd",
     "SESSION_EXPIRED": "Sesja wygasła. Zaloguj się ponownie.",
     "EMAIL_IS_SEND_IF_EXISTS": "Jeśli konto istnieje, kod resetu został wysłany na podany email.",
-    "TOO_MANY_REQUESTS": "Zbyt wiele prób. Spróbuj ponownie później."
+    "TOO_MANY_REQUESTS": "Zbyt wiele prób. Spróbuj ponownie później.",
+
+    "general": "Wystąpił nieoczekiwany błąd"
   },
   "forgot_password_dialog": {
     "label": "Email lub numer telefonu",

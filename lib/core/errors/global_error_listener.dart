@@ -48,14 +48,13 @@ class GlobalErrorListener extends ConsumerWidget {
     final size = MediaQuery.of(context).size;
     final bool isDesktop = size.width > 600;
 
-    // Definiujemy style dla typów
     final Map<NotificationType, _ToastStyle> styles = {
       NotificationType.error: _ToastStyle(
         color: Colors.red.shade800,
         icon: Icons.error_outline,
       ),
       NotificationType.warning: _ToastStyle(
-        color: Colors.orange.shade700, // Żółty/Pomarańczowy dla ostrzeżeń
+        color: Colors.orange.shade700,
         icon: Icons.warning_amber_rounded,
       ),
       NotificationType.success: _ToastStyle(
@@ -70,11 +69,14 @@ class GlobalErrorListener extends ConsumerWidget {
 
     final style = styles[notification.type] ?? styles[NotificationType.error]!;
 
+    // WAŻNE: Czyścimy poprzedni, żeby nowy wskoczył od razu
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            Icon(style.icon, color: Colors.white),
+            Icon(style.icon, color: Colors.white, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -82,18 +84,34 @@ class GlobalErrorListener extends ConsumerWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w500,
+                  fontSize: 14,
                 ),
               ),
+            ),
+            // Używamy IconButton - ma większą strefę kliknięcia
+            IconButton(
+              constraints:
+                  const BoxConstraints(), // Usuwa domyślne wielkie marginesy
+              padding: EdgeInsets.zero,
+              icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+              onPressed: () {
+                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+              },
             ),
           ],
         ),
         backgroundColor: style.color,
         behavior: SnackBarBehavior.floating,
+        // Ustawienie margin na stałe (nawet mały) często naprawia DismissDirection
+        margin: isDesktop
+            ? null
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         width: isDesktop ? 400 : null,
-        margin: isDesktop ? null : const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 8,
         duration: const Duration(seconds: 4),
+        // Zmiana na up - często lepiej działa przy floating
+        dismissDirection: DismissDirection.horizontal,
       ),
     );
   }

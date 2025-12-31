@@ -46,7 +46,9 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
       if (error != null) {
         ref
             .read(globalNotificationProvider.notifier)
-            .show(error.tr(), type: NotificationType.error);
+            .show(
+              AppNotification(messageKey: error, type: NotificationType.error),
+            );
       }
     });
 

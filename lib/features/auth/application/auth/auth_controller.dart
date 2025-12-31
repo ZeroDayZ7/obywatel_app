@@ -163,7 +163,7 @@ class AuthController extends Notifier<AuthState> {
   void _showError(String key) {
     ref
         .read(globalNotificationProvider.notifier)
-        .show(key, type: NotificationType.error);
+        .show(AppNotification(messageKey: key, type: NotificationType.error));
   }
 }
 

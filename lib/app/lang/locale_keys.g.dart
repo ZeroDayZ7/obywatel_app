@@ -63,6 +63,7 @@ abstract class  LocaleKeys {
   static const errors_SESSION_EXPIRED = 'errors.SESSION_EXPIRED';
   static const errors_EMAIL_IS_SEND_IF_EXISTS = 'errors.EMAIL_IS_SEND_IF_EXISTS';
   static const errors_TOO_MANY_REQUESTS = 'errors.TOO_MANY_REQUESTS';
+  static const errors_general = 'errors.general';
   static const errors = 'errors';
   static const forgot_password_dialog_label = 'forgot_password_dialog.label';
   static const forgot_password_dialog_code_sent = 'forgot_password_dialog.code_sent';
