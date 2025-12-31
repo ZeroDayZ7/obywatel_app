@@ -32,16 +32,24 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> setPin(String pin) async {
-    final current = state.requireValue;
+    // 1. Zabezpieczamy aktualny stan
+    final current = state.value;
+    if (current == null) return;
 
-    // 1. Ustawiamy stan na loading, co automatycznie pokaże spinner w UI
-    state = const AsyncLoading();
+    state = const AsyncValue.loading();
 
     try {
-      // 2. Wywołujemy serwis (który w środku odpala Isolate)
-      await ref.read(securityServiceProvider.notifier).setPin(pin);
+      // 2. KONWERSJA: Zamieniamy String na kody bajtów (List<int>)
+      // Dzięki temu utrzymujemy "bezpieczny łańcuch" danych wrażliwych.
+      final pinCodes = pin.codeUnits.toList();
 
-      // 3. Wracamy do danych z zaktualizowanym statusem
+      // 3. Wywołujemy serwis z bajtami zamiast Stringa
+      await ref.read(securityServiceProvider.notifier).setPin(pinCodes);
+
+      // 4. Czyścimy listę bajtów z pamięci RAM zaraz po użyciu
+      pinCodes.fillRange(0, pinCodes.length, 0);
+
+      // 5. Sukces - aktualizujemy stan
       state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
       state = AsyncValue.error(e, st);

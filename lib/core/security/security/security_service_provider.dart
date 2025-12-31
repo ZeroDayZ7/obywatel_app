@@ -62,12 +62,21 @@ class SecurityNotifier extends Notifier<SecurityState>
     _logger.i('🔐 Security Init: Done');
   }
 
-  Future<void> setPin(String pin) async {
-    await _pinService.setPin(pin);
-    // Zapisujemy na dysk, ale dostęp do _prefs jest natychmiastowy
+  Future<void> setPin(List<int> pinCodes) async {
+    // 1. Przekazujemy bajty bezpośrednio do serwisu
+    await _pinService.setPin(pinCodes);
+
+    // 2. Zapisujemy informację o konfiguracji (to jest tylko flaga true/false, więc bezpieczne)
     await _prefs.writeBool(StorageKeys.isPinConfigured, true);
 
+    // 3. Aktualizujemy stan UI
     state = state.copyWith(isPinConfigured: true);
+
+    // 4. DOBRA PRAKTYKA: Zerujemy listę wejściową,
+    // aby nie wisiała w pamięci warstwy prezentacji
+    for (int i = 0; i < pinCodes.length; i++) {
+      pinCodes[i] = 0;
+    }
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {

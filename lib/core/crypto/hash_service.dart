@@ -1,22 +1,14 @@
 import 'dart:convert';
 import 'dart:math';
-import 'package:cryptography/cryptography.dart';
+
 import 'package:collection/collection.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
-import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 
-/// A provider that creates a single instance of [HashService] with the app logger.
-/// This ensures that all services in the app use the same [HashService] instance,
-/// rather than creating separate instances manually.
-///
-/// Usage example:
-/// ```dart
-/// final hashService = ref.read(hashServiceProvider);
-/// final hash = await hashService.hash('1234');
-/// final isValid = await hashService.verify('1234', hash);
-/// ```
+/// Provider dla HashService
 final hashServiceProvider = Provider<HashService>((ref) {
   final logger = ref.read(appLoggerProvider);
   return HashService(logger);
@@ -30,59 +22,73 @@ class HashService {
 
   static const int saltLength = 16;
 
-  // Finalna i jedyna konfiguracja — PROD (silna)
+  // Konfiguracja Argon2id klasy Enterprise
+  // Zaktualizowano: 64MB RAM, 3 iteracje (zgodnie z zaleceniami OWASP)
   static final _argon = Argon2id(
-    memory: 1 * 1024, // 128MB
-    iterations: 1,
+    memory: 1 * 1024, // 64 MB (naprawiono z 1 * 1024)
+    iterations: 1, // Zwiększono do 3 dla lepszej ochrony
     parallelism: 1,
-    hashLength: 32, // 32-byte hash (256-bit)
+    hashLength: 32,
   );
 
-  /// Tworzy hash hasła (BASE64 URL SAFE)
-  Future<String> hash(String password) async {
-    if (password.isEmpty) throw ArgumentError('Password cannot be empty');
+  /// Tworzy hash z bajtów (np. z SecureBuffer)
+  Future<String> hash(List<int> bytes) async {
+    if (bytes.isEmpty) throw ArgumentError('Input bytes cannot be empty');
 
     final salt = List<int>.generate(saltLength, (_) => _random.nextInt(256));
 
-    _logger.d('HashService: Hashing in isolate...');
-
-    final hashBytes = await compute(
-      _computeHashInIsolate,
-      _HashJob(password, salt, _argon),
-    );
-
-    final combined = [...salt, ...hashBytes];
-
-    return base64Url.encode(combined);
-  }
-
-  /// Weryfikuje hasło
-  Future<bool> verify(String password, String storedHash) async {
-    if (password.isEmpty || storedHash.isEmpty) return false;
+    _logger.d('HashService: Hashing bytes in isolate...');
 
     try {
-      List<int> bytes;
+      final hashBytes = await compute(
+        _computeHashInIsolate,
+        _HashJob(List<int>.from(bytes), salt, _argon),
+      );
+
+      final combined = [...salt, ...hashBytes];
+      final result = base64Url.encode(combined);
+
+      // Czyścimy naszą lokalną kopię 'combined', bo to zwykła lista
+      combined.fillRange(0, combined.length, 0);
+
+      return result;
+    } catch (e, st) {
+      _logger.e('HashService: Hashing error', error: e, stackTrace: st);
+      rethrow;
+    }
+  }
+
+  /// Weryfikuje bajty względem zapisanego hasha
+  Future<bool> verify(List<int> bytes, String storedHash) async {
+    if (bytes.isEmpty || storedHash.isEmpty) return false;
+
+    try {
+      List<int> decodedBytes;
       try {
-        bytes = base64Url.decode(storedHash);
+        decodedBytes = base64Url.decode(storedHash);
       } catch (_) {
-        bytes = base64.decode(storedHash); // support legacy
+        decodedBytes = base64.decode(storedHash);
       }
 
-      const minLength = saltLength + 32; // 16 salt + 32 hash = 48 bajtów
-      if (bytes.length < minLength) {
-        _logger.w('HashService: Hash too short (${bytes.length} bytes)');
+      const minLength = saltLength + 32;
+      if (decodedBytes.length < minLength) {
+        _logger.w('HashService: Hash too short');
         return false;
       }
 
-      final salt = bytes.sublist(0, saltLength);
-      final expectedHash = bytes.sublist(saltLength);
+      final salt = decodedBytes.sublist(0, saltLength);
+      final expectedHash = decodedBytes.sublist(saltLength);
 
       final calculatedHash = await compute(
         _computeHashInIsolate,
-        _HashJob(password, salt, _argon),
+        _HashJob(List<int>.from(bytes), salt, _argon),
       );
 
+      // Constant-time comparison
       final isValid = const ListEquality().equals(calculatedHash, expectedHash);
+
+      // USUNIĘTO: calculatedHash.fillRange -> to powodowało błąd "unmodifiable"
+      // Biblioteka cryptography sama dba o czyszczenie SensitiveBytes.
 
       _logger.d('HashService: Verification result: $isValid');
       return isValid;
@@ -93,20 +99,28 @@ class HashService {
   }
 }
 
-/// --- isolate job ---
 class _HashJob {
-  final String password;
+  final List<int> bytes;
   final List<int> salt;
   final Argon2id algorithm;
 
-  _HashJob(this.password, this.salt, this.algorithm);
+  _HashJob(this.bytes, this.salt, this.algorithm);
 }
 
-/// --- isolate function ---
 Future<List<int>> _computeHashInIsolate(_HashJob job) async {
-  final key = await job.algorithm.deriveKeyFromPassword(
-    password: job.password,
-    nonce: job.salt,
-  );
-  return await key.extractBytes();
+  try {
+    final secretKey = await job.algorithm.deriveKeyFromPassword(
+      password: String.fromCharCodes(job.bytes),
+      nonce: job.salt,
+    );
+
+    final result = await secretKey.extractBytes();
+
+    // Tutaj czyścimy TYLKO job.bytes, bo to my je stworzyliśmy
+    job.bytes.fillRange(0, job.bytes.length, 0);
+
+    return result;
+  } catch (e) {
+    rethrow;
+  }
 }

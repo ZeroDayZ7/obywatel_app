@@ -22,7 +22,7 @@ class NotificationsSettingsScreen extends ConsumerWidget {
       ),
       body: capsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, __) => Center(child: Text(LocaleKeys.errors_general.tr())),
+        error: (_, _) => Center(child: Text(LocaleKeys.errors_general.tr())),
         data: (caps) => ListView(
           padding: const EdgeInsets.all(16),
           children: [

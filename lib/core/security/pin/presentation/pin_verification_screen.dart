@@ -111,9 +111,16 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                             isError: isError,
                             resetToken: _resetToken,
                             errorController: _errorController,
-                            onCompleted: (pin) => ref
-                                .read(pinVerificationProvider.notifier)
-                                .verifyPin(pin),
+                            onCompleted: (pin) {
+                              // 1. Konwertujemy String na kody ASCII (np. '1' -> 49)
+                              // To pozwala na bezpieczne przekazanie bajtów do FFI
+                              final codes = pin.codeUnits.toList();
+
+                              // 2. Przekazujemy listę bajtów do notifiera
+                              ref
+                                  .read(pinVerificationProvider.notifier)
+                                  .verifyPin(codes);
+                            },
                           ),
                         ),
                       ),

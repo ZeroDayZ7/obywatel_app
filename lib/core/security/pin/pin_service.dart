@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
@@ -37,51 +38,86 @@ class PinService {
        _hashService = hashService,
        _logger = logger;
 
-  /// Waliduje PIN (4-6 cyfr)
-  void _validatePin(String pin) {
-    if (pin.length < 4 || pin.length > 6 || int.tryParse(pin) == null) {
-      _logger.w('PinService: Nieprawidłowy PIN - musi być 4-6 cyfr');
-      throw PinValidationException('PIN musi być liczbą 4-6 cyfr');
-    }
-  }
+  // USUNIĘTO: _validatePin(String pin) - stara metoda generowała błąd unused_element
 
-  /// Ustawia PIN: waliduje, hashuje, zapisuje w secure storage
-  Future<void> setPin(String pin) async {
-    _logger.d('PinService: Ustawianie PIN (długość: ${pin.length})');
-    _validatePin(pin);
+  /// Ustawia PIN: waliduje, hashuje i zeruje pamięć RAM
+  Future<void> setPin(List<int> pinCodes) async {
+    _logger.d('PinService: Ustawianie PIN (Secure Flow)');
+
+    // 1. Walidacja (na poziomie bajtów/intów)
+    _validatePinList(pinCodes);
+
+    // 2. Alokacja bezpiecznego bufora przez FFI
+    final buffer = SecureBuffer(pinCodes.length);
 
     try {
-      final hashed = await _hashService.hash(pin);
+      // 3. Kopiowanie danych do natywnego RAMu
+      for (int i = 0; i < pinCodes.length; i++) {
+        buffer.view[i] = pinCodes[i];
+      }
+
+      // 4. Hashowanie bezpośrednio z bufora
+      final hashed = await _hashService.hash(buffer.view);
+
+      // 5. Zapisujemy tylko HASH
       await _storage.write(key: StorageKeys.pinHash, value: hashed);
-      _logger.i('PinService: PIN ustawiony pomyślnie');
+
+      _logger.i('PinService: PIN ustawiony i pamięć wyczyszczona');
     } catch (e, s) {
       _logger.e('PinService: Błąd ustawiania PIN', error: e, stackTrace: s);
       rethrow;
+    } finally {
+      // 6. KLUCZOWE: Całkowite wymazanie jawnego PINu z RAMu
+      buffer.dispose();
+
+      // Zerujemy też listę wejściową dla bezpieczeństwa
+      for (int i = 0; i < pinCodes.length; i++) {
+        pinCodes[i] = 0;
+      }
     }
   }
 
-  /// Weryfikuje PIN: czyta z storage i sprawdza hash
-  Future<bool> verifyPin(String pin) async {
-    _logger.d('PinService: Weryfikacja PIN');
+  /// Weryfikuje PIN: używa natywnego bufora i czyści go po operacji
+  Future<bool> verifyPin(List<int> pinCodes) async {
+    _logger.d('PinService: Weryfikacja PIN (Secure Flow)');
 
-    if (pin.isEmpty) {
-      _logger.w('PinService: Pusty PIN do weryfikacji');
-      return false;
-    }
+    if (pinCodes.isEmpty) return false;
+
+    final buffer = SecureBuffer(pinCodes.length);
 
     try {
-      final storedHash = await _storage.read(key: StorageKeys.pinHash);
-      if (storedHash == null || storedHash.isEmpty) {
-        _logger.w('PinService: Brak zapisanego PIN');
-        return false;
+      for (int i = 0; i < pinCodes.length; i++) {
+        buffer.view[i] = pinCodes[i];
       }
 
-      final isValid = await _hashService.verify(pin, storedHash);
-      _logger.i('PinService: Weryfikacja PIN: $isValid');
+      final storedHash = await _storage.read(key: StorageKeys.pinHash);
+      if (storedHash == null) return false;
+
+      final isValid = await _hashService.verify(buffer.view, storedHash);
+
       return isValid;
     } catch (e, s) {
-      _logger.e('PinService: Błąd weryfikacji PIN', error: e, stackTrace: s);
+      _logger.e('PinService: Błąd weryfikacji', error: e, stackTrace: s);
       return false;
+    } finally {
+      buffer.dispose();
+      for (int i = 0; i < pinCodes.length; i++) {
+        pinCodes[i] = 0;
+      }
+    }
+  }
+
+  /// Prywatna metoda walidacji listy kodów PIN
+  void _validatePinList(List<int> pinCodes) {
+    if (pinCodes.length < 4 || pinCodes.length > 6) {
+      // POPRAWKA: Używamy PinValidationException zamiast niezdefiniowanego AppException
+      throw PinValidationException('errors.pin_invalid_length');
+    }
+    // Dodatkowe sprawdzenie, czy to same cyfry (ASCII 48-57)
+    for (var code in pinCodes) {
+      if (code < 48 || code > 57) {
+        throw PinValidationException('errors.pin_not_numeric');
+      }
     }
   }
 

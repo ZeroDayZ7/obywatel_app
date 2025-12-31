@@ -46,11 +46,10 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
     });
   }
 
-  Future<void> verifyPin(String pin) async {
-    // 1. Pobieramy aktualną wartość limitera (musi być załadowana)
+  Future<void> verifyPin(List<int> pinCodes) async {
+    // 1. Pobieramy aktualną wartość limitera
     final limiterAsync = ref.read(pinAttemptLimiterProvider);
 
-    // Jeśli dane jeszcze się ładują, nie pozwalamy na weryfikację
     if (limiterAsync.isLoading) return;
 
     final limiterData = limiterAsync.value;
@@ -60,7 +59,9 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
     }
 
     state = const PinVerificationState.loading();
-    final isValid = await ref.read(pinServiceProvider).verifyPin(pin);
+
+    // TERAZ ZADZIAŁA: Przekazujemy List<int> do PinService
+    final isValid = await ref.read(pinServiceProvider).verifyPin(pinCodes);
 
     if (isValid) {
       await ref.read(pinAttemptLimiterProvider.notifier).reset();
@@ -71,13 +72,17 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
           .read(pinAttemptLimiterProvider.notifier)
           .registerFailedAttempt();
 
-      // Po nieudanej próbie sprawdzamy ponownie, czy wskoczyła blokada
       final updatedLimiter = ref.read(pinAttemptLimiterProvider).value;
       if (updatedLimiter != null && updatedLimiter.isLocked) {
         _startLockoutTimer(updatedLimiter.lockUntil!);
       } else {
         state = const PinVerificationState.error();
       }
+    }
+
+    // DOBRA PRAKTYKA: Czyścimy listę wejściową po zakończeniu operacji
+    for (int i = 0; i < pinCodes.length; i++) {
+      pinCodes[i] = 0;
     }
   }
 }
