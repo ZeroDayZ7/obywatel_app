@@ -17,10 +17,10 @@ class AuthService {
 
   /// Logowanie: zwraca AuthResponse (2FA lub success)
   /// 🔥 UWAGA: Usunięto try-catch. Błędy DioException lecą do AuthController.
-  Future<AuthResponse> login(String email, String password) async {
+  Future<AuthResponse> login(String email, List<int> passwordBytes) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
-      data: {'email': email, 'password': password},
+      data: {'email': email, 'password': passwordBytes},
     );
 
     final data = response.data;
@@ -53,12 +53,16 @@ class AuthService {
   /// Weryfikacja 2FA
   Future<AuthResponse> verifyTwoFa(
     String email,
-    String code,
+    List<int> codeBytes, // 🔥 Zmiana ze String na List<int>
     String tempToken,
   ) async {
     final response = await _apiClient.post(
       ApiEndpoints.twoFaVerify,
-      data: {'email': email, 'code': code, 'token': tempToken},
+      data: {
+        'email': email,
+        'code': codeBytes, // Wysyłamy tablicę liczb
+        'token': tempToken,
+      },
     );
 
     final data = response.data;

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -48,22 +49,27 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     super.dispose();
   }
 
+  // Wewnątrz _handleLogin w login_form.dart
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    // ✅ CHANGE: UI tylko wysyła intencję (command)
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(_emailController.text.trim(), _passwordController.text.trim());
+    // 1. Pobieramy tekst
+    final email = _emailController.text.trim();
+    final passwordStr = _passwordController.text.trim();
 
-    // UX: czyścimy hasło po próbie
-    if (mounted) {
-      _passwordController.clear();
-    }
+    // 2. Konwertujemy hasło na bajty (List<int>)
+    final passwordBytes = passwordStr.codeUnits.toList();
+
+    // 3. Wysyłamy do kontrolera
+    await ref.read(authControllerProvider.notifier).login(email, passwordBytes);
+
+    // 4. Czyścimy kontroler i lokalną listę bajtów
+    _passwordController.clear();
+    passwordBytes.fillRange(0, passwordBytes.length, 0);
   }
 
   void _handleForgotPassword() {
-    context.push('/reset-password');
+    context.push(AppRoutes.resetPassword);
   }
 
   @override

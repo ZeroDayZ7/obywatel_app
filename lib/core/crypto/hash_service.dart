@@ -22,11 +22,9 @@ class HashService {
 
   static const int saltLength = 16;
 
-  // Konfiguracja Argon2id klasy Enterprise
-  // Zaktualizowano: 64MB RAM, 3 iteracje (zgodnie z zaleceniami OWASP)
   static final _argon = Argon2id(
-    memory: 1 * 1024, // 64 MB (naprawiono z 1 * 1024)
-    iterations: 1, // Zwiększono do 3 dla lepszej ochrony
+    memory: 1 * 1024, // 64 MB
+    iterations: 1, //  3
     parallelism: 1,
     hashLength: 32,
   );
@@ -87,9 +85,6 @@ class HashService {
       // Constant-time comparison
       final isValid = const ListEquality().equals(calculatedHash, expectedHash);
 
-      // USUNIĘTO: calculatedHash.fillRange -> to powodowało błąd "unmodifiable"
-      // Biblioteka cryptography sama dba o czyszczenie SensitiveBytes.
-
       _logger.d('HashService: Verification result: $isValid');
       return isValid;
     } catch (e, st) {
@@ -116,7 +111,6 @@ Future<List<int>> _computeHashInIsolate(_HashJob job) async {
 
     final result = await secretKey.extractBytes();
 
-    // Tutaj czyścimy TYLKO job.bytes, bo to my je stworzyliśmy
     job.bytes.fillRange(0, job.bytes.length, 0);
 
     return result;

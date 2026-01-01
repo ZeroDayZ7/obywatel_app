@@ -24,9 +24,10 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     final code = _codeController.text.trim();
-    await ref.read(authControllerProvider.notifier).verifyTwoFa(code);
 
-    if (mounted) _codeController.clear();
+    _codeController.clear();
+
+    await ref.read(authControllerProvider.notifier).verifyTwoFa(code);
   }
 
   @override
