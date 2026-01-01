@@ -1,22 +1,30 @@
-// core/widgets/responsive_content_wrapper.dart
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
 
-class ResponsiveContentWrapper extends StatelessWidget {
+class ResponsiveContainer extends StatelessWidget {
   final Widget child;
-  final double maxWidth;
+  final double? maxWidth;
+  final EdgeInsetsGeometry padding;
+  final bool useTopAlignment;
 
-  const ResponsiveContentWrapper({
+  const ResponsiveContainer({
     super.key,
     required this.child,
-    this.maxWidth = 450.0,
+    this.maxWidth,
+    this.padding = ScreenMargins.all,
+    this.useTopAlignment = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveMaxWidth = maxWidth ?? (screenWidth > 800 ? 700 : 450);
+
+    return Align(
+      alignment: useTopAlignment ? Alignment.topCenter : Alignment.center,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: child,
+        constraints: BoxConstraints(maxWidth: effectiveMaxWidth),
+        child: Padding(padding: padding, child: child),
       ),
     );
   }

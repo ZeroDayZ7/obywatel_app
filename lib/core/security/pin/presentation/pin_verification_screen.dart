@@ -99,7 +99,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                   painter: CyberGridPainter(),
                 ),
                 SafeArea(
-                  child: ResponsiveContentWrapper(
+                  child: ResponsiveContainer(
                     child: AbsorbPointer(
                       absorbing: isLocked,
                       child: Opacity(
