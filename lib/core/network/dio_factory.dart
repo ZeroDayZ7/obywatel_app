@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // DODANE: dla klasy Re
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/network/device_interceptor.dart';
 import 'package:obywatel_plus/core/network/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/logging_interceptor.dart';
 import 'package:obywatel_plus/core/network/token_refresh_interceptor.dart';
@@ -63,6 +64,7 @@ class DioFactory {
 
     // Interceptory globalne
     dio.interceptors.addAll([
+      DeviceInterceptor(ref),
       LoggingInterceptor(logger: logger),
       GlobalErrorInterceptor(logger: logger),
     ]);
