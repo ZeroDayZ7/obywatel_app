@@ -84,6 +84,7 @@ dependencies:
   riverpod_annotation: ^4.0.0
   action_slider: ^0.7.0
   ffi: ^2.1.4
+  device_marketing_names: ^1.1.6
 
 dev_dependencies:
   flutter_test:

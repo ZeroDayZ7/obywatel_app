@@ -12,6 +12,7 @@ abstract interface class ISecurityService {
   Future<void> init();
   Future<void> lockApp();
   Future<void> unlockApp();
+  Future<void> unlockManually();
 }
 
 final securityServiceProvider =
@@ -145,6 +146,24 @@ class SecurityNotifier extends Notifier<SecurityState>
       state = state.copyWith(hasLocalLock: true);
       _logger.i('🔒 App Locked');
     }
+  }
+
+  @override
+  Future<void> unlockManually() async {
+    bool isPinConfigured = false;
+    try {
+      isPinConfigured = await _pinService.hasPin();
+    } catch (e) {
+      _logger.e('Failed to check PIN status during manual unlock', error: e);
+    }
+
+    state = state.copyWith(
+      hasLocalLock: false,
+      initialized: true,
+      isPinConfigured: isPinConfigured,
+      isSetupCompleted: isPinConfigured,
+    );
+    _logger.i('🔐 Security: Manual unlock. PIN configured: $isPinConfigured');
   }
 
   void debugSecurityState() {

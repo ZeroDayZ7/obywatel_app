@@ -70,14 +70,11 @@ class AuthController extends Notifier<AuthState> {
     state = AuthState.authenticated(userId: userId);
   }
 
-  Future<void> login(String email, List<int> passwordBytes) async {
+  Future<void> login(String email, String password) async {
     state = const AuthState.authenticating();
-    try {
-      // Przekazujemy bajty dalej
-      final result = await _authService.login(email, passwordBytes);
 
-      // Ważne: Czyścimy bajty po powrocie z serwisu
-      passwordBytes.fillRange(0, passwordBytes.length, 0);
+    try {
+      final result = await _authService.login(email, password);
 
       result.when(
         twoFaRequired: (token) {
@@ -97,7 +94,6 @@ class AuthController extends Notifier<AuthState> {
         },
       );
     } catch (e) {
-      passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
       state = const AuthState.unauthenticated();
     }
@@ -112,20 +108,14 @@ class AuthController extends Notifier<AuthState> {
       return;
     }
 
-    // 1. Konwersja na bajty
-    final List<int> codeBytes = code.codeUnits.toList();
-
     state = const AuthState.authenticating();
 
     try {
       final result = await _authService.verifyTwoFa(
         currentEmail,
-        codeBytes, // 🔥 Przekazujemy bajty
+        code,
         currentToken,
       );
-
-      // 2. Zerowanie bajtów po sukcesie
-      codeBytes.fillRange(0, codeBytes.length, 0);
 
       result.when(
         twoFaRequired: (token) {
@@ -136,6 +126,7 @@ class AuthController extends Notifier<AuthState> {
         },
         success: (accessToken, refreshToken, userId) async {
           await ref.read(securityServiceProvider.notifier).init();
+
           state = AuthState.authenticated(
             userId: userId,
             accessToken: accessToken,
@@ -144,9 +135,6 @@ class AuthController extends Notifier<AuthState> {
         },
       );
     } catch (e) {
-      // 3. Zerowanie bajtów w przypadku błędu
-      codeBytes.fillRange(0, codeBytes.length, 0);
-
       state = AuthState.twoFaRequired(
         email: currentEmail,
         tempToken: currentToken,
