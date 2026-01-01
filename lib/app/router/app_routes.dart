@@ -13,6 +13,7 @@ class AppRoutes {
 
   // Nowe ścieżki dla Settings
   static const setPin = 'set_pin';
+
   static const patternLock = 'pattern_lock';
   static const fingerprint = 'fingerprint';
 
@@ -30,7 +31,8 @@ class AppRoutes {
   static const settingsSecurity = 'security';
   static const settingsNotifications = 'notifications';
   static const settingsActiveSession = 'active-111session';
-
+  static const settingsChangePin = 'change-pin';
+  
   static const chats = '/chats';
   static const chatDetail = '/chats/:username';
   static const contacts = '/contacts';

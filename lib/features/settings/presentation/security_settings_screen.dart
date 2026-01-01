@@ -1,4 +1,3 @@
-import 'package:action_slider/action_slider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +7,7 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
 
 class SecuritySettingsScreen extends ConsumerWidget {
   const SecuritySettingsScreen({super.key});
@@ -25,7 +25,6 @@ class SecuritySettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: ScreenMargins.all,
         children: [
-          // SEKCJA PIN - Informacja o statusie i przycisk zmiany
           _Section(
             title: LocaleKeys.settings_security_pin_section.tr(),
             children: [
@@ -55,6 +54,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
                       ),
                     ),
                     const Divider(height: 1),
+                    // Zastąp TextButton tym kodem:
                     Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -62,19 +62,11 @@ class SecuritySettingsScreen extends ConsumerWidget {
                       ),
                       child: Row(
                         children: [
-                          Expanded(
-                            child: TextButton.icon(
-                              onPressed: () => context.push(AppRoutes.setPin),
-                              icon: const Icon(Icons.edit_note, size: 20),
-                              label: Text(
-                                LocaleKeys.settings_common_change_pin.tr(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              style: TextButton.styleFrom(
-                                alignment: Alignment.centerLeft,
-                              ),
+                          AppButton(
+                            labelKey: LocaleKeys.settings_common_change_pin,
+                            variant: AppButtonVariant.text,
+                            onPressed: () => context.push(
+                              '${AppRoutes.settings}/${AppRoutes.settingsChangePin}',
                             ),
                           ),
                         ],
@@ -143,7 +135,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
               _ActionTile(
                 icon: Icons.lock_reset,
                 title: LocaleKeys.settings_security_emergency_lock.tr(),
-                onTap: () => _showEmergencyLockDialog(context, ref),
+                onTap: () => EmergencyLockDialog.show(context, ref),
                 isDanger: true,
               ),
             ],
@@ -211,89 +203,4 @@ class _ActionTile extends StatelessWidget {
       ),
     );
   }
-}
-
-// Metoda wyświetlająca dialog z suwakiem
-void _showEmergencyLockDialog(BuildContext context, WidgetRef ref) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      // Pobieramy szerokość ekranu, żeby dialog był responsywny
-      final screenWidth = MediaQuery.of(context).size.width;
-      // Obliczamy szerokość: albo 400px, albo prawie cały ekran na telefonie
-      final dialogWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.85;
-
-      return AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(
-          children: [
-            const Icon(
-              Icons.warning_amber_rounded,
-              color: Colors.red,
-              size: 28,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                LocaleKeys.settings_security_emergency_lock.tr(),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        // Kluczowa zmiana: Container ze sztywnym 'width' zamiast ConstrainedBox
-        content: SizedBox(
-          width: dialogWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                LocaleKeys.settings_security_emergency_lock_description.tr(),
-                style: const TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 24),
-              ActionSlider.standard(
-                sliderBehavior: SliderBehavior.move,
-                width: dialogWidth,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.surfaceContainerHighest,
-                toggleColor: Colors.red,
-                actionThresholdType: ThresholdType.release,
-                icon: const Icon(Icons.lock_reset, color: Colors.white),
-                action: (controller) async {
-                  controller.loading();
-                  await Future.delayed(const Duration(seconds: 2));
-                  await ref.read(securityServiceProvider.notifier).lockApp();
-
-                  // if (context.mounted) {
-                  //   controller.success();
-                  //   await Future.delayed(const Duration(milliseconds: 500));
-                  //   Navigator.of(context).pop();
-                  //   context.go(AppRoutes.login);
-                  // }
-                },
-                child: Text(
-                  LocaleKeys.settings_security_emergency_lock_slider.tr(),
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          AppButton(
-            labelKey: LocaleKeys.common_cancel,
-            variant: AppButtonVariant.text,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ],
-      );
-    },
-  );
 }

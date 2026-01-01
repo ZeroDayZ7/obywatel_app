@@ -38,8 +38,6 @@ class PinService {
        _hashService = hashService,
        _logger = logger;
 
-  // USUNIĘTO: _validatePin(String pin) - stara metoda generowała błąd unused_element
-
   /// Ustawia PIN: waliduje, hashuje i zeruje pamięć RAM
   Future<void> setPin(List<int> pinCodes) async {
     _logger.d('PinService: Ustawianie PIN (Secure Flow)');

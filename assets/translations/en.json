@@ -35,7 +35,12 @@
     "set_pin_title": "Ustaw PIN",
     "repeat_pin_title": "Powtórz PIN",
     "pin_must_be_4_digits": "PIN musi mieć 4 cyfry",
-    "pin_not_identical": "PIN-y nie są identyczne"
+    "pin_not_identical": "PIN-y nie są identyczne",
+    "enter_old_pin": "Podaj stary kod PIN",
+    "verifying": "Weryfikowanie PIN-u...",
+    "changed_success": "PIN został pomyślnie zmieniony",
+    "invalid_pin": "Nieprawidłowy PIN",
+    "pin_same_as_old": "Nowy PIN nie może być taki sam jak poprzedni"
   },
   "validators": {
     "required_email": "Wpisz email",
@@ -46,8 +51,8 @@
     "password_letter": "Hasło musi zawierać przynajmniej jedną literę",
     "password_digit": "Hasło musi zawierać przynajmniej jedną cyfrę",
     "required_pin": "Wpisz PIN",
-    "invalid_pin": "PIN musi być liczbą 4-6 cyfr",
-    "pin_length": "PIN musi mieć od 4 do 6 cyfr",
+    "invalid_pin": "PIN musi być liczbą 4 cyfrową",
+    "pin_length": "PIN musi mieć 4 cyfry",
     "pin_too_simple": "PIN jest zbyt prosty",
     "required_field": "Pole wymagane",
     "invalid_email_or_phone": "Niepoprawny email lub numer telefonu",

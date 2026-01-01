@@ -13,6 +13,10 @@ class AppTextField extends StatelessWidget {
   final bool enabled;
   final Function(String)? onChanged;
 
+  // ✅ Nowe parametry do autofocus i focusNode
+  final FocusNode? focusNode;
+  final bool autofocus;
+
   const AppTextField({
     super.key,
     required this.controller,
@@ -24,6 +28,8 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.enabled = true,
     this.onChanged,
+    this.focusNode, // nowy
+    this.autofocus = false, // nowy
   });
 
   @override
@@ -36,6 +42,8 @@ class AppTextField extends StatelessWidget {
       inputFormatters: inputFormatters,
       enabled: enabled,
       onChanged: onChanged,
+      focusNode: focusNode, // przekazujemy dalej
+      autofocus: autofocus, // przekazujemy dalej
       decoration: InputDecoration(
         labelText: labelText,
         suffixIcon: suffixIcon,

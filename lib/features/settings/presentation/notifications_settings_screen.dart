@@ -32,7 +32,6 @@ class NotificationsSettingsScreen extends ConsumerWidget {
                     .tr(),
               ),
               value: settings.appNotifications,
-              // Używamy ref.read wewnątrz funkcji anonimowej dla akcji
               onChanged: (val) => ref
                   .read(notificationSettingsProvider.notifier)
                   .toggleApp(val),

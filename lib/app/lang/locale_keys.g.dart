@@ -37,6 +37,11 @@ abstract class  LocaleKeys {
   static const pin_dialog_repeat_pin_title = 'pin_dialog.repeat_pin_title';
   static const pin_dialog_pin_must_be_4_digits = 'pin_dialog.pin_must_be_4_digits';
   static const pin_dialog_pin_not_identical = 'pin_dialog.pin_not_identical';
+  static const pin_dialog_enter_old_pin = 'pin_dialog.enter_old_pin';
+  static const pin_dialog_verifying = 'pin_dialog.verifying';
+  static const pin_dialog_changed_success = 'pin_dialog.changed_success';
+  static const pin_dialog_invalid_pin = 'pin_dialog.invalid_pin';
+  static const pin_dialog_pin_same_as_old = 'pin_dialog.pin_same_as_old';
   static const pin_dialog = 'pin_dialog';
   static const validators_required_email = 'validators.required_email';
   static const validators_invalid_email = 'validators.invalid_email';
