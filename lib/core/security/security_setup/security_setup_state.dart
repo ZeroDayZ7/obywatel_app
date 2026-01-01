@@ -8,6 +8,7 @@ sealed class SecuritySetupState with _$SecuritySetupState {
     required bool pinSet,
     required bool biometricAvailable,
     required bool biometricSet,
+    @Default(true) bool trustDevice,
   }) = _SecuritySetupState;
 
   const SecuritySetupState._();

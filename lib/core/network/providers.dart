@@ -11,27 +11,30 @@ import 'package:obywatel_plus/features/auth/application/session/session_service.
 // 1. INSTANCJE DIO (WARSTWA NISKOKOPOZIOMOWA)
 // ============================================================
 
-/// Klient służący WYŁĄCZNIE do odświeżania tokena (bez interceptora refreshu, aby uniknąć pętli)
+/// Klient służący WYŁĄCZNIE do odświeżania tokena
 final refreshDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.refreshToken,
     logger: ref.watch(appLoggerProvider),
+    ref: ref, // DODANE
   );
 });
 
-/// Klient publiczny (np. pobieranie wersji aplikacji) - nie wymaga logowania
+/// Klient publiczny - nie wymaga logowania
 final publicDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
+    ref: ref, // DODANE
   );
 });
 
-/// Klient do operacji związanych z resetem hasła / auth bez tokena (profil noAuthAuth)
+/// Klient do operacji związanych z resetem hasła
 final resetDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
+    ref: ref, // DODANE
   );
 });
 
@@ -42,9 +45,10 @@ final authDioProvider = Provider<Dio>((ref) {
   return DioFactory.create(
     profile: DioProfile.authenticated,
     logger: ref.watch(appLoggerProvider),
+    ref: ref, // DODANE
     storage: ref.watch(secureStorageProvider),
     sessionService: ref.watch(sessionServiceProvider),
-    refreshClient: refreshDio, // Przekazujemy dedykowany klient do odświeżania
+    refreshClient: refreshDio,
   );
 });
 

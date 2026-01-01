@@ -28,6 +28,8 @@ abstract class  LocaleKeys {
   static const security_setup_set = 'security_setup.set';
   static const security_setup_processing = 'security_setup.processing';
   static const security_setup_wait_moment = 'security_setup.wait_moment';
+  static const security_setup_trust_device_title = 'security_setup.trust_device_title';
+  static const security_setup_trust_device_desc = 'security_setup.trust_device_desc';
   static const security_setup = 'security_setup';
   static const pin_dialog_enter_4_digits = 'pin_dialog.enter_4_digits';
   static const pin_dialog_repeat_4_digits = 'pin_dialog.repeat_4_digits';

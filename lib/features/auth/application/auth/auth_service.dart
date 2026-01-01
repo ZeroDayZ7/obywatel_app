@@ -16,7 +16,6 @@ class AuthService {
       _logger = logger;
 
   /// Logowanie: zwraca AuthResponse (2FA lub success)
-  /// 🔥 UWAGA: Usunięto try-catch. Błędy DioException lecą do AuthController.
   Future<AuthResponse> login(String email, List<int> passwordBytes) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
@@ -25,7 +24,6 @@ class AuthService {
 
     final data = response.data;
 
-    // 2FA required
     if (data['2fa_required'] == true) {
       final token = data['two_fa_token']?.toString();
       if (token == null) {
@@ -34,7 +32,6 @@ class AuthService {
       return AuthResponse.twoFaRequired(twoFaToken: token);
     }
 
-    // Successful login
     final accessToken = data[StorageKeys.accessToken]?.toString();
     final refreshToken = data[StorageKeys.refreshToken]?.toString();
     final userId = data[StorageKeys.userId]?.toString();
@@ -53,16 +50,12 @@ class AuthService {
   /// Weryfikacja 2FA
   Future<AuthResponse> verifyTwoFa(
     String email,
-    List<int> codeBytes, // 🔥 Zmiana ze String na List<int>
+    List<int> codeBytes,
     String tempToken,
   ) async {
     final response = await _apiClient.post(
       ApiEndpoints.twoFaVerify,
-      data: {
-        'email': email,
-        'code': codeBytes, // Wysyłamy tablicę liczb
-        'token': tempToken,
-      },
+      data: {'email': email, 'code': codeBytes, 'token': tempToken},
     );
 
     final data = response.data;
@@ -80,6 +73,26 @@ class AuthService {
       refreshToken: refreshToken,
       userId: userId,
     );
+  }
+
+  /// Rejestracja zaufanego urządzenia (Device Binding)
+  /// 🔥 Dodano do klasy zgodnie z modelem login/verifyTwoFa
+  Future<void> registerTrustedDevice({
+    required String fingerprint,
+    required String publicKey,
+    required String encryptedName,
+    required String platform,
+  }) async {
+    await _apiClient.post(
+      ApiEndpoints.registerDevice,
+      data: {
+        'device_fingerprint': fingerprint,
+        'public_key': publicKey,
+        'device_name_encrypted': encryptedName,
+        'platform': platform,
+      },
+    );
+    _logger.i('Device registration request sent for fingerprint: $fingerprint');
   }
 
   /// Logout

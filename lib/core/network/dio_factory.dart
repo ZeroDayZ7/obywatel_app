@@ -4,6 +4,7 @@ import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'; // DODANE: dla klasy Ref
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
@@ -12,7 +13,9 @@ import 'package:obywatel_plus/core/network/logging_interceptor.dart';
 import 'package:obywatel_plus/core/network/token_refresh_interceptor.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 enum DioProfile { public, authenticated, refreshToken, noAuthAuth }
 
@@ -20,6 +23,7 @@ class DioFactory {
   static Dio create({
     required DioProfile profile,
     required AppLogger logger,
+    required Ref ref, // Wymagane do sprawdzania RAMu
     SecureStorageService? storage,
     SessionService? sessionService,
     Dio? refreshClient,
@@ -40,46 +44,35 @@ class DioFactory {
       ),
     );
 
-    // --- SSL PINNING (Tylko dla platform mobilnych, Web tego nie wspiera) ---
+    // --- SSL PINNING ---
     if (!kIsWeb && apiConstants.enableSSLPinning) {
       dio.httpClientAdapter = IOHttpClientAdapter(
-        createHttpClient: () {
-          final client = HttpClient();
-          // Opcjonalnie: tutaj można dodać obsługę proxy dla debugowania
-          return client;
-        },
+        createHttpClient: () => HttpClient(),
         validateCertificate: (cert, host, port) {
           if (cert == null) return false;
-
-          // Pobieramy odcisk palca z certyfikatu serwera
           final serverFingerprint = _getFingerprint(cert.der);
-
-          // Porównujemy z hashem zapisanym w Env
-          // Env.apiFingerprint powinien wyglądać np. tak: "A1B2C3D4..."
           final bool isValid = serverFingerprint == apiConstants.apiFingerprint;
 
           if (!isValid) {
-            logger.e(
-              '🚨 SSL Pinning Violation! Host: $host, Fingerprint: $serverFingerprint',
-            );
+            logger.e('🚨 SSL Pinning Violation! Host: $host');
           }
-
           return isValid;
         },
       );
     }
 
-    // Interceptory
+    // Interceptory globalne
     dio.interceptors.addAll([
       LoggingInterceptor(logger: logger),
       GlobalErrorInterceptor(logger: logger),
     ]);
 
+    // Interceptory autoryzacji
     if (profile == DioProfile.authenticated &&
         storage != null &&
         sessionService != null &&
         refreshClient != null) {
-      dio.interceptors.add(_createAuthInterceptor(storage));
+      dio.interceptors.add(_createAuthInterceptor(storage, ref, logger));
       dio.interceptors.add(
         TokenRefreshInterceptor(
           dio,
@@ -87,6 +80,7 @@ class DioFactory {
           logger,
           sessionService,
           refreshClient,
+          ref,
         ),
       );
     }
@@ -94,19 +88,47 @@ class DioFactory {
     return dio;
   }
 
-  /// Pomocnicza funkcja generująca hash SHA-256 z danych binarnych certyfikatu (DER)
+  /// Naprawiona metoda pobierająca fingerprint
   static String _getFingerprint(List<int> der) {
     final digest = sha256.convert(der);
     return digest.toString().toUpperCase();
   }
 
-  static Interceptor _createAuthInterceptor(SecureStorageService storage) {
+  /// Interceptor z logiką: Dysk -> RAM (dla bezpieczeństwa podczas setupu)
+  static Interceptor _createAuthInterceptor(
+    SecureStorageService storage,
+    Ref ref,
+    AppLogger logger,
+  ) {
     return InterceptorsWrapper(
       onRequest: (options, handler) async {
-        final token = await storage.read(key: StorageKeys.accessToken);
-        if (token != null) {
+        // 1. Próba pobrania z RAMu
+        String? token = ref
+            .read(authControllerProvider)
+            .mapOrNull(authenticated: (s) => s.accessToken);
+
+        if (token != null && token.isNotEmpty) {
+          logger.i(
+            '🔑 AuthInterceptor: Token retrieved from RAM (AuthController)',
+          );
+        } else {
+          // 2. Próba pobrania z dysku (jeśli w RAM pusto)
+          token = await storage.read(key: StorageKeys.accessToken);
+          if (token != null && token.isNotEmpty) {
+            logger.i(
+              '📦 AuthInterceptor: Token retrieved from Disk (SecureStorage)',
+            );
+          } else {
+            logger.w(
+              '⚠️ AuthInterceptor: No token found in RAM or Disk for path: ${options.path}',
+            );
+          }
+        }
+
+        if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         }
+
         handler.next(options);
       },
     );

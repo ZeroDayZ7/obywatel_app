@@ -6,9 +6,15 @@ import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
 import 'package:uuid/uuid.dart';
+
+// PRZENIESIONO: Provider musi być poza klasą, aby był widoczny globalnie
+final deviceInfoServiceProvider = Provider<DeviceInfoService>((ref) {
+  return DeviceInfoService();
+});
 
 class DeviceInfoService {
   final _algorithm = AesGcm.with256bits();
@@ -17,12 +23,11 @@ class DeviceInfoService {
   final _deviceInfo = DeviceInfoPlugin();
   final _log = Logger();
 
-  /// Pobiera wszystkie możliwe dane urządzenia i zwraca jako Map
+  /// Pobiera wszystkie dane urządzenia i zwraca jako Map
   Future<Map<String, dynamic>> collectDeviceInfo() async {
     final Map<String, dynamic> deviceData = {};
     String? storedId = await _storage.read(key: 'app_device_id');
 
-    // Generowanie bezpiecznego UUID jeśli brak
     if (storedId == null) {
       storedId = const Uuid().v4();
       await _storage.write(key: 'app_device_id', value: storedId);
@@ -35,36 +40,23 @@ class DeviceInfoService {
       }
     } catch (e) {
       _log.w('Nie udało się pobrać Advertising ID: $e');
-      advertisingId = null;
     }
 
-    // Pobranie informacji specyficznych dla platformy
     if (Platform.isAndroid) {
       final info = await _deviceInfo.androidInfo;
       deviceData.addAll({
         'platform': 'android',
         'manufacturer': info.manufacturer,
         'model': info.model,
-        'device': info.device,
-        'version_sdkInt': info.version.sdkInt,
-        'version_release': info.version.release,
-        'board': info.board,
-        'brand': info.brand,
-        'hardware': info.hardware,
-        'isPhysicalDevice': info.isPhysicalDevice,
         'androidId': info.id,
-        'supportedAbis': info.supportedAbis,
+        'isPhysicalDevice': info.isPhysicalDevice,
       });
     } else if (Platform.isIOS) {
       final info = await _deviceInfo.iosInfo;
       deviceData.addAll({
         'platform': 'ios',
-        'name': info.name,
-        'systemName': info.systemName,
-        'systemVersion': info.systemVersion,
-        'model': info.model,
-        'localizedModel': info.localizedModel,
         'identifierForVendor': info.identifierForVendor,
+        'model': info.model,
         'isPhysicalDevice': info.isPhysicalDevice,
       });
     } else if (Platform.isWindows) {
@@ -73,25 +65,6 @@ class DeviceInfoService {
         'platform': 'windows',
         'computerName': info.computerName,
         'numberOfCores': info.numberOfCores,
-        'systemMemoryInMegabytes': info.systemMemoryInMegabytes,
-        'userName': info.userName,
-      });
-    } else if (Platform.isLinux) {
-      final info = await _deviceInfo.linuxInfo;
-      deviceData.addAll({
-        'platform': 'linux',
-        'name': info.name,
-        'version': info.version,
-        'id': info.id,
-        'machineId': info.machineId,
-      });
-    } else if (Platform.isMacOS) {
-      final info = await _deviceInfo.macOsInfo;
-      deviceData.addAll({
-        'platform': 'macos',
-        'computerName': info.computerName,
-        'osRelease': info.osRelease,
-        'arch': info.arch,
       });
     }
 
@@ -101,14 +74,10 @@ class DeviceInfoService {
       'device_info': deviceData,
     };
 
-    // Używamy loggera zamiast print
-    _log.i('===== DEVICE INFO =====');
-    _log.d(result);
-    _log.i('=======================');
-
     return result;
   }
 
+  /// Tworzy unikalny hash urządzenia
   Future<String> getSecureFingerprint(String userId) async {
     final data = await collectDeviceInfo();
     final info = data['device_info'] as Map<String, dynamic>;
@@ -116,64 +85,46 @@ class DeviceInfoService {
     List<String> components = [];
 
     if (Platform.isAndroid) {
-      // Android ID + parametry sprzętowe dla unikalności
       String aId = (info['androidId'] ?? '').toString();
       if (aId == "9774d56d682e549c" || aId.isEmpty) {
-        aId = "${info['board']}-${info['hardware']}";
+        aId = "fallback_id";
       }
       components.add(aId);
-      components.add(info['brand'] ?? 'unknown_brand');
-      components.add(info['model'] ?? 'unknown_model');
+      components.add(info['model'] ?? 'unknown');
     } else if (Platform.isIOS) {
-      components.add(info['identifierForVendor'] ?? 'unknown_vendor');
-      components.add(info['model'] ?? 'unknown_model');
+      components.add(info['identifierForVendor'] ?? 'unknown');
     } else {
-      // Desktop: machineId jest najstabilniejszy
-      components.add(
-        info['machineId'] ?? info['id'] ?? info['computerName'] ?? 'unknown_pc',
-      );
+      components.add(info['computerName'] ?? 'pc');
     }
 
-    // 1. Normalizacja komponentów
     final cleanComponents = components
         .map((e) => e.toString().trim().toLowerCase())
         .join('|');
 
-    // 2. Budowa finalnego ziarna (Seed)
-    // app_device_id_secure (UUID z storage) jest kluczowy, bo przetrwa update aplikacji
     final String rawFingerprint =
         "$cleanComponents|${data['app_device_id_secure']}|$userId";
 
-    // 3. Hashowanie
     final bytes = utf8.encode(rawFingerprint);
     return sha256.convert(bytes).toString();
   }
 
+  /// Pobiera czytelną nazwę (np. "iPhone 13")
   Future<String> getMarketingName() async {
     try {
-      // Jeśli używasz tej biblioteki, nie potrzebujesz ręcznie wyciągać 'info'
-      // biblioteka sama sprawdzi czy to iOS czy Android.
-
       if (Platform.isAndroid || Platform.isIOS) {
-        // ZAMIAST: final info = await _deviceInfo.androidInfo; (to usuwamy)
         return await _deviceMarketingNames.getSingleName();
       }
-
       if (Platform.isWindows) return "Windows PC";
-      if (Platform.isMacOS) return "Mac";
-      if (Platform.isLinux) return "Linux Workstation";
     } catch (e) {
-      _log.w('Nie udało się pobrać nazwy marketingowej: $e');
+      _log.w('Marketing name error: $e');
     }
     return Platform.operatingSystem;
   }
 
+  /// Zarządzanie Master Key (AES)
   Future<List<int>> generateMasterKey() async {
-    // Generujemy losowy 256-bitowy klucz
     final key = await _algorithm.newSecretKey();
     final bytes = await key.extractBytes();
-
-    // Zapisujemy go bezpiecznie - to nasz "Root of Trust" dla tego urządzenia
     await _storage.write(key: 'device_master_key', value: base64Encode(bytes));
     return bytes;
   }
@@ -181,14 +132,58 @@ class DeviceInfoService {
   Future<String> encryptDeviceName(String name, List<int> masterKey) async {
     final secretKey = SecretKey(masterKey);
     final nonce = _algorithm.newNonce();
-
     final box = await _algorithm.encrypt(
       utf8.encode(name),
       secretKey: secretKey,
       nonce: nonce,
     );
-
-    // Zwracamy połączenie nonce + ciphertext, żeby dało się to odszyfrować
     return base64Encode(box.concatenation());
+  }
+
+  /// Klucze asymetryczne (Ed25519) do podpisywania logowań
+  Future<SimpleKeyPair> generateDeviceKeyPair() async {
+    final algorithm = Ed25519();
+    final keyPair = await algorithm.newKeyPair();
+    final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
+
+    await _storage.write(
+      key: 'device_private_key',
+      value: base64Encode(privateKeyBytes),
+    );
+
+    _log.i('✅ Wygenerowano parę kluczy Ed25519');
+    return keyPair;
+  }
+
+  Future<SimpleKeyPair> getStoredKeyPair() async {
+    final storedRaw = await _storage.read(key: 'device_private_key');
+    if (storedRaw == null) {
+      throw Exception('Brak klucza prywatnego urządzenia.');
+    }
+
+    final privateKeyBytes = base64Decode(storedRaw);
+    final algorithm = Ed25519();
+
+    // Klucze Ed25519 można odtworzyć z samego seeda (bajty klucza prywatnego)
+    return algorithm.newKeyPairFromSeed(privateKeyBytes);
+  }
+
+  /// Helper łączący pobieranie nazwy i szyfrowanie
+  Future<String> getEncryptedMarketingName() async {
+    // 1. Sprawdzamy czy mamy Master Key, jak nie to generujemy
+    String? storedMasterKey = await _storage.read(key: 'device_master_key');
+    List<int> masterKeyBytes;
+
+    if (storedMasterKey == null) {
+      masterKeyBytes = await generateMasterKey();
+    } else {
+      masterKeyBytes = base64Decode(storedMasterKey);
+    }
+
+    // 2. Pobieramy nazwę (np. iPhone 13)
+    final name = await getMarketingName();
+
+    // 3. Szyfrujemy
+    return encryptDeviceName(name, masterKeyBytes);
   }
 }

@@ -1,9 +1,17 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 import 'security_setup_state.dart';
 
@@ -74,16 +82,60 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     state = AsyncValue.data(current.copyWith(biometricSet: true));
   }
 
-  Future<void> completeSetup() async {
-    final enableBiometric = state.requireValue.biometricSet;
-
-    await ref
-        .read(securityServiceProvider.notifier)
-        .completeSetup(enableBiometric: enableBiometric);
+  void toggleTrustDevice(bool value) {
+    final current = state.value;
+    if (current != null) {
+      state = AsyncValue.data(current.copyWith(trustDevice: value));
+    }
   }
 
-  void skipSetup() {
-    ref.read(securityServiceProvider.notifier).skipPinSetup();
-    // ref.invalidate(securityServiceProvider);
+  Future<void> completeSetup() async {
+    final current = state.requireValue;
+    final deviceService = ref.read(deviceInfoServiceProvider);
+    final authService = ref.read(authServiceProvider);
+
+    state = const AsyncValue.loading();
+
+    try {
+      if (current.trustDevice) {
+        final authState = ref.read(authControllerProvider);
+
+        // Wyciągamy userId z RAMu
+        String? userId = authState.mapOrNull(authenticated: (s) => s.userId);
+
+        // LINT FIX: Próba ratunkowa z dysku, jeśli w RAMie pusto
+        userId ??= await ref.read(sessionServiceProvider).getUserId();
+
+        if (userId == null) {
+          throw Exception(
+            "Błąd: Brak ID użytkownika w pamięci RAM i na dysku.",
+          );
+        }
+
+        // 1. Generujemy parę kluczy
+        final keyPair = await deviceService.generateDeviceKeyPair();
+        final publicKey = await keyPair.extractPublicKey();
+        final publicKeyBytes = publicKey.bytes;
+
+        // 2. Dane urządzenia (używamy bezpiecznego userId)
+        final fingerprint = await deviceService.getSecureFingerprint(userId);
+        final encryptedName = await deviceService.getEncryptedMarketingName();
+
+        // 3. Rejestrujemy urządzenie w Go
+        await authService.registerTrustedDevice(
+          fingerprint: fingerprint,
+          publicKey: base64Encode(publicKeyBytes),
+          encryptedName: encryptedName,
+          platform: Platform.operatingSystem,
+        );
+      }
+
+      // 4. Kończymy setup (PIN i Biometria)
+      await ref
+          .read(securityServiceProvider.notifier)
+          .completeSetup(enableBiometric: current.biometricSet);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 }

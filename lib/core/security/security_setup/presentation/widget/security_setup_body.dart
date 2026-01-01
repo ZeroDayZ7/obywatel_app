@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
@@ -17,6 +18,8 @@ class SecuritySetupBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(securitySetupProvider);
+    final theme = Theme.of(context);
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -27,10 +30,12 @@ class SecuritySetupBody extends ConsumerWidget {
           ),
           const SizedBox(height: 30),
 
+          // Kafelek PIN
           PinTile(pinSet: state.pinSet, onSetup: () => _setupPin(context, ref)),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
+          // Kafelek Biometrii (widoczny tylko jeśli urządzenie wspiera)
           if (state.biometricAvailable)
             BiometricTile(
               enabled: state.biometricSet,
@@ -41,8 +46,49 @@ class SecuritySetupBody extends ConsumerWidget {
                   : null,
             ),
 
+          const SizedBox(height: 32),
+
+          // Sekcja "Zaufaj temu urządzeniu" (Trust Device Switch)
+          // Serwer nie wie kim jesteś, ale dzięki temu nie zapyta o 2FA
+          Container(
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: state.trustDevice
+                    ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                    : Colors.transparent,
+              ),
+            ),
+            child: SwitchListTile(
+              secondary: Icon(
+                state.trustDevice
+                    ? Icons.verified_user
+                    : Icons.enhanced_encryption_outlined,
+                color: state.trustDevice ? theme.colorScheme.primary : null,
+              ),
+              title: Text(
+                LocaleKeys.security_setup_trust_device_title.tr(),
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                LocaleKeys.security_setup_trust_device_desc.tr(),
+                style: theme.textTheme.bodySmall,
+              ),
+              value: state.trustDevice,
+              onChanged: (value) {
+                ref
+                    .read(securitySetupProvider.notifier)
+                    .toggleTrustDevice(value);
+              },
+            ),
+          ),
+
           const SizedBox(height: 40),
 
+          // Przycisk kończący - brak przycisku SKIP (wymagane bezpieczeństwo)
           AppButton(
             labelKey: LocaleKeys.security_setup_finish_setup,
             onPressed: state.canFinish && asyncState is! AsyncLoading
@@ -53,19 +99,11 @@ class SecuritySetupBody extends ConsumerWidget {
                   }
                 : null,
             isLoading: asyncState is AsyncLoading,
-            fullWidth: false,
+            fullWidth: true,
             variant: AppButtonVariant.primary,
           ),
 
-          const SizedBox(height: 20),
-
-          AppButton(
-            labelKey: LocaleKeys.common_skip,
-            variant: AppButtonVariant.textDanger,
-            onPressed: () {
-              ref.read(securitySetupProvider.notifier).skipSetup();
-            },
-          ),
+          const SizedBox(height: 24),
         ],
       ),
     );

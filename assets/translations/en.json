@@ -25,7 +25,9 @@
     "set_pin": "Ustaw PIN",
     "set": "Ustaw",
     "processing": "Zabezpieczanie aplikacji...",
-    "wait_moment": "To może potrwać kilka sekund"
+    "wait_moment": "To może potrwać kilka sekund",
+    "trust_device_title": "Ufaj temu urządzeniu",
+    "trust_device_desc": "Loguj się bez kodów 2FA na tym urządzeniu"
   },
   "pin_dialog": {
     "enter_4_digits": "Wpisz 4 cyfry",
