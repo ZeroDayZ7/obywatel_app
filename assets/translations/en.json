@@ -13,7 +13,8 @@
     "phone": "Telefon",
     "reset_password": "Resetuj hasło",
     "enter_code": "Wprowadź kod",
-    "send_code": "Wyślij kod"
+    "send_code": "Wyślij kod",
+     "processing": "Przetwarzanie..."
   },
   "security_setup": {
     "additional_security": "Dodatkowe zabezpieczenie",

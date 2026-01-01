@@ -123,11 +123,14 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                       title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
                       controller: _confirmPinController,
                       focusNode: _confirmPinFocus,
+                      isLoading: isLoading,
                       onCompleted: (pin) {
-                        ref
-                            .read(changePinProvider.notifier)
-                            .confirmAndSave(pin.codeUnits.toList());
-                        _confirmPinController.clear();
+                        Future.microtask(() async {
+                          await ref
+                              .read(changePinProvider.notifier)
+                              .confirmAndSave(pin.codeUnits.toList());
+                          _confirmPinController.clear();
+                        });
                       },
                     ),
                   ],
@@ -181,7 +184,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                 const CircularProgressIndicator(),
                 const SizedBox(height: Spacing.sm),
                 Text(
-                  LocaleKeys.pin_dialog_verifying.tr(),
+                  LocaleKeys.common_processing.tr(),
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
               ],
@@ -208,7 +211,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             LengthLimitingTextInputFormatter(4),
           ],
           onChanged: (val) {
-            if (val.length == 4) {
+            if (val.length == 4 && !isLoading) {
               onCompleted(val);
             }
           },

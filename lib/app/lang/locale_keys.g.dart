@@ -17,6 +17,7 @@ abstract class  LocaleKeys {
   static const common_reset_password = 'common.reset_password';
   static const common_enter_code = 'common.enter_code';
   static const common_send_code = 'common.send_code';
+  static const common_processing = 'common.processing';
   static const common = 'common';
   static const security_setup_additional_security = 'security_setup.additional_security';
   static const security_setup_pin_or_biometric = 'security_setup.pin_or_biometric';
