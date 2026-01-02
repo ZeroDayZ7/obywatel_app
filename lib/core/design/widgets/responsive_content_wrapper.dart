@@ -1,30 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 
 class ResponsiveContainer extends StatelessWidget {
   final Widget child;
-  final double? maxWidth;
-  final EdgeInsetsGeometry padding;
-  final bool useTopAlignment;
+  final ContainerSize size;
+  final AlignmentGeometry alignment;
+  final EdgeInsetsGeometry? padding;
 
   const ResponsiveContainer({
     super.key,
     required this.child,
-    this.maxWidth,
-    this.padding = ScreenMargins.all,
-    this.useTopAlignment = true,
+    this.size = ContainerSize.medium,
+    this.alignment = Alignment.topCenter,
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final effectiveMaxWidth = maxWidth ?? (screenWidth > 800 ? 700 : 450);
+    double getMaxWidth() {
+      switch (size) {
+        case ContainerSize.narrow:
+          return 420.0;
+        case ContainerSize.form:
+          return 550.0;
+        case ContainerSize.medium:
+          return 750.0;
+        case ContainerSize.reading:
+          return 900.0;
+        case ContainerSize.wide:
+          return 1150.0;
+        case ContainerSize.full:
+          return double.infinity;
+      }
+    }
 
     return Align(
-      alignment: useTopAlignment ? Alignment.topCenter : Alignment.center,
+      alignment: alignment,
       child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: effectiveMaxWidth),
-        child: Padding(padding: padding, child: child),
+        constraints: BoxConstraints(maxWidth: getMaxWidth()),
+        child: Padding(
+          padding:
+              padding ??
+              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+          child: child,
+        ),
       ),
     );
   }

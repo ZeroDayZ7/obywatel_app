@@ -19,7 +19,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: ResponsiveContainer(
-        useTopAlignment: true,
+        alignment: Alignment.topCenter,
         child: sessionsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) => Center(

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/core/design/margins/screen_margins.dart';
 import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
@@ -24,7 +23,6 @@ class SecuritySettingsScreen extends ConsumerWidget {
         centerTitle: true,
       ),
       body: ResponsiveContainer(
-        padding: ScreenMargins.all,
         child: ListView(
           children: [
             _Section(
