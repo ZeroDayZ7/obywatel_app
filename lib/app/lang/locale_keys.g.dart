@@ -4,6 +4,7 @@
 
 abstract class  LocaleKeys {
   static const common_logout = 'common.logout';
+  static const common_undo = 'common.undo';
   static const common_today = 'common.today';
   static const common_yesterday = 'common.yesterday';
   static const common_delete = 'common.delete';
@@ -219,13 +220,11 @@ abstract class  LocaleKeys {
   static const pinVerification_errors = 'pinVerification.errors';
   static const pinVerification = 'pinVerification';
   static const notifications_title = 'notifications.title';
+  static const notifications_move_to_trash_action = 'notifications.move_to_trash_action';
   static const notifications_mark_all_read = 'notifications.mark_all_read';
   static const notifications_new_header = 'notifications.new_header';
   static const notifications_empty = 'notifications.empty';
   static const notifications_moved_to_trash = 'notifications.moved_to_trash';
-  static const notifications_undo = 'notifications.undo';
-  static const notifications_trash_title = 'notifications.trash_title';
-  static const notifications_trash_empty = 'notifications.trash_empty';
   static const notifications_details_delete_button = 'notifications.details.delete_button';
   static const notifications_details = 'notifications.details';
   static const notifications_categories_payments = 'notifications.categories.payments';
@@ -233,11 +232,14 @@ abstract class  LocaleKeys {
   static const notifications_categories_administrative = 'notifications.categories.administrative';
   static const notifications_categories_system = 'notifications.categories.system';
   static const notifications_categories = 'notifications.categories';
+  static const notifications_trash_title = 'notifications.trash.title';
+  static const notifications_trash_empty = 'notifications.trash.empty';
   static const notifications_trash_clear_all = 'notifications.trash.clear_all';
   static const notifications_trash_clear_all_confirm_title = 'notifications.trash.clear_all_confirm_title';
   static const notifications_trash_clear_all_confirm_content = 'notifications.trash.clear_all_confirm_content';
   static const notifications_trash_delete_permanent_title = 'notifications.trash.delete_permanent_title';
   static const notifications_trash_delete_permanent_content = 'notifications.trash.delete_permanent_content';
+  static const notifications_trash_delete_permanent_action = 'notifications.trash.delete_permanent_action';
   static const notifications_trash_restore = 'notifications.trash.restore';
   static const notifications_trash = 'notifications.trash';
   static const notifications = 'notifications';

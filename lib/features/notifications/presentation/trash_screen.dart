@@ -90,12 +90,12 @@ class TrashScreen extends ConsumerWidget {
               children: [
                 IconButton(
                   icon: const Icon(Icons.restore_from_trash),
-                  onPressed: () => ref
-                      .read(notificationsControllerProvider.notifier)
-                      .restoreFromTrash(item.id),
+                  tooltip: LocaleKeys.notifications_trash_restore.tr(),
+                  onPressed: () => _handleRestore(ref, item.id),
                 ),
                 IconButton(
                   icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  tooltip: LocaleKeys.notifications_trash_delete_permanent_action.tr(),
                   onPressed: () => _handleDeleteSingle(context, ref, item.id),
                 ),
               ],
@@ -107,6 +107,10 @@ class TrashScreen extends ConsumerWidget {
   }
 
   // --- LOGIKA AKCJI ---
+
+  void _handleRestore(WidgetRef ref, String id) {
+    ref.read(notificationsControllerProvider.notifier).restoreFromTrash(id);
+  }
 
   void _handleClearAll(BuildContext context, WidgetRef ref) {
     _confirmAction(

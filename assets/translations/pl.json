@@ -1,6 +1,7 @@
 {
   "common": {
     "logout": "Wyloguj",
+    "undo": "Cofnij",
     "today": "Dzisiaj",
     "yesterday": "Wczoraj",
     "delete": "Usuń",
@@ -247,13 +248,12 @@
   },
   "notifications": {
     "title": "Powiadomienia",
+    "move_to_trash_action": "Przenieś do kosza",
     "mark_all_read": "Oznacz jako przeczytane",
     "new_header": "Nowe powiadomienia",
     "empty": "Brak nowych powiadomień",
     "moved_to_trash": "Przeniesiono do kosza",
-    "undo": "Cofnij",
-    "trash_title": "Kosz",
-    "trash_empty": "Kosz jest pusty",
+
     "details": {
       "delete_button": "Usuń powiadomienie"
     },
@@ -264,11 +264,14 @@
       "system": "System"
     },
     "trash": {
+      "title": "Kosz",
+      "empty": "Kosz jest pusty",
       "clear_all": "Opróżnij kosz",
       "clear_all_confirm_title": "Wyczyścić kosz?",
       "clear_all_confirm_content": "Wszystkie wiadomości w koszu zostaną trwale usunięte. Tej operacji nie można cofnąć.",
       "delete_permanent_title": "Usunąć trwale?",
       "delete_permanent_content": "Tej operacji nie można cofnąć.",
+      "delete_permanent_action": "Usuń trwale",
       "restore": "Przywróć"
     }
   }

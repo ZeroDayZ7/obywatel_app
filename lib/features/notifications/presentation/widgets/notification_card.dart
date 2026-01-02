@@ -1,5 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/core/utils/date_formatter.dart'; // Import extension
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/utils/date_formatter.dart';
 
 import '../../domain/notification_model.dart';
 
@@ -66,86 +68,84 @@ class NotificationCard extends StatelessWidget {
     final isNew = !item.isRead;
     final priorityColor = item.priority.color(colors);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isNew
-            ? item.priority.containerColor(colors)
-            : colors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16), // Delikatnie większy radius
-        border: Border.all(
-          color: isNew
-              ? priorityColor.withValues(alpha: 0.4)
-              : colors.outlineVariant.withValues(alpha: 0.5),
-          width: isNew ? 1.5 : 1,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                NotificationBadge(
-                  isNew: isNew,
-                  category: item.category,
-                  priorityColor: priorityColor,
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          _CategoryTag(
-                            item: item,
-                            priorityColor: priorityColor,
-                            isNew: isNew,
-                          ),
-                          const Spacer(),
-                          // --- POPRAWKA DATY ---
-                          Text(
-                            item.createdAt.formatRelative(),
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.hintColor,
-                              fontWeight: isNew ? FontWeight.w600 : null,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          _DeleteButton(onDelete: onDelete, theme: theme),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        item.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: isNew ? FontWeight.bold : FontWeight.w600,
-                          color: isNew ? colors.onSurface : theme.hintColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.content,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.3,
-                          color: isNew
-                              ? colors.onSurfaceVariant
-                              : theme.hintColor.withValues(alpha: 0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return Material(
+      color: isNew
+          ? item.priority.containerColor(colors)
+          : colors.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isNew
+                  ? priorityColor.withValues(alpha: 0.4)
+                  : colors.outlineVariant.withValues(alpha: 0.5),
+              width: isNew ? 1.5 : 1,
             ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              NotificationBadge(
+                isNew: isNew,
+                category: item.category,
+                priorityColor: priorityColor,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _CategoryTag(
+                          item: item,
+                          priorityColor: priorityColor,
+                          isNew: isNew,
+                        ),
+                        const Spacer(),
+                        Text(
+                          item.createdAt.formatRelative(),
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.hintColor,
+                            fontWeight: isNew ? FontWeight.w600 : null,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        _DeleteButton(onDelete: onDelete, theme: theme),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      item.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: isNew ? FontWeight.bold : FontWeight.w600,
+                        color: isNew ? colors.onSurface : theme.hintColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      item.content,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        height: 1.3,
+                        color: isNew
+                            ? colors.onSurfaceVariant
+                            : theme.hintColor.withValues(alpha: 0.7),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -153,7 +153,6 @@ class NotificationCard extends StatelessWidget {
   }
 }
 
-// Wydzielony przycisk usuwania dla lepszej czytelności
 class _DeleteButton extends StatelessWidget {
   const _DeleteButton({required this.onDelete, required this.theme});
   final VoidCallback onDelete;
@@ -161,20 +160,18 @@ class _DeleteButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onDelete,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: Icon(
-            Icons.delete_outline,
-            size: 18,
-            color: theme.hintColor.withValues(alpha: 0.5),
-          ),
-        ),
+    return IconButton(
+      tooltip: LocaleKeys.notifications_move_to_trash_action.tr(),
+      icon: Icon(
+        Icons.delete_outline,
+        size: 18,
+        color: theme.hintColor.withValues(alpha: 0.5),
       ),
+      onPressed: onDelete,
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      padding: EdgeInsets.zero,
+      visualDensity: VisualDensity.compact,
+      splashRadius: 20,
     );
   }
 }

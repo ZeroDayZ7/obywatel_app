@@ -21,6 +21,11 @@ class NotificationsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final notificationsAsync = ref.watch(notificationsControllerProvider);
 
+    final hasUnread = notificationsAsync.maybeWhen(
+      data: (items) => items.any((item) => !item.isRead),
+      orElse: () => false,
+    );
+
     return AppScaffold(
       title: Text(LocaleKeys.notifications_title.tr()),
       size: ContainerSize.medium,
@@ -29,11 +34,15 @@ class NotificationsScreen extends ConsumerWidget {
       actions: [
         // Oznacz wszystkie jako przeczytane
         IconButton(
-          onPressed: () => ref
-              .read(notificationsControllerProvider.notifier)
-              .markAllAsRead(),
+          onPressed: hasUnread
+              ? () => ref
+                    .read(notificationsControllerProvider.notifier)
+                    .markAllAsRead()
+              : null,
           icon: const Icon(Icons.done_all),
-          tooltip: LocaleKeys.notifications_mark_all_read.tr(),
+          tooltip: hasUnread
+              ? LocaleKeys.notifications_mark_all_read.tr()
+              : null,
         ),
         // Ikona Kosza (prowadzi do usuniętych)
         IconButton(
@@ -41,6 +50,7 @@ class NotificationsScreen extends ConsumerWidget {
             '${AppRoutes.notifications}/${AppRoutes.notificationsTrash}',
           ),
           icon: const Icon(Icons.delete_sweep_outlined),
+          tooltip: LocaleKeys.notifications_trash_title.tr(),
         ),
         // Przycisk testowy
         IconButton(

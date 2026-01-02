@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/grid_painter.dart';
 import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
@@ -100,6 +101,8 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                 ),
                 SafeArea(
                   child: ResponsiveContainer(
+                    size: ContainerSize.narrow,
+                    alignment: Alignment.center,
                     child: AbsorbPointer(
                       absorbing: isLocked,
                       child: Opacity(
