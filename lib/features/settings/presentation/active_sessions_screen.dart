@@ -2,9 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/settings/application/active_sessions_provider.dart';
 import 'package:obywatel_plus/features/settings/application/user_session.dart';
+import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
 
 class ActiveSessionsScreen extends ConsumerWidget {
   const ActiveSessionsScreen({super.key});
@@ -13,43 +15,48 @@ class ActiveSessionsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(activeSessionsProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(LocaleKeys.settings_security_active_sessions.tr()),
-        centerTitle: true,
-      ),
-      body: ResponsiveContainer(
-        alignment: Alignment.topCenter,
-        child: sessionsAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 40),
-                const SizedBox(height: 16),
-                Text(LocaleKeys.errors_general.tr()),
-                TextButton(
-                  onPressed: () => ref.invalidate(activeSessionsProvider),
-                  child: const Text("Retry"),
-                ),
-              ],
-            ),
+    return AppScaffold(
+      title: Text(LocaleKeys.settings_security_active_sessions.tr()),
+      size: ContainerSize.medium,
+      scrollable: false,
+      padding: EdgeInsets.zero,
+      child: sessionsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.red, size: 40),
+              const SizedBox(height: 16),
+              Text(LocaleKeys.errors_general.tr()),
+              TextButton(
+                onPressed: () => ref.invalidate(activeSessionsProvider),
+                child: const Text("Retry"),
+              ),
+            ],
           ),
-          data: (sessions) => RefreshIndicator(
-            onRefresh: () => ref.refresh(activeSessionsProvider.future),
-            child: sessions.isEmpty
-                ? const Center(child: Text("No active sessions found"))
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: sessions.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      return _SessionTile(session: sessions[index]);
-                    },
+        ),
+        data: (sessions) => RefreshIndicator(
+          onRefresh: () => ref.refresh(activeSessionsProvider.future),
+          child: sessions.isEmpty
+              ? ListView(
+                  children: const [
+                    SizedBox(height: 100),
+                    Center(child: Text("No active sessions found")),
+                  ],
+                )
+              : ListView.separated(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
                   ),
-          ),
+                  itemCount: sessions.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    return _SessionTile(session: sessions[index]);
+                  },
+                ),
         ),
       ),
     );
@@ -63,37 +70,25 @@ class _SessionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Formatowanie daty (wymaga importu intl lub użycia metody z easy_localization)
     final String formattedDate = DateFormat(
       'dd.MM.yyyy HH:mm',
     ).format(session.createdAt);
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ListTile(
-        leading: Icon(
-          session.isCurrent ? Icons.phonelink_setup : Icons.devices,
-          color: session.isCurrent ? Colors.green : Colors.blueGrey,
-        ),
-        title: Text(
-          session.deviceName,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          "Platform: ${session.platform}\n"
-          "Last activity: $formattedDate",
-          style: const TextStyle(fontSize: 12),
-        ),
-        isThreeLine: true,
-        trailing: session.isCurrent
-            ? const Badge(label: Text("Current"))
-            : IconButton(
-                icon: const Icon(Icons.logout, color: Colors.redAccent),
-                onPressed: () {
-                  _confirmTermination(context, ref);
-                },
-              ),
-      ),
+    return SettingsCard(
+      icon: session.isCurrent ? Icons.phonelink_setup : Icons.devices,
+      title: session.deviceName,
+      subtitle: "Platform: ${session.platform}\nLast activity: $formattedDate",
+      onTap: () {},
+      trailing: session.isCurrent
+          ? Badge(
+              label: const Text("Current"),
+              backgroundColor: Colors.green.withValues(alpha: 0.1),
+              textColor: Colors.green,
+            )
+          : IconButton(
+              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              onPressed: () => _confirmTermination(context, ref),
+            ),
     );
   }
 

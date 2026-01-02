@@ -19,6 +19,8 @@ class ResponsiveContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     double getMaxWidth() {
       switch (size) {
+        case ContainerSize.compact:
+          return 320.0;
         case ContainerSize.narrow:
           return 420.0;
         case ContainerSize.form:
@@ -41,7 +43,7 @@ class ResponsiveContainer extends StatelessWidget {
         child: Padding(
           padding:
               padding ??
-              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+              const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
           child: child,
         ),
       ),

@@ -1,4 +1,7 @@
 enum ContainerSize {
+  /// Bardzo wąski (320px) - idealny pod ekrany wpisywania PIN-u, małe modale
+  compact,
+
   /// Wąski (420px) - standard dla Logowania / Rejestracji
   narrow,
 

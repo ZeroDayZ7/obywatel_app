@@ -9,7 +9,9 @@ class AppScaffold extends StatelessWidget {
   final bool scrollable;
   final Color? backgroundColor;
   final PreferredSizeWidget? appBar;
-  final ContainerSize size; // NOWOŚĆ
+  final Widget? title;
+  final ContainerSize size;
+  final EdgeInsetsGeometry? padding; // DODANE: Możliwość ustawienia paddingu
 
   const AppScaffold({
     super.key,
@@ -19,16 +21,26 @@ class AppScaffold extends StatelessWidget {
     this.scrollable = true,
     this.backgroundColor,
     this.appBar,
-    this.size = ContainerSize.medium, // Domyślnie średni
+    this.title,
+    this.size = ContainerSize.medium,
+    this.padding, // DODANE
   });
 
   @override
   Widget build(BuildContext context) {
+    // Automatyczny AppBar jeśli podano title
+    final PreferredSizeWidget? effectiveAppBar =
+        appBar ??
+        (title != null ? AppBar(title: title, centerTitle: true) : null);
+
+    // Przewijanie
     Widget content = scrollable ? SingleChildScrollView(child: child) : child;
 
+    // Kontener responsywny z przekazanym paddingiem
     content = ResponsiveContainer(
       alignment: alignment,
-      size: size, // PRZEKAZUJEMY ROZMIAR TUTAJ
+      size: size,
+      padding: padding, // PRZEKAZUJEMY TUTAJ
       child: content,
     );
 
@@ -37,7 +49,7 @@ class AppScaffold extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: appBar,
+      appBar: effectiveAppBar,
       backgroundColor: backgroundColor,
       body: content,
     );

@@ -8,6 +8,7 @@ class SettingsCard extends StatelessWidget {
   final VoidCallback onTap;
   final bool showArrow;
   final bool isDanger;
+  final Widget? trailing;
 
   const SettingsCard({
     super.key,
@@ -17,56 +18,64 @@ class SettingsCard extends StatelessWidget {
     required this.onTap,
     this.showArrow = false,
     this.isDanger = false,
+    this.trailing,
   });
 
   @override
   Widget build(BuildContext context) {
-    final errorColor = Theme.of(context).colorScheme.error;
+    final theme = Theme.of(context);
+    final errorColor = theme.colorScheme.error;
+
+    // Twoje kolory zależne od isDanger
     final iconColor = isDanger ? errorColor : Colors.blueAccent;
     final titleColor = isDanger ? errorColor : null;
     final subtitleColor = isDanger ? errorColor : Colors.grey;
 
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Ink(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: onTap,
-          child: Padding(
-            padding: ButtonMargins.medium,
-            child: Row(
-              children: [
-                Icon(icon, color: iconColor),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          color: titleColor,
-                          fontSize: 16
-                        ),
+      margin: EdgeInsets.only(bottom: 12),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: theme.dividerColor.withValues(alpha: 0.1)),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: ButtonMargins.medium,
+          child: Row(
+            children: [
+              Icon(icon, color: iconColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: titleColor,
+                        fontSize: 16,
                       ),
-                      if (subtitle != null && subtitle!.isNotEmpty)
-                        const SizedBox(height: 4),
-                      if (subtitle != null && subtitle!.isNotEmpty)
-                        Text(
-                          subtitle!,
-                          style: TextStyle(fontSize: 14, color: subtitleColor),
-                        ),
+                    ),
+                    if (subtitle != null && subtitle!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle!,
+                        style: TextStyle(fontSize: 14, color: subtitleColor),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
-                if (showArrow) const Icon(Icons.arrow_forward_ios, size: 16),
-              ],
-            ),
+              ),
+              // Obsługa końcówki: trailing (np. przycisk wyloguj) lub strzałka
+              if (trailing != null)
+                trailing!
+              else if (showArrow)
+                const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
           ),
         ),
       ),

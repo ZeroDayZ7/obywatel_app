@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/core/design/tokens/layout_tokens.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/text_field.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
@@ -30,6 +31,14 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   final _confirmPinFocus = FocusNode();
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _oldPinFocus.requestFocus();
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     _oldPinController.dispose();
@@ -49,15 +58,39 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         );
   }
 
+  void _goTo(int page) {
+    if (!_pageController.hasClients) return;
+
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    _pageController
+        .animateToPage(
+          page,
+          duration: const Duration(milliseconds: 450),
+          curve: Curves.easeInOutCubic,
+        )
+        .then((_) {
+          if (!mounted) return;
+
+          final List<FocusNode> nodes = [
+            _oldPinFocus,
+            _newPinFocus,
+            _confirmPinFocus,
+          ];
+
+          if (page >= 0 && page < nodes.length) {
+            nodes[page].requestFocus();
+          }
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
-    /// 🔁 Reakcja UI na zmiany state (nawigacja, błędy, sukces)
     ref.listen<ChangePinState>(changePinProvider, (prev, next) {
-      next.when(
+      next.maybeWhen(
         enterOld: () => _goTo(0),
         enterNew: () => _goTo(1),
         confirmNew: () => _goTo(2),
-        loading: () {},
         success: () {
           ref
               .read(globalNotificationProvider.notifier)
@@ -70,100 +103,73 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
           Navigator.pop(context);
         },
         error: (key) => _showError(key),
+        orElse: () {},
       );
     });
 
     final state = ref.watch(changePinProvider);
     final isLoading = state.maybeWhen(loading: () => true, orElse: () => false);
 
-    return Scaffold(
+    return AppScaffold(
+      size: ContainerSize.compact,
+      alignment: Alignment.center,
       appBar: AppBar(
         title: Text(LocaleKeys.settings_common_change_pin.tr()),
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: Spacing.xl),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: Layout.maxWidth),
-              child: SizedBox(
-                height: 400,
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    // KROK 1 – stary PIN
-                    _buildStep(
-                      title: LocaleKeys.pin_dialog_enter_old_pin.tr(),
-                      controller: _oldPinController,
-                      focusNode: _oldPinFocus,
-                      isLoading: isLoading,
-                      onCompleted: (pin) {
-                        ref
-                            .read(changePinProvider.notifier)
-                            .verifyOldPin(pin.codeUnits.toList());
-                        _oldPinController.clear();
-                      },
-                    ),
-                    // KROK 2 – nowy PIN
-                    _buildStep(
-                      title: LocaleKeys.pin_dialog_set_pin_title.tr(),
-                      controller: _newPinController,
-                      focusNode: _newPinFocus,
-                      onCompleted: (pin) {
-                        ref
-                            .read(changePinProvider.notifier)
-                            .setNewPin(pin.codeUnits.toList());
-                        _newPinController.clear();
-                      },
-                    ),
-                    // KROK 3 – potwierdzenie PIN-u
-                    _buildStep(
-                      title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
-                      controller: _confirmPinController,
-                      focusNode: _confirmPinFocus,
-                      isLoading: isLoading,
-                      onCompleted: (pin) {
-                        Future.microtask(() async {
-                          await ref
-                              .read(changePinProvider.notifier)
-                              .confirmAndSave(pin.codeUnits.toList());
-                          _confirmPinController.clear();
-                        });
-                      },
-                    ),
-                  ],
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            height: 300,
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildStep(
+                  title: LocaleKeys.pin_dialog_enter_old_pin.tr(),
+                  controller: _oldPinController,
+                  focusNode: _oldPinFocus,
+                  isLoading: isLoading,
+                  onCompleted: (pin) {
+                    ref
+                        .read(changePinProvider.notifier)
+                        .verifyOldPin(pin.codeUnits.toList());
+                    _oldPinController.clear();
+                  },
                 ),
-              ),
+                _buildStep(
+                  title: LocaleKeys.pin_dialog_set_pin_title.tr(),
+                  controller: _newPinController,
+                  focusNode: _newPinFocus,
+                  isLoading: isLoading,
+                  onCompleted: (pin) {
+                    ref
+                        .read(changePinProvider.notifier)
+                        .setNewPin(pin.codeUnits.toList());
+                    _newPinController.clear();
+                  },
+                ),
+                _buildStep(
+                  title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
+                  controller: _confirmPinController,
+                  focusNode: _confirmPinFocus,
+                  isLoading: isLoading,
+                  onCompleted: (pin) {
+                    Future.microtask(() async {
+                      await ref
+                          .read(changePinProvider.notifier)
+                          .confirmAndSave(pin.codeUnits.toList());
+                      _confirmPinController.clear();
+                    });
+                  },
+                ),
+              ],
             ),
           ),
-        ),
+        ],
       ),
     );
-  }
-
-  void _goTo(int page) {
-    _pageController
-        .animateToPage(
-          page,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        )
-        .then((_) {
-          // Automatyczne ustawienie focusa na odpowiednie pole
-          switch (page) {
-            case 0:
-              _oldPinFocus.requestFocus();
-              break;
-            case 1:
-              _newPinFocus.requestFocus();
-              break;
-            case 2:
-              _confirmPinFocus.requestFocus();
-              break;
-          }
-        });
   }
 
   Widget _buildStep({
@@ -177,18 +183,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (isLoading)
-          Padding(
-            padding: const EdgeInsets.only(bottom: Spacing.md),
-            child: Column(
-              children: [
-                const CircularProgressIndicator(),
-                const SizedBox(height: Spacing.sm),
-                Text(
-                  LocaleKeys.common_processing.tr(),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
+          const Padding(
+            padding: EdgeInsets.only(bottom: Spacing.xl),
+            child: CircularProgressIndicator(),
           ),
         Text(
           title,
@@ -201,7 +198,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         AppTextField(
           controller: controller,
           focusNode: focusNode,
-          autofocus: true,
+          autofocus: false,
           labelText: LocaleKeys.pin_dialog_enter_4_digits.tr(),
           obscureText: true,
           enabled: !isLoading,
