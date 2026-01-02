@@ -186,4 +186,35 @@ class DeviceInfoService {
     // 3. Szyfrujemy
     return encryptDeviceName(name, masterKeyBytes);
   }
+
+  // DeviceInfoService
+  Future<String> decryptDeviceName(String encryptedBase64) async {
+    try {
+      // 1. Pobierz Master Key z Secure Storage
+      final storedMasterKey = await _storage.read(key: 'device_master_key');
+      if (storedMasterKey == null) return "Unknown Device";
+
+      final masterKeyBytes = base64Decode(storedMasterKey);
+      final secretKey = SecretKey(masterKeyBytes);
+
+      // 2. Rozkoduj Base64 do bajtów
+      final combinedBytes = base64Decode(encryptedBase64);
+
+      // 3. Wyodrębnij Nonce (AesGcm domyślnie używa 12 bajtów)
+      // Twój kod w encryptDeviceName używał box.concatenation()
+      final box = SecretBox.fromConcatenation(
+        combinedBytes,
+        nonceLength: 12,
+        macLength: 16,
+      );
+
+      // 4. Deszyfruj
+      final clearBytes = await _algorithm.decrypt(box, secretKey: secretKey);
+
+      return utf8.decode(clearBytes);
+    } catch (e) {
+      _log.e('Błąd deszyfrowania nazwy urządzenia: $e');
+      return "Encrypted Device"; // Fallback
+    }
+  }
 }

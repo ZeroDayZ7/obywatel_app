@@ -30,7 +30,7 @@ class AppRoutes {
   static const settings = '/settings';
   static const settingsSecurity = 'security';
   static const settingsNotifications = 'notifications';
-  static const settingsActiveSession = 'active-111session';
+  static const settingsActiveSession = 'active-session';
   static const settingsChangePin = 'change-pin';
   
   static const chats = '/chats';

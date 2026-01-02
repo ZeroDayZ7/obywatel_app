@@ -19,4 +19,8 @@ class ApiEndpoints {
 
   // PUBLIC
   static String get checkVersion => '/version';
+
+  // SESSION
+  static String get userSessions => '/user/sessions';
+  static String get terminateSession => '/user/sessions/terminate';
 }

@@ -75,15 +75,13 @@ class AuthService {
     );
   }
 
-  /// Rejestracja zaufanego urządzenia (Device Binding)
-  /// 🔥 Dodano do klasy zgodnie z modelem login/verifyTwoFa
-  Future<void> registerTrustedDevice({
+  Future<String?> registerTrustedDevice({
     required String fingerprint,
     required String publicKey,
     required String encryptedName,
     required String platform,
   }) async {
-    await _apiClient.post(
+    final response = await _apiClient.post(
       ApiEndpoints.registerDevice,
       data: {
         'device_fingerprint': fingerprint,
@@ -92,7 +90,11 @@ class AuthService {
         'platform': platform,
       },
     );
-    _logger.i('Device registration request sent for fingerprint: $fingerprint');
+
+    _logger.i('Device registration successful for: $fingerprint');
+
+    // Wyciągamy nowy token z odpowiedzi (zakładając, że backend go wyśle)
+    return response.data['access_token']?.toString();
   }
 
   /// Logout

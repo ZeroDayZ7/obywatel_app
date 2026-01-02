@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
@@ -93,44 +94,43 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     final current = state.requireValue;
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
+    final sessionService = ref.read(sessionServiceProvider); // Dodaj to
 
     state = const AsyncValue.loading();
 
     try {
       if (current.trustDevice) {
         final authState = ref.read(authControllerProvider);
-
-        // Wyciągamy userId z RAMu
         String? userId = authState.mapOrNull(authenticated: (s) => s.userId);
+        userId ??= await sessionService.getUserId();
 
-        // LINT FIX: Próba ratunkowa z dysku, jeśli w RAMie pusto
-        userId ??= await ref.read(sessionServiceProvider).getUserId();
+        if (userId == null) throw Exception("Błąd: Brak ID użytkownika.");
 
-        if (userId == null) {
-          throw Exception(
-            "Błąd: Brak ID użytkownika w pamięci RAM i na dysku.",
-          );
-        }
-
-        // 1. Generujemy parę kluczy
         final keyPair = await deviceService.generateDeviceKeyPair();
         final publicKey = await keyPair.extractPublicKey();
-        final publicKeyBytes = publicKey.bytes;
-
-        // 2. Dane urządzenia (używamy bezpiecznego userId)
         final fingerprint = await deviceService.getSecureFingerprint(userId);
         final encryptedName = await deviceService.getEncryptedMarketingName();
 
-        // 3. Rejestrujemy urządzenie w Go
-        await authService.registerTrustedDevice(
+        // 🔥 WYWOŁANIE REJESTRACJI I ODBIÓR NOWEGO TOKENA
+        final newAccessToken = await authService.registerTrustedDevice(
           fingerprint: fingerprint,
-          publicKey: base64Encode(publicKeyBytes),
+          publicKey: base64Encode(publicKey.bytes),
           encryptedName: encryptedName,
           platform: Platform.operatingSystem,
         );
+
+        // 🔥 AKTUALIZACJA SESJI
+        // Jeśli dostaliśmy nowy token, nadpisujemy stary w SecureStorage.
+        // Dzięki temu następny request (np. GetSessions) użyje już tokena z nowym fingerprintem.
+        if (newAccessToken != null) {
+          await sessionService.updateAccessToken(newAccessToken);
+          ref
+              .read(appLoggerProvider)
+              .i('🔄 Access Token rotated after device binding');
+        }
       }
 
-      // 4. Kończymy setup (PIN i Biometria)
+      // 4. Kończymy setup
       await ref
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);

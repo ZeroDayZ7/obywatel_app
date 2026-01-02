@@ -18,6 +18,11 @@ class SessionService {
     return _storage.read(key: StorageKeys.userId);
   }
 
+  /// Używana po register-device, aby zsynchronizować nowy fingerprint w JWT
+  Future<void> updateAccessToken(String token) async {
+    await _storage.write(key: StorageKeys.accessToken, value: token);
+  }
+
   /// Zapisz nową sesję
   Future<void> saveSession({
     required String accessToken,

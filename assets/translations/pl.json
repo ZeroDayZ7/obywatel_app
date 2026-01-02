@@ -37,7 +37,7 @@
     "repeat_pin_title": "Powtórz PIN",
     "pin_must_be_4_digits": "PIN musi mieć 4 cyfry",
     "pin_not_identical": "PIN-y nie są identyczne",
-    "enter_old_pin": "Podaj stary kod PIN",
+    "enter_old_pin": "Podaj aktualny kod PIN",
     "verifying": "Weryfikowanie PIN-u...",
     "changed_success": "PIN został pomyślnie zmieniony",
     "invalid_pin": "Nieprawidłowy PIN",
