@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
+import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
@@ -11,23 +12,25 @@ import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
 class StorageInitTask implements StartupTask {
   final SecureStorageService storage;
   final SharedPreferencesService prefs;
+  final AppDatabase database;
 
-  StorageInitTask({required this.storage, required this.prefs});
+  StorageInitTask({
+    required this.storage,
+    required this.prefs,
+    required this.database, // 2. Wymagamy jej w konstruktorze
+  });
 
   @override
-  String get name => 'Storage & Prefs';
+  String get name => 'Storage & Database';
 
   @override
   Future<AppInitStatus?> initialize() async {
-    // Logowanie zawartości tylko w trybie debug
     if (kDebugMode) {
-      // JEŚLI CHCESZ CZYŚCIĆ PAMIĘĆ PRZY KAŻDYM RESTARCIE (tylko w dev):
-      // Odkomentuj poniższe linie, gdy resetujesz bazę
-
-      await Future.wait([
-          storage.clearAll(),
-          prefs.clearAll(),
-      ]);
+      // await Future.wait([
+      //   storage.clearAll(),
+      //   prefs.clearAll(),
+      //   database.clearDatabase(),
+      // ]);
 
       await storage.debugPrintAll();
       await prefs.debugPrintAll();

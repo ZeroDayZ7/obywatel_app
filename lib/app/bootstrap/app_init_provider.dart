@@ -3,6 +3,7 @@ import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_logic.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
@@ -27,11 +28,12 @@ class AppInitNotifier extends Notifier<AppInitStatus> {
     try {
       final prefs = ref.read(activePrefsProvider);
       final storage = ref.read(secureStorageProvider);
+      final database = ref.watch(appDatabaseProvider);
 
       final runner = StartupRunner(
         logger: logger,
         tasks: [
-          StorageInitTask(storage: storage, prefs: prefs),
+          StorageInitTask(storage: storage, prefs: prefs, database: database),
           // Używamy .notifier, aby przekazać obiekt implementujący ISecurityService
           SecurityInitTask(ref.read(securityServiceProvider.notifier)),
 

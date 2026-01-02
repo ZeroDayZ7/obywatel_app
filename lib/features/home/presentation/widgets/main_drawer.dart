@@ -85,7 +85,7 @@ class _DrawerHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return DrawerHeader(
-      decoration: BoxDecoration(color: theme.colorScheme.secondary),
+      decoration: BoxDecoration(color: theme.colorScheme.primary),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -170,20 +170,27 @@ class _LogoutConfirmDialog extends StatelessWidget {
       content: Text(LocaleKeys.drawer_logout_content.tr()),
       actions: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+            // To rozsunie przyciski z równymi odstępami wokół nich
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              AppButton(
-                labelKey: LocaleKeys.common_cancel,
-                variant: AppButtonVariant.text,
-                onPressed: () => Navigator.pop(context, false),
+              Expanded(
+                child: AppButton(
+                  labelKey: LocaleKeys.common_cancel,
+                  variant: AppButtonVariant.text,
+                  onPressed: () => Navigator.pop(context, false),
+                ),
               ),
-              const SizedBox(width: 12),
-              AppButton(
-                labelKey: LocaleKeys.drawer_logout,
-                variant: AppButtonVariant.danger,
-                onPressed: () => Navigator.pop(context, true),
+              const SizedBox(
+                width: 12,
+              ), // Mały odstęp bezpieczeństwa między nimi
+              Expanded(
+                child: AppButton(
+                  labelKey: LocaleKeys.drawer_logout,
+                  variant: AppButtonVariant.danger,
+                  onPressed: () => Navigator.pop(context, true),
+                ),
               ),
             ],
           ),

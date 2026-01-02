@@ -1,14 +1,28 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
+import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Provider bazy danych (Singleton)
-final databaseProvider = Provider<AppDatabase>((ref) {
+part 'database_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+AppDatabase appDatabase(Ref ref) {
+  // Zmienione z AppDatabaseRef na Ref
   final storage = ref.watch(secureStorageProvider);
-  return AppDatabase(storage);
-});
+  final db = AppDatabase(storage);
+  ref.onDispose(() => db.close());
+  return db;
+}
 
-/// Przykład providera dla konkretnego DAO
-final cryptoKeysDaoProvider = Provider((ref) {
-  return ref.watch(databaseProvider).cryptoKeysDao;
-});
+@riverpod
+NotificationsDao notificationsDao(Ref ref) {
+  // Zmienione na Ref
+  return ref.watch(appDatabaseProvider).notificationsDao;
+}
+
+@riverpod
+CryptoKeysDao cryptoKeysDao(Ref ref) {
+  // Zmienione na Ref
+  return ref.watch(appDatabaseProvider).cryptoKeysDao;
+}

@@ -1,139 +1,174 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 
-class NotificationsScreen extends StatelessWidget {
+import '../domain/notifications_controller.dart';
+import 'widgets/notification_card.dart';
+import 'widgets/notification_details_sheet.dart';
+
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final notifications = List.generate(
-      5,
-      (index) => NotificationItem(
-        title: 'Powiadomienie ${index + 1}',
-        description:
-            'To jest przykładowy opis powiadomienia numer ${index + 1}.',
-        timeAgo: '${index + 1}h temu',
-        isNew: index % 2 == 0,
-      ),
-    );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final notificationsAsync = ref.watch(notificationsControllerProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Powiadomienia'),
-        backgroundColor: Colors.deepPurple,
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.mark_email_read),
-            tooltip: 'Oznacz wszystkie jako przeczytane',
-          ),
-        ],
-      ),
-      body: Container(
-        color: Colors.grey[900],
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              alignment: Alignment.centerLeft,
-              child: const Text(
-                'Nowe powiadomienia',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white70,
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                itemCount: notifications.length,
-                itemBuilder: (context, index) {
-                  final item = notifications[index];
-                  return NotificationCard(item: item);
-                },
-              ),
-            ),
-          ],
+    return AppScaffold(
+      title: Text(LocaleKeys.notifications_title.tr()),
+      size: ContainerSize.medium,
+      scrollable: false,
+      padding: EdgeInsets.zero,
+      actions: [
+        // Oznacz wszystkie jako przeczytane
+        IconButton(
+          onPressed: () => ref
+              .read(notificationsControllerProvider.notifier)
+              .markAllAsRead(),
+          icon: const Icon(Icons.done_all),
+          tooltip: LocaleKeys.notifications_mark_all_read.tr(),
         ),
+        // Ikona Kosza (prowadzi do usuniętych)
+        IconButton(
+          onPressed: () => context.push(
+            '${AppRoutes.notifications}/${AppRoutes.notificationsTrash}',
+          ),
+          icon: const Icon(Icons.delete_sweep_outlined),
+        ),
+        // Przycisk testowy
+        IconButton(
+          onPressed: () => ref
+              .read(notificationsControllerProvider.notifier)
+              .addTestNotification(),
+          icon: const Icon(Icons.add_alert),
+        ),
+      ],
+      child: notificationsAsync.when(
+        data: (notifications) => notifications.isEmpty
+            ? Center(child: Text(LocaleKeys.notifications_empty.tr()))
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Header(theme: theme),
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
+                      itemCount: notifications.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final item = notifications[index];
+
+                        return Dismissible(
+                          key: Key(item.id),
+                          direction: DismissDirection.endToStart,
+                          // --- POPRAWKA TUTAJ ---
+                          confirmDismiss: (direction) async {
+                            // 1. Najpierw wywołujemy logikę w kontrolerze (baza danych)
+                            await ref
+                                .read(notificationsControllerProvider.notifier)
+                                .moveToTrash(item.id);
+
+                            // 2. Pokazujemy SnackBar (opcjonalnie)
+                            if (context.mounted) {
+                              _showUndoSnackBar(context, ref, item.id);
+                            }
+
+                            // 3. Zwracamy true, aby pozwolić Flutterowi usunąć widget z drzewa
+                            return true;
+                          },
+                          // onDismissed zostawiamy puste, bo logika jest wyżej w confirmDismiss
+                          onDismissed: (_) {},
+                          // -----------------------
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.error,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                            ),
+                          ),
+                          child: NotificationCard(
+                            item: item,
+                            onTap: () => NotificationDetailsSheet.show(
+                              context,
+                              ref,
+                              item,
+                            ),
+                            onDelete: () {
+                              // Przy kliknięciu ikony kosza na karcie wywołujemy zwykłą metodę
+                              _handleDelete(context, ref, item.id);
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('Błąd: $err')),
       ),
     );
   }
 }
 
-class NotificationItem {
-  final String title;
-  final String description;
-  final String timeAgo;
-  final bool isNew;
+// NotificationsScreen
 
-  NotificationItem({
-    required this.title,
-    required this.description,
-    required this.timeAgo,
-    this.isNew = false,
-  });
+// 1. POPRAWIONA METODA USUWANIA (DLA PRZYCISKU NA KARCIE)
+void _handleDelete(BuildContext context, WidgetRef ref, String id) {
+  // Logika w bazie danych
+  ref.read(notificationsControllerProvider.notifier).moveToTrash(id);
+
+  // Używamy globalnego systemu zamiast zwykłego SnackBar!
+  ref
+      .read(globalNotificationProvider.notifier)
+      .show(
+        AppNotification(
+          messageKey: LocaleKeys.notifications_moved_to_trash,
+          type: NotificationType.info,
+        ),
+      );
 }
 
-class NotificationCard extends StatelessWidget {
-  final NotificationItem item;
-  const NotificationCard({super.key, required this.item});
+// 2. METODA DLA SWIPE (JUŻ BYŁA OK, ALE UPEWNIJ SIĘ ŻE JEST TAKA SAMA)
+void _showUndoSnackBar(BuildContext context, WidgetRef ref, String id) {
+  ref
+      .read(globalNotificationProvider.notifier)
+      .show(
+        AppNotification(
+          messageKey: LocaleKeys.notifications_moved_to_trash,
+          type: NotificationType.info,
+        ),
+      );
+}
+
+class _Header extends StatelessWidget {
+  const _Header({required this.theme});
+  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 500),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: item.isNew ? Colors.deepPurple[600] : Colors.grey[850],
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          )
-        ],
-      ),
-      child: ListTile(
-        leading: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            CircleAvatar(
-              radius: 24,
-              backgroundColor: Colors.deepPurple[300],
-              child: const Icon(Icons.notifications, color: Colors.white),
-            ),
-            if (item.isNew)
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  color: Colors.redAccent,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.5),
-                ),
-              ),
-          ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Text(
+        LocaleKeys.notifications_new_header.tr(),
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.bold,
         ),
-        title: Text(
-          item.title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        subtitle: Text(
-          item.description,
-          style: const TextStyle(color: Colors.white70),
-        ),
-        trailing: Text(
-          item.timeAgo,
-          style: const TextStyle(color: Colors.white54, fontSize: 12),
-        ),
-        onTap: () {
-          // tu będzie logika np. otwarcia szczegółów powiadomienia
-        },
       ),
     );
   }

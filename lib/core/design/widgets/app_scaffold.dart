@@ -10,8 +10,9 @@ class AppScaffold extends StatelessWidget {
   final Color? backgroundColor;
   final PreferredSizeWidget? appBar;
   final Widget? title;
+  final List<Widget>? actions; // DODANE
   final ContainerSize size;
-  final EdgeInsetsGeometry? padding; // DODANE: Możliwość ustawienia paddingu
+  final EdgeInsetsGeometry? padding;
 
   const AppScaffold({
     super.key,
@@ -22,25 +23,30 @@ class AppScaffold extends StatelessWidget {
     this.backgroundColor,
     this.appBar,
     this.title,
+    this.actions, // DODANE
     this.size = ContainerSize.medium,
-    this.padding, // DODANE
+    this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Automatyczny AppBar jeśli podano title
+    // Przekazujemy actions do AppBar
     final PreferredSizeWidget? effectiveAppBar =
         appBar ??
-        (title != null ? AppBar(title: title, centerTitle: true) : null);
+        (title != null
+            ? AppBar(
+                title: title,
+                centerTitle: true,
+                actions: actions, // DODANE
+              )
+            : null);
 
-    // Przewijanie
     Widget content = scrollable ? SingleChildScrollView(child: child) : child;
 
-    // Kontener responsywny z przekazanym paddingiem
     content = ResponsiveContainer(
       alignment: alignment,
       size: size,
-      padding: padding, // PRZEKAZUJEMY TUTAJ
+      padding: padding,
       child: content,
     );
 

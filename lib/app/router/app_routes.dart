@@ -26,6 +26,7 @@ class AppRoutes {
   static const idCard = 'id_card';
 
   static const notifications = '/notifications';
+  static const notificationsTrash = 'trash';
   // Settings
   static const settings = '/settings';
   static const settingsSecurity = 'security';

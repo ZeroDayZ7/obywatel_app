@@ -69,7 +69,6 @@ class GlobalErrorListener extends ConsumerWidget {
 
     final style = styles[notification.type] ?? styles[NotificationType.error]!;
 
-    // WAŻNE: Czyścimy poprzedni, żeby nowy wskoczył od razu
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -88,21 +87,28 @@ class GlobalErrorListener extends ConsumerWidget {
                 ),
               ),
             ),
-            // Używamy IconButton - ma większą strefę kliknięcia
-            IconButton(
-              constraints:
-                  const BoxConstraints(), // Usuwa domyślne wielkie marginesy
-              padding: EdgeInsets.zero,
-              icon: const Icon(Icons.close, color: Colors.white70, size: 20),
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
+            // Krzyżyk pokazujemy tylko, gdy NIE MA przycisku akcji (żeby nie było tłoczno)
+            if (notification.onActionPressed == null)
+              IconButton(
+                constraints: const BoxConstraints(),
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.close, color: Colors.white70, size: 20),
+                onPressed: () =>
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar(),
+              ),
           ],
         ),
+        // DODAJEMY TO:
+        action: notification.onActionPressed != null
+            ? SnackBarAction(
+                label: notification.actionLabelKey!.tr(),
+                textColor: Colors.white,
+                onPressed: notification.onActionPressed!,
+              )
+            : null,
+        // ----------------
         backgroundColor: style.color,
         behavior: SnackBarBehavior.floating,
-        // Ustawienie margin na stałe (nawet mały) często naprawia DismissDirection
         margin: isDesktop
             ? null
             : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
@@ -110,7 +116,6 @@ class GlobalErrorListener extends ConsumerWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 8,
         duration: const Duration(seconds: 4),
-        // Zmiana na up - często lepiej działa przy floating
         dismissDirection: DismissDirection.horizontal,
       ),
     );

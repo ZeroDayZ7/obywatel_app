@@ -1,6 +1,9 @@
 {
   "common": {
     "logout": "Wyloguj",
+    "today": "Dzisiaj",
+    "yesterday": "Wczoraj",
+    "delete": "Usuń",
     "cancel": "Anuluj",
     "save": "Zapisz",
     "next": "Dalej",
@@ -240,6 +243,33 @@
     "errors": {
       "too_many_attempts": "Zbyt wiele prób! Spróbuj za {time}",
       "invalid_pin": "Błędny PIN! Spróbuj ponownie."
+    }
+  },
+  "notifications": {
+    "title": "Powiadomienia",
+    "mark_all_read": "Oznacz jako przeczytane",
+    "new_header": "Nowe powiadomienia",
+    "empty": "Brak nowych powiadomień",
+    "moved_to_trash": "Przeniesiono do kosza",
+    "undo": "Cofnij",
+    "trash_title": "Kosz",
+    "trash_empty": "Kosz jest pusty",
+    "details": {
+      "delete_button": "Usuń powiadomienie"
+    },
+    "categories": {
+      "payments": "Płatności",
+      "security": "Bezpieczeństwo",
+      "administrative": "Administracja",
+      "system": "System"
+    },
+    "trash": {
+      "clear_all": "Opróżnij kosz",
+      "clear_all_confirm_title": "Wyczyścić kosz?",
+      "clear_all_confirm_content": "Wszystkie wiadomości w koszu zostaną trwale usunięte. Tej operacji nie można cofnąć.",
+      "delete_permanent_title": "Usunąć trwale?",
+      "delete_permanent_content": "Tej operacji nie można cofnąć.",
+      "restore": "Przywróć"
     }
   }
 }
