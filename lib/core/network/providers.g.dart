@@ -167,7 +167,7 @@ final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$authDioHash() => r'0f5d00bcd1de4bee613ced08d0fcaeb14a651f28';
+String _$authDioHash() => r'd437de59df520afc2039e140a81b974a9ba2552a';
 
 @ProviderFor(publicApiClient)
 final publicApiClientProvider = PublicApiClientProvider._();

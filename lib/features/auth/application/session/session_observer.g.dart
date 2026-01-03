@@ -48,4 +48,4 @@ final class SessionObserverProvider
   }
 }
 
-String _$sessionObserverHash() => r'3c484770053b23bf8b90e4e84e75d587a3a2eca0';
+String _$sessionObserverHash() => r'3cded3fa996e84fd62cfdf1786908eac6a109d1c';

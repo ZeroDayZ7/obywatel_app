@@ -23,4 +23,9 @@ class ApiEndpoints {
   // SESSION
   static String get userSessions => '/user/sessions';
   static String get terminateSession => '/user/sessions/terminate';
+
+  // NOTIFICATIONS
+  static String get notifications => '/notifications';
+  static String markAsRead(String id) => '/notifications/$id/read';
+  static String get markAllNotificationsAsRead => '/notifications/read-all';
 }

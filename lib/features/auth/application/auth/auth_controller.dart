@@ -1,4 +1,5 @@
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_exception.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
@@ -7,6 +8,7 @@ import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
+import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_controller.g.dart';
@@ -124,6 +126,8 @@ class AuthController extends _$AuthController {
     } finally {
       await _sessionService.clearSession();
       ref.invalidate(securityServiceProvider);
+      ref.invalidate(appDatabaseProvider);
+      ref.invalidate(notificationsControllerProvider);
       state = const AuthState.unauthenticated();
     }
   }

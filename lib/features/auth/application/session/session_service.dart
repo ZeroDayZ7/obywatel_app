@@ -1,29 +1,39 @@
-// features/auth/application/session/session_service.dart
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'session_service.g.dart';
+
+@Riverpod(keepAlive: true)
+SessionService sessionService(Ref ref) {
+  return SessionService(ref.watch(secureStorageProvider));
+}
 
 class SessionService {
   final SecureStorageService _storage;
-
   SessionService(this._storage);
 
-  /// Czy użytkownik ma zapisane tokeny? (Start aplikacji)
   Future<bool> hasSession() async {
     final token = await _storage.read(key: StorageKeys.accessToken);
     return token != null && token.isNotEmpty;
   }
 
-  Future<String?> getUserId() async {
-    return _storage.read(key: StorageKeys.userId);
+  /// Pobiera Access Token z Secure Storage
+  Future<String?> getAccessToken() async {
+    return _storage.read(key: StorageKeys.accessToken);
   }
 
-  /// Używana po register-device, aby zsynchronizować nowy fingerprint w JWT
+  /// Pobiera Refresh Token z Secure Storage
+  Future<String?> getRefreshToken() async {
+    return _storage.read(key: StorageKeys.refreshToken);
+  }
+
+  Future<String?> getUserId() async => _storage.read(key: StorageKeys.userId);
+
   Future<void> updateAccessToken(String token) async {
     await _storage.write(key: StorageKeys.accessToken, value: token);
   }
 
-  /// Zapisz nową sesję
   Future<void> saveSession({
     required String accessToken,
     required String refreshToken,
@@ -34,14 +44,9 @@ class SessionService {
     await _storage.write(key: StorageKeys.userId, value: userId);
   }
 
-  /// Wyczyść sesję (Logout)
   Future<void> clearSession() async {
     await _storage.delete(key: StorageKeys.accessToken);
     await _storage.delete(key: StorageKeys.refreshToken);
     await _storage.delete(key: StorageKeys.userId);
   }
 }
-
-final sessionServiceProvider = Provider<SessionService>((ref) {
-  return SessionService(ref.watch(secureStorageProvider));
-});

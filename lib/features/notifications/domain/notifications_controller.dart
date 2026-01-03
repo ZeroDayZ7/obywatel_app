@@ -1,4 +1,7 @@
 import 'package:obywatel_plus/core/database/database_provider.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'notification_model.dart';
@@ -9,18 +12,41 @@ part 'notifications_controller.g.dart';
 class NotificationsController extends _$NotificationsController {
   @override
   Stream<List<NotificationModel>> build() {
+    final stream = ref.watch(notificationsDaoProvider).watchAllNotifications();
     // Automatycznie czyść stary kosz przy inicjalizacji kontrolera (opcjonalnie)
     // vacuumOldNotifications();
+    Future.microtask(() => syncWithBackend());
 
-    return ref.watch(notificationsDaoProvider).watchAllNotifications();
+    return stream;
   }
 
   Future<void> markAsRead(String id) async {
     await ref.read(notificationsDaoProvider).markAsRead(id);
+    try {
+      await NotificationApi(ref.read(authDioProvider)).markAsRead(id);
+    } catch (_) {}
   }
 
   Future<void> markAllAsRead() async {
+    final logger = ref.read(appLoggerProvider);
+
+    // 1. Najpierw baza lokalna (Błyskawiczna reakcja UI)
     await ref.read(notificationsDaoProvider).markAllAsRead();
+
+    // 2. Potem strzał do API
+    try {
+      final dio = ref.read(authDioProvider);
+      await NotificationApi(dio).markAllAsRead();
+      logger.i(
+        '✅ Oznaczono wszystkie powiadomienia jako przeczytane na serwerze',
+      );
+    } catch (e) {
+      logger.e(
+        '❌ Nie udało się zsynchronizować statusu "przeczytane" z serwerem',
+      );
+      // Tutaj opcjonalnie: jeśli API padnie, można by przeładować dane z serwera,
+      // żeby przywrócić stan faktyczny, ale w mObywatelu zazwyczaj zostawia się to do następnej synchro.
+    }
   }
 
   Future<void> moveToTrash(String id) async {
@@ -44,6 +70,27 @@ class NotificationsController extends _$NotificationsController {
 
   Future<void> clearAllTrash() async {
     await ref.read(notificationsDaoProvider).deleteAllTrash();
+  }
+
+  Future<void> syncWithBackend() async {
+    final logger = ref.read(appLoggerProvider);
+    try {
+      // 1. Pobierz z API (używając authDio z Fresh)
+      final api = NotificationApi(ref.read(authDioProvider));
+      final remoteNotifications = await api.fetchNotifications();
+
+      // 2. Zapisz/Aktualizuj w lokalnej bazie Drift (Upsert)
+      // Twój DAO musi mieć metodę upsertNotifications
+      await ref
+          .read(notificationsDaoProvider)
+          .upsertNotifications(remoteNotifications);
+
+      logger.i(
+        '🔄 Powiadomienia zsynchronizowane: ${remoteNotifications.length}',
+      );
+    } catch (e, st) {
+      logger.e('❌ Błąd synchronizacji powiadomień', error: e, stackTrace: st);
+    }
   }
 
   Future<void> addTestNotification() async {
