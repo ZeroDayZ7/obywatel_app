@@ -1,4 +1,4 @@
-import '../../storage/secure_storage_service.dart';
+import '../../storage/secure_storage_provider.dart';
 import '../../storage/storage_keys.dart';
 
 abstract class SecretStorage {

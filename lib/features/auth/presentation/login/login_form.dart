@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -58,7 +60,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final passwordStr = _passwordController.text.trim();
 
     // 2. Konwertujemy hasło na bajty (List<int>)
-    final passwordBytes = passwordStr.codeUnits.toList();
+    final passwordBytes = utf8.encode(passwordStr);
 
     // 3. Wysyłamy do kontrolera
     await ref.read(authControllerProvider.notifier).login(email, passwordBytes);

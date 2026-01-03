@@ -1,9 +1,9 @@
 import 'dart:convert';
 
+import '../../storage/secure_storage_provider.dart';
+import '../../storage/storage_keys.dart';
 import '../domain/auth_method.dart';
 import '../domain/security_config.dart';
-import '../../storage/secure_storage_service.dart';
-import '../../storage/storage_keys.dart';
 
 abstract class SecurityConfigStorage {
   Future<SecurityConfig?> load();

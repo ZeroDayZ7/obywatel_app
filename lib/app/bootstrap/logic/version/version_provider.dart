@@ -1,31 +1,26 @@
-// lib/app/bootstrap/logic/version_logic.dart
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'version_models.dart';
 
-// --- Providers ---
+part 'version_provider.g.dart';
 
-final versionServiceProvider = Provider<VersionService>(
-  (ref) => VersionService(
-    ref.read(publicApiClientProvider),
-    ref.read(appLoggerProvider),
-  ),
-);
+@riverpod
+VersionService versionService(Ref ref) {
+  return VersionService(
+    ref.watch(publicApiClientProvider),
+    ref.watch(appLoggerProvider),
+  );
+}
 
-final versionNotifierProvider = NotifierProvider<VersionNotifier, VersionState>(
-  VersionNotifier.new,
-);
-
-// --- Notifier (Implementation of Facade) ---
-
-class VersionNotifier extends Notifier<VersionState> implements IVersionFacade {
+/// Notifier implementujący interfejs fasady
+@Riverpod(keepAlive: true)
+class VersionNotifier extends _$VersionNotifier implements IVersionFacade {
   @override
   VersionState build() => const VersionState();
 
@@ -53,8 +48,6 @@ class VersionNotifier extends Notifier<VersionState> implements IVersionFacade {
         );
   }
 }
-
-// --- Service (Infrastructure Layer) ---
 
 class VersionService {
   final PublicApiClient _api;
@@ -97,7 +90,6 @@ class VersionService {
     } catch (e, s) {
       _logger.e('Version check API failed', error: e, stackTrace: s);
     }
-
     return const VersionState();
   }
 }

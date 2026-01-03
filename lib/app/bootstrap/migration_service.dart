@@ -1,6 +1,6 @@
 // lib/app/bootstrap/migration_service.dart
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 
 /// Prosty, wersjonowany migrator danych w secure storage.
 /// Każda migracja ma unikalny ID i jest odhaczana w storage.

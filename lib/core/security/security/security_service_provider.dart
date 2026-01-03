@@ -1,12 +1,14 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
-import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'security_service_provider.g.dart';
 
 abstract interface class ISecurityService {
   Future<void> init();
@@ -15,25 +17,18 @@ abstract interface class ISecurityService {
   Future<void> unlockManually();
 }
 
-final securityServiceProvider =
-    NotifierProvider<SecurityNotifier, SecurityState>(SecurityNotifier.new);
-
-class SecurityNotifier extends Notifier<SecurityState>
-    implements ISecurityService {
-  // Clean Getters - teraz synchroniczne
-  AppLogger get _logger => ref.read(appLoggerProvider);
-  PinService get _pinService => ref.read(pinServiceProvider);
-  LocalAuthentication get _localAuth => ref.read(localAuthProvider);
-
-  // POPRAWKA: Pobieramy gotowy serwis synchronicznie
-  SharedPreferencesService get _prefs => ref.read(activePrefsProvider);
-
+@Riverpod(keepAlive: true)
+class SecurityService extends _$SecurityService implements ISecurityService {
   @override
   SecurityState build() => SecurityState.initial();
 
+  SharedPreferencesService get _prefs => ref.read(activePrefsProvider);
+  PinService get _pinService => ref.read(pinServiceProvider);
+  LocalAuthentication get _localAuth => ref.read(localAuthProvider);
+  AppLogger get _logger => ref.read(appLoggerProvider);
+
   @override
   Future<void> init() async {
-    // Odczyt z SharedPreferencesService jest teraz synchroniczny
     final setupCompleted = _prefs.readBool(StorageKeys.setupCompleted) ?? false;
 
     if (!setupCompleted) {
@@ -41,14 +36,11 @@ class SecurityNotifier extends Notifier<SecurityState>
       return;
     }
 
-    // PIN Service zazwyczaj operuje na SecureStorage, więc tu zostaje await
     final isPinConfigured = await _pinService.hasPin();
-
     final isLocalLockEnabled =
         _prefs.readBool(StorageKeys.localLockEnabled) ?? false;
     final isBiometricEnabled =
         _prefs.readBool(StorageKeys.isBiometricConfigured) ?? false;
-
     final canUseBiometrics = await _checkBiometricsAvailability();
 
     state = state.copyWith(
@@ -64,24 +56,17 @@ class SecurityNotifier extends Notifier<SecurityState>
   }
 
   Future<void> setPin(List<int> pinCodes) async {
-    // 1. Przekazujemy bajty bezpośrednio do serwisu
     await _pinService.setPin(pinCodes);
-
-    // 2. Zapisujemy informację o konfiguracji (to jest tylko flaga true/false, więc bezpieczne)
     await _prefs.writeBool(StorageKeys.isPinConfigured, true);
 
-    // 3. Aktualizujemy stan UI
     state = state.copyWith(isPinConfigured: true);
 
-    // 4. DOBRA PRAKTYKA: Zerujemy listę wejściową,
-    // aby nie wisiała w pamięci warstwy prezentacji
     for (int i = 0; i < pinCodes.length; i++) {
       pinCodes[i] = 0;
     }
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
-    // Wykonujemy serie zapisów asynchronicznych
     await Future.wait([
       _prefs.writeBool(StorageKeys.setupCompleted, true),
       _prefs.writeBool(StorageKeys.localLockEnabled, true),
@@ -122,9 +107,6 @@ class SecurityNotifier extends Notifier<SecurityState>
   }
 
   Future<void> toggleBiometrics(bool enabled) async {
-    _logger.i(
-      'DEBUG: Kliknięto switch biometrii! Nowa wartość: $enabled',
-    ); // <--- DODAJ TO
     try {
       await _prefs.writeBool(StorageKeys.isBiometricConfigured, enabled);
       state = state.copyWith(isBiometricEnabled: enabled);
@@ -154,7 +136,7 @@ class SecurityNotifier extends Notifier<SecurityState>
     try {
       isPinConfigured = await _pinService.hasPin();
     } catch (e) {
-      _logger.e('Failed to check PIN status during manual unlock', error: e);
+      _logger.e('Failed to check PIN status', error: e);
     }
 
     state = state.copyWith(

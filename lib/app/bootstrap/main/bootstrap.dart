@@ -5,21 +5,21 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/main/app_observer.dart';
-import 'package:obywatel_plus/core/storage/shared_preferences_service.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Funkcja inicjalizująca całą infrastrukturę aplikacji przed jej uruchomieniem.
+final _logger = AppLogger();
+
 Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
-  // 1️⃣ Konfiguracja błędów frameworka Flutter
   FlutterError.onError = _handleFlutterError;
 
-  // 2️⃣ Błędy spoza głównego isolate
   PlatformDispatcher.instance.onError = (error, stack) {
     _handleGlobalError(error, stack);
     return true;
   };
 
-  // 3️⃣ Konfiguracja ErrorWidget (UI dla błędów w trybie debug/prod)
   ErrorWidget.builder = (FlutterErrorDetails details) {
     if (kDebugMode) {
       return ErrorWidget(details.exception);
@@ -31,14 +31,12 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     );
   };
 
-  // 4️⃣ Uruchomienie w strefie bezpieczeństwa (async errors)
   await runZonedGuarded<Future<void>>(() async {
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
 
-    final rawPrefs = await SharedPreferences.getInstance();
-    final sharedService = SharedPreferencesService(rawPrefs);
-
+    final prefsInstance = await SharedPreferences.getInstance();
+    final sharedService = SharedPreferencesService(prefsInstance, _logger);
     final observer = AppObserver();
 
     runApp(
@@ -51,6 +49,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
         child: ProviderScope(
           overrides: [
             activePrefsProvider.overrideWithValue(sharedService),
+            appLoggerProvider.overrideWithValue(_logger),
           ],
           observers: kDebugMode ? [observer] : [],
           child: await builder(),
@@ -61,19 +60,19 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 }
 
 void _handleGlobalError(Object error, StackTrace stack) {
-  if (kDebugMode) {
-    debugPrint('🔥 [GlobalError][${error.runtimeType}] $error');
-    debugPrintStack(stackTrace: stack);
-  } else {
-    // TOD: Sentry / Crashlytics
-  }
+  _logger.e(
+    '🔥 Global Error',
+    error: error,
+    stackTrace: stack,
+    module: 'Bootstrap',
+  );
 }
 
 void _handleFlutterError(FlutterErrorDetails details) {
-  if (kDebugMode) {
-    debugPrint('💥 [FlutterError] ${details.exceptionAsString()}');
-    debugPrintStack(stackTrace: details.stack);
-  } else {
-    // TOD: Raportowanie do zewnętrznego systemu
-  }
+  _logger.e(
+    '💥 Flutter Error',
+    error: details.exception,
+    stackTrace: details.stack,
+    module: 'Bootstrap',
+  );
 }

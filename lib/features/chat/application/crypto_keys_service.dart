@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:cryptography/cryptography.dart';
 import 'package:obywatel_plus/core/database/database.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 
 class CryptoKeysService {
   static const _privateKeyKey = 'privateKey';

@@ -1,15 +1,21 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:flutter/foundation.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final secureStorageProvider = Provider<SecureStorageService>(
-  (ref) => SecureStorageService(const FlutterSecureStorage()),
-);
+part 'secure_storage_provider.g.dart';
+
+@riverpod
+SecureStorageService secureStorage(Ref ref) {
+  final logger = ref.watch(appLoggerProvider);
+  return SecureStorageService(const FlutterSecureStorage(), logger);
+}
 
 class SecureStorageService {
   final FlutterSecureStorage _storage;
+  final AppLogger _logger;
 
-  SecureStorageService(this._storage);
+  SecureStorageService(this._storage, this._logger);
 
   /// Write a string value to secure storage
   Future<void> write({required String key, required String value}) async {
@@ -28,8 +34,7 @@ class SecureStorageService {
 
   /// Read all key-value pairs from secure storage
   Future<Map<String, String>> readAll() async {
-    final all = await _storage.readAll();
-    return all;
+    return await _storage.readAll();
   }
 
   /// Clear all values from secure storage
@@ -37,15 +42,21 @@ class SecureStorageService {
     await _storage.deleteAll();
   }
 
-  /// Debug: print all key-value pairs in secure storage
+  /// Debug: print all key-value pairs using AppLogger
   Future<void> debugPrintAll() async {
     final all = await _storage.readAll();
     if (all.isEmpty) {
-      debugPrint('🟢 ===== SecureStorage: no entries. =====');
+      _logger.d(
+        '===== SecureStorage: no entries. =====',
+        module: 'SecureStorage',
+      );
     } else {
-      debugPrint('🟢 ===== SecureStorage contains ${all.length} entries =====');
+      _logger.d(
+        '===== SecureStorage contains ${all.length} entries =====',
+        module: 'SecureStorage',
+      );
       all.forEach((key, value) {
-        debugPrint('$key: $value');
+        _logger.d('• $key: $value', module: 'SecureStorage');
       });
     }
   }

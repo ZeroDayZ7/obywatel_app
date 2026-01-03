@@ -1,82 +1,89 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
 import 'package:obywatel_plus/core/network/public_client.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-// ============================================================
-// 1. INSTANCJE DIO (WARSTWA NISKOKOPOZIOMOWA)
-// ============================================================
+part 'providers.g.dart';
 
-/// Klient służący WYŁĄCZNIE do odświeżania tokena
-final refreshDioProvider = Provider<Dio>((ref) {
+@Riverpod(keepAlive: true)
+Dio refreshDio(Ref ref) {
+  // Zamienione na Ref
   return DioFactory.create(
     profile: DioProfile.refreshToken,
     logger: ref.watch(appLoggerProvider),
-    ref: ref, // DODANE
+    deviceInfoRef: ref,
   );
-});
+}
 
-/// Klient publiczny - nie wymaga logowania
-final publicDioProvider = Provider<Dio>((ref) {
+@Riverpod(keepAlive: true)
+Dio publicDio(Ref ref) {
+  // Zamienione na Ref
   return DioFactory.create(
     profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
-    ref: ref, // DODANE
+    deviceInfoRef: ref,
   );
-});
+}
 
-/// Klient do operacji związanych z resetem hasła
-final resetDioProvider = Provider<Dio>((ref) {
+@Riverpod(keepAlive: true)
+Dio resetDio(Ref ref) {
+  // Zamienione na Ref
   return DioFactory.create(
     profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
-    ref: ref, // DODANE
+    deviceInfoRef: ref,
   );
-});
+}
 
-/// GŁÓWNY KLIENT AUTORYZOWANY - posiada interceptory Auth i Refresh (Mutex)
-final authDioProvider = Provider<Dio>((ref) {
-  final refreshDio = ref.watch(refreshDioProvider);
-
+@Riverpod(keepAlive: true)
+Dio authDio(Ref ref) {
+  // Zamienione na Ref
   return DioFactory.create(
     profile: DioProfile.authenticated,
     logger: ref.watch(appLoggerProvider),
-    ref: ref, // DODANE
     storage: ref.watch(secureStorageProvider),
     sessionService: ref.watch(sessionServiceProvider),
-    refreshClient: refreshDio,
+    refreshClient: ref.watch(refreshDioProvider),
+    accessTokenGetter: () => ref
+        .read(authControllerProvider)
+        .mapOrNull(authenticated: (s) => s.accessToken),
+    onRefreshFailure: () {
+      ref.read(authControllerProvider.notifier).logout();
+    },
+    deviceInfoRef: ref,
   );
-});
+}
 
-// ============================================================
-// 2. API CLIENTS (WARSTWA ABSTRAKCJI)
-// ============================================================
-
-/// Klient API dla endpointów publicznych
-final publicApiClientProvider = Provider<PublicApiClient>((ref) {
+@Riverpod(keepAlive: true)
+PublicApiClient publicApiClient(Ref ref) {
+  // Zamienione na Ref
   return PublicApiClient(
     dio: ref.watch(publicDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
-});
+}
 
-/// Klient API dla endpointów wymagających autoryzacji (JWT)
-final apiClientProvider = Provider<ApiClient>((ref) {
+@Riverpod(keepAlive: true)
+ApiClient apiClient(Ref ref) {
+  // Zamienione na Ref
   return ApiClient(
     dio: ref.watch(authDioProvider),
     storage: ref.watch(secureStorageProvider),
     logger: ref.watch(appLoggerProvider),
   );
-});
+}
 
-/// Klient API specyficzny dla procesów resetowania/odzyskiwania konta
-final resetApiClientProvider = Provider<PublicApiClient>((ref) {
+@Riverpod(keepAlive: true)
+PublicApiClient resetApiClient(Ref ref) {
+  // Zamienione na Ref
   return PublicApiClient(
     dio: ref.watch(resetDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
-});
+}

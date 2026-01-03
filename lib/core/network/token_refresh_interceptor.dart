@@ -1,34 +1,29 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // DODANE
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
-/// Interceptor zarządzający automatycznym odświeżaniem tokena JWT.
 class TokenRefreshInterceptor extends QueuedInterceptor {
   final Dio _dio;
   final SecureStorageService _storage;
   final AppLogger _logger;
   final SessionService _sessionService;
   final Dio _refreshClient;
-  final Ref _ref; // DODANE: Pole na referencję do Riverpod
+  final void Function()? onRefreshFailure;
 
   static Completer<String?>? _refreshCompleter;
 
-  // AKTUALIZACJA: Konstruktor przyjmuje teraz 6 argumentów
   TokenRefreshInterceptor(
     this._dio,
     this._storage,
     this._logger,
     this._sessionService,
     this._refreshClient,
-    this._ref, // DODANE
+    this.onRefreshFailure,
   );
 
   @override
@@ -55,15 +50,11 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
     _logger.i('🔒 401 detected → initiating token refresh');
 
     try {
-      // 1. Najpierw szukaj refresh_token na dysku
       String? refreshToken = await _storage.read(key: StorageKeys.refreshToken);
 
-      // 2. Jeśli nie ma (bo trwa setup), weź z RAMu
-      refreshToken ??= _ref
-          .read(authControllerProvider)
-          .mapOrNull(authenticated: (s) => s.refreshToken);
-
-      if (refreshToken == null) throw Exception('No refresh token available');
+      if (refreshToken == null || refreshToken.isEmpty) {
+        throw Exception('No refresh token available');
+      }
 
       final response = await _refreshClient.post(
         ApiEndpoints.refreshToken,
@@ -98,9 +89,13 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
         error: e,
         stackTrace: stack,
       );
+
       _refreshCompleter?.complete(null);
       _refreshCompleter = null;
+
       await _sessionService.clearSession();
+      onRefreshFailure?.call();
+
       handler.next(err);
     }
   }

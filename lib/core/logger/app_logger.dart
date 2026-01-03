@@ -2,12 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 
 class AppLogger {
-  static final AppLogger _instance = AppLogger._internal();
-  factory AppLogger() => _instance;
-
   final Logger _logger;
 
-  AppLogger._internal()
+  AppLogger()
     : _logger = Logger(
         level: kReleaseMode ? Level.warning : Level.debug,
         printer: PrettyPrinter(

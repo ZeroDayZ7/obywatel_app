@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 
 class ApiClient {
   final Dio dio;

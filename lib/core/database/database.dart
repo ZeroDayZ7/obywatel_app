@@ -4,7 +4,7 @@ import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;

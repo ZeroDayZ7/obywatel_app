@@ -1,7 +1,7 @@
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'database_provider.g.dart';

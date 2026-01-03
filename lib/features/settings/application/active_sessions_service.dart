@@ -1,9 +1,11 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'user_session.dart';
+
+part 'active_sessions_service.g.dart';
 
 class ActiveSessionsService {
   final ApiClient _apiClient;
@@ -12,28 +14,24 @@ class ActiveSessionsService {
   Future<List<UserSession>> getActiveSessions() async {
     final response = await _apiClient.get(ApiEndpoints.userSessions);
 
-    // Backend Go zwraca [] (listę), więc mapujemy ją bezpośrednio
+    // Używamy bezpiecznego rzutowania i mapowania Freezed
     if (response.data is List) {
-      final List<dynamic> data = response.data;
-      return data.map((json) => UserSession.fromJson(json)).toList();
+      return (response.data as List)
+          .map((json) => UserSession.fromJson(json as Map<String, dynamic>))
+          .toList();
     }
-
     return [];
   }
 
-  Future<bool> terminateSession(int sessionId) async {
-    try {
-      await _apiClient.post(
-        ApiEndpoints.terminateSession,
-        data: {'session_id': sessionId},
-      );
-      return true;
-    } catch (e) {
-      return false;
-    }
+  Future<void> terminateSession(int sessionId) async {
+    await _apiClient.post(
+      ApiEndpoints.terminateSession,
+      data: {'session_id': sessionId},
+    );
   }
 }
 
-final activeSessionsServiceProvider = Provider<ActiveSessionsService>((ref) {
+@riverpod
+ActiveSessionsService activeSessionsService(Ref ref) {
   return ActiveSessionsService(ref.watch(apiClientProvider));
-});
+}

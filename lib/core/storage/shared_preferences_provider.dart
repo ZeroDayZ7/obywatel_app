@@ -1,16 +1,28 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-// To jest placeholder na gotowy serwis, żeby nie pisać wszędzie "await"
-final activePrefsProvider = Provider<SharedPreferencesService>((ref) {
-  throw UnimplementedError('Pamiętaj o override w bootstrapie!');
-});
+part 'shared_preferences_provider.g.dart';
+
+/// Provider dla instancji SharedPreferences (używany przy inicjalizacji)
+@riverpod
+Future<SharedPreferences> sharedPreferencesInstance(Ref ref) {
+  return SharedPreferences.getInstance();
+}
+
+/// Aktywny serwis (wymaga override w ProviderScope w main.dart po załadowaniu instancji)
+@riverpod
+SharedPreferencesService activePrefs(Ref ref) {
+  throw UnimplementedError(
+    'Pamiętaj o override activePrefsProvider w bootstrapie!',
+  );
+}
 
 class SharedPreferencesService {
   final SharedPreferences _prefs;
+  final AppLogger _logger;
 
-  SharedPreferencesService(this._prefs);
+  SharedPreferencesService(this._prefs, this._logger);
 
   /// Read a string value from SharedPreferences
   String? read(String key) => _prefs.getString(key);
@@ -38,18 +50,22 @@ class SharedPreferencesService {
     await _prefs.clear();
   }
 
-  /// Debug: print all key-value pairs in SharedPreferences
+  /// Debug: print all key-value pairs using AppLogger
   Future<void> debugPrintAll() async {
     final keys = _prefs.getKeys();
     if (keys.isEmpty) {
-      debugPrint('🟢 ===== SharedPreferences: no entries. =====');
+      _logger.d(
+        '===== SharedPreferences: no entries. =====',
+        module: 'Storage',
+      );
     } else {
-      debugPrint(
-        '🟢 ===== SharedPreferences contains ${keys.length} entries =====',
+      _logger.d(
+        '===== SharedPreferences contains ${keys.length} entries =====',
+        module: 'Storage',
       );
       for (final key in keys) {
         final value = _prefs.get(key);
-        debugPrint('• $key: $value');
+        _logger.d('• $key: $value', module: 'Storage');
       }
     }
   }

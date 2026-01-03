@@ -1,6 +1,6 @@
 // features/auth/application/session/session_service.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_service.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 class SessionService {
