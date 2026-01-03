@@ -32,7 +32,13 @@ class NotificationsScreen extends ConsumerWidget {
       scrollable: false,
       padding: EdgeInsets.zero,
       actions: [
-        // Oznacz wszystkie jako przeczytane
+        IconButton(
+          onPressed: () => ref
+              .read(notificationsControllerProvider.notifier)
+              .syncWithBackend(),
+          icon: const Icon(Icons.refresh),
+          tooltip: LocaleKeys.common_refresh.tr(),
+        ),
         IconButton(
           onPressed: hasUnread
               ? () => ref
@@ -44,7 +50,6 @@ class NotificationsScreen extends ConsumerWidget {
               ? LocaleKeys.notifications_mark_all_read.tr()
               : null,
         ),
-        // Ikona Kosza (prowadzi do usuniętych)
         IconButton(
           onPressed: () => context.push(
             '${AppRoutes.notifications}/${AppRoutes.notificationsTrash}',
@@ -52,83 +57,87 @@ class NotificationsScreen extends ConsumerWidget {
           icon: const Icon(Icons.delete_sweep_outlined),
           tooltip: LocaleKeys.notifications_trash_title.tr(),
         ),
-        // Przycisk testowy
-        IconButton(
-          onPressed: () => ref
-              .read(notificationsControllerProvider.notifier)
-              .addTestNotification(),
-          icon: const Icon(Icons.add_alert),
-        ),
       ],
       child: notificationsAsync.when(
-        data: (notifications) => notifications.isEmpty
-            ? Center(child: Text(LocaleKeys.notifications_empty.tr()))
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _Header(theme: theme),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
+        data: (notifications) => RefreshIndicator(
+          onRefresh: () => ref
+              .read(notificationsControllerProvider.notifier)
+              .syncWithBackend(),
+          child: notifications.isEmpty
+              ? ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      child: Center(
+                        child: Text(LocaleKeys.notifications_empty.tr()),
                       ),
-                      itemCount: notifications.length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final item = notifications[index];
-
-                        return Dismissible(
-                          key: Key(item.id),
-                          direction: DismissDirection.endToStart,
-                          // --- POPRAWKA TUTAJ ---
-                          confirmDismiss: (direction) async {
-                            // 1. Najpierw wywołujemy logikę w kontrolerze (baza danych)
-                            await ref
-                                .read(notificationsControllerProvider.notifier)
-                                .moveToTrash(item.id);
-
-                            // 2. Pokazujemy SnackBar (opcjonalnie)
-                            if (context.mounted) {
-                              _showUndoSnackBar(context, ref, item.id);
-                            }
-
-                            // 3. Zwracamy true, aby pozwolić Flutterowi usunąć widget z drzewa
-                            return true;
-                          },
-                          // onDismissed zostawiamy puste, bo logika jest wyżej w confirmDismiss
-                          onDismissed: (_) {},
-                          // -----------------------
-                          background: Container(
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.only(right: 24),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.error,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.delete_outline,
-                              color: Colors.white,
-                            ),
-                          ),
-                          child: NotificationCard(
-                            item: item,
-                            onTap: () => NotificationDetailsSheet.show(
-                              context,
-                              ref,
-                              item,
-                            ),
-                            onDelete: () {
-                              // Przy kliknięciu ikony kosza na karcie wywołujemy zwykłą metodę
-                              _handleDelete(context, ref, item.id);
-                            },
-                          ),
-                        );
-                      },
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _Header(theme: theme),
+                    Expanded(
+                      child: ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
+                        ),
+                        itemCount: notifications.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = notifications[index];
+
+                          return Dismissible(
+                            key: Key(item.id),
+                            direction: DismissDirection.endToStart,
+                            confirmDismiss: (direction) async {
+                              await ref
+                                  .read(
+                                    notificationsControllerProvider.notifier,
+                                  )
+                                  .moveToTrash(item.id);
+
+                              if (context.mounted) {
+                                _showUndoSnackBar(context, ref, item.id);
+                              }
+
+                              return true;
+                            },
+                            onDismissed: (_) {},
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 24),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.error,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.white,
+                              ),
+                            ),
+                            child: NotificationCard(
+                              item: item,
+                              onTap: () => NotificationDetailsSheet.show(
+                                context,
+                                ref,
+                                item,
+                              ),
+                              onDelete: () {
+                                _handleDelete(context, ref, item.id);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+        ),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Błąd: $err')),
       ),

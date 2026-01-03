@@ -4,6 +4,7 @@
 
 abstract class  LocaleKeys {
   static const common_logout = 'common.logout';
+  static const common_refresh = 'common.refresh';
   static const common_undo = 'common.undo';
   static const common_today = 'common.today';
   static const common_yesterday = 'common.yesterday';

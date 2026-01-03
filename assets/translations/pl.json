@@ -1,6 +1,7 @@
 {
   "common": {
     "logout": "Wyloguj",
+    "refresh": "Odśwież",
     "undo": "Cofnij",
     "today": "Dzisiaj",
     "yesterday": "Wczoraj",
