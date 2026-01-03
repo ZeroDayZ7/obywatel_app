@@ -1,11 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
-import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -22,9 +18,7 @@ part 'database.g.dart';
   daos: [CryptoKeysDao, NotificationsDao],
 )
 class AppDatabase extends _$AppDatabase {
-  final SecureStorageService storage;
-
-  AppDatabase(this.storage) : super(_openConnection(storage));
+  AppDatabase(super.executor);
 
   @override
   int get schemaVersion => 2;
@@ -51,25 +45,17 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-QueryExecutor _openConnection(SecureStorageService storage) {
+/// Funkcja tworząca połączenie. Klucz szyfrujący jest przekazywany jako prosty String,
+/// co pozwala na bezpieczne przesłanie go do tła (Isolate).
+QueryExecutor openConnection(String encryptionKey) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
     final file = File(p.join(dbFolder.path, 'app_encrypted.sqlite'));
 
-    String? encryptionKey = await storage.read(key: StorageKeys.databaseKey);
-
-    if (encryptionKey == null) {
-      final values = List<int>.generate(
-        32,
-        (i) => Random.secure().nextInt(256),
-      );
-      encryptionKey = base64Url.encode(values);
-      await storage.write(key: StorageKeys.databaseKey, value: encryptionKey);
-    }
-
     return NativeDatabase.createInBackground(
       file,
       setup: (rawDb) {
+        // Używamy PRAGMA key dla SQLCipher
         rawDb.execute("PRAGMA key = '$encryptionKey';");
       },
     );

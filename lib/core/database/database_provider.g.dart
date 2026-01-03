@@ -48,7 +48,7 @@ final class AppDatabaseProvider
   }
 }
 
-String _$appDatabaseHash() => r'63c4d6e8ab059d587fc48306c31d85c057cae52e';
+String _$appDatabaseHash() => r'9ae0f333087389c5f5153f3a4962fe4d4a4eb397';
 
 @ProviderFor(notificationsDao)
 final notificationsDaoProvider = NotificationsDaoProvider._();
