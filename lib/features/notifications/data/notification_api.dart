@@ -20,4 +20,20 @@ class NotificationApi {
   Future<void> markAllAsRead() async {
     await _dio.patch(ApiEndpoints.markAllNotificationsAsRead);
   }
+
+  Future<void> moveToTrash(String id) async {
+    await _dio.patch(ApiEndpoints.moveToTrash(id));
+  }
+
+  Future<void> clearTrash() async {
+    await _dio.delete(ApiEndpoints.clearTrash);
+  }
+
+  Future<void> restoreFromTrash(String id) async {
+    await _dio.patch(ApiEndpoints.restoreFromTrash(id));
+  }
+
+  Future<void> deletePermanently(String id) async {
+    await _dio.delete(ApiEndpoints.deleteNotification(id));
+  }
 }

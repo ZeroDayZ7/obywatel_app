@@ -28,4 +28,8 @@ class ApiEndpoints {
   static String get notifications => '/notifications';
   static String markAsRead(String id) => '/notifications/$id/read';
   static String get markAllNotificationsAsRead => '/notifications/read-all';
+  static String moveToTrash(String id) => '/notifications/$id/trash';
+  static String get clearTrash => '/notifications/trash';
+  static String restoreFromTrash(String id) => '/notifications/$id/restore';
+  static String deleteNotification(String id) => '/notifications/$id';
 }

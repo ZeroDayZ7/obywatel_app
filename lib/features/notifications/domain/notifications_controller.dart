@@ -21,10 +21,16 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> markAsRead(String id) async {
+    // 1. Lokalnie
     await ref.read(notificationsDaoProvider).markAsRead(id);
+    // 2. Serwer
     try {
       await NotificationApi(ref.read(authDioProvider)).markAsRead(id);
-    } catch (_) {}
+    } catch (e) {
+      ref
+          .read(appLoggerProvider)
+          .e('Błąd oznaczania jako przeczytane w API: $id');
+    }
   }
 
   Future<void> markAllAsRead() async {
@@ -50,17 +56,56 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> moveToTrash(String id) async {
+    // 1. Lokalnie
     await ref
         .read(notificationsDaoProvider)
         .updateDeletedAt(id, DateTime.now());
+    // 2. Serwer (Soft Delete)
+    try {
+      await NotificationApi(ref.read(authDioProvider)).moveToTrash(id);
+    } catch (e) {
+      ref.read(appLoggerProvider).e('Błąd przenoszenia do kosza w API: $id');
+    }
+  }
+
+  Future<void> clearAllTrash() async {
+    // 1. Lokalnie
+    await ref.read(notificationsDaoProvider).deleteAllTrash();
+    // 2. Serwer (Hard Delete)
+    try {
+      await NotificationApi(ref.read(authDioProvider)).clearTrash();
+    } catch (e) {
+      ref.read(appLoggerProvider).e('Błąd czyszczenia kosza w API');
+    }
   }
 
   Future<void> restoreFromTrash(String id) async {
+    // 1. Lokalnie (UI reaguje od razu)
     await ref.read(notificationsDaoProvider).updateDeletedAt(id, null);
+
+    // 2. Serwer
+    try {
+      await NotificationApi(ref.read(authDioProvider)).restoreFromTrash(id);
+      ref
+          .read(appLoggerProvider)
+          .i('✅ Przywrócono powiadomienie na serwerze: $id');
+    } catch (e) {
+      ref.read(appLoggerProvider).e('❌ Błąd przywracania z kosza w API: $id');
+      // Opcjonalnie: jeśli API zwróci błąd, przywracamy deletedAt lokalnie
+      // await ref.read(notificationsDaoProvider).updateDeletedAt(id, DateTime.now());
+    }
   }
 
   Future<void> deletePermanently(String id) async {
+    // 1. Lokalnie
     await ref.read(notificationsDaoProvider).deleteNotification(id);
+
+    // 2. API
+    try {
+      await NotificationApi(ref.read(authDioProvider)).deletePermanently(id);
+    } catch (e) {
+      ref.read(appLoggerProvider).e('Błąd usuwania w API: $id');
+    }
   }
 
   Future<void> vacuumOldNotifications() async {
@@ -68,25 +113,19 @@ class NotificationsController extends _$NotificationsController {
     await ref.read(notificationsDaoProvider).deleteOlderThan(sevenDaysAgo);
   }
 
-  Future<void> clearAllTrash() async {
-    await ref.read(notificationsDaoProvider).deleteAllTrash();
-  }
-
   Future<void> syncWithBackend() async {
     final logger = ref.read(appLoggerProvider);
     try {
-      // 1. Pobierz z API (używając authDio z Fresh)
       final api = NotificationApi(ref.read(authDioProvider));
       final remoteNotifications = await api.fetchNotifications();
 
-      // 2. Zapisz/Aktualizuj w lokalnej bazie Drift (Upsert)
-      // Twój DAO musi mieć metodę upsertNotifications
+      // ZMIANA: Zamiast upsertNotifications, używamy nowej metody sync
       await ref
           .read(notificationsDaoProvider)
-          .upsertNotifications(remoteNotifications);
+          .syncLocalWithRemote(remoteNotifications);
 
       logger.i(
-        '🔄 Powiadomienia zsynchronizowane: ${remoteNotifications.length}',
+        '🔄 Synchronizacja zakończona: ${remoteNotifications.length} powiadomień',
       );
     } catch (e, st) {
       logger.e('❌ Błąd synchronizacji powiadomień', error: e, stackTrace: st);
@@ -133,4 +172,9 @@ class NotificationsController extends _$NotificationsController {
     // Zapisujemy listę do bazy za pomocą Twojego DAO
     await ref.read(notificationsDaoProvider).upsertNotifications(testMocks);
   }
+}
+
+@riverpod
+Stream<List<NotificationModel>> trashNotifications(Ref ref) {
+  return ref.watch(notificationsDaoProvider).watchTrashNotifications();
 }

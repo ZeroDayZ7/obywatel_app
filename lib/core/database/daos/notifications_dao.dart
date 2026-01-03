@@ -11,6 +11,23 @@ class NotificationsDao extends DatabaseAccessor<AppDatabase>
     with _$NotificationsDaoMixin {
   NotificationsDao(super.db);
 
+  // Metoda wykonująca pełną synchronizację (Lustro serwera)
+  Future<void> syncLocalWithRemote(List<NotificationModel> remoteItems) async {
+    // transaction zapewnia, że albo wszystko się uda, albo nic
+    // oraz że UI odświeży się tylko raz
+    await transaction(() async {
+      // 1. Najpierw aktualizujemy i dodajemy to, co przyszło z serwera
+      await upsertNotifications(remoteItems);
+
+      // 2. Pobieramy ID wszystkich powiadomień, które właśnie dostaliśmy
+      final remoteIds = remoteItems.map((e) => e.id).toList();
+
+      // 3. Usuwamy z lokalnej bazy te, których NIE MA na liście z serwera
+      // (czyli te, które zostały trwale usunięte w pgAdminie lub na innym urządzeniu)
+      await (delete(notifications)..where((t) => t.id.isNotIn(remoteIds))).go();
+    });
+  }
+
   Stream<List<NotificationModel>> watchAllNotifications() {
     return (select(notifications)
           ..where((t) => t.deletedAt.isNull())

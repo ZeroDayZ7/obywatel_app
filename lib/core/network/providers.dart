@@ -59,7 +59,7 @@ Dio authDio(Ref ref) {
       final deviceService = ref.read(deviceInfoServiceProvider);
       final authState = ref.read(authControllerProvider);
       final userId = authState.maybeWhen(
-        authenticated: (id, _, __) => id.toString(),
+        authenticated: (id, _, _) => id.toString(),
         orElse: () => '',
       );
       if (userId.isEmpty) {
