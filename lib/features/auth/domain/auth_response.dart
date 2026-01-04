@@ -5,15 +5,16 @@ part 'auth_response.freezed.dart';
 
 @freezed
 sealed class AuthResponse with _$AuthResponse {
-  // 2FA required response
-  const factory AuthResponse.twoFaRequired({
-    required String twoFaToken,
-  }) = _TwoFaRequired;
-
-  // Successful login response
+  // Sukces po 2FA: mamy tokeny w RAM i challenge do podpisania
   const factory AuthResponse.success({
     required String accessToken,
     required String refreshToken,
     required String userId,
+    String? challenge,
+    @Default(false) bool isDeviceTrusted,
   }) = _Success;
+
+  // 2FA wymagane (pierwszy krok logowania)
+  const factory AuthResponse.twoFaRequired({required String twoFaToken}) =
+      _TwoFaRequired;
 }

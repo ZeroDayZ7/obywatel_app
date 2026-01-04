@@ -94,7 +94,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     final current = state.requireValue;
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
-    final sessionService = ref.read(sessionServiceProvider); // Dodaj to
+    final sessionService = ref.read(sessionServiceProvider);
 
     state = const AsyncValue.loading();
 
@@ -107,9 +107,21 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
         if (userId == null) throw Exception("Błąd: Brak ID użytkownika.");
 
         final keyPair = await deviceService.generateDeviceKeyPair();
+        final challenge = authState.mapOrNull(
+          authenticated: (s) => s.challenge,
+        );
         final publicKey = await keyPair.extractPublicKey();
-        final fingerprint = await deviceService.getSecureFingerprint(userId);
+        final fingerprint = await deviceService.getSecureFingerprint();
         final encryptedName = await deviceService.getEncryptedMarketingName();
+
+        String? signature;
+        if (challenge != null) {
+          signature = await deviceService.signChallenge(challenge, keyPair);
+        }
+
+        if (signature == null) {
+          throw Exception("Nie udało się wygenerować podpisu urządzenia");
+        }
 
         // 🔥 WYWOŁANIE REJESTRACJI I ODBIÓR NOWEGO TOKENA
         final newAccessToken = await authService.registerTrustedDevice(
@@ -117,6 +129,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
           publicKey: base64Encode(publicKey.bytes),
           encryptedName: encryptedName,
           platform: Platform.operatingSystem,
+          signature: signature,
         );
 
         // 🔥 AKTUALIZACJA SESJI

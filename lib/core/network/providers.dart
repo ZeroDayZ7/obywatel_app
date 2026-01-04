@@ -10,7 +10,6 @@ import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_status_provider.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -59,7 +58,7 @@ Dio authDio(Ref ref) {
       final deviceService = ref.read(deviceInfoServiceProvider);
       final authState = ref.read(authControllerProvider);
       final userId = authState.maybeWhen(
-        authenticated: (id, _, _) => id.toString(),
+        authenticated: (id, _, _, _, _) => id.toString(),
         orElse: () => '',
       );
       if (userId.isEmpty) {
@@ -68,7 +67,7 @@ Dio authDio(Ref ref) {
         );
       }
 
-      final fingerprint = await deviceService.getSecureFingerprint(userId);
+      final fingerprint = await deviceService.getSecureFingerprint();
       final response = await client.post(
         '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
         data: {'refresh_token': token?.refreshToken},
@@ -85,12 +84,12 @@ Dio authDio(Ref ref) {
 
   dio.interceptors.add(fresh);
 
-  fresh.authenticationStatus.listen((status) {
-    if (status == AuthenticationStatus.unauthenticated) {
-      ref.read(sessionStatusProvider.notifier).reportInvalidSession();
-      ref.read(authControllerProvider.notifier).logout();
-    }
-  });
+  // fresh.authenticationStatus.listen((status) {
+  //   if (status == AuthenticationStatus.unauthenticated) {
+  //     ref.read(sessionStatusProvider.notifier).reportInvalidSession();
+  //     ref.read(authControllerProvider.notifier).logout();
+  //   }
+  // });
 
   return dio;
 }

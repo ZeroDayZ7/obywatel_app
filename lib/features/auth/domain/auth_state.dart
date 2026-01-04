@@ -24,6 +24,8 @@ sealed class AuthState with _$AuthState {
     required String userId,
     String? accessToken,
     String? refreshToken,
+    String? challenge,
+    @Default(false) bool isDeviceTrusted,
   }) = _Authenticated;
 
   /// Error state (optional – często lepiej przez global error handler)

@@ -33,10 +33,11 @@ class SecureTokenStorage extends TokenStorage<OAuth2Token> {
 
   @override
   Future<void> write(OAuth2Token token) async {
+    final currentUserId = await _sessionService.getUserId();
     await _sessionService.saveSession(
       accessToken: token.accessToken,
       refreshToken: token.refreshToken ?? '',
-      userId: await _sessionService.getUserId() ?? '',
+      userId: currentUserId ?? '',
     );
   }
 }

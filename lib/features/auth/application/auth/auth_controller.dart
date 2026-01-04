@@ -1,8 +1,10 @@
+import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_exception.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
@@ -53,15 +55,29 @@ class AuthController extends _$AuthController {
         twoFaRequired: (token) {
           state = AuthState.twoFaRequired(email: email, tempToken: token);
         },
-        success: (accessToken, refreshToken, userId) async {
-          await ref.read(securityServiceProvider.notifier).init();
-          // Tylko ustawiamy stan. Observer zajmie się resztą.
-          state = AuthState.authenticated(
-            userId: userId,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          );
-        },
+        success:
+            (
+              accessToken,
+              refreshToken,
+              userId,
+              challenge,
+              isDeviceTrusted,
+            ) async {
+              // 1. ZAPISUJEMY (Blokujemy wykonanie)
+              await _sessionService.saveSession(
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                userId: userId,
+              );
+              await ref.read(securityServiceProvider.notifier).init();
+              state = AuthState.authenticated(
+                userId: userId,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                challenge: challenge,
+                isDeviceTrusted: isDeviceTrusted,
+              );
+            },
       );
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
@@ -101,14 +117,41 @@ class AuthController extends _$AuthController {
           email: currentEmail,
           tempToken: token,
         ),
-        success: (accessToken, refreshToken, userId) async {
-          await ref.read(securityServiceProvider.notifier).unlockManually();
-          state = AuthState.authenticated(
-            userId: userId,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-          );
-        },
+        success:
+            (
+              accessToken,
+              refreshToken,
+              userId,
+              challenge,
+              isDeviceTrusted,
+            ) async {
+              // 1. Tworzymy obiekt tokena z parametrów, które przyszły z sukcesu
+              final oAuthToken = OAuth2Token(
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+              );
+              // 2. Pobieramy fresh i ustawiamy w nim nowo utworzony token
+              final dio = ref.read(authDioProvider);
+              final fresh = dio.interceptors
+                  .whereType<Fresh<OAuth2Token>>()
+                  .first;
+
+              await fresh.setToken(oAuthToken);
+              // 3. Zapisujemy w sesji i aktualizujemy stan
+              await _sessionService.saveSession(
+                userId: userId,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+              );
+              await ref.read(securityServiceProvider.notifier).unlockManually();
+              state = AuthState.authenticated(
+                userId: userId,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                challenge: challenge,
+                isDeviceTrusted: isDeviceTrusted,
+              );
+            },
       );
     } catch (e) {
       codeBytes.fillRange(0, codeBytes.length, 0);

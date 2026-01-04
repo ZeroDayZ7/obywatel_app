@@ -32,6 +32,10 @@ class StorageInitTask implements StartupTask {
       //   database.clearDatabase(),
       // ]);
 
+      // await storage.clearAll();
+      // await Future.delayed(const Duration(seconds: 2));
+      // await storage.debugPrintAll();
+
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
     }

@@ -78,7 +78,7 @@ class DeviceInfoService {
   }
 
   /// Tworzy unikalny hash urządzenia
-  Future<String> getSecureFingerprint(String userId) async {
+  Future<String> getSecureFingerprint() async {
     final data = await collectDeviceInfo();
     final info = data['device_info'] as Map<String, dynamic>;
 
@@ -102,7 +102,7 @@ class DeviceInfoService {
         .join('|');
 
     final String rawFingerprint =
-        "$cleanComponents|${data['app_device_id_secure']}|$userId";
+        "$cleanComponents|${data['app_device_id_secure']}";
 
     final bytes = utf8.encode(rawFingerprint);
     return sha256.convert(bytes).toString();
@@ -215,6 +215,25 @@ class DeviceInfoService {
     } catch (e) {
       _log.e('Błąd deszyfrowania nazwy urządzenia: $e');
       return "Encrypted Device"; // Fallback
+    }
+  }
+
+  /// Podpisuje challenge (UUID) przy użyciu klucza prywatnego urządzenia
+  Future<String> signChallenge(String challenge, SimpleKeyPair keyPair) async {
+    try {
+      final algorithm = Ed25519();
+
+      // 1. Konwertujemy tekstowe wyzwanie na bajty
+      final message = utf8.encode(challenge);
+
+      // 2. Podpisujemy algorytmem Ed25519
+      final signature = await algorithm.sign(message, keyPair: keyPair);
+
+      // 3. Zwracamy jako Base64, aby serwer w Go mógł to łatwo odczytać
+      return base64Encode(signature.bytes);
+    } catch (e) {
+      _log.e('Błąd podczas podpisywania challenge: $e');
+      throw Exception('Nie udało się podpisać wyzwania bezpieczeństwa.');
     }
   }
 }

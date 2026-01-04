@@ -63,6 +63,8 @@ class AuthService {
     final accessToken = data[StorageKeys.accessToken]?.toString();
     final refreshToken = data[StorageKeys.refreshToken]?.toString();
     final userId = data[StorageKeys.userId]?.toString();
+    final challenge = data['challenge']?.toString();
+    final isTrusted = data['is_trusted'] as bool? ?? false;
 
     if (accessToken == null || refreshToken == null || userId == null) {
       throw Exception('errors.INVALID_2FA');
@@ -72,6 +74,8 @@ class AuthService {
       accessToken: accessToken,
       refreshToken: refreshToken,
       userId: userId,
+      challenge: challenge,
+      isDeviceTrusted: isTrusted,
     );
   }
 
@@ -80,14 +84,16 @@ class AuthService {
     required String publicKey,
     required String encryptedName,
     required String platform,
+    required String signature,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.registerDevice,
       data: {
-        'device_fingerprint': fingerprint,
+        'fingerprint': fingerprint,
         'public_key': publicKey,
-        'device_name_encrypted': encryptedName,
+        'encrypted_name': encryptedName,
         'platform': platform,
+        'signature': signature,
       },
     );
 

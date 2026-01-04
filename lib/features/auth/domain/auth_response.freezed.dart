@@ -55,12 +55,12 @@ extension AuthResponsePatterns on AuthResponse {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _TwoFaRequired value)?  twoFaRequired,TResult Function( _Success value)?  success,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Success value)?  success,TResult Function( _TwoFaRequired value)?  twoFaRequired,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _TwoFaRequired() when twoFaRequired != null:
-return twoFaRequired(_that);case _Success() when success != null:
-return success(_that);case _:
+case _Success() when success != null:
+return success(_that);case _TwoFaRequired() when twoFaRequired != null:
+return twoFaRequired(_that);case _:
   return orElse();
 
 }
@@ -78,12 +78,12 @@ return success(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _TwoFaRequired value)  twoFaRequired,required TResult Function( _Success value)  success,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Success value)  success,required TResult Function( _TwoFaRequired value)  twoFaRequired,}){
 final _that = this;
 switch (_that) {
-case _TwoFaRequired():
-return twoFaRequired(_that);case _Success():
-return success(_that);}
+case _Success():
+return success(_that);case _TwoFaRequired():
+return twoFaRequired(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -97,12 +97,12 @@ return success(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _TwoFaRequired value)?  twoFaRequired,TResult? Function( _Success value)?  success,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Success value)?  success,TResult? Function( _TwoFaRequired value)?  twoFaRequired,}){
 final _that = this;
 switch (_that) {
-case _TwoFaRequired() when twoFaRequired != null:
-return twoFaRequired(_that);case _Success() when success != null:
-return success(_that);case _:
+case _Success() when success != null:
+return success(_that);case _TwoFaRequired() when twoFaRequired != null:
+return twoFaRequired(_that);case _:
   return null;
 
 }
@@ -119,11 +119,11 @@ return success(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String accessToken,  String refreshToken,  String userId)?  success,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String accessToken,  String refreshToken,  String userId,  String? challenge,  bool isDeviceTrusted)?  success,TResult Function( String twoFaToken)?  twoFaRequired,required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _TwoFaRequired() when twoFaRequired != null:
-return twoFaRequired(_that.twoFaToken);case _Success() when success != null:
-return success(_that.accessToken,_that.refreshToken,_that.userId);case _:
+case _Success() when success != null:
+return success(_that.accessToken,_that.refreshToken,_that.userId,_that.challenge,_that.isDeviceTrusted);case _TwoFaRequired() when twoFaRequired != null:
+return twoFaRequired(_that.twoFaToken);case _:
   return orElse();
 
 }
@@ -141,11 +141,11 @@ return success(_that.accessToken,_that.refreshToken,_that.userId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String accessToken,  String refreshToken,  String userId)  success,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String accessToken,  String refreshToken,  String userId,  String? challenge,  bool isDeviceTrusted)  success,required TResult Function( String twoFaToken)  twoFaRequired,}) {final _that = this;
 switch (_that) {
-case _TwoFaRequired():
-return twoFaRequired(_that.twoFaToken);case _Success():
-return success(_that.accessToken,_that.refreshToken,_that.userId);}
+case _Success():
+return success(_that.accessToken,_that.refreshToken,_that.userId,_that.challenge,_that.isDeviceTrusted);case _TwoFaRequired():
+return twoFaRequired(_that.twoFaToken);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -159,15 +159,89 @@ return success(_that.accessToken,_that.refreshToken,_that.userId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String accessToken,  String refreshToken,  String userId)?  success,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String accessToken,  String refreshToken,  String userId,  String? challenge,  bool isDeviceTrusted)?  success,TResult? Function( String twoFaToken)?  twoFaRequired,}) {final _that = this;
 switch (_that) {
-case _TwoFaRequired() when twoFaRequired != null:
-return twoFaRequired(_that.twoFaToken);case _Success() when success != null:
-return success(_that.accessToken,_that.refreshToken,_that.userId);case _:
+case _Success() when success != null:
+return success(_that.accessToken,_that.refreshToken,_that.userId,_that.challenge,_that.isDeviceTrusted);case _TwoFaRequired() when twoFaRequired != null:
+return twoFaRequired(_that.twoFaToken);case _:
   return null;
 
 }
 }
+
+}
+
+/// @nodoc
+
+
+class _Success implements AuthResponse {
+  const _Success({required this.accessToken, required this.refreshToken, required this.userId, this.challenge, this.isDeviceTrusted = false});
+  
+
+ final  String accessToken;
+ final  String refreshToken;
+ final  String userId;
+ final  String? challenge;
+@JsonKey() final  bool isDeviceTrusted;
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$SuccessCopyWith<_Success> get copyWith => __$SuccessCopyWithImpl<_Success>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.isDeviceTrusted, isDeviceTrusted) || other.isDeviceTrusted == isDeviceTrusted));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,userId,challenge,isDeviceTrusted);
+
+@override
+String toString() {
+  return 'AuthResponse.success(accessToken: $accessToken, refreshToken: $refreshToken, userId: $userId, challenge: $challenge, isDeviceTrusted: $isDeviceTrusted)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$SuccessCopyWith<$Res> implements $AuthResponseCopyWith<$Res> {
+  factory _$SuccessCopyWith(_Success value, $Res Function(_Success) _then) = __$SuccessCopyWithImpl;
+@useResult
+$Res call({
+ String accessToken, String refreshToken, String userId, String? challenge, bool isDeviceTrusted
+});
+
+
+
+
+}
+/// @nodoc
+class __$SuccessCopyWithImpl<$Res>
+    implements _$SuccessCopyWith<$Res> {
+  __$SuccessCopyWithImpl(this._self, this._then);
+
+  final _Success _self;
+  final $Res Function(_Success) _then;
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,Object? userId = null,Object? challenge = freezed,Object? isDeviceTrusted = null,}) {
+  return _then(_Success(
+accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
+as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,challenge: freezed == challenge ? _self.challenge : challenge // ignore: cast_nullable_to_non_nullable
+as String?,isDeviceTrusted: null == isDeviceTrusted ? _self.isDeviceTrusted : isDeviceTrusted // ignore: cast_nullable_to_non_nullable
+as bool,
+  ));
+}
+
 
 }
 
@@ -230,76 +304,6 @@ class __$TwoFaRequiredCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') $Res call({Object? twoFaToken = null,}) {
   return _then(_TwoFaRequired(
 twoFaToken: null == twoFaToken ? _self.twoFaToken : twoFaToken // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class _Success implements AuthResponse {
-  const _Success({required this.accessToken, required this.refreshToken, required this.userId});
-  
-
- final  String accessToken;
- final  String refreshToken;
- final  String userId;
-
-/// Create a copy of AuthResponse
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$SuccessCopyWith<_Success> get copyWith => __$SuccessCopyWithImpl<_Success>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.userId, userId) || other.userId == userId));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,userId);
-
-@override
-String toString() {
-  return 'AuthResponse.success(accessToken: $accessToken, refreshToken: $refreshToken, userId: $userId)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$SuccessCopyWith<$Res> implements $AuthResponseCopyWith<$Res> {
-  factory _$SuccessCopyWith(_Success value, $Res Function(_Success) _then) = __$SuccessCopyWithImpl;
-@useResult
-$Res call({
- String accessToken, String refreshToken, String userId
-});
-
-
-
-
-}
-/// @nodoc
-class __$SuccessCopyWithImpl<$Res>
-    implements _$SuccessCopyWith<$Res> {
-  __$SuccessCopyWithImpl(this._self, this._then);
-
-  final _Success _self;
-  final $Res Function(_Success) _then;
-
-/// Create a copy of AuthResponse
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,Object? userId = null,}) {
-  return _then(_Success(
-accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
-as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
