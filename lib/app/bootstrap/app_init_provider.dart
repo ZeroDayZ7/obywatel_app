@@ -40,7 +40,7 @@ class AppInitNotifier extends _$AppInitNotifier {
         tasks: [
           StorageInitTask(storage: storage, prefs: prefs, database: database),
           SecurityInitTask(ref.read(securityServiceProvider.notifier)),
-          DeviceIntegrityTask(ref.read(deviceIntegrityServiceProvider)),
+          DeviceIntegrityTask(ref.read(deviceIntegrityFacadeProvider)),
           VersionCheckTask(ref.read(versionProvider.notifier)),
         ],
       );

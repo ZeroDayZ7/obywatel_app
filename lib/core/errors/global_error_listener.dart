@@ -1,12 +1,10 @@
-// lib/core/errors/global_error_listener.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
-
-import 'global_error_provider.dart';
 
 class GlobalErrorListener extends ConsumerWidget {
   final Widget child;
@@ -14,65 +12,54 @@ class GlobalErrorListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    ref.listen<AppNotification?>(globalNotificationProvider, (previous, next) {
+    // Nasłuchiwanie na globalne powiadomienia
+    ref.listen<AppNotification?>(globalNotificationProvider, (prev, next) {
       if (next != null) {
-        // 1. Najpierw wywołaj efekt fizyczny (wibracja/dźwięk)
-        _triggerFeedback(ref, next.type);
-
-        // 2. Potem pokaż UI (SnackBar)
-        _showAdaptiveSnackBar(context, next);
+        _handleNotification(context, ref, next);
       }
     });
+
     return child;
   }
 
-  // PRYWATNA METODA DO MAPOWANIA I URUCHAMIANIA FEEDBACKU
-  void _triggerFeedback(WidgetRef ref, NotificationType type) {
-    final feedbackService = ref.read(feedbackServiceProvider);
+  void _handleNotification(
+    BuildContext context,
+    WidgetRef ref,
+    AppNotification notification,
+  ) {
+    // 1. Feedback haptyczny/fizyczny
+    final feedbackType = _mapToFeedback(notification.type);
+    ref.read(feedbackServiceProvider).trigger(feedbackType);
 
-    // Mapujemy typ powiadomienia na typ fizycznego feedbacku
-    final feedbackType = switch (type) {
-      NotificationType.error => FeedbackType.error,
-      NotificationType.warning => FeedbackType.warning,
-      NotificationType.success => FeedbackType.success,
-      NotificationType.info => FeedbackType.info,
-    };
-
-    feedbackService.trigger(feedbackType);
+    // 2. Wyświetlenie UI
+    _showAdaptiveSnackBar(context, notification);
   }
 
   void _showAdaptiveSnackBar(
     BuildContext context,
     AppNotification notification,
   ) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final bool isDesktop = size.width > 600;
 
-    final Map<NotificationType, _ToastStyle> styles = {
-      NotificationType.error: _ToastStyle(
-        color: Colors.red.shade800,
-        icon: Icons.error_outline,
-      ),
-      NotificationType.warning: _ToastStyle(
-        color: Colors.orange.shade700,
-        icon: Icons.warning_amber_rounded,
-      ),
-      NotificationType.success: _ToastStyle(
-        color: Colors.green.shade800,
-        icon: Icons.check_circle_outline,
-      ),
-      NotificationType.info: _ToastStyle(
-        color: Colors.blue.shade800,
-        icon: Icons.info_outline,
-      ),
-    };
+    // Pobieramy styl na podstawie typu notyfikacji za pomocą Pattern Matching
+    final style = _getStyle(notification.type);
 
-    final style = styles[notification.type] ?? styles[NotificationType.error]!;
-
+    // Czyścimy poprzednie powiadomienia, aby uniknąć kolejkowania
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
+        backgroundColor: style.color,
+        behavior: SnackBarBehavior.floating,
+        elevation: 8,
+        duration: const Duration(seconds: 4),
+        dismissDirection: DismissDirection.horizontal,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        width: isDesktop ? 400 : null,
+        margin: isDesktop
+            ? null
+            : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         content: Row(
           children: [
             Icon(style.icon, color: Colors.white, size: 24),
@@ -87,7 +74,6 @@ class GlobalErrorListener extends ConsumerWidget {
                 ),
               ),
             ),
-            // Krzyżyk pokazujemy tylko, gdy NIE MA przycisku akcji (żeby nie było tłoczno)
             if (notification.onActionPressed == null)
               IconButton(
                 constraints: const BoxConstraints(),
@@ -98,30 +84,51 @@ class GlobalErrorListener extends ConsumerWidget {
               ),
           ],
         ),
-        // DODAJEMY TO:
         action: notification.onActionPressed != null
             ? SnackBarAction(
-                label: notification.actionLabelKey!.tr(),
+                label: notification.actionLabelKey?.tr() ?? '',
                 textColor: Colors.white,
                 onPressed: notification.onActionPressed!,
               )
             : null,
-        // ----------------
-        backgroundColor: style.color,
-        behavior: SnackBarBehavior.floating,
-        margin: isDesktop
-            ? null
-            : const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        width: isDesktop ? 400 : null,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 8,
-        duration: const Duration(seconds: 4),
-        dismissDirection: DismissDirection.horizontal,
       ),
     );
   }
+
+  // Mapowanie typu notyfikacji na fizyczny feedback
+  FeedbackType _mapToFeedback(NotificationType type) {
+    return switch (type) {
+      NotificationType.error => FeedbackType.error,
+      NotificationType.warning => FeedbackType.warning,
+      NotificationType.success => FeedbackType.success,
+      NotificationType.info => FeedbackType.info,
+    };
+  }
+
+  // Mapowanie wizualne (Kolory i Ikony)
+  _ToastStyle _getStyle(NotificationType type) {
+    return switch (type) {
+      NotificationType.error => _ToastStyle(
+        color: Colors.red.shade800,
+        icon: Icons.error_outline,
+      ),
+      NotificationType.warning => _ToastStyle(
+        color: Colors.orange.shade700,
+        icon: Icons.warning_amber_rounded,
+      ),
+      NotificationType.success => _ToastStyle(
+        color: Colors.green.shade800,
+        icon: Icons.check_circle_outline,
+      ),
+      NotificationType.info => _ToastStyle(
+        color: Colors.blue.shade800,
+        icon: Icons.info_outline,
+      ),
+    };
+  }
 }
 
+/// Prywatna klasa pomocnicza dla stylizacji
 class _ToastStyle {
   final Color color;
   final IconData icon;

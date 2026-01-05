@@ -66,6 +66,7 @@
     "invalid_phone": "Nieprawidłowy format numeru telefonu"
   },
   "errors": {
+    "cache": "Błąd zapisu lub odczytu danych lokalnych",
     "unexpected_error": "Wystąpił nieoczekiwany błąd",
     "CONNECTION_ERROR": "Brak połączenia z internetem",
     "SERVER_ERROR": "Błąd serwera. Spróbuj ponownie później.",

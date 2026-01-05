@@ -1,7 +1,6 @@
 import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
-import 'package:obywatel_plus/core/errors/app_exception.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
@@ -176,9 +175,8 @@ class AuthController extends _$AuthController {
   }
 
   void _handleError(Object e) {
-    ref
-        .read(globalNotificationProvider.notifier)
-        .showFromError(e is AppException ? e : AppException.fromDio(e));
+    // Po prostu przekaż błąd dalej. Notifier zajmie się mapowaniem na AppFailure.
+    ref.read(globalNotificationProvider.notifier).showFromError(e);
   }
 
   void _showError(String key) {

@@ -1,6 +1,6 @@
 import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/errors/app_exception.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_provider.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_service.dart';
@@ -48,9 +48,7 @@ class ResetPasswordNotifier extends Notifier<ResetPasswordState> {
           );
           _startTimer();
         } catch (e) {
-          // 🔹 mapujemy błąd i wysyłamy do globalnego powiadomienia
-          final appError = e is AppException ? e : AppException.fromDio(e);
-          ref.read(globalNotificationProvider.notifier).showFromError(appError);
+          ref.read(globalNotificationProvider.notifier).showFromError(e);
           state = ResetPasswordState.methodChosen(input: input, method: method);
         }
       },
@@ -93,8 +91,7 @@ class ResetPasswordNotifier extends Notifier<ResetPasswordState> {
       await _service.verifyCode(code);
       state = const ResetPasswordState.codeVerified();
     } catch (e) {
-      final appError = e is AppException ? e : AppException.fromDio(e);
-      ref.read(globalNotificationProvider.notifier).showFromError(appError);
+      ref.read(globalNotificationProvider.notifier).showFromError(e);
       state = const ResetPasswordState.codeSent(
         input: '',
         method: ResetMethod.email,
@@ -111,8 +108,7 @@ class ResetPasswordNotifier extends Notifier<ResetPasswordState> {
       await _service.resetPassword(password);
       state = const ResetPasswordState.completed();
     } catch (e) {
-      final appError = e is AppException ? e : AppException.fromDio(e);
-      ref.read(globalNotificationProvider.notifier).showFromError(appError);
+      ref.read(globalNotificationProvider.notifier).showFromError(e);
       state = const ResetPasswordState.codeVerified();
     }
   }

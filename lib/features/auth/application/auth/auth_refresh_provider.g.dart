@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'security_service_provider.dart';
+part of 'auth_refresh_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,51 +9,52 @@ part of 'security_service_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(SecurityService)
-final securityServiceProvider = SecurityServiceProvider._();
+@ProviderFor(AuthRefreshListenable)
+final authRefreshListenableProvider = AuthRefreshListenableProvider._();
 
-final class SecurityServiceProvider
-    extends $NotifierProvider<SecurityService, SecurityState> {
-  SecurityServiceProvider._()
+final class AuthRefreshListenableProvider
+    extends $NotifierProvider<AuthRefreshListenable, void> {
+  AuthRefreshListenableProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'securityServiceProvider',
+        name: r'authRefreshListenableProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$securityServiceHash();
+  String debugGetCreateSourceHash() => _$authRefreshListenableHash();
 
   @$internal
   @override
-  SecurityService create() => SecurityService();
+  AuthRefreshListenable create() => AuthRefreshListenable();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(SecurityState value) {
+  Override overrideWithValue(void value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<SecurityState>(value),
+      providerOverride: $SyncValueProvider<void>(value),
     );
   }
 }
 
-String _$securityServiceHash() => r'b2d9df32749d05b32f68ca6e671e08258239caa5';
+String _$authRefreshListenableHash() =>
+    r'e97a609efc0407ede659b6573c6d7e021a496efa';
 
-abstract class _$SecurityService extends $Notifier<SecurityState> {
-  SecurityState build();
+abstract class _$AuthRefreshListenable extends $Notifier<void> {
+  void build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<SecurityState, SecurityState>;
+    final ref = this.ref as $Ref<void, void>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<SecurityState, SecurityState>,
-              SecurityState,
+              AnyNotifier<void, void>,
+              void,
               Object?,
               Object?
             >;

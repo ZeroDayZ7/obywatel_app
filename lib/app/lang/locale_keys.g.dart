@@ -65,6 +65,7 @@ abstract class  LocaleKeys {
   static const validators_required_phone = 'validators.required_phone';
   static const validators_invalid_phone = 'validators.invalid_phone';
   static const validators = 'validators';
+  static const errors_cache = 'errors.cache';
   static const errors_unexpected_error = 'errors.unexpected_error';
   static const errors_CONNECTION_ERROR = 'errors.CONNECTION_ERROR';
   static const errors_SERVER_ERROR = 'errors.SERVER_ERROR';
