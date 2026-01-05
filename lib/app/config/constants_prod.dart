@@ -20,5 +20,5 @@ class ApiConstants extends ApiConstantsBase {
       defaultEmail = 'user@example.com',
       defaultPassword = 'Zaq1@wsx',
       appName = "Obywatel+",
-      appDescription = "Secure Citizen App";
+      appDescription = "Government Operating System";
 }

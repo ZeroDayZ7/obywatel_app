@@ -66,6 +66,7 @@ class SecurityService extends _$SecurityService
         case AppLifecycleState.paused:
           _logger.d('App hidden/minimized', module: 'Security');
           _enablePrivacyShield();
+          // Clipboard.setData(const ClipboardData(text: ''));
           break;
         default:
           break;

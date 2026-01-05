@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
@@ -33,11 +34,16 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
   void _startLockoutTimer(DateTime lockUntil) {
     _lockoutTimer?.cancel();
+
+    // Pobieramy notifier raz, by nie czytać go w pętli
+    final backendNotifier = ref.read(backendStateProvider.notifier);
+
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      final now = DateTime.now();
+      // KLUCZ: Używamy skorygowanego czasu serwerowego
+      final now = backendNotifier.getSafeNow();
       final remaining = lockUntil.difference(now);
 
-      if (remaining.isNegative || remaining.inSeconds <= 0) {
+      if (remaining.inSeconds <= 0) {
         timer.cancel();
         _lockoutTimer = null;
         await ref.read(pinAttemptLimiterProvider.notifier).reset();
@@ -68,12 +74,20 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       await ref.read(securityServiceProvider.notifier).unlockApp();
       state = const PinVerificationState.success();
     } else {
+      // 1. Zarejestruj próbę (to jest asynchroniczne)
       await ref
           .read(pinAttemptLimiterProvider.notifier)
           .registerFailedAttempt();
 
+      // 2. Pobierz aktualny stan limitera
       final updatedLimiter = ref.read(pinAttemptLimiterProvider).value;
+
       if (updatedLimiter != null && updatedLimiter.isLocked) {
+        // 3. OD RAU ustaw stan weryfikacji na locked, żeby UI nie mignął błędem
+        final now = ref.read(backendStateProvider.notifier).getSafeNow();
+        final initialRemaining = updatedLimiter.lockUntil!.difference(now);
+
+        state = PinVerificationState.locked(remaining: initialRemaining);
         _startLockoutTimer(updatedLimiter.lockUntil!);
       } else {
         state = const PinVerificationState.error();

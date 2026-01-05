@@ -1,24 +1,25 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
-  late final SecureStorageService _storage;
+part 'pin_attempt_limiter.g.dart';
 
+@Riverpod(keepAlive: true)
+class PinAttemptLimiter extends _$PinAttemptLimiter {
   @override
   Future<PinAttemptState> build() async {
-    _storage = ref.read(secureStorageProvider);
     return _loadFromStorage();
   }
 
   Future<PinAttemptState> _loadFromStorage() async {
-    final attemptsStr = await _storage.read(key: StorageKeys.pinAttempts);
-    final lockMillisStr = await _storage.read(key: StorageKeys.pinLockUntil);
+    final storage = ref.read(secureStorageProvider);
+    final attemptsStr = await storage.read(key: StorageKeys.pinAttempts);
+    final lockMillisStr = await storage.read(key: StorageKeys.pinLockUntil);
 
     final attempts = int.tryParse(attemptsStr ?? '') ?? 0;
     DateTime? lockUntil;
@@ -33,7 +34,7 @@ class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
   }
 
   Future<void> registerFailedAttempt() async {
-    // Pobieramy aktualny stan (jeśli załadowany)
+    // Generator obsługuje stan asynchroniczny, pobieramy aktualną wartość
     final currentState = state.value ?? const PinAttemptState();
 
     final nextAttempts = currentState.attempts + 1;
@@ -57,7 +58,7 @@ class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
       lockUntil: lockUntil,
     );
 
-    // Aktualizujemy stan i zapisujemy
+    // W generatorze używamy state = AsyncData(newState)
     state = AsyncData(newState);
     await _saveToStorage(newState);
   }
@@ -69,29 +70,27 @@ class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
   }
 
   Future<void> _saveToStorage(PinAttemptState data) async {
-    await _storage.write(
+    final storage = ref.read(secureStorageProvider);
+    await storage.write(
       key: StorageKeys.pinAttempts,
       value: data.attempts.toString(),
     );
+
     if (data.lockUntil != null) {
-      await _storage.write(
+      await storage.write(
         key: StorageKeys.pinLockUntil,
         value: data.lockUntil!.millisecondsSinceEpoch.toString(),
       );
     } else {
-      await _storage.delete(key: StorageKeys.pinLockUntil);
+      await storage.delete(key: StorageKeys.pinLockUntil);
     }
   }
 
   Duration _getLockDuration(int attempts) {
     if (attempts < 3) return Duration.zero;
     final lockCount = attempts - 2;
+    // Wykładniczy wzrost blokady: 60s, 120s, 240s...
     final seconds = 60 * (1 << (lockCount - 1));
     return Duration(seconds: seconds);
   }
 }
-
-final pinAttemptLimiterProvider =
-    AsyncNotifierProvider<PinAttemptLimiter, PinAttemptState>(
-      PinAttemptLimiter.new,
-    );
