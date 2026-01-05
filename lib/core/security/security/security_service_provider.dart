@@ -25,6 +25,7 @@ class SecurityService extends _$SecurityService
     with WidgetsBindingObserver
     implements ISecurityService {
   SecureApplicationController? _secureController;
+  Future<void>? _initFuture;
 
   @override
   SecurityState build() {
@@ -39,45 +40,40 @@ class SecurityService extends _$SecurityService
     _logger.d('SecureApplicationController registered', module: 'Security');
   }
 
-  // DODAJ TĘ METODĘ - ona usuwa błąd "undefined_method"
   void _enablePrivacyShield() {
     _logger.d('Locking SecureGate', module: 'Security');
-    _secureController?.lock(); // To aktywuje rozmycie (SecureGate)
+    _secureController?.lock();
   }
 
-  // DODAJ TĘ METODĘ - do odblokowania przy powrocie
   void _disablePrivacyShield() {
     _logger.d('Opening SecureGate', module: 'Security');
-    _secureController?.unlock(); // To zdejmuje rozmycie
+    _secureController?.unlock();
   }
 
-@override
-void didChangeAppLifecycleState(AppLifecycleState state) {
-  // Ignoruj zdarzenia, jeśli kontroler jeszcze nie jest zarejestrowany
-  if (_secureController == null) return;
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_secureController == null) return;
 
-  // Używamy Future.delayed, aby dać Windowsowi czas na "ogarnięcie" stanu okna
-  Future.microtask(() {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        _logger.d('App resumed', module: 'Security');
-        _checkIntegrityOnResume();
-        _disablePrivacyShield();
-        break;
+    Future.microtask(() {
+      switch (state) {
+        case AppLifecycleState.resumed:
+          _logger.d('App resumed', module: 'Security');
+          _checkIntegrityOnResume();
+          _disablePrivacyShield();
+          break;
 
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.paused:
-        _logger.d('App hidden/minimized', module: 'Security');
-        _enablePrivacyShield();
-        break;
-      default:
-        break;
-    }
-  });
-}
+        case AppLifecycleState.inactive:
+        case AppLifecycleState.paused:
+          _logger.d('App hidden/minimized', module: 'Security');
+          _enablePrivacyShield();
+          break;
+        default:
+          break;
+      }
+    });
+  }
 
   Future<void> _checkIntegrityOnResume() async {
-    // Sprawdzamy integralność urządzenia przy każdym powrocie z tła
     final isAllowed = await ref
         .read(deviceIntegrityFacadeProvider)
         .isDeviceAllowed();
@@ -99,7 +95,7 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
     }
   }
 
-  // --- Twoje Gettery ---
+  // --- Gettery ---
   SecureStorageService get _secureStorage => ref.read(secureStorageProvider);
   PinService get _pinService => ref.read(pinServiceProvider);
   LocalAuthentication get _localAuth => ref.read(localAuthProvider);
@@ -107,6 +103,21 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
 
   @override
   Future<void> init() async {
+    // Jeśli proces już trwa lub został zakończony, zwróć istniejący Future
+    if (_initFuture != null) {
+      return _initFuture;
+    }
+
+    // W przeciwnym razie przypisz i uruchom proces inicjalizacji
+    _initFuture = _internalInit();
+    return _initFuture;
+  }
+
+  // 3. Prywatna metoda z całą Twoją logiką
+  Future<void> _internalInit() async {
+    // Podwójne sprawdzenie, czy stan nie jest już gotowy
+    if (state.initialized) return;
+
     final [
       bool isPinConfigured,
       bool setupCompleted,
@@ -119,8 +130,9 @@ void didChangeAppLifecycleState(AppLifecycleState state) {
       _readBool(StorageKeys.isBiometricConfigured),
     ]);
 
+    // Poprawione wywołanie (dodane nawiasy)
     if (!isBiometricEnabled) {
-      _checkBiometricsAvailability;
+      await _checkBiometricsAvailability();
     }
 
     if (!setupCompleted) {
