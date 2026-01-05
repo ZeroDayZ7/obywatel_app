@@ -1,19 +1,21 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Provider dla PinService
-final pinServiceProvider = Provider<PinService>((ref) {
-  final storage = ref.read(secureStorageProvider);
-  final hash = ref.read(hashServiceProvider);
-  final logger = ref.read(appLoggerProvider);
+part 'pin_service.g.dart';
 
-  return PinService(storage: storage, hashService: hash, logger: logger);
-});
+@Riverpod(keepAlive: true)
+PinService pinService(Ref ref) {
+  return PinService(
+    storage: ref.watch(secureStorageProvider),
+    hashService: ref.watch(hashServiceProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+}
 
 /// Wyjątek dla nieprawidłowego PIN-u
 class PinValidationException implements Exception {
@@ -59,16 +61,11 @@ class PinService {
 
       // 5. Zapisujemy tylko HASH
       await _storage.write(key: StorageKeys.pinHash, value: hashed);
-
-      _logger.i('PinService: PIN ustawiony i pamięć wyczyszczona');
-    } catch (e, s) {
-      _logger.e('PinService: Błąd ustawiania PIN', error: e, stackTrace: s);
+    } catch (e) {
       rethrow;
     } finally {
-      // 6. KLUCZOWE: Całkowite wymazanie jawnego PINu z RAMu
       buffer.dispose();
 
-      // Zerujemy też listę wejściową dla bezpieczeństwa
       for (int i = 0; i < pinCodes.length; i++) {
         pinCodes[i] = 0;
       }
@@ -123,7 +120,6 @@ class PinService {
   Future<bool> hasPin() async {
     final storedHash = await _storage.read(key: StorageKeys.pinHash);
     final has = storedHash != null && storedHash.isNotEmpty;
-    _logger.d('PinService: PIN ustawiony? $has');
     return has;
   }
 

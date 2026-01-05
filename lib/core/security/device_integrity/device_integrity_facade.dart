@@ -12,7 +12,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'device_integrity_facade.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 IDeviceIntegrityFacade deviceIntegrityFacade(Ref ref) {
   return DeviceIntegrityFacade(
     logger: ref.watch(appLoggerProvider),

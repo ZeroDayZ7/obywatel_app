@@ -6,15 +6,19 @@ import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
-// PRZENIESIONO: Provider musi być poza klasą, aby był widoczny globalnie
-final deviceInfoServiceProvider = Provider<DeviceInfoService>((ref) {
+// 1. Dodaj wygenerowany plik
+part 'device_info_service.g.dart';
+
+// 2. Wygeneruj provider za pomocą adnotacji @riverpod
+@Riverpod(keepAlive: true)
+DeviceInfoService deviceInfoService(Ref ref) {
   return DeviceInfoService();
-});
+}
 
 class DeviceInfoService {
   final _algorithm = AesGcm.with256bits();
@@ -59,22 +63,13 @@ class DeviceInfoService {
         'model': info.model,
         'isPhysicalDevice': info.isPhysicalDevice,
       });
-    } else if (Platform.isWindows) {
-      final info = await _deviceInfo.windowsInfo;
-      deviceData.addAll({
-        'platform': 'windows',
-        'computerName': info.computerName,
-        'numberOfCores': info.numberOfCores,
-      });
     }
 
-    final result = {
+    return {
       'app_device_id_secure': storedId,
       'advertising_id': advertisingId,
       'device_info': deviceData,
     };
-
-    return result;
   }
 
   /// Tworzy unikalny hash urządzenia
@@ -93,8 +88,6 @@ class DeviceInfoService {
       components.add(info['model'] ?? 'unknown');
     } else if (Platform.isIOS) {
       components.add(info['identifierForVendor'] ?? 'unknown');
-    } else {
-      components.add(info['computerName'] ?? 'pc');
     }
 
     final cleanComponents = components
@@ -114,7 +107,6 @@ class DeviceInfoService {
       if (Platform.isAndroid || Platform.isIOS) {
         return await _deviceMarketingNames.getSingleName();
       }
-      if (Platform.isWindows) return "Windows PC";
     } catch (e) {
       _log.w('Marketing name error: $e');
     }
@@ -162,15 +154,11 @@ class DeviceInfoService {
     }
 
     final privateKeyBytes = base64Decode(storedRaw);
-    final algorithm = Ed25519();
-
-    // Klucze Ed25519 można odtworzyć z samego seeda (bajty klucza prywatnego)
-    return algorithm.newKeyPairFromSeed(privateKeyBytes);
+    return Ed25519().newKeyPairFromSeed(privateKeyBytes);
   }
 
   /// Helper łączący pobieranie nazwy i szyfrowanie
   Future<String> getEncryptedMarketingName() async {
-    // 1. Sprawdzamy czy mamy Master Key, jak nie to generujemy
     String? storedMasterKey = await _storage.read(key: 'device_master_key');
     List<int> masterKeyBytes;
 
@@ -180,56 +168,38 @@ class DeviceInfoService {
       masterKeyBytes = base64Decode(storedMasterKey);
     }
 
-    // 2. Pobieramy nazwę (np. iPhone 13)
     final name = await getMarketingName();
-
-    // 3. Szyfrujemy
     return encryptDeviceName(name, masterKeyBytes);
   }
 
-  // DeviceInfoService
   Future<String> decryptDeviceName(String encryptedBase64) async {
     try {
-      // 1. Pobierz Master Key z Secure Storage
       final storedMasterKey = await _storage.read(key: 'device_master_key');
       if (storedMasterKey == null) return "Unknown Device";
 
       final masterKeyBytes = base64Decode(storedMasterKey);
       final secretKey = SecretKey(masterKeyBytes);
-
-      // 2. Rozkoduj Base64 do bajtów
       final combinedBytes = base64Decode(encryptedBase64);
 
-      // 3. Wyodrębnij Nonce (AesGcm domyślnie używa 12 bajtów)
-      // Twój kod w encryptDeviceName używał box.concatenation()
       final box = SecretBox.fromConcatenation(
         combinedBytes,
         nonceLength: 12,
         macLength: 16,
       );
 
-      // 4. Deszyfruj
       final clearBytes = await _algorithm.decrypt(box, secretKey: secretKey);
-
       return utf8.decode(clearBytes);
     } catch (e) {
       _log.e('Błąd deszyfrowania nazwy urządzenia: $e');
-      return "Encrypted Device"; // Fallback
+      return "Encrypted Device";
     }
   }
 
   /// Podpisuje challenge (UUID) przy użyciu klucza prywatnego urządzenia
   Future<String> signChallenge(String challenge, SimpleKeyPair keyPair) async {
     try {
-      final algorithm = Ed25519();
-
-      // 1. Konwertujemy tekstowe wyzwanie na bajty
       final message = utf8.encode(challenge);
-
-      // 2. Podpisujemy algorytmem Ed25519
-      final signature = await algorithm.sign(message, keyPair: keyPair);
-
-      // 3. Zwracamy jako Base64, aby serwer w Go mógł to łatwo odczytać
+      final signature = await Ed25519().sign(message, keyPair: keyPair);
       return base64Encode(signature.bytes);
     } catch (e) {
       _log.e('Błąd podczas podpisywania challenge: $e');

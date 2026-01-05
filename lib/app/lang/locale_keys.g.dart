@@ -188,6 +188,8 @@ abstract class  LocaleKeys {
   static const homeMenu_security = 'homeMenu.security';
   static const homeMenu = 'homeMenu';
   static const system_initialization = 'system.initialization';
+  static const system_privacy_title = 'system.privacy_title';
+  static const system_privacy_description = 'system.privacy_description';
   static const system = 'system';
   static const workAndCareer_title = 'workAndCareer.title';
   static const workAndCareer_job_offers = 'workAndCareer.job_offers';

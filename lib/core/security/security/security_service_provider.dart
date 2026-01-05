@@ -1,12 +1,15 @@
+import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:secure_application/secure_application_controller.dart';
 
 part 'security_service_provider.g.dart';
 
@@ -18,11 +21,85 @@ abstract interface class ISecurityService {
 }
 
 @Riverpod(keepAlive: true)
-class SecurityService extends _$SecurityService implements ISecurityService {
-  @override
-  SecurityState build() => SecurityState.initial();
+class SecurityService extends _$SecurityService
+    with WidgetsBindingObserver
+    implements ISecurityService {
+  SecureApplicationController? _secureController;
 
-  // SharedPreferencesService get _prefs => ref.read(activePrefsProvider);
+  @override
+  SecurityState build() {
+    WidgetsBinding.instance.addObserver(this);
+    ref.onDispose(() => WidgetsBinding.instance.removeObserver(this));
+    return SecurityState.initial();
+  }
+
+  void registerSecureController(SecureApplicationController? controller) {
+    _secureController = controller;
+    _secureController?.secure();
+    _logger.d('SecureApplicationController registered', module: 'Security');
+  }
+
+  // DODAJ TĘ METODĘ - ona usuwa błąd "undefined_method"
+  void _enablePrivacyShield() {
+    _logger.d('Locking SecureGate', module: 'Security');
+    _secureController?.lock(); // To aktywuje rozmycie (SecureGate)
+  }
+
+  // DODAJ TĘ METODĘ - do odblokowania przy powrocie
+  void _disablePrivacyShield() {
+    _logger.d('Opening SecureGate', module: 'Security');
+    _secureController?.unlock(); // To zdejmuje rozmycie
+  }
+
+@override
+void didChangeAppLifecycleState(AppLifecycleState state) {
+  // Ignoruj zdarzenia, jeśli kontroler jeszcze nie jest zarejestrowany
+  if (_secureController == null) return;
+
+  // Używamy Future.delayed, aby dać Windowsowi czas na "ogarnięcie" stanu okna
+  Future.microtask(() {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _logger.d('App resumed', module: 'Security');
+        _checkIntegrityOnResume();
+        _disablePrivacyShield();
+        break;
+
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.paused:
+        _logger.d('App hidden/minimized', module: 'Security');
+        _enablePrivacyShield();
+        break;
+      default:
+        break;
+    }
+  });
+}
+
+  Future<void> _checkIntegrityOnResume() async {
+    // Sprawdzamy integralność urządzenia przy każdym powrocie z tła
+    final isAllowed = await ref
+        .read(deviceIntegrityFacadeProvider)
+        .isDeviceAllowed();
+
+    if (!isAllowed) {
+      _logger.e(
+        '🛑 Security violation detected on resume!',
+        module: 'Security',
+      );
+
+      // Natychmiastowa reakcja: blokujemy stan aplikacji
+      state = state.copyWith(
+        hasLocalLock: true,
+        initialized:
+            false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
+      );
+
+      // Tutaj możesz dodać ref.read(authControllerProvider.notifier).logout();
+    }
+  }
+
+  // --- Twoje Gettery ---
   SecureStorageService get _secureStorage => ref.read(secureStorageProvider);
   PinService get _pinService => ref.read(pinServiceProvider);
   LocalAuthentication get _localAuth => ref.read(localAuthProvider);
@@ -30,31 +107,33 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   @override
   Future<void> init() async {
-    final setupCompleted = await _readBool(StorageKeys.setupCompleted);
+    final [
+      bool isPinConfigured,
+      bool setupCompleted,
+      bool isLocalLockEnabled,
+      bool isBiometricEnabled,
+    ] = await Future.wait([
+      _pinService.hasPin(),
+      _readBool(StorageKeys.setupCompleted),
+      _readBool(StorageKeys.localLockEnabled),
+      _readBool(StorageKeys.isBiometricConfigured),
+    ]);
+
+    if (!isBiometricEnabled) {
+      _checkBiometricsAvailability;
+    }
 
     if (!setupCompleted) {
       state = state.copyWith(isSetupCompleted: false, initialized: true);
       return;
     }
 
-    final [
-      bool isPinConfigured,
-      bool isLocalLockEnabled,
-      bool isBiometricEnabled,
-      bool canUseBiometrics,
-    ] = await Future.wait([
-      _pinService.hasPin(),
-      _readBool(StorageKeys.localLockEnabled),
-      _readBool(StorageKeys.isBiometricConfigured),
-      _checkBiometricsAvailability(),
-    ]);
-
     state = state.copyWith(
       hasLocalLock: isLocalLockEnabled && isPinConfigured,
       isPinConfigured: isPinConfigured,
       isBiometricEnabled: isBiometricEnabled,
-      canUseBiometrics: canUseBiometrics,
-      isSetupCompleted: true,
+      canUseBiometrics: isBiometricEnabled,
+      isSetupCompleted: setupCompleted,
       initialized: true,
     );
 

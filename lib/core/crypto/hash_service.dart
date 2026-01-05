@@ -4,15 +4,17 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-/// Provider dla HashService
-final hashServiceProvider = Provider<HashService>((ref) {
-  final logger = ref.read(appLoggerProvider);
+part 'hash_service.g.dart';
+
+@Riverpod(keepAlive: true)
+HashService hashService(Ref ref) {
+  final logger = ref.watch(appLoggerProvider);
   return HashService(logger);
-});
+}
 
 class HashService {
   final AppLogger _logger;

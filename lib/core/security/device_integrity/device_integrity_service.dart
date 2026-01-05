@@ -11,7 +11,7 @@ import 'security_integrity_config.dart';
 
 part 'device_integrity_service.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 DeviceIntegrityService deviceIntegrityService(Ref ref) {
   return DeviceIntegrityService();
 }

@@ -208,7 +208,9 @@
     "security": "Bezpieczeństwo"
   },
   "system": {
-    "initialization": "INICJALIZACJA SYSTEMU"
+    "initialization": "INICJALIZACJA SYSTEMU",
+    "privacy_title": "APLIKACJA ZABEZPIECZONA",
+    "privacy_description": "Treść została ukryta ze względów bezpieczeństwa"
   },
   "workAndCareer": {
     "title": "Praca i Kariera",

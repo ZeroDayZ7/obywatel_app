@@ -26,7 +26,7 @@ final class DeviceIntegrityFacadeProvider
         argument: null,
         retry: null,
         name: r'deviceIntegrityFacadeProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -55,4 +55,4 @@ final class DeviceIntegrityFacadeProvider
 }
 
 String _$deviceIntegrityFacadeHash() =>
-    r'e078d529331475bc9d180a8043e92b07863eb4e7';
+    r'b2339bf535b911bfe735e4affa0fc8fb9636db5f';

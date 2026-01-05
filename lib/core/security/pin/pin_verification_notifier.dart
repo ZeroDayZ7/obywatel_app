@@ -1,19 +1,21 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class PinVerificationNotifier extends Notifier<PinVerificationState> {
+part 'pin_verification_notifier.g.dart';
+
+@Riverpod(keepAlive: true)
+class PinVerificationNotifier extends _$PinVerificationNotifier {
   Timer? _lockoutTimer;
 
   @override
   PinVerificationState build() {
-    // Słuchamy zmian w limiterze. Gdy tylko dane się załadują (AsyncData)
-    // i okaże się, że jest blokada, odpalany timer.
+    // Słuchamy zmian w limiterze
     ref.listen<AsyncValue<PinAttemptState>>(pinAttemptLimiterProvider, (
       prev,
       next,
@@ -47,9 +49,7 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
   }
 
   Future<void> verifyPin(List<int> pinCodes) async {
-    // 1. Pobieramy aktualną wartość limitera
     final limiterAsync = ref.read(pinAttemptLimiterProvider);
-
     if (limiterAsync.isLoading) return;
 
     final limiterData = limiterAsync.value;
@@ -60,7 +60,7 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
 
     state = const PinVerificationState.loading();
 
-    // TERAZ ZADZIAŁA: Przekazujemy List<int> do PinService
+    // Używamy wygenerowanego pinServiceProvider
     final isValid = await ref.read(pinServiceProvider).verifyPin(pinCodes);
 
     if (isValid) {
@@ -80,14 +80,9 @@ class PinVerificationNotifier extends Notifier<PinVerificationState> {
       }
     }
 
-    // DOBRA PRAKTYKA: Czyścimy listę wejściową po zakończeniu operacji
+    // Bezpieczeństwo: czyścimy bajty w pamięci
     for (int i = 0; i < pinCodes.length; i++) {
       pinCodes[i] = 0;
     }
   }
 }
-
-final pinVerificationProvider =
-    NotifierProvider.autoDispose<PinVerificationNotifier, PinVerificationState>(
-      PinVerificationNotifier.new,
-    );

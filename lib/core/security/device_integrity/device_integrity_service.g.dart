@@ -26,7 +26,7 @@ final class DeviceIntegrityServiceProvider
         argument: null,
         retry: null,
         name: r'deviceIntegrityServiceProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -55,4 +55,4 @@ final class DeviceIntegrityServiceProvider
 }
 
 String _$deviceIntegrityServiceHash() =>
-    r'd3b3b6ac09c040e99656221dcff2d8c2343543ce';
+    r'04940a87f4ca10b240aadf9b09ff2abfd5990d70';

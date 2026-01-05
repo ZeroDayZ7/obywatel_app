@@ -86,6 +86,7 @@ dependencies:
   ffi: ^2.1.4
   device_marketing_names: ^1.1.6
   fresh_dio: 0.4.4
+  secure_application: ^4.1.0
 
 dev_dependencies:
   flutter_test:
