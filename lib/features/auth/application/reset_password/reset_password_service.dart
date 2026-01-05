@@ -1,5 +1,5 @@
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
-import 'package:obywatel_plus/core/network/public_client.dart';
+import 'package:obywatel_plus/core/network/clients/public_client.dart';
 
 class ResetPasswordService {
   ResetPasswordService(this._api);

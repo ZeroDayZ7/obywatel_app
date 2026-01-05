@@ -1,8 +1,8 @@
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
-import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

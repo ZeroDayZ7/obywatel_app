@@ -49,6 +49,14 @@ class AppLogger {
   }) =>
       _logger.e(_format(message, module), error: error, stackTrace: stackTrace);
 
+  void t(
+    String message, {
+    String? module,
+    dynamic error,
+    StackTrace? stackTrace,
+  }) =>
+      _logger.t(_format(message, module), error: error, stackTrace: stackTrace);
+
   String _format(String message, String? module) =>
       module != null ? '[$module] $message' : message;
 }

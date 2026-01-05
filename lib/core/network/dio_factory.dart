@@ -8,9 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/network/device_interceptor.dart';
-import 'package:obywatel_plus/core/network/global_error_interceptor.dart';
-import 'package:obywatel_plus/core/network/logging_interceptor.dart';
+import 'package:obywatel_plus/core/network/interceptors/device_interceptor.dart';
+import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
+import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
 
 enum DioProfile { public, authenticated, refreshToken, noAuthAuth }
 

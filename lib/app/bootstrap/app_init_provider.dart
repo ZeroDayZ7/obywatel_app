@@ -1,6 +1,7 @@
+// lib/app/bootstrap/app_init_provider.dart
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
-import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
+import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart'; // Tu masz definicje StorageInitTask itd.
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_provider.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -15,31 +16,27 @@ part 'app_init_provider.g.dart';
 @riverpod
 class AppInitNotifier extends _$AppInitNotifier {
   @override
-  AppInitStatus build() {
-    // Metoda build jest czysta (pure) - zwraca tylko stan początkowy.
-    return const AppInitStatus.loading();
-  }
+  AppInitStatus build() => const AppInitStatus.loading();
 
-  /// Inicjalizacja wywoływana jawnie z warstwy UI (np. w PostFrameCallback lub initState)
-  Future<void> initialize() async {
-    // Zapobiegamy wielokrotnemu uruchamianiu, jeśli już trwa ładowanie
-    // (opcjonalne, zależnie od logiki UI)
-    await _runBootstrap();
-  }
+  Future<void> initialize() async => await _runBootstrap();
 
   Future<void> _runBootstrap() async {
     final logger = ref.read(appLoggerProvider);
 
     try {
-      final prefs = ref.read(activePrefsProvider);
-      final storage = ref.read(secureStorageProvider);
-      final database = ref.read(appDatabaseProvider);
-
       final runner = StartupRunner(
         logger: logger,
-        tasks: [
-          StorageInitTask(storage: storage, prefs: prefs, database: database),
+        // Grupa 1: Muszą być gotowe najpierw (Infrastruktura)
+        sequentialTasks: [
+          StorageInitTask(
+            storage: ref.read(secureStorageProvider),
+            prefs: ref.read(activePrefsProvider),
+            database: ref.read(appDatabaseProvider),
+          ),
           SecurityInitTask(ref.read(securityServiceProvider.notifier)),
+        ],
+        // Grupa 2: Mogą działać w tle jednocześnie (Sieć / System)
+        parallelTasks: [
           DeviceIntegrityTask(ref.read(deviceIntegrityFacadeProvider)),
           VersionCheckTask(ref.read(versionProvider.notifier)),
         ],
@@ -56,7 +53,6 @@ class AppInitNotifier extends _$AppInitNotifier {
     }
   }
 
-  /// Metoda retry do ponownej próby inicjalizacji
   Future<void> recheck() async {
     state = const AppInitStatus.loading();
     await _runBootstrap();

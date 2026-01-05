@@ -1,3 +1,4 @@
+// lib\app\bootstrap\app_init_status.dart
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'app_init_status.freezed.dart';

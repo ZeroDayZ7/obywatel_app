@@ -20,12 +20,8 @@ class ObywatelPlusApp extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
     final router = ref.watch(appRouterProvider);
 
-    // Owijamy całą aplikację w SecureApplication, aby chronić screenshoty
-    // i widok w managerze zadań (native protection).
     return SecureApplication(
       nativeRemoveDelay: 100,
-      // Ta funkcja wykona się, gdy SecureApplication zostanie zainicjalizowana.
-      // Rejestrujemy kontroler w naszym SecurityService.
       onNeedUnlock: (controller) {
         ref
             .read(securityServiceProvider.notifier)

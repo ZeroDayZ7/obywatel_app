@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';

@@ -1,5 +1,5 @@
-import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 

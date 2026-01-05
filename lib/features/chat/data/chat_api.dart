@@ -1,10 +1,10 @@
 // lib/features/chat/data/remote/chat_api.dart
-import 'package:obywatel_plus/core/network/api_client.dart' show ApiClient;
+import 'package:obywatel_plus/core/network/clients/api_client.dart' show ApiClient;
 import 'package:obywatel_plus/features/chat/core/chat_endpoints.dart'
     show ChatEndpoints;
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:obywatel_plus/features/chat/domain/message.dart';
 import 'package:obywatel_plus/features/chat/data/message_dto.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
 
 class ChatApi {
   final ApiClient client;

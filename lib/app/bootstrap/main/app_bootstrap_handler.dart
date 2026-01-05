@@ -24,7 +24,6 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
   @override
   void initState() {
     super.initState();
-    // Odpalamy bootstrap po wyrenderowaniu pierwszej klatki
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(appInitProvider.notifier).initialize();
     });
@@ -32,18 +31,14 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Aktywujemy observera sesji. Będzie działał "w tle" tak długo,
-    // jak aplikacja jest uruchomiona i ten widget jest w drzewie.
     ref.watch(sessionObserverProvider);
 
-    // 2. Słuchamy stanu inicjalizacji
     final status = ref.watch(appInitProvider);
 
     return status.when(
       loading: () => const SplashScreen(),
       blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
       forceUpdate: () => const ForceUpdateScreen(),
-      // Poniższe stany oznaczają, że bootstrap się udał i możemy pokazać resztę aplikacji
       unauthenticated: () => GlobalErrorListener(child: widget.child),
       lockedPin: () => GlobalErrorListener(child: widget.child),
       authorized: () => GlobalErrorListener(child: widget.child),

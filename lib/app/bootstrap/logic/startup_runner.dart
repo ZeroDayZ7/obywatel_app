@@ -1,48 +1,69 @@
-// startup_runner.dart
+// lib/app/bootstrap/logic/startup_runner.dart
+import 'dart:async';
+
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 
-import 'tasks.dart';
+import 'startup_task.dart';
 
 class StartupRunner {
-  final List<StartupTask> tasks;
+  final List<StartupTask> sequentialTasks;
+  final List<StartupTask> parallelTasks;
   final AppLogger logger;
 
-  StartupRunner({required this.tasks, required this.logger});
+  StartupRunner({
+    required this.sequentialTasks,
+    required this.parallelTasks,
+    required this.logger,
+  });
 
   Future<AppInitStatus> run() async {
     logger.i('🚀 StartupRunner: Starting bootstrap sequence...');
 
-    for (final task in tasks) {
-      try {
-        // Logujemy start każdego zadania, by wiedzieć gdzie proces "wisi"
-        logger.i('⏳ Task [${task.name}] starting...');
+    // 1. Wykonaj zadania sekwencyjne (np. bazy danych, storage)
+    for (final task in sequentialTasks) {
+      final status = await _executeTask(task);
+      if (status != null) return status; // Przerwij jeśli błąd/wymagana akcja
+    }
 
-        final result = await task.initialize();
+    // 2. Wykonaj zadania równoległe (np. API, Integrity)
+    if (parallelTasks.isNotEmpty) {
+      logger.i(
+        '⚡ Starting parallel tasks: ${parallelTasks.map((e) => e.name).toList()}',
+      );
 
-        if (result != null) {
-          logger.w(
-            '⚠️ Task [${task.name}] returned non-null status: $result. Aborting sequence.',
-          );
-          return result;
-        }
+      final results = await Future.wait(
+        parallelTasks.map((task) => _executeTask(task)),
+      );
 
-        logger.i('✅ Task [${task.name}] completed successfully.');
-      } catch (e, st) {
-        // CRITICAL: Logowanie do systemów zewnętrznych (Sentry/Crashlytics)
-        // powinno odbywać się wewnątrz loggera.
-        logger.e(
-          '💥 CRITICAL FAILURE: Task [${task.name}] crashed',
-          error: e,
-          stackTrace: st,
-        );
-
-        // Zwracamy stan zablokowany, co pozwoli UI pokazać ErrorApp
-        return AppInitStatus.blocked(reason: 'task_failed_${task.name}');
+      for (final result in results) {
+        if (result != null) return result;
       }
     }
 
-    logger.i('🎉 StartupRunner: All tasks finished. App authorized.');
+    logger.i('🎉 StartupRunner: All tasks finished successfully.');
     return const AppInitStatus.authorized();
+  }
+
+  Future<AppInitStatus?> _executeTask(StartupTask task) async {
+    try {
+      logger.i('⏳ Task [${task.name}] starting...');
+
+      final result = await task.initialize().timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => throw TimeoutException('Task ${task.name} timed out'),
+      );
+      return result;
+    } on TimeoutException catch (e) {
+      logger.e('⏰ TIMEOUT: Task [${task.name}] took too long ERROR: $e');
+      return AppInitStatus.blocked(reason: 'timeout_${task.name}');
+    } catch (e, st) {
+      logger.e(
+        '💥 CRITICAL FAILURE: Task [${task.name}] crashed',
+        error: e,
+        stackTrace: st,
+      );
+      return AppInitStatus.blocked(reason: 'task_failed_${task.name}');
+    }
   }
 }

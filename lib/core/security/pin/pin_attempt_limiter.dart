@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -39,8 +41,16 @@ class PinAttemptLimiter extends AsyncNotifier<PinAttemptState> {
 
     DateTime? lockUntil;
     if (lockDuration > Duration.zero) {
-      lockUntil = DateTime.now().add(lockDuration);
+      final serverNow = ref.read(backendStateProvider.notifier).getSafeNow();
+      lockUntil = serverNow.add(lockDuration);
     }
+
+    ref
+        .read(appLoggerProvider)
+        .w(
+          'PIN trial failed ($nextAttempts). Device locked until: $lockUntil',
+          module: 'SECURITY',
+        );
 
     final newState = currentState.copyWith(
       attempts: nextAttempts,

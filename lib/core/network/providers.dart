@@ -2,10 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/network/api_client.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/network/backend_sync.dart';
+import 'package:obywatel_plus/core/network/clients/api_client.dart';
+import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
-import 'package:obywatel_plus/core/network/public_client.dart';
 import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
@@ -26,20 +27,29 @@ Dio refreshDio(Ref ref) {
 
 @Riverpod(keepAlive: true)
 Dio publicDio(Ref ref) {
-  return DioFactory.create(
+  final dio = DioFactory.create(
     profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
+
+  // Dodajemy interceptor do publicznych zapytań (np. checkVersion)
+  dio.interceptors.add(SecuritySyncInterceptor(ref));
+
+  return dio;
 }
 
 @Riverpod(keepAlive: true)
 Dio resetDio(Ref ref) {
-  return DioFactory.create(
+  final dio = DioFactory.create(
     profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
+
+  dio.interceptors.add(SecuritySyncInterceptor(ref));
+
+  return dio;
 }
 
 @Riverpod(keepAlive: true)
@@ -51,6 +61,8 @@ Dio authDio(Ref ref) {
     logger: logger,
     deviceInfoRef: ref,
   );
+
+  dio.interceptors.add(SecuritySyncInterceptor(ref));
 
   final fresh = Fresh.oAuth2(
     tokenStorage: ref.watch(tokenStorageProvider),
