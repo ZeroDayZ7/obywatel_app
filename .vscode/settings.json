@@ -41,7 +41,7 @@
     "flutter_launcher_icons.yaml": true,
     // "**/*.freezed.dart": true,
     // "**/*.g.dart": true
-    "android": true
+    // "android": true
   },
 
   // (Search)
