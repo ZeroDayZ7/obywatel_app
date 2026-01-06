@@ -1,5 +1,3 @@
-// lib/app/bootstrap/presentation/app_bootstrap_handler.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_provider.dart';
@@ -8,7 +6,7 @@ import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/force_update_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
 import 'package:obywatel_plus/core/errors/global_error_listener.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_observer.dart'; // Import observera
+import 'package:obywatel_plus/features/auth/application/session/session_observer.dart';
 
 class AppBootstrapHandler extends ConsumerStatefulWidget {
   final Widget child;
@@ -29,8 +27,21 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
     });
   }
 
+  /// Pomocnicza metoda owijająca widok w detektor aktywności
+  Widget _wrapWithInactivityDetector(Widget child) {
+    return Listener(
+      behavior: HitTestBehavior.translucent, // Ważne: dotyk przechodzi głębiej
+      onPointerDown: (_) {
+        // Resetujemy timer przy każdym dotknięciu
+        ref.read(sessionObserverProvider.notifier).onUserInteraction();
+      },
+      child: GlobalErrorListener(child: child),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Inicjalizujemy/obserwujemy observera
     ref.watch(sessionObserverProvider);
 
     final status = ref.watch(appInitProvider);
@@ -39,9 +50,10 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
       loading: () => const SplashScreen(),
       blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
       forceUpdate: () => const ForceUpdateScreen(),
-      unauthenticated: () => GlobalErrorListener(child: widget.child),
-      lockedPin: () => GlobalErrorListener(child: widget.child),
-      authorized: () => GlobalErrorListener(child: widget.child),
+      // Owijamy stany, w których użytkownik może wchodzić w interakcję
+      unauthenticated: () => _wrapWithInactivityDetector(widget.child),
+      lockedPin: () => _wrapWithInactivityDetector(widget.child),
+      authorized: () => _wrapWithInactivityDetector(widget.child),
     );
   }
 }

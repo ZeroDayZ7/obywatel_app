@@ -39,8 +39,6 @@ class AuthController extends _$AuthController {
       return;
     }
 
-    // Jeśli sesja istnieje, inicjujemy security (blokada PIN)
-    await ref.read(securityServiceProvider.notifier).init();
     state = AuthState.authenticated(userId: userId);
   }
 

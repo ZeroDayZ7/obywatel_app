@@ -9,12 +9,11 @@ part of 'session_observer.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(sessionObserver)
+@ProviderFor(SessionObserver)
 final sessionObserverProvider = SessionObserverProvider._();
 
 final class SessionObserverProvider
-    extends $FunctionalProvider<void, void, void>
-    with $Provider<void> {
+    extends $NotifierProvider<SessionObserver, void> {
   SessionObserverProvider._()
     : super(
         from: null,
@@ -31,13 +30,7 @@ final class SessionObserverProvider
 
   @$internal
   @override
-  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  void create(Ref ref) {
-    return sessionObserver(ref);
-  }
+  SessionObserver create() => SessionObserver();
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(void value) {
@@ -48,4 +41,22 @@ final class SessionObserverProvider
   }
 }
 
-String _$sessionObserverHash() => r'b248fbaa15c8539d812e9350811a27678a45fad4';
+String _$sessionObserverHash() => r'6a7247c60723c93ad0cc597ee9d9f43dac5e544f';
+
+abstract class _$SessionObserver extends $Notifier<void> {
+  void build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<void, void>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<void, void>,
+              void,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
