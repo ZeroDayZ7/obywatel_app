@@ -5,6 +5,7 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_models.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
 class AuthService {
@@ -16,6 +17,7 @@ class AuthService {
       _logger = logger;
 
   /// Logowanie: zwraca AuthResponse (2FA lub success)
+  /// Logowanie: zwraca AuthResponse (2FARequired lub PreTrust/FullSuccess)
   Future<AuthResponse> login(String email, List<int> passwordBytes) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
@@ -24,26 +26,37 @@ class AuthService {
 
     final data = response.data;
 
+    // 1. Obsługa wymaganego 2FA
     if (data['2fa_required'] == true) {
-      final token = data['two_fa_token']?.toString();
-      if (token == null) {
-        throw Exception('errors.INVALID_2FA_TOKEN');
-      }
-      return AuthResponse.twoFaRequired(twoFaToken: token);
+      return AuthResponse.twoFaRequired(
+        twoFaToken: data['two_fa_token'].toString(),
+      );
     }
 
-    final accessToken = data[StorageKeys.accessToken]?.toString();
-    final refreshToken = data[StorageKeys.refreshToken]?.toString();
-    final userId = data[StorageKeys.userId]?.toString();
+    // 2. Jeśli nie 2FA, mapujemy na wynik weryfikacji urządzenia
+    return _mapToAuthResponse(data);
+  }
 
-    if (accessToken == null || refreshToken == null || userId == null) {
-      throw Exception('errors.INVALID_LOGIN_RESPONSE');
+  /// Pomocnicza metoda do mapowania danych sukcesu
+  AuthResponse _mapToAuthResponse(Map<String, dynamic> data) {
+    final isTrusted = data['is_trusted'] as bool? ?? false;
+    final accessToken = data['access_token'].toString();
+
+    if (!isTrusted) {
+      // Urządzenie niezweryfikowane - zwracamy PreTrust (z challenge)
+      return AuthResponse.preTrust(
+        accessToken: accessToken,
+        challenge: data['challenge']?.toString() ?? '',
+        isTrusted: false,
+      );
     }
 
-    return AuthResponse.success(
+    // Pełny sukces - urządzenie jest już zaufane
+    return AuthResponse.fullSuccess(
       accessToken: accessToken,
-      refreshToken: refreshToken,
-      userId: userId,
+      refreshToken: data['refresh_token'].toString(),
+      user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
+      rbac: RbacData.fromJson(data['rbac'] as Map<String, dynamic>),
     );
   }
 
@@ -61,22 +74,12 @@ class AuthService {
     final data = response.data;
 
     final accessToken = data[StorageKeys.accessToken]?.toString();
-    final refreshToken = data[StorageKeys.refreshToken]?.toString();
-    final userId = data[StorageKeys.userId]?.toString();
-    final challenge = data['challenge']?.toString();
-    final isTrusted = data['is_trusted'] as bool? ?? false;
 
-    if (accessToken == null || refreshToken == null || userId == null) {
+    if (accessToken == null) {
       throw Exception('errors.INVALID_2FA');
     }
 
-    return AuthResponse.success(
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-      userId: userId,
-      challenge: challenge,
-      isDeviceTrusted: isTrusted,
-    );
+    return _mapToAuthResponse(data);
   }
 
   Future<String?> registerTrustedDevice({

@@ -9,6 +9,93 @@ part of 'providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(authFresh)
+final authFreshProvider = AuthFreshProvider._();
+
+final class AuthFreshProvider
+    extends
+        $FunctionalProvider<
+          Fresh<OAuth2Token>,
+          Fresh<OAuth2Token>,
+          Fresh<OAuth2Token>
+        >
+    with $Provider<Fresh<OAuth2Token>> {
+  AuthFreshProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authFreshProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$authFreshHash();
+
+  @$internal
+  @override
+  $ProviderElement<Fresh<OAuth2Token>> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  Fresh<OAuth2Token> create(Ref ref) {
+    return authFresh(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Fresh<OAuth2Token> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Fresh<OAuth2Token>>(value),
+    );
+  }
+}
+
+String _$authFreshHash() => r'3709f9e95bd2c981cf26a01cb87edb5a1e7d1a24';
+
+@ProviderFor(authDio)
+final authDioProvider = AuthDioProvider._();
+
+final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
+    with $Provider<Dio> {
+  AuthDioProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'authDioProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$authDioHash();
+
+  @$internal
+  @override
+  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Dio create(Ref ref) {
+    return authDio(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Dio value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Dio>(value),
+    );
+  }
+}
+
+String _$authDioHash() => r'fab23ee2522a1a89acdc00d211abddb539d237bd';
+
 @ProviderFor(refreshDio)
 final refreshDioProvider = RefreshDioProvider._();
 
@@ -129,45 +216,46 @@ final class ResetDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
 
 String _$resetDioHash() => r'79f30774e6b81d2a4110b49d893aa644875adee6';
 
-@ProviderFor(authDio)
-final authDioProvider = AuthDioProvider._();
+@ProviderFor(apiClient)
+final apiClientProvider = ApiClientProvider._();
 
-final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
-    with $Provider<Dio> {
-  AuthDioProvider._()
+final class ApiClientProvider
+    extends $FunctionalProvider<ApiClient, ApiClient, ApiClient>
+    with $Provider<ApiClient> {
+  ApiClientProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'authDioProvider',
+        name: r'apiClientProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$authDioHash();
+  String debugGetCreateSourceHash() => _$apiClientHash();
 
   @$internal
   @override
-  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<ApiClient> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  Dio create(Ref ref) {
-    return authDio(ref);
+  ApiClient create(Ref ref) {
+    return apiClient(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Dio value) {
+  Override overrideWithValue(ApiClient value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<Dio>(value),
+      providerOverride: $SyncValueProvider<ApiClient>(value),
     );
   }
 }
 
-String _$authDioHash() => r'44d673512a6263499b3709f8e2a940ba9d9d4dab';
+String _$apiClientHash() => r'a5b461a3c5bcb7cd7880a74b4806ee7b682c1c89';
 
 @ProviderFor(publicApiClient)
 final publicApiClientProvider = PublicApiClientProvider._();
@@ -210,47 +298,6 @@ final class PublicApiClientProvider
 }
 
 String _$publicApiClientHash() => r'20b91b552704a886f8ae3ff7b5aca36f8d9154e9';
-
-@ProviderFor(apiClient)
-final apiClientProvider = ApiClientProvider._();
-
-final class ApiClientProvider
-    extends $FunctionalProvider<ApiClient, ApiClient, ApiClient>
-    with $Provider<ApiClient> {
-  ApiClientProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'apiClientProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$apiClientHash();
-
-  @$internal
-  @override
-  $ProviderElement<ApiClient> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  ApiClient create(Ref ref) {
-    return apiClient(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(ApiClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<ApiClient>(value),
-    );
-  }
-}
-
-String _$apiClientHash() => r'a5b461a3c5bcb7cd7880a74b4806ee7b682c1c89';
 
 @ProviderFor(resetApiClient)
 final resetApiClientProvider = ResetApiClientProvider._();

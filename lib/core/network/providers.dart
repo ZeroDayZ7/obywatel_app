@@ -9,12 +9,66 @@ import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
 import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
+
+// --- NOWY PROVIDER DLA FRESH ---
+@Riverpod(keepAlive: true)
+Fresh<OAuth2Token> authFresh(Ref ref) {
+  return Fresh.oAuth2(
+    tokenStorage: ref.watch(tokenStorageProvider),
+    refreshToken: (token, client) async {
+      final deviceService = ref.read(deviceInfoServiceProvider);
+      final authState = ref.read(authControllerProvider);
+
+      final userId = authState.maybeWhen(
+        authenticated: (id, _, _, _, _) => id.toString(),
+        orElse: () => '',
+      );
+
+      if (userId.isEmpty) {
+        throw Exception('Refresh failed: No authenticated user ID found');
+      }
+
+      final fingerprint = await deviceService.getSecureFingerprint();
+      final response = await client.post(
+        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
+        data: {StorageKeys.refreshToken: token?.refreshToken},
+        options: Options(headers: {'X-Device-Fingerprint': fingerprint}),
+      );
+
+      return OAuth2Token(
+        accessToken: response.data[StorageKeys.accessToken],
+        refreshToken: response.data[StorageKeys.refreshToken],
+      );
+    },
+    shouldRefresh: (response) => response?.statusCode == 401,
+  );
+}
+
+// --- ZAKTUALIZOWANY AUTH DIO ---
+@Riverpod(keepAlive: true)
+Dio authDio(Ref ref) {
+  final dio = DioFactory.create(
+    profile: DioProfile.authenticated,
+    logger: ref.watch(appLoggerProvider),
+    deviceInfoRef: ref,
+  );
+
+  dio.interceptors.add(SecuritySyncInterceptor(ref));
+
+  // Wstrzykujemy Fresh z osobnego providera
+  dio.interceptors.add(ref.watch(authFreshProvider));
+
+  return dio;
+}
+
+// --- RESZTA POZOSTAJE BEZ ZMIAN ---
 
 @Riverpod(keepAlive: true)
 Dio refreshDio(Ref ref) {
@@ -32,9 +86,7 @@ Dio publicDio(Ref ref) {
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
-
   dio.interceptors.add(SecuritySyncInterceptor(ref));
-
   return dio;
 }
 
@@ -45,65 +97,8 @@ Dio resetDio(Ref ref) {
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
-
   dio.interceptors.add(SecuritySyncInterceptor(ref));
-
   return dio;
-}
-
-@Riverpod(keepAlive: true)
-Dio authDio(Ref ref) {
-  final logger = ref.watch(appLoggerProvider);
-
-  final dio = DioFactory.create(
-    profile: DioProfile.authenticated,
-    logger: logger,
-    deviceInfoRef: ref,
-  );
-
-  dio.interceptors.add(SecuritySyncInterceptor(ref));
-
-  final fresh = Fresh.oAuth2(
-    tokenStorage: ref.watch(tokenStorageProvider),
-    refreshToken: (token, client) async {
-      final deviceService = ref.read(deviceInfoServiceProvider);
-      final authState = ref.read(authControllerProvider);
-      final userId = authState.maybeWhen(
-        authenticated: (id, _, _, _, _) => id.toString(),
-        orElse: () => '',
-      );
-      if (userId.isEmpty) {
-        throw Exception(
-          'Refresh failed: No authenticated user ID found in state',
-        );
-      }
-
-      final fingerprint = await deviceService.getSecureFingerprint();
-      final response = await client.post(
-        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
-        data: {'refresh_token': token?.refreshToken},
-        options: Options(headers: {'X-Device-Fingerprint': fingerprint}),
-      );
-
-      return OAuth2Token(
-        accessToken: response.data['access_token'],
-        refreshToken: response.data['refresh_token'],
-      );
-    },
-    shouldRefresh: (response) => response?.statusCode == 401,
-  );
-
-  dio.interceptors.add(fresh);
-
-  return dio;
-}
-
-@Riverpod(keepAlive: true)
-PublicApiClient publicApiClient(Ref ref) {
-  return PublicApiClient(
-    dio: ref.watch(publicDioProvider),
-    logger: ref.watch(appLoggerProvider),
-  );
 }
 
 @Riverpod(keepAlive: true)
@@ -111,6 +106,14 @@ ApiClient apiClient(Ref ref) {
   return ApiClient(
     dio: ref.watch(authDioProvider),
     storage: ref.watch(secureStorageProvider),
+    logger: ref.watch(appLoggerProvider),
+  );
+}
+
+@Riverpod(keepAlive: true)
+PublicApiClient publicApiClient(Ref ref) {
+  return PublicApiClient(
+    dio: ref.watch(publicDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
 }

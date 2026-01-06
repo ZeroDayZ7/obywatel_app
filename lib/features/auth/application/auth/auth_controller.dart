@@ -46,41 +46,67 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
     try {
       final result = await _authService.login(email, passwordBytes);
+      // Czyszczenie hasła z pamięci natychmiast po użyciu
       passwordBytes.fillRange(0, passwordBytes.length, 0);
 
-      result.when(
-        twoFaRequired: (token) {
-          state = AuthState.twoFaRequired(email: email, tempToken: token);
-        },
-        success:
-            (
-              accessToken,
-              refreshToken,
-              userId,
-              challenge,
-              isDeviceTrusted,
-            ) async {
-              // 1. ZAPISUJEMY (Blokujemy wykonanie)
-              await _sessionService.saveSession(
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                userId: userId,
-              );
-              await ref.read(securityServiceProvider.notifier).init();
-              state = AuthState.authenticated(
-                userId: userId,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                challenge: challenge,
-                isDeviceTrusted: isDeviceTrusted,
-              );
-            },
-      );
+      // Używamy ujednoliconej obsługi wyniku
+      await _handleAuthResponse(result, email);
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
       state = const AuthState.unauthenticated();
     }
+  }
+
+  /// Wspólna logika dla login i verifyTwoFa
+  Future<void> _handleAuthResponse(AuthResponse result, String email) async {
+    await result.when(
+      twoFaRequired: (token) {
+        state = AuthState.twoFaRequired(email: email, tempToken: token);
+      },
+      preTrust: (accessToken, challenge, isTrusted) async {
+        // Zapisujemy token dostępu, mimo że urządzenie nie jest jeszcze zaufane
+        await _sessionService.saveSession(
+          accessToken: accessToken,
+          refreshToken: '',
+          userId: 'pending',
+        );
+
+        ref
+            .read(authFreshProvider)
+            .setToken(
+              OAuth2Token(
+                accessToken: accessToken,
+                refreshToken: null,
+              ),
+            );
+
+        state = AuthState.authenticated(
+          userId: 'pending',
+          accessToken: accessToken,
+          challenge: challenge,
+          isDeviceTrusted: false,
+        );
+      },
+      fullSuccess: (accessToken, refreshToken, user, rbac) async {
+        // Pełny sukces - urządzenie jest zaufane, mamy komplet danych
+        await _sessionService.saveSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          userId: user.userId,
+        );
+
+        // Inicjalizacja usług zależnych od sesji
+        await ref.read(securityServiceProvider.notifier).init();
+
+        state = AuthState.authenticated(
+          userId: user.userId,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          isDeviceTrusted: true,
+        );
+      },
+    );
   }
 
   Future<void> verifyTwoFa(String code) async {
@@ -109,47 +135,7 @@ class AuthController extends _$AuthController {
       );
       codeBytes.fillRange(0, codeBytes.length, 0);
 
-      result.when(
-        twoFaRequired: (token) => state = AuthState.twoFaRequired(
-          email: currentEmail,
-          tempToken: token,
-        ),
-        success:
-            (
-              accessToken,
-              refreshToken,
-              userId,
-              challenge,
-              isDeviceTrusted,
-            ) async {
-              // 1. Tworzymy obiekt tokena z parametrów, które przyszły z sukcesu
-              final oAuthToken = OAuth2Token(
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-              );
-              // 2. Pobieramy fresh i ustawiamy w nim nowo utworzony token
-              final dio = ref.read(authDioProvider);
-              final fresh = dio.interceptors
-                  .whereType<Fresh<OAuth2Token>>()
-                  .first;
-
-              await fresh.setToken(oAuthToken);
-              // 3. Zapisujemy w sesji i aktualizujemy stan
-              await _sessionService.saveSession(
-                userId: userId,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-              );
-              await ref.read(securityServiceProvider.notifier).unlockManually();
-              state = AuthState.authenticated(
-                userId: userId,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                challenge: challenge,
-                isDeviceTrusted: isDeviceTrusted,
-              );
-            },
-      );
+      await _handleAuthResponse(result, currentEmail);
     } catch (e) {
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
