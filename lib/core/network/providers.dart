@@ -33,7 +33,6 @@ Dio publicDio(Ref ref) {
     deviceInfoRef: ref,
   );
 
-  // Dodajemy interceptor do publicznych zapytań (np. checkVersion)
   dio.interceptors.add(SecuritySyncInterceptor(ref));
 
   return dio;
@@ -95,13 +94,6 @@ Dio authDio(Ref ref) {
   );
 
   dio.interceptors.add(fresh);
-
-  // fresh.authenticationStatus.listen((status) {
-  //   if (status == AuthenticationStatus.unauthenticated) {
-  //     ref.read(sessionStatusProvider.notifier).reportInvalidSession();
-  //     ref.read(authControllerProvider.notifier).logout();
-  //   }
-  // });
 
   return dio;
 }

@@ -10,27 +10,26 @@ part 'active_sessions_provider.g.dart';
 class ActiveSessions extends _$ActiveSessions {
   @override
   Future<List<UserSession>> build() async {
-    return _fetch();
-  }
-
-  Future<List<UserSession>> _fetch() async {
     final service = ref.watch(activeSessionsServiceProvider);
     final deviceInfo = ref.watch(deviceInfoServiceProvider);
 
-    // 1. Pobierz sesje z API (nazwy są jeszcze zaszyfrowane)
+    return _fetch(service, deviceInfo);
+  }
+
+  Future<List<UserSession>> _fetch(
+    ActiveSessionsService service,
+    DeviceInfoService deviceInfo,
+  ) async {
     final sessions = await service.getActiveSessions();
 
-    // 2. Deszyfruj nazwy wszystkich sesji równolegle
     final decryptedSessions = await Future.wait(
       sessions.map((session) async {
         try {
-          // Wywołujemy metodę, którą dodaliśmy do DeviceInfoService
           final clearName = await deviceInfo.decryptDeviceName(
             session.deviceName,
           );
           return session.copyWith(deviceName: clearName);
         } catch (e) {
-          // W razie błędu zostawiamy jak jest lub dajemy fallback
           return session.copyWith(deviceName: "Unknown Device");
         }
       }),
@@ -40,16 +39,20 @@ class ActiveSessions extends _$ActiveSessions {
   }
 
   Future<void> terminateSession(int sessionId) async {
+    final service = ref.read(activeSessionsServiceProvider);
+
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await ref.read(activeSessionsServiceProvider).terminateSession(sessionId);
-      // ref.invalidateSelf() automatycznie wywoła build() i nasz nowy _fetch()
-      return _fetch();
+      await service.terminateSession(sessionId);
+
+      ref.invalidateSelf();
+
+      return await future;
     });
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetch());
+    ref.invalidateSelf();
+    await future;
   }
 }

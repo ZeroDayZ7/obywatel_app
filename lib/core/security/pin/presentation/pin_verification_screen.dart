@@ -68,11 +68,18 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     );
 
     return limiterAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFF0a0e27),
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => const CyberBackground(
+        showCorners: false, // Opcjonalnie wyłączamy narożniki dla loaderów
+        child: Center(child: CircularProgressIndicator()),
       ),
-      error: (err, _) => Scaffold(body: Center(child: Text("Błąd: $err"))),
+      error: (err, _) => CyberBackground(
+        child: Center(
+          child: Text(
+            "Błąd: $err",
+            style: const TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
       data: (limiter) {
         final isLocked = isLockedUI || limiter.isLocked;
         final verificationState = ref.watch(pinVerificationProvider);
@@ -86,53 +93,41 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
           orElse: () => false,
         );
 
-        return Scaffold(
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0a0e27), Color(0xFF1a1a2e)],
-              ),
-            ),
-            child: Stack(
-              children: [
-                CustomPaint(
-                  size: MediaQuery.of(context).size,
-                  painter: CyberGridPainter(),
-                ),
-                SafeArea(
-                  child: ResponsiveContainer(
-                    size: ContainerSize.narrow,
-                    alignment: Alignment.center,
-                    child: AbsorbPointer(
-                      absorbing: isLocked,
-                      child: Opacity(
-                        opacity: isLocked ? 0.3 : 1.0,
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: PinInputView(
-                            isLoading: isLoading,
-                            isError: isError,
-                            resetToken: _resetToken,
-                            errorController: _errorController,
-                            onCompleted: (pin) {
-                              // 1. Konwertujemy String na kody ASCII (np. '1' -> 49)
-                              // To pozwala na bezpieczne przekazanie bajtów do FFI
-                              final codes = pin.codeUnits.toList();
-
-                              // 2. Przekazujemy listę bajtów do notifiera
-                              ref
-                                  .read(pinVerificationProvider.notifier)
-                                  .verifyPin(codes);
-                            },
-                          ),
+        // --- KLUCZOWA ZMIANA: Używamy CyberBackground zamiast Scaffold + Container + Stack ---
+        return CyberBackground(
+          showCorners: true, // Chcemy narożniki na ekranie PIN
+          child: Stack(
+            // Stack potrzebny tylko dla Overlay'a blokady
+            children: [
+              SafeArea(
+                child: ResponsiveContainer(
+                  size: ContainerSize.narrow,
+                  alignment: Alignment.center,
+                  child: AbsorbPointer(
+                    absorbing: isLocked,
+                    child: Opacity(
+                      opacity: isLocked ? 0.3 : 1.0,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.symmetric(horizontal: 40),
+                        child: PinInputView(
+                          isLoading: isLoading,
+                          isError: isError,
+                          resetToken: _resetToken,
+                          errorController: _errorController,
+                          onCompleted: (pin) {
+                            final codes = pin.codeUnits.toList();
+                            ref
+                                .read(pinVerificationProvider.notifier)
+                                .verifyPin(codes);
+                          },
                         ),
                       ),
                     ),
                   ),
                 ),
-                if (isLocked) const LockoutOverlay(),
-              ],
-            ),
+              ),
+              if (isLocked) const LockoutOverlay(),
+            ],
           ),
         );
       },

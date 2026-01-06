@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -16,7 +17,8 @@ class SessionObserver extends _$SessionObserver {
   Timer? _inactivityTimer;
 
   // Konfiguracja czasu bezczynności (np. 5 minut)
-  static const _timeout = Duration(minutes: 5);
+  late final Duration _timeout = apiConstants.inactivityTimeout;
+  // static const _timeout = Duration(minutes: 5);
 
   @override
   void build() {

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$BackendState {
 
- DateTime? get serverTime; Duration get timeOffset; int get rateLimitRemaining; String? get lastRequestId; bool get isMaintenanceMode; bool get isDeviceSecure;
+ DateTime? get serverTime; Duration get timeOffset; int get rateLimitRemaining; String? get lastRequestId; bool get isMaintenanceMode; bool get isDeviceSecure; String? get deviceFingerprint;
 /// Create a copy of BackendState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $BackendStateCopyWith<BackendState> get copyWith => _$BackendStateCopyWithImpl<B
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is BackendState&&(identical(other.serverTime, serverTime) || other.serverTime == serverTime)&&(identical(other.timeOffset, timeOffset) || other.timeOffset == timeOffset)&&(identical(other.rateLimitRemaining, rateLimitRemaining) || other.rateLimitRemaining == rateLimitRemaining)&&(identical(other.lastRequestId, lastRequestId) || other.lastRequestId == lastRequestId)&&(identical(other.isMaintenanceMode, isMaintenanceMode) || other.isMaintenanceMode == isMaintenanceMode)&&(identical(other.isDeviceSecure, isDeviceSecure) || other.isDeviceSecure == isDeviceSecure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is BackendState&&(identical(other.serverTime, serverTime) || other.serverTime == serverTime)&&(identical(other.timeOffset, timeOffset) || other.timeOffset == timeOffset)&&(identical(other.rateLimitRemaining, rateLimitRemaining) || other.rateLimitRemaining == rateLimitRemaining)&&(identical(other.lastRequestId, lastRequestId) || other.lastRequestId == lastRequestId)&&(identical(other.isMaintenanceMode, isMaintenanceMode) || other.isMaintenanceMode == isMaintenanceMode)&&(identical(other.isDeviceSecure, isDeviceSecure) || other.isDeviceSecure == isDeviceSecure)&&(identical(other.deviceFingerprint, deviceFingerprint) || other.deviceFingerprint == deviceFingerprint));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serverTime,timeOffset,rateLimitRemaining,lastRequestId,isMaintenanceMode,isDeviceSecure);
+int get hashCode => Object.hash(runtimeType,serverTime,timeOffset,rateLimitRemaining,lastRequestId,isMaintenanceMode,isDeviceSecure,deviceFingerprint);
 
 @override
 String toString() {
-  return 'BackendState(serverTime: $serverTime, timeOffset: $timeOffset, rateLimitRemaining: $rateLimitRemaining, lastRequestId: $lastRequestId, isMaintenanceMode: $isMaintenanceMode, isDeviceSecure: $isDeviceSecure)';
+  return 'BackendState(serverTime: $serverTime, timeOffset: $timeOffset, rateLimitRemaining: $rateLimitRemaining, lastRequestId: $lastRequestId, isMaintenanceMode: $isMaintenanceMode, isDeviceSecure: $isDeviceSecure, deviceFingerprint: $deviceFingerprint)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $BackendStateCopyWith<$Res>  {
   factory $BackendStateCopyWith(BackendState value, $Res Function(BackendState) _then) = _$BackendStateCopyWithImpl;
 @useResult
 $Res call({
- DateTime? serverTime, Duration timeOffset, int rateLimitRemaining, String? lastRequestId, bool isMaintenanceMode, bool isDeviceSecure
+ DateTime? serverTime, Duration timeOffset, int rateLimitRemaining, String? lastRequestId, bool isMaintenanceMode, bool isDeviceSecure, String? deviceFingerprint
 });
 
 
@@ -62,7 +62,7 @@ class _$BackendStateCopyWithImpl<$Res>
 
 /// Create a copy of BackendState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? serverTime = freezed,Object? timeOffset = null,Object? rateLimitRemaining = null,Object? lastRequestId = freezed,Object? isMaintenanceMode = null,Object? isDeviceSecure = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? serverTime = freezed,Object? timeOffset = null,Object? rateLimitRemaining = null,Object? lastRequestId = freezed,Object? isMaintenanceMode = null,Object? isDeviceSecure = null,Object? deviceFingerprint = freezed,}) {
   return _then(_self.copyWith(
 serverTime: freezed == serverTime ? _self.serverTime : serverTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,timeOffset: null == timeOffset ? _self.timeOffset : timeOffset // ignore: cast_nullable_to_non_nullable
@@ -70,7 +70,8 @@ as Duration,rateLimitRemaining: null == rateLimitRemaining ? _self.rateLimitRema
 as int,lastRequestId: freezed == lastRequestId ? _self.lastRequestId : lastRequestId // ignore: cast_nullable_to_non_nullable
 as String?,isMaintenanceMode: null == isMaintenanceMode ? _self.isMaintenanceMode : isMaintenanceMode // ignore: cast_nullable_to_non_nullable
 as bool,isDeviceSecure: null == isDeviceSecure ? _self.isDeviceSecure : isDeviceSecure // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,deviceFingerprint: freezed == deviceFingerprint ? _self.deviceFingerprint : deviceFingerprint // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -152,10 +153,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure,  String? deviceFingerprint)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _BackendState() when $default != null:
-return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure);case _:
+return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure,_that.deviceFingerprint);case _:
   return orElse();
 
 }
@@ -173,10 +174,10 @@ return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure,  String? deviceFingerprint)  $default,) {final _that = this;
 switch (_that) {
 case _BackendState():
-return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure);}
+return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure,_that.deviceFingerprint);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -190,10 +191,10 @@ return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( DateTime? serverTime,  Duration timeOffset,  int rateLimitRemaining,  String? lastRequestId,  bool isMaintenanceMode,  bool isDeviceSecure,  String? deviceFingerprint)?  $default,) {final _that = this;
 switch (_that) {
 case _BackendState() when $default != null:
-return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure);case _:
+return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that.lastRequestId,_that.isMaintenanceMode,_that.isDeviceSecure,_that.deviceFingerprint);case _:
   return null;
 
 }
@@ -205,7 +206,7 @@ return $default(_that.serverTime,_that.timeOffset,_that.rateLimitRemaining,_that
 
 
 class _BackendState extends BackendState {
-  const _BackendState({this.serverTime, this.timeOffset = Duration.zero, this.rateLimitRemaining = 100, this.lastRequestId, this.isMaintenanceMode = false, this.isDeviceSecure = false}): super._();
+  const _BackendState({this.serverTime, this.timeOffset = Duration.zero, this.rateLimitRemaining = 100, this.lastRequestId, this.isMaintenanceMode = false, this.isDeviceSecure = false, this.deviceFingerprint}): super._();
   
 
 @override final  DateTime? serverTime;
@@ -214,6 +215,7 @@ class _BackendState extends BackendState {
 @override final  String? lastRequestId;
 @override@JsonKey() final  bool isMaintenanceMode;
 @override@JsonKey() final  bool isDeviceSecure;
+@override final  String? deviceFingerprint;
 
 /// Create a copy of BackendState
 /// with the given fields replaced by the non-null parameter values.
@@ -225,16 +227,16 @@ _$BackendStateCopyWith<_BackendState> get copyWith => __$BackendStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackendState&&(identical(other.serverTime, serverTime) || other.serverTime == serverTime)&&(identical(other.timeOffset, timeOffset) || other.timeOffset == timeOffset)&&(identical(other.rateLimitRemaining, rateLimitRemaining) || other.rateLimitRemaining == rateLimitRemaining)&&(identical(other.lastRequestId, lastRequestId) || other.lastRequestId == lastRequestId)&&(identical(other.isMaintenanceMode, isMaintenanceMode) || other.isMaintenanceMode == isMaintenanceMode)&&(identical(other.isDeviceSecure, isDeviceSecure) || other.isDeviceSecure == isDeviceSecure));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackendState&&(identical(other.serverTime, serverTime) || other.serverTime == serverTime)&&(identical(other.timeOffset, timeOffset) || other.timeOffset == timeOffset)&&(identical(other.rateLimitRemaining, rateLimitRemaining) || other.rateLimitRemaining == rateLimitRemaining)&&(identical(other.lastRequestId, lastRequestId) || other.lastRequestId == lastRequestId)&&(identical(other.isMaintenanceMode, isMaintenanceMode) || other.isMaintenanceMode == isMaintenanceMode)&&(identical(other.isDeviceSecure, isDeviceSecure) || other.isDeviceSecure == isDeviceSecure)&&(identical(other.deviceFingerprint, deviceFingerprint) || other.deviceFingerprint == deviceFingerprint));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,serverTime,timeOffset,rateLimitRemaining,lastRequestId,isMaintenanceMode,isDeviceSecure);
+int get hashCode => Object.hash(runtimeType,serverTime,timeOffset,rateLimitRemaining,lastRequestId,isMaintenanceMode,isDeviceSecure,deviceFingerprint);
 
 @override
 String toString() {
-  return 'BackendState(serverTime: $serverTime, timeOffset: $timeOffset, rateLimitRemaining: $rateLimitRemaining, lastRequestId: $lastRequestId, isMaintenanceMode: $isMaintenanceMode, isDeviceSecure: $isDeviceSecure)';
+  return 'BackendState(serverTime: $serverTime, timeOffset: $timeOffset, rateLimitRemaining: $rateLimitRemaining, lastRequestId: $lastRequestId, isMaintenanceMode: $isMaintenanceMode, isDeviceSecure: $isDeviceSecure, deviceFingerprint: $deviceFingerprint)';
 }
 
 
@@ -245,7 +247,7 @@ abstract mixin class _$BackendStateCopyWith<$Res> implements $BackendStateCopyWi
   factory _$BackendStateCopyWith(_BackendState value, $Res Function(_BackendState) _then) = __$BackendStateCopyWithImpl;
 @override @useResult
 $Res call({
- DateTime? serverTime, Duration timeOffset, int rateLimitRemaining, String? lastRequestId, bool isMaintenanceMode, bool isDeviceSecure
+ DateTime? serverTime, Duration timeOffset, int rateLimitRemaining, String? lastRequestId, bool isMaintenanceMode, bool isDeviceSecure, String? deviceFingerprint
 });
 
 
@@ -262,7 +264,7 @@ class __$BackendStateCopyWithImpl<$Res>
 
 /// Create a copy of BackendState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? serverTime = freezed,Object? timeOffset = null,Object? rateLimitRemaining = null,Object? lastRequestId = freezed,Object? isMaintenanceMode = null,Object? isDeviceSecure = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? serverTime = freezed,Object? timeOffset = null,Object? rateLimitRemaining = null,Object? lastRequestId = freezed,Object? isMaintenanceMode = null,Object? isDeviceSecure = null,Object? deviceFingerprint = freezed,}) {
   return _then(_BackendState(
 serverTime: freezed == serverTime ? _self.serverTime : serverTime // ignore: cast_nullable_to_non_nullable
 as DateTime?,timeOffset: null == timeOffset ? _self.timeOffset : timeOffset // ignore: cast_nullable_to_non_nullable
@@ -270,7 +272,8 @@ as Duration,rateLimitRemaining: null == rateLimitRemaining ? _self.rateLimitRema
 as int,lastRequestId: freezed == lastRequestId ? _self.lastRequestId : lastRequestId // ignore: cast_nullable_to_non_nullable
 as String?,isMaintenanceMode: null == isMaintenanceMode ? _self.isMaintenanceMode : isMaintenanceMode // ignore: cast_nullable_to_non_nullable
 as bool,isDeviceSecure: null == isDeviceSecure ? _self.isDeviceSecure : isDeviceSecure // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,deviceFingerprint: freezed == deviceFingerprint ? _self.deviceFingerprint : deviceFingerprint // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

@@ -5,6 +5,7 @@ import 'package:flutter_root_jailbreak_checker/flutter_root_jailbreak_checker.da
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'backend_sync.freezed.dart';
@@ -19,9 +20,10 @@ sealed class BackendState with _$BackendState {
     String? lastRequestId,
     @Default(false) bool isMaintenanceMode,
     @Default(false) bool isDeviceSecure,
+    String? deviceFingerprint,
   }) = _BackendState;
 
-  const BackendState._(); // Wymagane, aby mieć gettery w Freezed
+  const BackendState._();
   DateTime get currentCorrectedTime => DateTime.now().add(timeOffset);
 }
 
@@ -33,17 +35,25 @@ class BackendStateNotifier extends _$BackendStateNotifier {
   @override
   FutureOr<BackendState> build() async {
     final storage = ref.watch(secureStorageProvider);
+    final deviceInfo = ref.watch(deviceInfoServiceProvider);
 
-    final savedTime = await storage.read(key: _timeKey);
-    final savedOffsetMs = await storage.read(key: _offsetKey);
+    final results = await Future.wait([
+      storage.read(key: _timeKey),
+      storage.read(key: _offsetKey),
+      deviceInfo.getSecureFingerprint(), // Ciężka operacja - robimy ją tu RAZ
+    ]);
+
+    final savedTime = results[0];
+    final savedOffsetMs = results[1];
+    final fingerprint = results[2];
 
     return BackendState(
       serverTime: savedTime != null ? DateTime.tryParse(savedTime) : null,
       timeOffset: Duration(
         milliseconds: int.tryParse(savedOffsetMs ?? '0') ?? 0,
       ),
-      isDeviceSecure:
-          true, // Na starcie zakładamy true, Interceptor zweryfikuje
+      isDeviceSecure: true,
+      deviceFingerprint: fingerprint,
     );
   }
 
@@ -137,7 +147,7 @@ class SecuritySyncInterceptor extends Interceptor {
   final Ref ref;
   final _checker = FlutterRootJailbreakChecker();
   DateTime? _lastSecurityCheck;
-  bool _cachedSecurityResult = true; // Domyślnie bezpieczne
+  bool _cachedSecurityResult = true;
 
   SecuritySyncInterceptor(this.ref);
 
@@ -148,6 +158,11 @@ class SecuritySyncInterceptor extends Interceptor {
   ) async {
     final now = DateTime.now();
     final log = ref.read(appLoggerProvider);
+    final backendState = ref.read(backendStateProvider).value;
+
+    if (backendState?.deviceFingerprint != null) {
+      options.headers['X-Device-Fingerprint'] = backendState!.deviceFingerprint;
+    }
 
     if (!Platform.isAndroid && !Platform.isIOS) {
       // Optymalizacja: na Windows nie wywołujemy notifiers.update zbyt często

@@ -11,6 +11,7 @@ class ApiConstants extends ApiConstantsBase {
   final String defaultPassword;
   final String appName;
   final String appDescription;
+  final Duration inactivityTimeout;
 
   const ApiConstants()
     : baseUrl = 'https://api-test.ct8.pl',
@@ -20,5 +21,6 @@ class ApiConstants extends ApiConstantsBase {
       defaultEmail = 'user@example.com',
       defaultPassword = 'Zaq1@wsx',
       appName = "Obywatel+",
-      appDescription = "Government Operating System";
+      appDescription = "Government Operating System",
+      inactivityTimeout = const Duration(minutes: 5);
 }
