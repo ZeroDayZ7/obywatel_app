@@ -27,6 +27,15 @@ class DeviceInfoService {
   final _deviceInfo = DeviceInfoPlugin();
   final _log = Logger();
 
+  Future<String> getPlatformName() async {
+    if (Platform.isAndroid) return 'android';
+    if (Platform.isIOS) return 'ios';
+    if (Platform.isWindows) return 'windows';
+    if (Platform.isMacOS) return 'macos';
+    if (Platform.isLinux) return 'linux';
+    return 'unknown';
+  }
+
   /// Pobiera wszystkie dane urządzenia i zwraca jako Map
   Future<Map<String, dynamic>> collectDeviceInfo() async {
     final Map<String, dynamic> deviceData = {};

@@ -20,7 +20,7 @@ final class GlobalNotificationProvider
         argument: null,
         retry: null,
         name: r'globalNotificationProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -42,7 +42,7 @@ final class GlobalNotificationProvider
 }
 
 String _$globalNotificationHash() =>
-    r'13d1672609f6e5031ceadcf0a9c949d800d60ee3';
+    r'f4c207cf04ee652d63f7e2563730bfe7e0043b1a';
 
 abstract class _$GlobalNotification extends $Notifier<AppNotification?> {
   AppNotification? build();

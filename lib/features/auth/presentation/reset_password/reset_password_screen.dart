@@ -5,7 +5,6 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
-import 'package:obywatel_plus/features/auth/domain/reset_password_state.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/code_input.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/method_selection.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/password_input.dart';
@@ -16,6 +15,7 @@ class ResetPasswordScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // FIX: Używamy resetPasswordNotifierProvider zamiast resetPasswordServiceProvider
     final state = ref.watch(resetPasswordProvider);
     final notifier = ref.read(resetPasswordProvider.notifier);
 
@@ -33,6 +33,7 @@ class ResetPasswordScreen extends ConsumerWidget {
 
 class _ResetPasswordBody extends StatefulWidget {
   final ResetPasswordState state;
+  // FIX: ResetPasswordNotifier to nazwa klasy z pliku notifiera
   final ResetPasswordNotifier notifier;
 
   const _ResetPasswordBody({required this.state, required this.notifier});
@@ -52,60 +53,46 @@ class _ResetPasswordBodyState extends State<_ResetPasswordBody> {
     super.dispose();
   }
 
-  bool _isButtonLoading() {
-    return widget.state.maybeWhen(
-      sendingCode: (_, _) => true,
-      verifyingCode: () => true,
-      resettingPassword: () => true,
-      orElse: () => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final isLoading = _isButtonLoading();
+    // FIX: Sprawdzamy typ wygenerowany przez Freezed (zazwyczaj _Loading)
+    // Jeśli build_runner jeszcze nie skończył, może podkreślać na czerwono.
+    final bool isLoading = widget.state.maybeMap(
+      loading: (_) => true,
+      orElse: () => false,
+    );
+
+    // Wewnątrz _ResetPasswordBodyState w metodzie build:
 
     return widget.state.when(
       initial: () => MethodSelectionWidget(
         notifier: widget.notifier,
         isLoading: isLoading,
       ),
-      methodChosen: (_, _) => MethodSelectionWidget(
+      methodChosen: (input, method) => MethodSelectionWidget(
         notifier: widget.notifier,
         isLoading: isLoading,
       ),
-      sendingCode: (_, _) => MethodSelectionWidget(
+      loading: () {
+        // Zamiast samego spinnera, możesz zwrócić ostatni widoczny stan ze spinnerem overlay,
+        // ale na razie zostańmy przy Twoim rozwiązaniu:
+        return const Center(child: CircularProgressIndicator());
+      },
+      codeSent: (input, method, resendTime, canResend, token) =>
+          CodeInputWidget(
+            notifier: widget.notifier,
+            codeController: codeController,
+            resendTime: resendTime,
+            canResend: canResend,
+            isLoading: isLoading,
+          ),
+      // POPRAWKA TUTAJ: Dodajemy drugi parametr (challenge)
+      codeVerified: (token, challenge) => PasswordInputWidget(
         notifier: widget.notifier,
+        code: codeController.text, // Kod z kontrolera potrzebny do podpisu
         isLoading: isLoading,
       ),
-      codeSent: (_, _, resendTime, canResend) => CodeInputWidget(
-        notifier: widget.notifier,
-        codeController: codeController,
-        resendTime: resendTime,
-        canResend: canResend,
-        isLoading: isLoading,
-      ),
-      verifyingCode: () => CodeInputWidget(
-        notifier: widget.notifier,
-        codeController: codeController,
-        resendTime: 0,
-        canResend: false,
-        isLoading: isLoading,
-      ),
-      codeVerified: () => PasswordInputWidget(
-        notifier: widget.notifier,
-        passwordController: passwordController,
-        isLoading: isLoading,
-      ),
-      resettingPassword: () => PasswordInputWidget(
-        notifier: widget.notifier,
-        passwordController: passwordController,
-        isLoading: isLoading,
-      ),
-      completed: () => SuccessWidget(),
-      error: (message) => Center(
-        child: Text(message, style: const TextStyle(color: Colors.red)),
-      ),
+      completed: () => const SuccessWidget(),
     );
   }
 }
