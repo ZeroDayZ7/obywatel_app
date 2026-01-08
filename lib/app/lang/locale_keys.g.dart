@@ -67,6 +67,11 @@ abstract class  LocaleKeys {
   static const validators = 'validators';
   static const errors_cache = 'errors.cache';
   static const errors_unexpected_error = 'errors.unexpected_error';
+  static const errors_2FA_LOCKED = 'errors.2FA_LOCKED';
+  static const errors_ACCOUNT_LOCKED = 'errors.ACCOUNT_LOCKED';
+  static const errors_ACCOUNT_SUSPENDED = 'errors.ACCOUNT_SUSPENDED';
+  static const errors_ACCOUNT_BANNED = 'errors.ACCOUNT_BANNED';
+  static const errors_ACCOUNT_PENDING = 'errors.ACCOUNT_PENDING';
   static const errors_CONNECTION_ERROR = 'errors.CONNECTION_ERROR';
   static const errors_SERVER_ERROR = 'errors.SERVER_ERROR';
   static const errors_INVALID_CREDENTIALS = 'errors.INVALID_CREDENTIALS';

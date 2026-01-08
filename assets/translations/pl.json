@@ -68,6 +68,11 @@
   "errors": {
     "cache": "Błąd zapisu lub odczytu danych lokalnych",
     "unexpected_error": "Wystąpił nieoczekiwany błąd",
+    "2FA_LOCKED": "Zbyt wiele niepoprawnych prób 2FA. Spróbuj ponownie za 15 minut.",
+    "ACCOUNT_LOCKED": "Konto zablokowane z powodu zbyt wielu nieudanych prób logowania",
+    "ACCOUNT_SUSPENDED": "Konto użytkownika jest tymczasowo zawieszone",
+    "ACCOUNT_BANNED": "Konto użytkownika zostało zablokowane",
+    "ACCOUNT_PENDING": "Konto użytkownika oczekuje na weryfikację",
     "CONNECTION_ERROR": "Brak połączenia z internetem",
     "SERVER_ERROR": "Błąd serwera. Spróbuj ponownie później.",
     "INVALID_CREDENTIALS": "Nieprawidłowe dane logowania",
