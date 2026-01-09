@@ -75,10 +75,7 @@ class AuthController extends _$AuthController {
         ref
             .read(authFreshProvider)
             .setToken(
-              OAuth2Token(
-                accessToken: accessToken,
-                refreshToken: null,
-              ),
+              OAuth2Token(accessToken: accessToken, refreshToken: null),
             );
 
         state = AuthState.authenticated(

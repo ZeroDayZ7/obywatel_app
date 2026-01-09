@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:advertising_id/advertising_id.dart';
-import 'package:crypto/crypto.dart';
+import 'package:crypto/crypto.dart' as standard_crypto;
 import 'package:cryptography/cryptography.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
@@ -26,6 +26,66 @@ class DeviceInfoService {
   final _storage = const FlutterSecureStorage();
   final _deviceInfo = DeviceInfoPlugin();
   final _log = Logger();
+
+  /// Generuje klucz AES z PIN-u użytkownika przy użyciu PBKDF2
+  Future<SecretKey> deriveKeyFromPin(List<int> pinBytes, String userId) async {
+    final pbkdf2 = Pbkdf2(
+      macAlgorithm: Hmac.sha256(),
+      iterations: 10000,
+      bits: 256,
+    );
+
+    return await pbkdf2.deriveKey(
+      secretKey: SecretKey(pinBytes),
+      nonce: utf8.encode(userId),
+    );
+  }
+
+  /// Szyfruje dane za pomocą klucza z PIN-u
+  Future<String> encryptWithPin({
+    required String plainText,
+    required List<int> pinBytes,
+    required String userId,
+  }) async {
+    final secretKey = await deriveKeyFromPin(pinBytes, userId);
+    final nonce = _algorithm.newNonce();
+
+    final secretBox = await _algorithm.encrypt(
+      utf8.encode(plainText),
+      secretKey: secretKey,
+      nonce: nonce,
+    );
+
+    return base64Encode(secretBox.concatenation());
+  }
+
+  /// Deszyfruje dane za pomocą PIN-u
+  Future<String> decryptWithPin({
+    required String encryptedBase64,
+    required List<int> pinBytes,
+    required String userId,
+  }) async {
+    try {
+      final secretKey = await deriveKeyFromPin(pinBytes, userId);
+      final combinedBytes = base64Decode(encryptedBase64);
+
+      final secretBox = SecretBox.fromConcatenation(
+        combinedBytes,
+        nonceLength: _algorithm.nonceLength,
+        macLength: _algorithm.macAlgorithm.macLength,
+      );
+
+      final clearBytes = await _algorithm.decrypt(
+        secretBox,
+        secretKey: secretKey,
+      );
+
+      return utf8.decode(clearBytes);
+    } catch (e) {
+      _log.e('Błąd deszyfrowania danych PIN-em: $e');
+      return "Zaszyfrowane dane";
+    }
+  }
 
   Future<String> getPlatformName() async {
     if (Platform.isAndroid) return 'android';
@@ -87,12 +147,9 @@ class DeviceInfoService {
     final info = data['device_info'] as Map<String, dynamic>;
 
     List<String> components = [];
-
     if (Platform.isAndroid) {
       String aId = (info['androidId'] ?? '').toString();
-      if (aId == "9774d56d682e549c" || aId.isEmpty) {
-        aId = "fallback_id";
-      }
+      if (aId == "9774d56d682e549c" || aId.isEmpty) aId = "fallback_id";
       components.add(aId);
       components.add(info['model'] ?? 'unknown');
     } else if (Platform.isIOS) {
@@ -106,8 +163,9 @@ class DeviceInfoService {
     final String rawFingerprint =
         "$cleanComponents|${data['app_device_id_secure']}";
 
+    // POPRAWKA: Używamy aliasu standard_crypto
     final bytes = utf8.encode(rawFingerprint);
-    return sha256.convert(bytes).toString();
+    return standard_crypto.sha256.convert(bytes).toString();
   }
 
   /// Pobiera czytelną nazwę (np. "iPhone 13")

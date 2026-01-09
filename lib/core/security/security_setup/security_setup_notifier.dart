@@ -12,6 +12,7 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 import 'security_setup_state.dart';
@@ -95,6 +96,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
     final sessionService = ref.read(sessionServiceProvider);
+    final logger = ref.read(appLoggerProvider);
 
     state = const AsyncValue.loading();
 
@@ -110,6 +112,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
         final challenge = authState.mapOrNull(
           authenticated: (s) => s.challenge,
         );
+
         final publicKey = await keyPair.extractPublicKey();
         final fingerprint = await deviceService.getSecureFingerprint();
         final encryptedName = await deviceService.getEncryptedMarketingName();
@@ -123,8 +126,8 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
           throw Exception("Nie udało się wygenerować podpisu urządzenia");
         }
 
-        // 🔥 WYWOŁANIE REJESTRACJI I ODBIÓR NOWEGO TOKENA
-        final newAccessToken = await authService.registerTrustedDevice(
+        // 1. REJESTRACJA - otrzymujemy teraz obiekt AuthResponse
+        final response = await authService.registerTrustedDevice(
           fingerprint: fingerprint,
           publicKey: base64Encode(publicKey.bytes),
           encryptedName: encryptedName,
@@ -132,23 +135,32 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
           signature: signature,
         );
 
-        // 🔥 AKTUALIZACJA SESJI
-        // Jeśli dostaliśmy nowy token, nadpisujemy stary w SecureStorage.
-        // Dzięki temu następny request (np. GetSessions) użyje już tokena z nowym fingerprintem.
-        if (newAccessToken != null) {
-          await sessionService.updateAccessToken(newAccessToken);
-          ref
-              .read(appLoggerProvider)
-              .i('🔄 Access Token rotated after device binding');
-        }
+        // 2. MAPOWANIE I ZAPIS TOKENÓW
+        await response.maybeWhen(
+          fullSuccess: (accessToken, refreshToken, user, rbac) async {
+            await sessionService.updateTokens(
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+            );
+            logger.i('✅ Sesja zaufana ustanowiona. Tokeny zrotowane.');
+          },
+          orElse: () {
+            // Jeśli backend nie zwrócił FullSuccess, coś poszło nie tak
+            throw Exception(
+              "Serwer nie potwierdził pełnego zaufania urządzenia.",
+            );
+          },
+        );
       }
 
-      // 4. Kończymy setup
+      // 3. Kończymy setup bezpieczeństwa (PIN/Biometria)
       await ref
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);
     } catch (e, st) {
+      logger.e('Błąd podczas kończenia konfiguracji: $e');
       state = AsyncValue.error(e, st);
     }
   }
+
 }

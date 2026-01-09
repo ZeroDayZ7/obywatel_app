@@ -11,11 +11,41 @@ part of 'auth_response.dart';
 
 // dart format off
 T _$identity<T>(T value) => value;
+AuthResponse _$AuthResponseFromJson(
+  Map<String, dynamic> json
+) {
+        switch (json['runtimeType']) {
+                  case 'twoFaRequired':
+          return _TwoFaRequired.fromJson(
+            json
+          );
+                case 'preTrust':
+          return _PreTrust.fromJson(
+            json
+          );
+                case 'fullSuccess':
+          return _FullSuccess.fromJson(
+            json
+          );
+        
+          default:
+            throw CheckedFromJsonException(
+  json,
+  'runtimeType',
+  'AuthResponse',
+  'Invalid union type "${json['runtimeType']}"!'
+);
+        }
+      
+}
+
 /// @nodoc
 mixin _$AuthResponse {
 
 
 
+  /// Serializes this AuthResponse to a JSON map.
+  Map<String, dynamic> toJson();
 
 
 @override
@@ -23,7 +53,7 @@ bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthResponse);
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => runtimeType.hashCode;
 
@@ -178,13 +208,17 @@ return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);c
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _TwoFaRequired implements AuthResponse {
-  const _TwoFaRequired({required this.twoFaToken});
-  
+  const _TwoFaRequired({required this.twoFaToken, final  String? $type}): $type = $type ?? 'twoFaRequired';
+  factory _TwoFaRequired.fromJson(Map<String, dynamic> json) => _$TwoFaRequiredFromJson(json);
 
  final  String twoFaToken;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AuthResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -192,14 +226,17 @@ class _TwoFaRequired implements AuthResponse {
 @pragma('vm:prefer-inline')
 _$TwoFaRequiredCopyWith<_TwoFaRequired> get copyWith => __$TwoFaRequiredCopyWithImpl<_TwoFaRequired>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$TwoFaRequiredToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _TwoFaRequired&&(identical(other.twoFaToken, twoFaToken) || other.twoFaToken == twoFaToken));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,twoFaToken);
 
@@ -244,15 +281,19 @@ as String,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _PreTrust implements AuthResponse {
-  const _PreTrust({required this.accessToken, required this.challenge, this.isTrusted = false});
-  
+  const _PreTrust({required this.accessToken, required this.challenge, this.isTrusted = false, final  String? $type}): $type = $type ?? 'preTrust';
+  factory _PreTrust.fromJson(Map<String, dynamic> json) => _$PreTrustFromJson(json);
 
  final  String accessToken;
  final  String challenge;
 @JsonKey() final  bool isTrusted;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AuthResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -260,14 +301,17 @@ class _PreTrust implements AuthResponse {
 @pragma('vm:prefer-inline')
 _$PreTrustCopyWith<_PreTrust> get copyWith => __$PreTrustCopyWithImpl<_PreTrust>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$PreTrustToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreTrust&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.isTrusted, isTrusted) || other.isTrusted == isTrusted));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,accessToken,challenge,isTrusted);
 
@@ -314,16 +358,20 @@ as bool,
 }
 
 /// @nodoc
-
+@JsonSerializable()
 
 class _FullSuccess implements AuthResponse {
-  const _FullSuccess({required this.accessToken, required this.refreshToken, required this.user, required this.rbac});
-  
+  const _FullSuccess({required this.accessToken, required this.refreshToken, required this.user, required this.rbac, final  String? $type}): $type = $type ?? 'fullSuccess';
+  factory _FullSuccess.fromJson(Map<String, dynamic> json) => _$FullSuccessFromJson(json);
 
  final  String accessToken;
  final  String refreshToken;
  final  UserProfile user;
  final  RbacData rbac;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
 
 /// Create a copy of AuthResponse
 /// with the given fields replaced by the non-null parameter values.
@@ -331,14 +379,17 @@ class _FullSuccess implements AuthResponse {
 @pragma('vm:prefer-inline')
 _$FullSuccessCopyWith<_FullSuccess> get copyWith => __$FullSuccessCopyWithImpl<_FullSuccess>(this, _$identity);
 
-
+@override
+Map<String, dynamic> toJson() {
+  return _$FullSuccessToJson(this, );
+}
 
 @override
 bool operator ==(Object other) {
   return identical(this, other) || (other.runtimeType == runtimeType&&other is _FullSuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.user, user) || other.user == user)&&(identical(other.rbac, rbac) || other.rbac == rbac));
 }
 
-
+@JsonKey(includeFromJson: false, includeToJson: false)
 @override
 int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,user,rbac);
 

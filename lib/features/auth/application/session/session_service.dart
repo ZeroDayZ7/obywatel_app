@@ -30,8 +30,12 @@ class SessionService {
 
   Future<String?> getUserId() async => _storage.read(key: StorageKeys.userId);
 
-  Future<void> updateAccessToken(String token) async {
-    await _storage.write(key: StorageKeys.accessToken, value: token);
+  Future<void> updateTokens({
+    required String accessToken,
+    required String refreshToken,
+  }) async {
+    await _storage.write(key: StorageKeys.accessToken, value: accessToken);
+    await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
   }
 
   Future<void> saveSession({

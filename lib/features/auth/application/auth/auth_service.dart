@@ -5,7 +5,6 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_models.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 
 class AuthService {
@@ -34,30 +33,7 @@ class AuthService {
     }
 
     // 2. Jeśli nie 2FA, mapujemy na wynik weryfikacji urządzenia
-    return _mapToAuthResponse(data);
-  }
-
-  /// Pomocnicza metoda do mapowania danych sukcesu
-  AuthResponse _mapToAuthResponse(Map<String, dynamic> data) {
-    final isTrusted = data['is_trusted'] as bool? ?? false;
-    final accessToken = data['access_token'].toString();
-
-    if (!isTrusted) {
-      // Urządzenie niezweryfikowane - zwracamy PreTrust (z challenge)
-      return AuthResponse.preTrust(
-        accessToken: accessToken,
-        challenge: data['challenge']?.toString() ?? '',
-        isTrusted: false,
-      );
-    }
-
-    // Pełny sukces - urządzenie jest już zaufane
-    return AuthResponse.fullSuccess(
-      accessToken: accessToken,
-      refreshToken: data['refresh_token'].toString(),
-      user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
-      rbac: RbacData.fromJson(data['rbac'] as Map<String, dynamic>),
-    );
+    return AuthResponse.fromMap(response.data);
   }
 
   /// Weryfikacja 2FA
@@ -79,10 +55,10 @@ class AuthService {
       throw Exception('errors.INVALID_2FA');
     }
 
-    return _mapToAuthResponse(data);
+    return AuthResponse.fromMap(response.data);
   }
 
-  Future<String?> registerTrustedDevice({
+  Future<AuthResponse> registerTrustedDevice({
     required String fingerprint,
     required String publicKey,
     required String encryptedName,
@@ -102,8 +78,8 @@ class AuthService {
 
     _logger.i('Device registration successful for: $fingerprint');
 
-    // Wyciągamy nowy token z odpowiedzi (zakładając, że backend go wyśle)
-    return response.data['access_token']?.toString();
+    // Teraz zwracamy pełny model, który zawiera refreshToken
+    return AuthResponse.fromMap(response.data);
   }
 
   /// Logout
