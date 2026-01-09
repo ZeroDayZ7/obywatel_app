@@ -7,18 +7,18 @@ part of 'auth_models.dart';
 // **************************************************************************
 
 _UserProfile _$UserProfileFromJson(Map<String, dynamic> json) => _UserProfile(
-  userId: json['uid'] as String,
+  userId: json['user_id'] as String,
+  displayName: json['display_name'] as String,
+  lastLogin: json['last_login'] as String,
   role: json['role'] as String,
-  displayName: json['displayName'] as String,
-  lastLogin: json['lastLogin'] as String,
 );
 
 Map<String, dynamic> _$UserProfileToJson(_UserProfile instance) =>
     <String, dynamic>{
-      'uid': instance.userId,
+      'user_id': instance.userId,
+      'display_name': instance.displayName,
+      'last_login': instance.lastLogin,
       'role': instance.role,
-      'displayName': instance.displayName,
-      'lastLogin': instance.lastLogin,
     };
 
 _RbacData _$RbacDataFromJson(Map<String, dynamic> json) => _RbacData(

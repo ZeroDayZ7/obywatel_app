@@ -15,7 +15,8 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserProfile {
 
-@JsonKey(name: 'uid') String get userId; String get role; String get displayName; String get lastLogin;
+// ZMIEŃ 'uid' na 'user_id' – to jest powód błędu!
+@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'display_name') String get displayName;@JsonKey(name: 'last_login') String get lastLogin; String get role;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +29,16 @@ $UserProfileCopyWith<UserProfile> get copyWith => _$UserProfileCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,role,displayName,lastLogin);
+int get hashCode => Object.hash(runtimeType,userId,displayName,lastLogin,role);
 
 @override
 String toString() {
-  return 'UserProfile(userId: $userId, role: $role, displayName: $displayName, lastLogin: $lastLogin)';
+  return 'UserProfile(userId: $userId, displayName: $displayName, lastLogin: $lastLogin, role: $role)';
 }
 
 
@@ -48,7 +49,7 @@ abstract mixin class $UserProfileCopyWith<$Res>  {
   factory $UserProfileCopyWith(UserProfile value, $Res Function(UserProfile) _then) = _$UserProfileCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'uid') String userId, String role, String displayName, String lastLogin
+@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'display_name') String displayName,@JsonKey(name: 'last_login') String lastLogin, String role
 });
 
 
@@ -65,12 +66,12 @@ class _$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? role = null,Object? displayName = null,Object? lastLogin = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? displayName = null,Object? lastLogin = null,Object? role = null,}) {
   return _then(_self.copyWith(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,lastLogin: null == lastLogin ? _self.lastLogin : lastLogin // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -153,10 +154,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'uid')  String userId,  String role,  String displayName,  String lastLogin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);case _:
+return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case _:
   return orElse();
 
 }
@@ -174,10 +175,10 @@ return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'uid')  String userId,  String role,  String displayName,  String lastLogin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile():
-return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);}
+return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -191,10 +192,10 @@ return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'uid')  String userId,  String role,  String displayName,  String lastLogin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)?  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
-return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);case _:
+return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case _:
   return null;
 
 }
@@ -206,13 +207,14 @@ return $default(_that.userId,_that.role,_that.displayName,_that.lastLogin);case 
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({@JsonKey(name: 'uid') required this.userId, required this.role, required this.displayName, required this.lastLogin});
+  const _UserProfile({@JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'display_name') required this.displayName, @JsonKey(name: 'last_login') required this.lastLogin, required this.role});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
-@override@JsonKey(name: 'uid') final  String userId;
+// ZMIEŃ 'uid' na 'user_id' – to jest powód błędu!
+@override@JsonKey(name: 'user_id') final  String userId;
+@override@JsonKey(name: 'display_name') final  String displayName;
+@override@JsonKey(name: 'last_login') final  String lastLogin;
 @override final  String role;
-@override final  String displayName;
-@override final  String lastLogin;
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
@@ -227,16 +229,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.role, role) || other.role == role)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,role,displayName,lastLogin);
+int get hashCode => Object.hash(runtimeType,userId,displayName,lastLogin,role);
 
 @override
 String toString() {
-  return 'UserProfile(userId: $userId, role: $role, displayName: $displayName, lastLogin: $lastLogin)';
+  return 'UserProfile(userId: $userId, displayName: $displayName, lastLogin: $lastLogin, role: $role)';
 }
 
 
@@ -247,7 +249,7 @@ abstract mixin class _$UserProfileCopyWith<$Res> implements $UserProfileCopyWith
   factory _$UserProfileCopyWith(_UserProfile value, $Res Function(_UserProfile) _then) = __$UserProfileCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'uid') String userId, String role, String displayName, String lastLogin
+@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'display_name') String displayName,@JsonKey(name: 'last_login') String lastLogin, String role
 });
 
 
@@ -264,12 +266,12 @@ class __$UserProfileCopyWithImpl<$Res>
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? role = null,Object? displayName = null,Object? lastLogin = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? displayName = null,Object? lastLogin = null,Object? role = null,}) {
   return _then(_UserProfile(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,lastLogin: null == lastLogin ? _self.lastLogin : lastLogin // ignore: cast_nullable_to_non_nullable
+as String,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
