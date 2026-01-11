@@ -83,9 +83,12 @@ class AuthService {
   }
 
   /// Logout
-  Future<void> logout() async {
+  Future<void> logout(String? refreshToken) async {
     try {
-      await _apiClient.post(ApiEndpoints.logout);
+      await _apiClient.post(
+        ApiEndpoints.logout,
+        data: {StorageKeys.refreshToken: refreshToken},
+      );
     } catch (e) {
       _logger.w('Logout API failed, forcing local logout');
     }

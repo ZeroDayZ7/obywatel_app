@@ -145,7 +145,8 @@ class AuthController extends _$AuthController {
 
   Future<void> logout() async {
     try {
-      await _authService.logout();
+      final refreshToken = await _sessionService.getRefreshToken();
+      await _authService.logout(refreshToken);
     } finally {
       await _sessionService.clearSession();
       ref.invalidate(securityServiceProvider);

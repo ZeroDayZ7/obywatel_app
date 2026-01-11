@@ -69,6 +69,12 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               controller: _codeController,
               enabled: !isLoading,
               keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 8.0,
+              ),
               decoration: InputDecoration(
                 labelText: LocaleKeys.login_2fa_code.tr(),
               ),
