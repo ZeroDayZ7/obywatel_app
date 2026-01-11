@@ -49,9 +49,9 @@ class AuthService {
 
     final data = response.data;
 
-    final accessToken = data[StorageKeys.accessToken]?.toString();
+    final setupToken = data[StorageKeys.setupToken]?.toString();
 
-    if (accessToken == null) {
+    if (setupToken == null) {
       throw Exception('errors.INVALID_2FA');
     }
 

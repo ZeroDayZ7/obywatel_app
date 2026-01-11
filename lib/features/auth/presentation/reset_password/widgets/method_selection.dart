@@ -59,6 +59,7 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
               controller: _emailCtrl,
               decoration: InputDecoration(
                 labelText: LocaleKeys.common_email.tr(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                 border: const UnderlineInputBorder(),
               ),
               validator: Validators.validateEmail,
@@ -69,6 +70,7 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
               controller: _phoneCtrl,
               decoration: InputDecoration(
                 labelText: LocaleKeys.common_phone.tr(),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
                 border: const UnderlineInputBorder(),
               ),
               validator: Validators.validatePhone,

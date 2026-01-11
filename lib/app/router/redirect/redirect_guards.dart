@@ -13,6 +13,7 @@ String? authGuard(Ref ref, GoRouterState state) {
   final isLogin = state.uri.path == AppRoutes.login;
   final is2Fa = state.uri.path == AppRoutes.twoFaVerify;
   final isPin = state.uri.path == AppRoutes.pin;
+  final isSecuritySetup = state.uri.path == AppRoutes.securitySetup;
 
   final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
@@ -40,20 +41,23 @@ String? authGuard(Ref ref, GoRouterState state) {
     return is2Fa ? null : AppRoutes.twoFaVerify;
   }
 
-  // 4️⃣ Zalogowany
-  if (authState.maybeMap(authenticated: (_) => true, orElse: () => false)) {
-    // Setup PIN nieukończony → idź na setup
-    if (!securityState.isSetupCompleted) {
-      return state.uri.path == AppRoutes.securitySetup
-          ? null
-          : AppRoutes.securitySetup;
-    }
+  // 🔥 NOWY PUNKT: 3.5️⃣ Częściowo zalogowany (po 2FA, przed zaufaniem urządzeniu)
+  if (authState.maybeMap(
+    partiallyAuthenticated: (_) => true,
+    orElse: () => false,
+  )) {
+    // Jeśli user ma setupToken, ale nie ukończył setupu bezpieczeństwa -> wyślij na setup
+    return isSecuritySetup ? null : AppRoutes.securitySetup;
+  }
 
-    // Jeśli próbujemy wejść na login/2FA/pin → Home
+  // 4️⃣ Zalogowany (Full Success)
+  if (authState.maybeMap(authenticated: (_) => true, orElse: () => false)) {
+    if (!securityState.isSetupCompleted) {
+      return isSecuritySetup ? null : AppRoutes.securitySetup;
+    }
     if (isLogin || is2Fa || isPin) return AppRoutes.home;
   }
 
-  // 5️⃣ Domyślnie brak redirectu
   return null;
 }
 

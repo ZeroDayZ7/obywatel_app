@@ -94,6 +94,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             enabled: !isLoading,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_email.tr(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
             validator: Validators.validateEmail,
             keyboardType: TextInputType.emailAddress,
@@ -112,6 +113,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             obscureText: _obscurePassword,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_password.tr(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,

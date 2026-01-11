@@ -19,6 +19,11 @@ sealed class AuthState with _$AuthState {
     required String tempToken,
   }) = _TwoFaRequired;
 
+  const factory AuthState.partiallyAuthenticated({
+    required String setupToken,
+    required String challenge,
+  }) = _PartiallyAuthenticated;
+
   /// Fully authenticated session
   const factory AuthState.authenticated({
     required String userId,

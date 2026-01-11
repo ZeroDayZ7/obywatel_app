@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 import 'auth_models.dart';
 
@@ -11,7 +12,7 @@ sealed class AuthResponse with _$AuthResponse {
       _TwoFaRequired;
 
   const factory AuthResponse.preTrust({
-    required String accessToken,
+    required String setupToken,
     required String challenge,
     @Default(false) bool isTrusted,
   }) = _PreTrust;
@@ -29,18 +30,18 @@ sealed class AuthResponse with _$AuthResponse {
 
   // Twoja własna logika mapowania
   factory AuthResponse.fromMap(Map<String, dynamic> data) {
-    if (data['2fa_required'] == true) {
+    if (data[StorageKeys.twoFaRequired] == true) {
       return AuthResponse.twoFaRequired(
-        twoFaToken: data['two_fa_token']?.toString() ?? '',
+        twoFaToken: data[StorageKeys.twoFaToken]?.toString() ?? '',
       );
     }
 
-    final isTrusted = data['is_trusted'] as bool? ?? false;
-    final refreshToken = data['refresh_token']?.toString();
+    final isTrusted = data[StorageKeys.isTrusted] as bool? ?? false;
+    final refreshToken = data[StorageKeys.refreshToken]?.toString();
 
     if (isTrusted && refreshToken != null && refreshToken.isNotEmpty) {
       return AuthResponse.fullSuccess(
-        accessToken: data['access_token']?.toString() ?? '',
+        accessToken: data[StorageKeys.accessToken]?.toString() ?? '',
         refreshToken: refreshToken,
         user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
         rbac: RbacData.fromJson(data['rbac'] as Map<String, dynamic>),
@@ -48,8 +49,8 @@ sealed class AuthResponse with _$AuthResponse {
     }
 
     return AuthResponse.preTrust(
-      accessToken: data['access_token']?.toString() ?? '',
-      challenge: data['challenge']?.toString() ?? '',
+      setupToken: data[StorageKeys.setupToken]?.toString() ?? '',
+      challenge: data[StorageKeys.challenge]?.toString() ?? '',
       isTrusted: isTrusted,
     );
   }

@@ -110,6 +110,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
             obscureText: !_isPassVisible,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_password.tr(),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               prefixIcon: const Icon(Icons.lock_outline),
               suffixIcon: IconButton(
                 icon: Icon(

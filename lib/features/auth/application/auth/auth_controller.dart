@@ -64,25 +64,14 @@ class AuthController extends _$AuthController {
       twoFaRequired: (token) {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
-      preTrust: (accessToken, challenge, isTrusted) async {
-        // Zapisujemy token dostępu, mimo że urządzenie nie jest jeszcze zaufane
-        await _sessionService.saveSession(
-          accessToken: accessToken,
-          refreshToken: '',
-          userId: 'pending',
-        );
-
+      preTrust: (setupToken, challenge, isTrusted) async {
         ref
             .read(authFreshProvider)
-            .setToken(
-              OAuth2Token(accessToken: accessToken, refreshToken: null),
-            );
+            .setToken(OAuth2Token(accessToken: setupToken, refreshToken: null));
 
-        state = AuthState.authenticated(
-          userId: 'pending',
-          accessToken: accessToken,
+        state = AuthState.partiallyAuthenticated(
+          setupToken: setupToken,
           challenge: challenge,
-          isDeviceTrusted: false,
         );
       },
       fullSuccess: (accessToken, refreshToken, user, rbac) async {
@@ -133,7 +122,9 @@ class AuthController extends _$AuthController {
       codeBytes.fillRange(0, codeBytes.length, 0);
 
       await _handleAuthResponse(result, currentEmail);
-    } catch (e) {
+    } catch (e, stack) {
+      print("❌ BŁĄD WE FLUTTERZE: $e");
+      print("❌ STACKTRACE: $stack");
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
         email: currentEmail,
@@ -159,6 +150,10 @@ class AuthController extends _$AuthController {
   void _handleError(Object e) {
     // Po prostu przekaż błąd dalej. Notifier zajmie się mapowaniem na AppFailure.
     ref.read(globalNotificationProvider.notifier).showFromError(e);
+  }
+
+  void cancelTwoFa() {
+    state = const AuthState.unauthenticated();
   }
 
   void _showError(String key) {

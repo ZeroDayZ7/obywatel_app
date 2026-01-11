@@ -2,6 +2,12 @@
 class StorageKeys {
   static const accessToken = 'access_token';
   static const refreshToken = 'refresh_token';
+  static const setupToken = 'setup_token';
+  static const challenge = 'challenge';
+  static const isTrusted = 'is_trusted';
+  static const twoFaToken = 'two_fa_token';
+  static const twoFaRequired= '2fa_required';
+
   static const userPin = 'user_pin';
   static const pinHash = 'pin_hash';
   static const biometric = 'biometric';

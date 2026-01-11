@@ -71,12 +71,16 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               keyboardType: TextInputType.number,
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 24,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 8.0,
               ),
               decoration: InputDecoration(
                 labelText: LocaleKeys.login_2fa_code.tr(),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 10,
+                  horizontal: 10,
+                ),
               ),
               validator: Validators.validateTwoFaCode,
             ),
@@ -93,7 +97,9 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               labelKey: LocaleKeys.common_cancel,
               onPressed: isLoading
                   ? null
-                  : () => ref.read(authControllerProvider.notifier).logout(),
+                  : () {
+                      ref.read(authControllerProvider.notifier).cancelTwoFa();
+                    },
               variant: AppButtonVariant.text,
               fullWidth: true,
             ),
