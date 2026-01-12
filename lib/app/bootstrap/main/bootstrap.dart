@@ -51,6 +51,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
             activePrefsProvider.overrideWithValue(sharedService),
             appLoggerProvider.overrideWithValue(_logger),
           ],
+          // observers: kDebugMode ? [] : [],
           observers: kDebugMode ? [observer] : [],
           child: await builder(),
         ),

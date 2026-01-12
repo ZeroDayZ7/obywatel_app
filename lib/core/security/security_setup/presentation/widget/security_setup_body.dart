@@ -88,7 +88,6 @@ class SecuritySetupBody extends ConsumerWidget {
 
           const SizedBox(height: 40),
 
-          // Przycisk kończący - brak przycisku SKIP (wymagane bezpieczeństwo)
           AppButton(
             labelKey: LocaleKeys.security_setup_finish_setup,
             onPressed: state.canFinish && asyncState is! AsyncLoading

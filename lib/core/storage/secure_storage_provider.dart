@@ -19,17 +19,50 @@ class SecureStorageService {
 
   /// Write a string value to secure storage
   Future<void> write({required String key, required String value}) async {
-    await _storage.write(key: key, value: value);
+    try {
+      await _storage.write(key: key, value: value);
+      _logger.d('SecureStorage: wrote key "$key"'); // logowanie sukcesu
+    } catch (e, st) {
+      _logger.e(
+        'SecureStorage: failed to write key "$key"',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
   }
 
   /// Read a string value from secure storage
   Future<String?> read({required String key}) async {
-    return _storage.read(key: key);
+    try {
+      final result = await _storage.read(key: key);
+      _logger.d(
+        'SecureStorage: read key "$key", value present: ${result != null}',
+      );
+      return result;
+    } catch (e, st) {
+      _logger.e(
+        'SecureStorage: failed to read key "$key"',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
   }
 
   /// Delete a value from secure storage
   Future<void> delete({required String key}) async {
-    await _storage.delete(key: key);
+    try {
+      await _storage.delete(key: key);
+      _logger.d('SecureStorage: deleted key "$key"');
+    } catch (e, st) {
+      _logger.e(
+        'SecureStorage: failed to delete key "$key"',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
   }
 
   /// Read all key-value pairs from secure storage

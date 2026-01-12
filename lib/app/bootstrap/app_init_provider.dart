@@ -1,11 +1,11 @@
 // lib/app/bootstrap/app_init_provider.dart
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
-import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart'; // Tu masz definicje StorageInitTask itd.
-import 'package:obywatel_plus/app/bootstrap/logic/version/version_provider.dart';
+import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
+// import 'package:obywatel_plus/app/bootstrap/logic/version/version_provider.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
+// import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
@@ -37,8 +37,8 @@ class AppInitNotifier extends _$AppInitNotifier {
         ],
         // Grupa 2: Mogą działać w tle jednocześnie (Sieć / System)
         parallelTasks: [
-          DeviceIntegrityTask(ref.read(deviceIntegrityFacadeProvider)),
-          VersionCheckTask(ref.read(versionProvider.notifier)),
+          // DeviceIntegrityTask(ref.read(deviceIntegrityFacadeProvider)),
+          // VersionCheckTask(ref.read(versionProvider.notifier)),
         ],
       );
 

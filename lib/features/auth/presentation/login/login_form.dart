@@ -119,7 +119,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
                   _obscurePassword ? Icons.visibility : Icons.visibility_off,
                   color: Theme.of(
                     context,
-                  ).iconTheme.color, // <- wymuszenie koloru
+                  ).iconTheme.color,
                 ),
                 onPressed: () => setState(() {
                   _obscurePassword = !_obscurePassword;

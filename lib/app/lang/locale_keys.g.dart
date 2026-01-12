@@ -67,6 +67,7 @@ abstract class  LocaleKeys {
   static const validators = 'validators';
   static const errors_cache = 'errors.cache';
   static const errors_unexpected_error = 'errors.unexpected_error';
+  static const errors_cache_error = 'errors.cache_error';
   static const errors_2FA_LOCKED = 'errors.2FA_LOCKED';
   static const errors_ACCOUNT_LOCKED = 'errors.ACCOUNT_LOCKED';
   static const errors_ACCOUNT_SUSPENDED = 'errors.ACCOUNT_SUSPENDED';
@@ -126,6 +127,8 @@ abstract class  LocaleKeys {
   static const login_2fa_code = 'login.2fa.code';
   static const login_2fa_submit = 'login.2fa.submit';
   static const login_2fa_invalid_code = 'login.2fa.invalid_code';
+  static const login_2fa_session_expired_title = 'login.2fa.session_expired_title';
+  static const login_2fa_session_expired_subtitle = 'login.2fa.session_expired_subtitle';
   static const login_2fa = 'login.2fa';
   static const login_reset_link_sent = 'login.reset.link_sent';
   static const login_reset_title = 'login.reset.title';

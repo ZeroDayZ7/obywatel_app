@@ -9,21 +9,30 @@ class ApiClient {
 
   ApiClient({required this.dio, required this.storage, required this.logger});
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
-      dio.get(path, queryParameters: queryParams);
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) => dio.get(path, queryParameters: queryParams, options: options);
 
-  Future<Response> post(String path, {dynamic data}) =>
-      dio.post(path, data: data);
+  Future<Response> post(
+    String path, {
+    dynamic data,
+    Options? options, // <-- dodajemy
+  }) => dio.post(path, data: data, options: options);
 
-  Future<Response> put(String path, {dynamic data}) =>
-      dio.put(path, data: data);
+  Future<Response> put(String path, {dynamic data, Options? options}) =>
+      dio.put(path, data: data, options: options);
 
-  Future<Response> delete(String path, {Object? data}) =>
-      dio.delete(path, data: data);
+  Future<Response> delete(String path, {Object? data, Options? options}) =>
+      dio.delete(path, data: data, options: options);
 
-  Future<Response> upload(String path, FormData formData) => dio.post(
-    path,
-    data: formData,
-    options: Options(headers: {'Content-Type': 'multipart/form-data'}),
-  );
+  Future<Response> upload(String path, FormData formData, {Options? options}) =>
+      dio.post(
+        path,
+        data: formData,
+        options:
+            options ??
+            Options(headers: {'Content-Type': 'multipart/form-data'}),
+      );
 }

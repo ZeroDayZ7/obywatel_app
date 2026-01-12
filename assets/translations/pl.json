@@ -68,6 +68,7 @@
   "errors": {
     "cache": "Błąd zapisu lub odczytu danych lokalnych",
     "unexpected_error": "Wystąpił nieoczekiwany błąd",
+    "cache_error": "Błąd zapisu lub odczytu danych lokalnych",
     "2FA_LOCKED": "Zbyt wiele niepoprawnych prób 2FA. Spróbuj ponownie za 15 minut.",
     "ACCOUNT_LOCKED": "Konto zablokowane z powodu zbyt wielu nieudanych prób logowania",
     "ACCOUNT_SUSPENDED": "Konto użytkownika jest tymczasowo zawieszone",
@@ -134,7 +135,9 @@
       "subtitle": "Wprowadź kod z aplikacji autoryzującej",
       "code": "Kod 2FA",
       "submit": "Zweryfikuj",
-      "invalid_code": "Nieprawidłowy kod 2FA"
+      "invalid_code": "Nieprawidłowy kod 2FA",
+      "session_expired_title": "Sesja wygasła",
+      "session_expired_subtitle": "Kod 2FA jest ważny tylko 5 minut. Spróbuj ponownie."
     },
     "reset": {
       "link_sent": "Link resetujący hasło został wysłany na email",

@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -16,23 +17,12 @@ class AuthService {
       _logger = logger;
 
   /// Logowanie: zwraca AuthResponse (2FA lub success)
-  /// Logowanie: zwraca AuthResponse (2FARequired lub PreTrust/FullSuccess)
   Future<AuthResponse> login(String email, List<int> passwordBytes) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
       data: {'email': email, 'password': passwordBytes},
     );
 
-    final data = response.data;
-
-    // 1. Obsługa wymaganego 2FA
-    if (data['2fa_required'] == true) {
-      return AuthResponse.twoFaRequired(
-        twoFaToken: data['two_fa_token'].toString(),
-      );
-    }
-
-    // 2. Jeśli nie 2FA, mapujemy na wynik weryfikacji urządzenia
     return AuthResponse.fromMap(response.data);
   }
 
@@ -64,7 +54,13 @@ class AuthService {
     required String encryptedName,
     required String platform,
     required String signature,
+    String? accessToken,
   }) async {
+    final headers = <String, String>{};
+    if (accessToken != null) {
+      headers['Authorization'] = 'Bearer $accessToken';
+    }
+
     final response = await _apiClient.post(
       ApiEndpoints.registerDevice,
       data: {
@@ -74,12 +70,10 @@ class AuthService {
         'platform': platform,
         'signature': signature,
       },
+      options: Options(headers: headers),
     );
 
-    _logger.i('Device registration successful for: $fingerprint');
-
-    // Teraz zwracamy pełny model, który zawiera refreshToken
-    return AuthResponse.fromMap(response.data);
+    return AuthResponse.fromJson(response.data);
   }
 
   /// Logout

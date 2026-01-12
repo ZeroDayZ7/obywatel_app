@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/retry_view.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/security_setup_body.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_notifier.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
 class SecuritySetupScreen extends ConsumerWidget {
   const SecuritySetupScreen({super.key});
@@ -46,8 +47,24 @@ class SecuritySetupScreen extends ConsumerWidget {
             ),
           ],
         ),
-        error: (error, stack) =>
-            RetryView(onRetry: () => ref.invalidate(securitySetupProvider)),
+        error: (error, stack) {
+          // Obsługa SESSION_EXPIRED
+          if (error == 'SESSION_EXPIRED') {
+            return RetryView(
+              onRetry: () {
+                ref.invalidate(securitySetupProvider);
+                ref.read(authControllerProvider.notifier).setUnauthenticated();
+              },
+            );
+          }
+
+          // Inne błędy – zwykły Retry
+          return RetryView(
+            onRetry: () {
+              ref.invalidate(securitySetupProvider);
+            },
+          );
+        },
         data: (state) => SecuritySetupBody(state: state),
       ),
     );

@@ -54,7 +54,7 @@ final class AuthFreshProvider
   }
 }
 
-String _$authFreshHash() => r'3709f9e95bd2c981cf26a01cb87edb5a1e7d1a24';
+String _$authFreshHash() => r'd792c622560787e2002d3a61479cd696a3632e6e';
 
 @ProviderFor(authDio)
 final authDioProvider = AuthDioProvider._();

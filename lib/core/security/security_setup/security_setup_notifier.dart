@@ -11,6 +11,7 @@ import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
@@ -95,57 +96,59 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     final current = state.requireValue;
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
-    final sessionService = ref.read(sessionServiceProvider);
     final logger = ref.read(appLoggerProvider);
 
     state = const AsyncValue.loading();
 
     try {
+      final pending = ref.read(pendingSessionProvider);
       if (current.trustDevice) {
         final authState = ref.read(authControllerProvider);
-        String? userId = authState.mapOrNull(authenticated: (s) => s.userId);
-        userId ??= await sessionService.getUserId();
 
-        if (userId == null) throw Exception("Błąd: Brak ID użytkownika.");
-
-        final keyPair = await deviceService.generateDeviceKeyPair();
-        final challenge = authState.mapOrNull(
-          authenticated: (s) => s.challenge,
+        final challenge = authState.maybeMap(
+          partiallyAuthenticated: (s) => s.challenge,
+          orElse: () => null,
         );
 
+        if (challenge == null) {
+          throw Exception(
+            "Brak wyzwania (challenge) do podpisania. Stan: $authState",
+          );
+        }
+
+        logger.d('Próba podpisu challenge: $challenge');
+
+        final keyPair = await deviceService.generateDeviceKeyPair();
         final publicKey = await keyPair.extractPublicKey();
         final fingerprint = await deviceService.getSecureFingerprint();
         final encryptedName = await deviceService.getEncryptedMarketingName();
+        final signature = await deviceService.signChallenge(challenge, keyPair);
 
-        String? signature;
-        if (challenge != null) {
-          signature = await deviceService.signChallenge(challenge, keyPair);
-        }
+        final setupToken = pending?.setupToken;
+        logger.d('Registering trusted device with setupToken: $setupToken');
 
-        if (signature == null) {
-          throw Exception("Nie udało się wygenerować podpisu urządzenia");
-        }
-
-        // 1. REJESTRACJA - otrzymujemy teraz obiekt AuthResponse
         final response = await authService.registerTrustedDevice(
           fingerprint: fingerprint,
           publicKey: base64Encode(publicKey.bytes),
           encryptedName: encryptedName,
           platform: Platform.operatingSystem,
           signature: signature,
+          accessToken: pending?.setupToken,
         );
 
-        // 2. MAPOWANIE I ZAPIS TOKENÓW
         await response.maybeWhen(
           fullSuccess: (accessToken, refreshToken, user, rbac) async {
-            await sessionService.updateTokens(
-              accessToken: accessToken,
-              refreshToken: refreshToken,
+            await ref
+                .read(sessionServiceProvider)
+                .updateTokens(
+                  accessToken: accessToken,
+                  refreshToken: refreshToken,
+                );
+            logger.i(
+              '✅ Sesja zaufana ustanowiona. Tokeny zrotowane. $response',
             );
-            logger.i('✅ Sesja zaufana ustanowiona. Tokeny zrotowane.');
           },
           orElse: () {
-            // Jeśli backend nie zwrócił FullSuccess, coś poszło nie tak
             throw Exception(
               "Serwer nie potwierdził pełnego zaufania urządzenia.",
             );
@@ -153,14 +156,14 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
         );
       }
 
-      // 3. Kończymy setup bezpieczeństwa (PIN/Biometria)
       await ref
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);
+
+      ref.invalidate(pendingSessionProvider);
     } catch (e, st) {
       logger.e('Błąd podczas kończenia konfiguracji: $e');
       state = AsyncValue.error(e, st);
     }
   }
-
 }

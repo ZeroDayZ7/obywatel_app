@@ -1,11 +1,12 @@
-import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
-import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
+import 'package:obywatel_plus/features/auth/application/session/pending_session_state.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
@@ -42,6 +43,42 @@ class AuthController extends _$AuthController {
     state = AuthState.authenticated(userId: userId);
   }
 
+  /// Wspólna logika dla login i verifyTwoFa
+  Future<void> _handleAuthResponse(AuthResponse result, String email) async {
+    await result.when(
+      twoFaRequired: (token) {
+        state = AuthState.twoFaRequired(email: email, tempToken: token);
+      },
+      preTrust: (setupToken, challenge, isTrusted) async {
+        state = AuthState.partiallyAuthenticated(
+          setupToken: setupToken,
+          challenge: challenge,
+        );
+
+        final pending = PendingSession(setupToken: setupToken);
+
+        ref.read(appLoggerProvider).i('pending:  $pending');
+        ref.read(pendingSessionProvider.notifier).update(pending);
+      },
+      fullSuccess: (accessToken, refreshToken, user, rbac) async {
+        state = AuthState.authenticated(
+          userId: user.userId,
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          isDeviceTrusted: true,
+        );
+
+        final pending = PendingSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+          userId: user.userId,
+        );
+
+        ref.read(pendingSessionProvider.notifier).update(pending);
+      },
+    );
+  }
+
   Future<void> login(String email, List<int> passwordBytes) async {
     state = const AuthState.authenticating();
     try {
@@ -56,43 +93,6 @@ class AuthController extends _$AuthController {
       _handleError(e);
       state = const AuthState.unauthenticated();
     }
-  }
-
-  /// Wspólna logika dla login i verifyTwoFa
-  Future<void> _handleAuthResponse(AuthResponse result, String email) async {
-    await result.when(
-      twoFaRequired: (token) {
-        state = AuthState.twoFaRequired(email: email, tempToken: token);
-      },
-      preTrust: (setupToken, challenge, isTrusted) async {
-        ref
-            .read(authFreshProvider)
-            .setToken(OAuth2Token(accessToken: setupToken, refreshToken: null));
-
-        state = AuthState.partiallyAuthenticated(
-          setupToken: setupToken,
-          challenge: challenge,
-        );
-      },
-      fullSuccess: (accessToken, refreshToken, user, rbac) async {
-        // Pełny sukces - urządzenie jest zaufane, mamy komplet danych
-        await _sessionService.saveSession(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          userId: user.userId,
-        );
-
-        // Inicjalizacja usług zależnych od sesji
-        await ref.read(securityServiceProvider.notifier).init();
-
-        state = AuthState.authenticated(
-          userId: user.userId,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          isDeviceTrusted: true,
-        );
-      },
-    );
   }
 
   Future<void> verifyTwoFa(String code) async {
@@ -122,9 +122,8 @@ class AuthController extends _$AuthController {
       codeBytes.fillRange(0, codeBytes.length, 0);
 
       await _handleAuthResponse(result, currentEmail);
-    } catch (e, stack) {
-      print("❌ BŁĄD WE FLUTTERZE: $e");
-      print("❌ STACKTRACE: $stack");
+    } catch (e) {
+      ref.read(globalNotificationProvider.notifier).showFromError(e);
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
         email: currentEmail,
@@ -148,7 +147,6 @@ class AuthController extends _$AuthController {
   }
 
   void _handleError(Object e) {
-    // Po prostu przekaż błąd dalej. Notifier zajmie się mapowaniem na AppFailure.
     ref.read(globalNotificationProvider.notifier).showFromError(e);
   }
 
@@ -160,5 +158,9 @@ class AuthController extends _$AuthController {
     ref
         .read(globalNotificationProvider.notifier)
         .show(AppNotification(messageKey: key, type: NotificationType.error));
+  }
+
+  void setUnauthenticated() {
+    state = const AuthState.unauthenticated();
   }
 }

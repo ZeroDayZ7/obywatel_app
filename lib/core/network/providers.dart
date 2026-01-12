@@ -27,9 +27,13 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
       final authState = ref.read(authControllerProvider);
 
       final userId = authState.maybeWhen(
-        authenticated: (id, _, _, _, _) => id.toString(),
+        authenticated: (id, accessToken, refreshToken, isDeviceTrusted) => id,
         orElse: () => '',
       );
+      // final userId = authState.maybeWhen(
+      //   authenticated: (id, _, _, _) => id,
+      //   orElse: () => '',
+      // );
 
       if (userId.isEmpty) {
         throw Exception('Refresh failed: No authenticated user ID found');

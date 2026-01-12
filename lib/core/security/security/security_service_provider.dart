@@ -155,43 +155,14 @@ class SecurityService extends _$SecurityService
   }
 
   Future<bool> _readBool(String key) async {
-    try {
-      final value = await _secureStorage.read(key: key);
-      final boolResult = value == 'true';
+    final value = await _secureStorage.read(key: key);
+    final boolResult = value == 'true';
 
-      // Logujemy odczyt (pomocne przy sprawdzaniu init aplikacji)
-      _logger.d(
-        'Read security flag: $key = $boolResult',
-        module: 'SecurityService',
-      );
-
-      return boolResult;
-    } catch (e) {
-      _logger.e(
-        'Error reading security flag: $key',
-        error: e,
-        module: 'SecurityService',
-      );
-      return false;
-    }
+    return boolResult;
   }
 
   Future<void> _writeBool(String key, bool value) async {
-    try {
-      await _secureStorage.write(key: key, value: value.toString());
-
-      // Logujemy zapis (potwierdzenie, że flaga została utrwalona)
-      _logger.i(
-        'Saved security flag: $key = $value',
-        module: 'SecurityService',
-      );
-    } catch (e) {
-      _logger.e(
-        'Error saving security flag: $key',
-        error: e,
-        module: 'SecurityService',
-      );
-    }
+    await _secureStorage.write(key: key, value: value.toString());
   }
 
   Future<void> setPin(List<int> pinCodes) async {
