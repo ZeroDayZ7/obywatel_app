@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
 import 'package:obywatel_plus/features/auth/application/session/pending_session_state.dart';
@@ -131,6 +135,39 @@ class AuthController extends _$AuthController {
       );
       _handleError(e);
     }
+  }
+
+  Future<void> registerTrustedDevice() async {
+    final pending = ref.read(pendingSessionProvider);
+    final deviceService = ref.read(deviceInfoServiceProvider);
+    final authService = ref.read(authServiceProvider);
+    // final logger = ref.read(appLoggerProvider);
+
+    // generate key pair
+    final keyPair = await deviceService.generateDeviceKeyPair();
+    final publicKey = await keyPair.extractPublicKey();
+    final fingerprint = await deviceService.getSecureFingerprint();
+    final encryptedName = await deviceService.getEncryptedMarketingName();
+
+    // pobieramy challenge z aktualnego stanu AuthController
+    final challenge = state.maybeMap(
+      partiallyAuthenticated: (s) => s.challenge,
+      orElse: () => throw Exception('Brak challenge'),
+    );
+
+    final signature = await deviceService.signChallenge(challenge, keyPair);
+
+    final response = await authService.registerTrustedDevice(
+      fingerprint: fingerprint,
+      publicKey: base64Encode(publicKey.bytes),
+      encryptedName: encryptedName,
+      platform: Platform.operatingSystem,
+      signature: signature,
+      accessToken: pending?.setupToken,
+    );
+
+    await _handleAuthResponse(response, "");
+
   }
 
   Future<void> logout() async {

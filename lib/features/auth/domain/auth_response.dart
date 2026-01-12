@@ -44,7 +44,9 @@ sealed class AuthResponse with _$AuthResponse {
         accessToken: data[StorageKeys.accessToken]?.toString() ?? '',
         refreshToken: refreshToken,
         user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
-        rbac: RbacData.fromJson(data['rbac'] as Map<String, dynamic>),
+        rbac: data['rbac'] == null
+            ? RbacData(permissions: [])
+            : RbacData.fromJson(data['rbac']),
       );
     }
 

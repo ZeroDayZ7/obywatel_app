@@ -21,7 +21,8 @@ class SecureStorageService {
   Future<void> write({required String key, required String value}) async {
     try {
       await _storage.write(key: key, value: value);
-      _logger.d('SecureStorage: wrote key "$key"'); // logowanie sukcesu
+      // Logujemy klucz i wartość
+      _logger.d('SecureStorage: wrote key "$key" with value: $value');
     } catch (e, st) {
       _logger.e(
         'SecureStorage: failed to write key "$key"',

@@ -55,7 +55,7 @@ String? authGuard(Ref ref, GoRouterState state) {
     if (!securityState.isSetupCompleted) {
       return isSecuritySetup ? null : AppRoutes.securitySetup;
     }
-    if (isLogin || is2Fa || isPin) return AppRoutes.home;
+    if (isLogin || is2Fa || isPin || isSecuritySetup) return AppRoutes.home;
   }
 
   return null;

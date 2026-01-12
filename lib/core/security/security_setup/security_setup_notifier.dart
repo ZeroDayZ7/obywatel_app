@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
@@ -8,13 +5,7 @@ import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
-import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
-import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
 import 'security_setup_state.dart';
 
@@ -94,75 +85,24 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
 
   Future<void> completeSetup() async {
     final current = state.requireValue;
-    final deviceService = ref.read(deviceInfoServiceProvider);
-    final authService = ref.read(authServiceProvider);
     final logger = ref.read(appLoggerProvider);
 
     state = const AsyncValue.loading();
 
     try {
-      final pending = ref.read(pendingSessionProvider);
       if (current.trustDevice) {
-        final authState = ref.read(authControllerProvider);
-
-        final challenge = authState.maybeMap(
-          partiallyAuthenticated: (s) => s.challenge,
-          orElse: () => null,
-        );
-
-        if (challenge == null) {
-          throw Exception(
-            "Brak wyzwania (challenge) do podpisania. Stan: $authState",
-          );
-        }
-
-        logger.d('Próba podpisu challenge: $challenge');
-
-        final keyPair = await deviceService.generateDeviceKeyPair();
-        final publicKey = await keyPair.extractPublicKey();
-        final fingerprint = await deviceService.getSecureFingerprint();
-        final encryptedName = await deviceService.getEncryptedMarketingName();
-        final signature = await deviceService.signChallenge(challenge, keyPair);
-
-        final setupToken = pending?.setupToken;
-        logger.d('Registering trusted device with setupToken: $setupToken');
-
-        final response = await authService.registerTrustedDevice(
-          fingerprint: fingerprint,
-          publicKey: base64Encode(publicKey.bytes),
-          encryptedName: encryptedName,
-          platform: Platform.operatingSystem,
-          signature: signature,
-          accessToken: pending?.setupToken,
-        );
-
-        await response.maybeWhen(
-          fullSuccess: (accessToken, refreshToken, user, rbac) async {
-            await ref
-                .read(sessionServiceProvider)
-                .updateTokens(
-                  accessToken: accessToken,
-                  refreshToken: refreshToken,
-                );
-            logger.i(
-              '✅ Sesja zaufana ustanowiona. Tokeny zrotowane. $response',
-            );
-          },
-          orElse: () {
-            throw Exception(
-              "Serwer nie potwierdził pełnego zaufania urządzenia.",
-            );
-          },
-        );
+        await ref.read(authControllerProvider.notifier).registerTrustedDevice();
       }
 
       await ref
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);
 
-      ref.invalidate(pendingSessionProvider);
+      state = AsyncValue.data(
+        current.copyWith(trustDevice: current.trustDevice),
+      );
     } catch (e, st) {
-      logger.e('Błąd podczas kończenia konfiguracji: $e');
+      logger.e('Błąd podczas kończenia setupu', error: e, stackTrace: st);
       state = AsyncValue.error(e, st);
     }
   }

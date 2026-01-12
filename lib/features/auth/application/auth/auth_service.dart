@@ -73,7 +73,8 @@ class AuthService {
       options: Options(headers: headers),
     );
 
-    return AuthResponse.fromJson(response.data);
+    // return AuthResponse.fromJson(response.data);
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
   /// Logout
