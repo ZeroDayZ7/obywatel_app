@@ -26,7 +26,6 @@ class AuthController extends _$AuthController {
 
   @override
   AuthState build() {
-    // Inicjalizujemy odtwarzanie sesji przy startowaniu providera
     _restoreSession();
     return const AuthState.initial();
   }
@@ -47,7 +46,6 @@ class AuthController extends _$AuthController {
     state = AuthState.authenticated(userId: userId);
   }
 
-  /// Wspólna logika dla login i verifyTwoFa
   Future<void> _handleAuthResponse(AuthResponse result, String email) async {
     await result.when(
       twoFaRequired: (token) {
@@ -65,20 +63,23 @@ class AuthController extends _$AuthController {
         ref.read(pendingSessionProvider.notifier).update(pending);
       },
       fullSuccess: (accessToken, refreshToken, user, rbac) async {
-        state = AuthState.authenticated(
-          userId: user.userId,
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          isDeviceTrusted: true,
-        );
+        try {
+          await _sessionService.saveSession(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            userId: user.userId,
+          );
 
-        final pending = PendingSession(
-          accessToken: accessToken,
-          refreshToken: refreshToken,
-          userId: user.userId,
-        );
-
-        ref.read(pendingSessionProvider.notifier).update(pending);
+          state = AuthState.authenticated(
+            userId: user.userId,
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            isDeviceTrusted: true,
+          );
+        } catch (e) {
+          _handleError(e);
+          state = const AuthState.unauthenticated();
+        }
       },
     );
   }
@@ -87,10 +88,9 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
     try {
       final result = await _authService.login(email, passwordBytes);
-      // Czyszczenie hasła z pamięci natychmiast po użyciu
+
       passwordBytes.fillRange(0, passwordBytes.length, 0);
 
-      // Używamy ujednoliconej obsługi wyniku
       await _handleAuthResponse(result, email);
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
@@ -141,15 +141,12 @@ class AuthController extends _$AuthController {
     final pending = ref.read(pendingSessionProvider);
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
-    // final logger = ref.read(appLoggerProvider);
 
-    // generate key pair
     final keyPair = await deviceService.generateDeviceKeyPair();
     final publicKey = await keyPair.extractPublicKey();
     final fingerprint = await deviceService.getSecureFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();
 
-    // pobieramy challenge z aktualnego stanu AuthController
     final challenge = state.maybeMap(
       partiallyAuthenticated: (s) => s.challenge,
       orElse: () => throw Exception('Brak challenge'),
@@ -167,7 +164,6 @@ class AuthController extends _$AuthController {
     );
 
     await _handleAuthResponse(response, "");
-
   }
 
   Future<void> logout() async {

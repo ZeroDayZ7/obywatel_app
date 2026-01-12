@@ -16,7 +16,7 @@ class AuthService {
     : _apiClient = apiClient,
       _logger = logger;
 
-  /// Logowanie: zwraca AuthResponse (2FA lub success)
+  /// Logowanie
   Future<AuthResponse> login(String email, List<int> passwordBytes) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
@@ -48,6 +48,7 @@ class AuthService {
     return AuthResponse.fromMap(response.data);
   }
 
+  /// Register Device
   Future<AuthResponse> registerTrustedDevice({
     required String fingerprint,
     required String publicKey,
@@ -73,7 +74,6 @@ class AuthService {
       options: Options(headers: headers),
     );
 
-    // return AuthResponse.fromJson(response.data);
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
