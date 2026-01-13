@@ -1,12 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:cryptography/cryptography.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'reset_password_notifier.freezed.dart';
@@ -206,39 +203,39 @@ class ResetPasswordNotifier extends _$ResetPasswordNotifier {
     state = const ResetPasswordState.loading();
 
     try {
-      final deviceInfo = ref.read(deviceInfoServiceProvider);
-      SimpleKeyPair keyPair;
-      String? publicKeyToSent;
+      // final deviceInfo = ref.read(deviceInfoServiceProvider);
+      // SimpleKeyPair keyPair;
+      // String? publicKeyToSent;
 
-      try {
-        keyPair = await deviceInfo.getStoredKeyPair();
-      } catch (e) {
-        keyPair = await deviceInfo.generateDeviceKeyPair();
-        final pubKeyData = await keyPair.extractPublicKey();
-        publicKeyToSent = base64Encode(pubKeyData.bytes);
-      }
+      // try {
+      //   keyPair = await deviceInfo.getStoredKeyPair();
+      // } catch (e) {
+      //   keyPair = await deviceInfo.generateDeviceKeyPair();
+      //   final pubKeyData = await keyPair.extractPublicKey();
+      //   publicKeyToSent = base64Encode(pubKeyData.bytes);
+      // }
 
-      final deviceName = await deviceInfo.getMarketingName();
-      final challengeToSign = '$serverChallenge|$code';
-      final signature = await deviceInfo.signChallenge(
-        challengeToSign,
-        keyPair,
-      );
-      final fingerprint = await deviceInfo.getSecureFingerprint();
-      final platform = await deviceInfo.getPlatformName();
+      // final deviceName = await deviceInfo.getMarketingName();
+      // final challengeToSign = '$serverChallenge|$code';
+      // final signature = await deviceInfo.signChallenge(
+      //   challengeToSign,
+      //   keyPair,
+      // );
+      // final fingerprint = await deviceInfo.getSecureFingerprint();
+      // final platform = await deviceInfo.getPlatformName();
 
-      await ref
-          .read(resetPasswordServiceProvider.notifier)
-          .resetPasswordFinal(
-            code: code,
-            token: resetToken!,
-            newPassword: newPassword,
-            signature: signature,
-            fingerprint: fingerprint,
-            deviceName: deviceName,
-            publicKey: publicKeyToSent,
-            platform: platform,
-          );
+      // await ref
+      //     .read(resetPasswordServiceProvider.notifier)
+      //     .resetPasswordFinal(
+      //       code: code,
+      //       token: resetToken!,
+      //       newPassword: newPassword,
+      //       signature: signature,
+      //       fingerprint: fingerprint,
+      //       deviceName: deviceName,
+      //       publicKey: publicKeyToSent,
+      //       platform: platform,
+      //     );
 
       state = const ResetPasswordState.completed();
 

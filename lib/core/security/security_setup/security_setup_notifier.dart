@@ -15,6 +15,8 @@ final securitySetupProvider =
     );
 
 class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
+  List<int>? _tempPinBytes;
+
   @override
   Future<SecuritySetupState> build() async {
     final pinService = ref.read(pinServiceProvider);
@@ -52,6 +54,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       pinCodes.fillRange(0, pinCodes.length, 0);
 
       // 5. Sukces - aktualizujemy stan
+      _tempPinBytes = pin.codeUnits.toList();
       state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -84,6 +87,11 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> completeSetup() async {
+    if (_tempPinBytes == null) {
+      state = AsyncValue.error(Exception("PIN not set"), StackTrace.current);
+      return;
+    }
+
     final current = state.requireValue;
     final logger = ref.read(appLoggerProvider);
 
@@ -91,7 +99,10 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
 
     try {
       if (current.trustDevice) {
-        await ref.read(authControllerProvider.notifier).registerTrustedDevice();
+        // Przekazujemy bajty do rejestracji
+        await ref
+            .read(authControllerProvider.notifier)
+            .registerTrustedDevice(_tempPinBytes!);
       }
 
       await ref
@@ -104,6 +115,11 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     } catch (e, st) {
       logger.e('Błąd podczas kończenia setupu', error: e, stackTrace: st);
       state = AsyncValue.error(e, st);
+    } finally {
+      _tempPinBytes?.fillRange(0, _tempPinBytes!.length, 0);
+      _tempPinBytes = null;
+
+      logger.d('🧹 Sensitive PIN data cleared from memory (finally)');
     }
   }
 }

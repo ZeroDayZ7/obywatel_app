@@ -199,28 +199,57 @@ class DeviceInfoService {
     return base64Encode(box.concatenation());
   }
 
-  /// Klucze asymetryczne (Ed25519) do podpisywania logowań
-  Future<SimpleKeyPair> generateDeviceKeyPair() async {
+  /// Klucze asymetryczne (Ed25519) - ZASZYFROWANE PIN-em
+  Future<SimpleKeyPair> generateDeviceKeyPair({
+    required List<int> pinBytes,
+    required String userId,
+  }) async {
     final algorithm = Ed25519();
     final keyPair = await algorithm.newKeyPair();
     final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
 
-    await _storage.write(
-      key: 'device_private_key',
-      value: base64Encode(privateKeyBytes),
+    // Konwertujemy klucz prywatny na String, żeby go zaszyfrować
+    final String rawKey = base64Encode(privateKeyBytes);
+
+    // Szyfrujemy PIN-em
+    final encryptedKey = await encryptWithPin(
+      plainText: rawKey,
+      pinBytes: pinBytes,
+      userId: userId,
     );
 
-    _log.i('✅ Wygenerowano parę kluczy Ed25519');
+    await _storage.write(
+      key: 'device_private_key_encrypted',
+      value: encryptedKey,
+    );
+
+    _log.i('✅ Wygenerowano parę kluczy i zaszyfrowano PIN-em');
     return keyPair;
   }
 
-  Future<SimpleKeyPair> getStoredKeyPair() async {
-    final storedRaw = await _storage.read(key: 'device_private_key');
-    if (storedRaw == null) {
-      throw Exception('Brak klucza prywatnego urządzenia.');
+  Future<SimpleKeyPair> getStoredKeyPair({
+    required List<int> pinBytes,
+    required String userId,
+  }) async {
+    final encryptedKey = await _storage.read(
+      key: 'device_private_key_encrypted',
+    );
+    if (encryptedKey == null) {
+      throw Exception('Brak zaszyfrowanego klucza urządzenia.');
     }
 
-    final privateKeyBytes = base64Decode(storedRaw);
+    // Deszyfrujemy PIN-em
+    final decryptedRaw = await decryptWithPin(
+      encryptedBase64: encryptedKey,
+      pinBytes: pinBytes,
+      userId: userId,
+    );
+
+    if (decryptedRaw == "Zaszyfrowane dane") {
+      throw Exception('Niepoprawny PIN lub błąd deszyfrowania klucza.');
+    }
+
+    final privateKeyBytes = base64Decode(decryptedRaw);
     return Ed25519().newKeyPairFromSeed(privateKeyBytes);
   }
 

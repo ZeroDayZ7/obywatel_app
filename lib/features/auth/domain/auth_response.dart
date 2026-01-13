@@ -15,6 +15,7 @@ sealed class AuthResponse with _$AuthResponse {
     required String setupToken,
     required String challenge,
     @Default(false) bool isTrusted,
+    required String userId,
   }) = _PreTrust;
 
   const factory AuthResponse.fullSuccess({
@@ -54,6 +55,7 @@ sealed class AuthResponse with _$AuthResponse {
       setupToken: data[StorageKeys.setupToken]?.toString() ?? '',
       challenge: data[StorageKeys.challenge]?.toString() ?? '',
       isTrusted: isTrusted,
+      userId: data[StorageKeys.userId]?.toString() ?? '',
     );
   }
 }

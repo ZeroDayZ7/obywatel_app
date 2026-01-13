@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
@@ -67,8 +68,13 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
             const SizedBox(height: 24),
             TextFormField(
               controller: _codeController,
+              autofocus: true,
               enabled: !isLoading,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(6),
+              ],
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 20,
@@ -83,6 +89,9 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
                 ),
               ),
               validator: Validators.validateTwoFaCode,
+              autofillHints: const [AutofillHints.oneTimeCode],
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submitCode(),
             ),
             const SizedBox(height: 24),
             AppButton(

@@ -22,6 +22,7 @@ _PreTrust _$PreTrustFromJson(Map<String, dynamic> json) => _PreTrust(
   setupToken: json['setupToken'] as String,
   challenge: json['challenge'] as String,
   isTrusted: json['isTrusted'] as bool? ?? false,
+  userId: json['userId'] as String,
   $type: json['runtimeType'] as String?,
 );
 
@@ -29,6 +30,7 @@ Map<String, dynamic> _$PreTrustToJson(_PreTrust instance) => <String, dynamic>{
   'setupToken': instance.setupToken,
   'challenge': instance.challenge,
   'isTrusted': instance.isTrusted,
+  'userId': instance.userId,
   'runtimeType': instance.$type,
 };
 

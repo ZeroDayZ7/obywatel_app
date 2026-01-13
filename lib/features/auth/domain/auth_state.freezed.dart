@@ -134,14 +134,14 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge)?  partiallyAuthenticated,TResult Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)?  authenticated,TResult Function( String code)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)?  authenticated,TResult Function( String code)?  error,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
-return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated() when authenticated != null:
+return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
 return authenticated(_that.userId,_that.accessToken,_that.refreshToken,_that.isDeviceTrusted);case _Error() when error != null:
 return error(_that.code);case _:
   return orElse();
@@ -161,14 +161,14 @@ return error(_that.code);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge)  partiallyAuthenticated,required TResult Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)  authenticated,required TResult Function( String code)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  String userId)  partiallyAuthenticated,required TResult Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)  authenticated,required TResult Function( String code)  error,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Unauthenticated():
 return unauthenticated();case _Authenticating():
 return authenticating();case _TwoFaRequired():
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated():
-return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated():
+return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated():
 return authenticated(_that.userId,_that.accessToken,_that.refreshToken,_that.isDeviceTrusted);case _Error():
 return error(_that.code);}
 }
@@ -184,14 +184,14 @@ return error(_that.code);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge)?  partiallyAuthenticated,TResult? Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)?  authenticated,TResult? Function( String code)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult? Function( String userId,  String? accessToken,  String? refreshToken,  bool isDeviceTrusted)?  authenticated,TResult? Function( String code)?  error,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
-return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated() when authenticated != null:
+return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
 return authenticated(_that.userId,_that.accessToken,_that.refreshToken,_that.isDeviceTrusted);case _Error() when error != null:
 return error(_that.code);case _:
   return null;
@@ -204,8 +204,8 @@ return error(_that.code);case _:
 /// @nodoc
 
 
-class _Initial implements AuthState {
-  const _Initial();
+class _Initial extends AuthState {
+  const _Initial(): super._();
   
 
 
@@ -236,8 +236,8 @@ String toString() {
 /// @nodoc
 
 
-class _Unauthenticated implements AuthState {
-  const _Unauthenticated();
+class _Unauthenticated extends AuthState {
+  const _Unauthenticated(): super._();
   
 
 
@@ -268,8 +268,8 @@ String toString() {
 /// @nodoc
 
 
-class _Authenticating implements AuthState {
-  const _Authenticating();
+class _Authenticating extends AuthState {
+  const _Authenticating(): super._();
   
 
 
@@ -300,8 +300,8 @@ String toString() {
 /// @nodoc
 
 
-class _TwoFaRequired implements AuthState {
-  const _TwoFaRequired({required this.email, required this.tempToken});
+class _TwoFaRequired extends AuthState {
+  const _TwoFaRequired({required this.email, required this.tempToken}): super._();
   
 
  final  String email;
@@ -368,12 +368,13 @@ as String,
 /// @nodoc
 
 
-class _PartiallyAuthenticated implements AuthState {
-  const _PartiallyAuthenticated({required this.setupToken, required this.challenge});
+class _PartiallyAuthenticated extends AuthState {
+  const _PartiallyAuthenticated({required this.setupToken, required this.challenge, required this.userId}): super._();
   
 
  final  String setupToken;
  final  String challenge;
+ final  String userId;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -385,16 +386,16 @@ _$PartiallyAuthenticatedCopyWith<_PartiallyAuthenticated> get copyWith => __$Par
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.userId, userId) || other.userId == userId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,setupToken,challenge);
+int get hashCode => Object.hash(runtimeType,setupToken,challenge,userId);
 
 @override
 String toString() {
-  return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge)';
+  return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge, userId: $userId)';
 }
 
 
@@ -405,7 +406,7 @@ abstract mixin class _$PartiallyAuthenticatedCopyWith<$Res> implements $AuthStat
   factory _$PartiallyAuthenticatedCopyWith(_PartiallyAuthenticated value, $Res Function(_PartiallyAuthenticated) _then) = __$PartiallyAuthenticatedCopyWithImpl;
 @useResult
 $Res call({
- String setupToken, String challenge
+ String setupToken, String challenge, String userId
 });
 
 
@@ -422,10 +423,11 @@ class __$PartiallyAuthenticatedCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? challenge = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? challenge = null,Object? userId = null,}) {
   return _then(_PartiallyAuthenticated(
 setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
 as String,challenge: null == challenge ? _self.challenge : challenge // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
@@ -436,8 +438,8 @@ as String,
 /// @nodoc
 
 
-class _Authenticated implements AuthState {
-  const _Authenticated({required this.userId, this.accessToken, this.refreshToken, this.isDeviceTrusted = false});
+class _Authenticated extends AuthState {
+  const _Authenticated({required this.userId, this.accessToken, this.refreshToken, this.isDeviceTrusted = false}): super._();
   
 
  final  String userId;
@@ -508,8 +510,8 @@ as bool,
 /// @nodoc
 
 
-class _Error implements AuthState {
-  const _Error({required this.code});
+class _Error extends AuthState {
+  const _Error({required this.code}): super._();
   
 
  final  String code;

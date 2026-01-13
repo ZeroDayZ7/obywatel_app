@@ -31,19 +31,17 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> _restoreSession() async {
-    final hasSession = await _sessionService.hasSession();
-    if (!hasSession) {
+    final session = await _sessionService.getSessionDetails();
+
+    if (session == null) {
       state = const AuthState.unauthenticated();
       return;
     }
 
-    final userId = await _sessionService.getUserId();
-    if (userId == null) {
-      state = const AuthState.unauthenticated();
-      return;
-    }
-
-    state = AuthState.authenticated(userId: userId);
+    // Tutaj dostęp do:
+    // session.userId
+    // session.accessToken
+    state = AuthState.authenticated(userId: session.userId);
   }
 
   Future<void> _handleAuthResponse(AuthResponse result, String email) async {
@@ -51,13 +49,14 @@ class AuthController extends _$AuthController {
       twoFaRequired: (token) {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
-      preTrust: (setupToken, challenge, isTrusted) async {
+      preTrust: (setupToken, challenge, isTrusted, userId) async {
         state = AuthState.partiallyAuthenticated(
           setupToken: setupToken,
           challenge: challenge,
+          userId: userId,
         );
 
-        final pending = PendingSession(setupToken: setupToken);
+        final pending = PendingSession(setupToken: setupToken, userId: userId);
 
         ref.read(appLoggerProvider).i('pending:  $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
@@ -137,12 +136,16 @@ class AuthController extends _$AuthController {
     }
   }
 
-  Future<void> registerTrustedDevice() async {
+  Future<void> registerTrustedDevice(List<int> pinBytes) async {
     final pending = ref.read(pendingSessionProvider);
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
+    final userId = pending?.userId ?? "";
 
-    final keyPair = await deviceService.generateDeviceKeyPair();
+    final keyPair = await deviceService.generateDeviceKeyPair(
+      pinBytes: pinBytes,
+      userId: userId,
+    );
     final publicKey = await keyPair.extractPublicKey();
     final fingerprint = await deviceService.getSecureFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();

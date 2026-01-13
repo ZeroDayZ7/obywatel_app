@@ -4,42 +4,35 @@ part 'auth_state.freezed.dart';
 
 @freezed
 sealed class AuthState with _$AuthState {
-  /// App start / session not checked yet
+  const AuthState._();
+
   const factory AuthState.initial() = _Initial;
-
-  /// User is logged out
   const factory AuthState.unauthenticated() = _Unauthenticated;
-
-  /// Login / refresh / verify in progress
   const factory AuthState.authenticating() = _Authenticating;
-
-  /// 2FA required after correct credentials
   const factory AuthState.twoFaRequired({
     required String email,
     required String tempToken,
   }) = _TwoFaRequired;
-
   const factory AuthState.partiallyAuthenticated({
     required String setupToken,
     required String challenge,
+    required String userId,
   }) = _PartiallyAuthenticated;
-
-  /// Fully authenticated session
   const factory AuthState.authenticated({
     required String userId,
     String? accessToken,
     String? refreshToken,
     @Default(false) bool isDeviceTrusted,
   }) = _Authenticated;
-
-  /// Error state (optional – często lepiej przez global error handler)
   const factory AuthState.error({required String code}) = _Error;
-}
 
-/// ✅ Enterprise getter / helper
-extension AuthStateX on AuthState {
-  bool get isLoading =>
-      maybeMap(authenticating: (_) => true, orElse: () => false);
+  bool get isInitial => this is _Initial;
+  bool get isUnauthenticated => this is _Unauthenticated;
+  bool get isLoading => this is _Authenticating;
+  bool get isTwoFaRequired => this is _TwoFaRequired;
+  bool get isPartiallyAuthenticated => this is _PartiallyAuthenticated;
+  bool get isAuthenticated => this is _Authenticated;
+  bool get isError => this is _Error;
 
   String? get email =>
       maybeMap(twoFaRequired: (state) => state.email, orElse: () => null);

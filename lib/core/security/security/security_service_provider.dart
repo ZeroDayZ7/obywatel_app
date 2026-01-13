@@ -92,7 +92,7 @@ class SecurityService extends _$SecurityService
             false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
       );
 
-      // Tutaj możesz dodać ref.read(authControllerProvider.notifier).logout();
+      // ref.read(authControllerProvider.notifier).logout();
     }
   }
 

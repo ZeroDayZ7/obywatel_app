@@ -9,13 +9,21 @@ SessionService sessionService(Ref ref) {
   return SessionService(ref.watch(secureStorageProvider));
 }
 
+typedef SessionData = ({String accessToken, String userId});
+
 class SessionService {
   final SecureStorageService _storage;
   SessionService(this._storage);
 
-  Future<bool> hasSession() async {
+  Future<SessionData?> getSessionDetails() async {
     final token = await _storage.read(key: StorageKeys.accessToken);
-    return token != null && token.isNotEmpty;
+    final userId = await _storage.read(key: StorageKeys.userId);
+
+    if (token == null || token.isEmpty || userId == null || userId.isEmpty) {
+      return null;
+    }
+
+    return (accessToken: token, userId: userId);
   }
 
   /// Pobiera Access Token z Secure Storage

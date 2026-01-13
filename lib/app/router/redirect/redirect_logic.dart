@@ -12,7 +12,7 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
   logger.d('Redirect check for: ${state.uri.path}');
 
   // Kolejność ma znaczenie!
-  final guards = [authGuard, securitySetupGuard];
+  final guards = [rootGuard];
 
   for (final guard in guards) {
     final redirect = guard(ref, state);
