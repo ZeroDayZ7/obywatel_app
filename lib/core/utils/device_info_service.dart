@@ -8,6 +8,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
@@ -33,17 +34,14 @@ class DeviceInfoService {
   Future<void> unlockWithPin(List<int> pinBytes) async {
     try {
       // Pobieramy ID urządzenia bezpośrednio ze storage wewnątrz serwisu
-      String? deviceId = await _storage.read(key: 'app_device_id');
+      String? deviceId = await _storage.read(key: StorageKeys.appDeviceId);
 
       if (deviceId == null) {
         _log.e('🚨 Nie znaleziono app_device_id podczas odblokowywania!');
         throw Exception('Urządzenie nie zostało zainicjalizowane (brak ID).');
       }
 
-      _activeKeyPair = await getStoredKeyPair(
-        pinBytes: pinBytes,
-        deviceId: deviceId,
-      );
+      _activeKeyPair = await getStoredKeyPair(pinBytes: pinBytes);
 
       _log.i('🔓 Skarbiec odblokowany dla urządzenia: $deviceId');
     } catch (e) {
@@ -59,8 +57,12 @@ class DeviceInfoService {
       throw Exception('Vault locked! Wymagane odblokowanie aplikacji.');
     }
 
-    final message = utf8.encode(data);
+    // ZAMIAST utf8.encode(data) zrób to:
+    final List<int> message = base64Decode(data);
+
+    // Teraz podpisujesz te same 32 bajty, które wygenerował Go
     final signature = await Ed25519().sign(message, keyPair: _activeKeyPair!);
+
     return base64Encode(signature.bytes);
   }
 
@@ -142,11 +144,11 @@ class DeviceInfoService {
   /// Pobiera wszystkie dane urządzenia i zwraca jako Map
   Future<Map<String, dynamic>> collectDeviceInfo() async {
     final Map<String, dynamic> deviceData = {};
-    String? storedId = await _storage.read(key: 'app_device_id');
+    String? storedId = await _storage.read(key: StorageKeys.appDeviceId);
 
     if (storedId == null) {
       storedId = const Uuid().v4();
-      await _storage.write(key: 'app_device_id', value: storedId);
+      await _storage.write(key: StorageKeys.appDeviceId, value: storedId);
     }
 
     String? advertisingId;
@@ -243,37 +245,62 @@ class DeviceInfoService {
   }
 
   /// Klucze asymetryczne (Ed25519) - ZASZYFROWANE PIN-em
+  /// Tworzy parę kluczy urządzenia i szyfruje klucz prywatny PIN-em.
+  /// Używa app_device_id jako soli, aby umożliwić odblokowanie skarbca przed zalogowaniem.
   Future<SimpleKeyPair> generateDeviceKeyPair({
     required List<int> pinBytes,
-    required String userId,
   }) async {
     final algorithm = Ed25519();
     final keyPair = await algorithm.newKeyPair();
     final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
 
-    // Konwertujemy klucz prywatny na String, żeby go zaszyfrować
+    // 1. Pobieramy ID urządzenia (identycznie jak w unlockWithPin)
+    String? deviceId = await _storage.read(key: StorageKeys.appDeviceId);
+
+    // Failsafe: jeśli jakimś cudem go nie ma, generujemy go teraz
+    if (deviceId == null) {
+      deviceId = const Uuid().v4();
+      await _storage.write(key: StorageKeys.appDeviceId, value: deviceId);
+      _log.w(
+        '⚠️ Generowanie kluczy: app_device_id był pusty, utworzono nowy: $deviceId',
+      );
+    }
+
+    // 2. Konwertujemy klucz prywatny na String
     final String rawKey = base64Encode(privateKeyBytes);
 
-    // Szyfrujemy PIN-em
+    // 3. Szyfrujemy PIN-em, używając deviceId jako nonce/userId w PBKDF2
     final encryptedKey = await encryptWithPin(
       plainText: rawKey,
       pinBytes: pinBytes,
-      userId: userId,
+      userId: deviceId,
     );
 
+    // 4. Zapisujemy zaszyfrowany klucz
     await _storage.write(
       key: 'device_private_key_encrypted',
       value: encryptedKey,
     );
 
-    _log.i('✅ Wygenerowano parę kluczy i zaszyfrowano PIN-em');
+    // Przypisujemy do pamięci RAM, żeby skarbiec był od razu gotowy po setupie
+    _activeKeyPair = keyPair;
+
+    _log.i(
+      '✅ Wygenerowano parę kluczy urządzenia. Zaszyfrowano przy użyciu ID: $deviceId',
+    );
     return keyPair;
   }
 
-  Future<SimpleKeyPair> getStoredKeyPair({
-    required List<int> pinBytes,
-    required String deviceId,
-  }) async {
+  Future<SimpleKeyPair> getStoredKeyPair({required List<int> pinBytes}) async {
+    // 1. Pobieramy ID urządzenia bezpośrednio tutaj
+    final deviceId = await _storage.read(key: StorageKeys.appDeviceId);
+
+    if (deviceId == null) {
+      _log.e('🚨 Brak app_device_id w storage podczas pobierania kluczy!');
+      throw Exception('Urządzenie nie jest zainicjalizowane.');
+    }
+
+    // 2. Pobieramy zaszyfrowany klucz
     final encryptedKey = await _storage.read(
       key: 'device_private_key_encrypted',
     );
@@ -282,10 +309,11 @@ class DeviceInfoService {
       throw Exception('Brak zaszyfrowanego klucza w bezpiecznej pamięci.');
     }
 
+    // 3. Deszyfrujemy, używając pobranego deviceId jako soli
     final decryptedRaw = await decryptWithPin(
       encryptedBase64: encryptedKey,
       pinBytes: pinBytes,
-      userId: deviceId, // deviceId służy jako sól (nonce)
+      userId: deviceId, // używamy lokalnie pobranego ID
     );
 
     if (decryptedRaw == "Zaszyfrowane dane") {

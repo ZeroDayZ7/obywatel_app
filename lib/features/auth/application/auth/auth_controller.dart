@@ -74,8 +74,6 @@ class AuthController extends _$AuthController {
             '🛡️ Urządzenie jest zaufane (isTrusted: true). Uruchamiam automatyczną weryfikację podpisu...',
           );
 
-          // Wywołujemy Twoją istniejącą metodę.
-          // Ponieważ state jest już set na partiallyAuthenticated, verifyDeviceSignature zadziała poprawnie.
           await verifyDeviceSignature();
         } else {
           logger.w(
@@ -178,11 +176,9 @@ class AuthController extends _$AuthController {
     final pending = ref.read(pendingSessionProvider);
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
-    final userId = pending?.userId ?? "";
 
     final keyPair = await deviceService.generateDeviceKeyPair(
-      pinBytes: pinBytes,
-      userId: userId,
+      pinBytes: pinBytes
     );
     final publicKey = await keyPair.extractPublicKey();
     final fingerprint = await deviceService.getSecureFingerprint();

@@ -7,6 +7,7 @@ class StorageKeys {
   static const isTrusted = 'is_trusted';
   static const twoFaToken = 'two_fa_token';
   static const twoFaRequired= '2fa_required';
+  static const appDeviceId = 'app_device_id';
 
   static const userPin = 'user_pin';
   static const pinHash = 'pin_hash';
