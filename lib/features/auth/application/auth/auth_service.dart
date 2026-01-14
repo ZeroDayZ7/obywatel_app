@@ -88,6 +88,24 @@ class AuthService {
       _logger.w('Logout API failed, forcing local logout');
     }
   }
+
+  Future<AuthResponse> verifyDevice({
+    required String setupToken,
+    required String signature,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.verifyDevice,
+      data: {'signature': signature},
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $setupToken',
+        },
+      ),
+    );
+
+    // Zwróci AuthResponse.fullSuccess z AccessToken i RefreshToken
+    return AuthResponse.fromJson(response.data);
+  }
 }
 
 final authServiceProvider = Provider<AuthService>((ref) {

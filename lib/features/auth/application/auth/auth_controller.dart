@@ -1,11 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
@@ -23,6 +26,7 @@ part 'auth_controller.g.dart';
 class AuthController extends _$AuthController {
   AuthService get _authService => ref.read(authServiceProvider);
   SessionService get _sessionService => ref.read(sessionServiceProvider);
+  AppLogger get _log => ref.read(appLoggerProvider);
 
   @override
   AuthState build() {
@@ -45,29 +49,60 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> _handleAuthResponse(AuthResponse result, String email) async {
+    final logger = ref.read(appLoggerProvider);
+
     await result.when(
       twoFaRequired: (token) {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
       preTrust: (setupToken, challenge, isTrusted, userId) async {
+        // 1. Najpierw ustawiamy stan partiallyAuthenticated
         state = AuthState.partiallyAuthenticated(
           setupToken: setupToken,
           challenge: challenge,
           userId: userId,
         );
 
+        // 2. Aktualizujemy PendingSession dla zachowania spójności
         final pending = PendingSession(setupToken: setupToken, userId: userId);
-
-        ref.read(appLoggerProvider).i('pending:  $pending');
+        logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
+
+        // 3. LOGIKA AUTOMATYCZNEJ WERYFIKACJI (Silent Auth)
+        if (isTrusted) {
+          logger.i(
+            '🛡️ Urządzenie jest zaufane (isTrusted: true). Uruchamiam automatyczną weryfikację podpisu...',
+          );
+
+          // Wywołujemy Twoją istniejącą metodę.
+          // Ponieważ state jest już set na partiallyAuthenticated, verifyDeviceSignature zadziała poprawnie.
+          await verifyDeviceSignature();
+        } else {
+          logger.w(
+            '📱 Nowe urządzenie lub brak zaufania. Wymagany ręczny setup bezpieczeństwa.',
+          );
+        }
       },
       fullSuccess: (accessToken, refreshToken, user, rbac) async {
         try {
+          logger.i(
+            '✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji dla: ${user.userId}',
+          );
+
           await _sessionService.saveSession(
             accessToken: accessToken,
             refreshToken: refreshToken,
             userId: user.userId,
           );
+
+          await ref
+              .read(authFreshProvider)
+              .setToken(
+                OAuth2Token(
+                  accessToken: accessToken,
+                  refreshToken: refreshToken,
+                ),
+              );
 
           state = AuthState.authenticated(
             userId: user.userId,
@@ -75,7 +110,10 @@ class AuthController extends _$AuthController {
             refreshToken: refreshToken,
             isDeviceTrusted: true,
           );
+
+          logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
         } catch (e) {
+          logger.e('❌ Błąd podczas finalizacji sesji: $e');
           _handleError(e);
           state = const AuthState.unauthenticated();
         }
@@ -180,6 +218,43 @@ class AuthController extends _$AuthController {
       ref.invalidate(notificationsControllerProvider);
       state = const AuthState.unauthenticated();
     }
+  }
+
+  Future<void> verifyDeviceSignature() async {
+    // Używamy mapOrNull, który wykona kod TYLKO dla stanu partiallyAuthenticated
+    await state.maybeMap(
+      partiallyAuthenticated: (s) async {
+        try {
+          final deviceService = ref.read(deviceInfoServiceProvider);
+
+          if (!deviceService.isUnlocked) {
+            _log.e('Skarbiec jest zablokowany - wymagany PIN', module: 'AUTH');
+            state = const AuthState.error(code: 'VAULT_LOCKED');
+            return;
+          }
+
+          // 1. Podpisujemy challenge (s.challenge jest dostępne bezpośrednio)
+          final signature = await deviceService.signData(s.challenge);
+
+          // 2. Wysyłamy do backendu (s.setupToken jest dostępne bezpośrednio)
+          final result = await _authService.verifyDevice(
+            setupToken: s.setupToken,
+            signature: signature,
+          );
+
+          // 3. Obsługujemy odpowiedź
+          await _handleAuthResponse(result, "");
+        } catch (e) {
+          _log.e('Błąd podczas weryfikacji urządzenia: $e', module: 'AUTH');
+          _handleError(e);
+          state = const AuthState.unauthenticated();
+        }
+      },
+      // Dla wszystkich innych stanów nie rób nic
+      orElse: () async {
+        _log.w('Próba weryfikacji podpisu w złym stanie: ${state.runtimeType}');
+      },
+    );
   }
 
   void _handleError(Object e) {

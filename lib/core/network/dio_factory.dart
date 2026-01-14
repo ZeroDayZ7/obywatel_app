@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/network/clients/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
 
@@ -57,9 +58,9 @@ class DioFactory {
       GlobalErrorInterceptor(logger: logger),
     ]);
 
-    // UWAGA: Nie dodajemy tutaj interceptorów autoryzacji!
-    // One zostaną dodane w providers.dart przy użyciu Fresh.
-
+    if (deviceInfoRef != null) {
+      dio.interceptors.add(DeviceFingerprintInterceptor(deviceInfoRef));
+    }
     return dio;
   }
 

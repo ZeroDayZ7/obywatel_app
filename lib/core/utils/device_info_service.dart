@@ -21,11 +21,54 @@ DeviceInfoService deviceInfoService(Ref ref) {
 }
 
 class DeviceInfoService {
+  SimpleKeyPair? _activeKeyPair;
+  bool get isUnlocked => _activeKeyPair != null;
   final _algorithm = AesGcm.with256bits();
   final _deviceMarketingNames = DeviceMarketingNames();
   final _storage = const FlutterSecureStorage();
   final _deviceInfo = DeviceInfoPlugin();
   final _log = Logger();
+
+  // 1. Odblokowanie (Wywoływane raz przy wejściu do apki / loginie)
+  Future<void> unlockWithPin(List<int> pinBytes) async {
+    try {
+      // Pobieramy ID urządzenia bezpośrednio ze storage wewnątrz serwisu
+      String? deviceId = await _storage.read(key: 'app_device_id');
+
+      if (deviceId == null) {
+        _log.e('🚨 Nie znaleziono app_device_id podczas odblokowywania!');
+        throw Exception('Urządzenie nie zostało zainicjalizowane (brak ID).');
+      }
+
+      _activeKeyPair = await getStoredKeyPair(
+        pinBytes: pinBytes,
+        deviceId: deviceId,
+      );
+
+      _log.i('🔓 Skarbiec odblokowany dla urządzenia: $deviceId');
+    } catch (e) {
+      _activeKeyPair = null;
+      _log.e('❌ Błąd odblokowania skarbca: $e');
+      rethrow;
+    }
+  }
+
+  // 2. Bezpieczne podpisywanie (Używane w całej aplikacji)
+  Future<String> signData(String data) async {
+    if (_activeKeyPair == null) {
+      throw Exception('Vault locked! Wymagane odblokowanie aplikacji.');
+    }
+
+    final message = utf8.encode(data);
+    final signature = await Ed25519().sign(message, keyPair: _activeKeyPair!);
+    return base64Encode(signature.bytes);
+  }
+
+  // 3. Blokowanie (Wywoływane przy logout lub gdy apka idzie do tła)
+  void lock() {
+    _activeKeyPair = null; // Usuwamy klucz z RAM
+    _log.i('🔒 Skarbiec zablokowany');
+  }
 
   /// Generuje klucz AES z PIN-u użytkownika przy użyciu PBKDF2
   Future<SecretKey> deriveKeyFromPin(List<int> pinBytes, String userId) async {
@@ -229,24 +272,24 @@ class DeviceInfoService {
 
   Future<SimpleKeyPair> getStoredKeyPair({
     required List<int> pinBytes,
-    required String userId,
+    required String deviceId,
   }) async {
     final encryptedKey = await _storage.read(
       key: 'device_private_key_encrypted',
     );
+
     if (encryptedKey == null) {
-      throw Exception('Brak zaszyfrowanego klucza urządzenia.');
+      throw Exception('Brak zaszyfrowanego klucza w bezpiecznej pamięci.');
     }
 
-    // Deszyfrujemy PIN-em
     final decryptedRaw = await decryptWithPin(
       encryptedBase64: encryptedKey,
       pinBytes: pinBytes,
-      userId: userId,
+      userId: deviceId, // deviceId służy jako sól (nonce)
     );
 
     if (decryptedRaw == "Zaszyfrowane dane") {
-      throw Exception('Niepoprawny PIN lub błąd deszyfrowania klucza.');
+      throw Exception('Niepoprawny PIN (błąd deszyfrowania klucza).');
     }
 
     final privateKeyBytes = base64Decode(decryptedRaw);

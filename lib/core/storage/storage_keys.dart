@@ -25,4 +25,7 @@ class StorageKeys {
 
   static const securitySecret = 'security_secret';
   static const securityConfig = 'security_config';
+
+  // Headers
+  static const headerFingerPrint = 'X-Device-Fingerprint';
 }

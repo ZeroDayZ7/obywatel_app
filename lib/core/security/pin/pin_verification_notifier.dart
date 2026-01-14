@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_verification_notifier.g.dart';
@@ -13,6 +14,7 @@ part 'pin_verification_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class PinVerificationNotifier extends _$PinVerificationNotifier {
   Timer? _lockoutTimer;
+  // AppLogger get _log => ref.read(appLoggerProvider);
 
   @override
   PinVerificationState build() {
@@ -71,6 +73,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     if (isValid) {
       await ref.read(pinAttemptLimiterProvider.notifier).reset();
+      await ref.read(deviceInfoServiceProvider).unlockWithPin(pinCodes);
       await ref.read(securityServiceProvider.notifier).unlockApp();
       state = const PinVerificationState.success();
     } else {

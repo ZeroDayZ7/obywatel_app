@@ -42,4 +42,10 @@ sealed class AuthState with _$AuthState {
 
   String? get errorCode =>
       maybeMap(error: (state) => state.code, orElse: () => null);
+
+  String? get userId => maybeMap(
+    partiallyAuthenticated: (state) => state.userId,
+    authenticated: (state) => state.userId,
+    orElse: () => null,
+  );
 }
