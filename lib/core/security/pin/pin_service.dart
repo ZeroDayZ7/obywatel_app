@@ -4,6 +4,7 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_service.g.dart';
@@ -14,6 +15,7 @@ PinService pinService(Ref ref) {
     storage: ref.watch(secureStorageProvider),
     hashService: ref.watch(hashServiceProvider),
     logger: ref.watch(appLoggerProvider),
+    deviceInfoService: ref.watch(deviceInfoServiceProvider),
   );
 }
 
@@ -28,17 +30,37 @@ class PinValidationException implements Exception {
 
 /// Serwis obsługi PIN
 class PinService {
+  final DeviceInfoService _deviceInfoService;
   final SecureStorageService _storage;
   final HashService _hashService;
   final AppLogger _logger;
 
   PinService({
     required SecureStorageService storage,
+    required DeviceInfoService deviceInfoService,
     required HashService hashService,
     required AppLogger logger,
   }) : _storage = storage,
+       _deviceInfoService = deviceInfoService,
        _hashService = hashService,
        _logger = logger;
+
+  Future<void> initializeSecurity(List<int> pinBytes) async {
+    try {
+      // 1. Zapisz hash PINu do weryfikacji przy loginie
+      await setPin(pinBytes);
+
+      // 2. Wygeneruj i zapisz zaszyfrowany klucz prywatny urządzenia
+      // Przekazujemy pinBytes, bo są potrzebne do zaszyfrowania klucza prywatnego
+      await _deviceInfoService.generateDeviceKeyPair();
+
+      _logger.i('🔐 PIN ustawiony i klucze urządzenia wygenerowane.');
+    } finally {
+      for (int i = 0; i < pinBytes.length; i++) {
+        pinBytes[i] = 0;
+      }
+    }
+  }
 
   /// Ustawia PIN: waliduje, hashuje i zeruje pamięć RAM
   Future<void> setPin(List<int> pinCodes) async {
@@ -74,7 +96,7 @@ class PinService {
 
   /// Weryfikuje PIN: używa natywnego bufora i czyści go po operacji
   Future<bool> verifyPin(List<int> pinCodes) async {
-    _logger.d('PinService: Weryfikacja PIN (Secure Flow)');
+    _logger.d('PinService: Rozpoczynam pełny proces odblokowania');
 
     if (pinCodes.isEmpty) return false;
 
@@ -89,8 +111,11 @@ class PinService {
       if (storedHash == null) return false;
 
       final isValid = await _hashService.verify(buffer.view, storedHash);
+      if (!isValid) return false;
+      _logger.d('PIN:$pinCodes');
+      await _deviceInfoService.unlockWithPin(pinCodes);
 
-      return isValid;
+      return true;
     } catch (e, s) {
       _logger.e('PinService: Błąd weryfikacji', error: e, stackTrace: s);
       return false;

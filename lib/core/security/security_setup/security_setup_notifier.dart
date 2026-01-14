@@ -5,6 +5,7 @@ import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
 import 'security_setup_state.dart';
@@ -36,25 +37,29 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> setPin(String pin) async {
-    // 1. Zabezpieczamy aktualny stan
     final current = state.value;
     if (current == null) return;
 
     state = const AsyncValue.loading();
 
     try {
-      // 2. KONWERSJA: Zamieniamy String na kody bajtów (List<int>)
-      // Dzięki temu utrzymujemy "bezpieczny łańcuch" danych wrażliwych.
-      final pinCodes = pin.codeUnits.toList();
+      // 1️⃣ Zamieniamy PIN na bajty
+      final pinBytes = pin.codeUnits.toList();
 
-      // 3. Wywołujemy serwis z bajtami zamiast Stringa
-      await ref.read(securityServiceProvider.notifier).setPin(pinCodes);
+      // 2️⃣ Ustawiamy PIN w SecurityService
+      await ref.read(securityServiceProvider.notifier).setPin(pinBytes);
 
-      // 4. Czyścimy listę bajtów z pamięci RAM zaraz po użyciu
-      pinCodes.fillRange(0, pinCodes.length, 0);
+      // 3️⃣ Generujemy klucz urządzenia od razu
+      final deviceService = ref.read(deviceInfoServiceProvider);
+      await deviceService.generateDeviceKeyPair();
 
-      // 5. Sukces - aktualizujemy stan
+      // 4️⃣ Czyścimy PIN z RAM
+      pinBytes.fillRange(0, pinBytes.length, 0);
+
+      // 5️⃣ Przechowujemy tymczasowo bajty PINu na potrzeby rejestracji urządzenia
       _tempPinBytes = pin.codeUnits.toList();
+
+      // 6️⃣ Aktualizujemy stan UI
       state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
       state = AsyncValue.error(e, st);

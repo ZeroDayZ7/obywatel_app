@@ -177,9 +177,7 @@ class AuthController extends _$AuthController {
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
 
-    final keyPair = await deviceService.generateDeviceKeyPair(
-      pinBytes: pinBytes
-    );
+    final keyPair = await deviceService.generateDeviceKeyPair();
     final publicKey = await keyPair.extractPublicKey();
     final fingerprint = await deviceService.getSecureFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();
@@ -189,7 +187,7 @@ class AuthController extends _$AuthController {
       orElse: () => throw Exception('Brak challenge'),
     );
 
-    final signature = await deviceService.signChallenge(challenge, keyPair);
+    final signature = await deviceService.signChallenge(challenge);
 
     final response = await authService.registerTrustedDevice(
       fingerprint: fingerprint,
@@ -230,7 +228,7 @@ class AuthController extends _$AuthController {
           }
 
           // 1. Podpisujemy challenge (s.challenge jest dostępne bezpośrednio)
-          final signature = await deviceService.signData(s.challenge);
+          final signature = await deviceService.signChallenge(s.challenge);
 
           // 2. Wysyłamy do backendu (s.setupToken jest dostępne bezpośrednio)
           final result = await _authService.verifyDevice(
