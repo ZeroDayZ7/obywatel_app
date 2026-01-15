@@ -2,27 +2,27 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:logger/logger.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'symmetric_crypto.g.dart';
 
 @Riverpod(keepAlive: true)
 SymmetricCrypto symmetricCrypto(Ref ref) {
-  return SymmetricCrypto();
+  final logger = ref.watch(appLoggerProvider);
+  return SymmetricCrypto(logger);
 }
 
 ///
 /// ENTERPRISE Symmetric Crypto Service
 ///
-/// Odpowiedzialność:
-/// - Szyfrowanie / deszyfrowanie danych binarnych
-/// - Algorytm: AES-256-GCM
-///
-///
+
 class SymmetricCrypto {
   static final _algorithm = AesGcm.with256bits();
-  static final _log = Logger();
+  final AppLogger _log;
+
+  SymmetricCrypto(this._log);
 
   /// ============================================
   /// 🔐 ENCRYPT

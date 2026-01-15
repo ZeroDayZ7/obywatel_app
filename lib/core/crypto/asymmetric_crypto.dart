@@ -2,14 +2,16 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:logger/logger.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'asymmetric_crypto.g.dart';
 
 @Riverpod(keepAlive: true)
 AsymmetricCrypto asymmetricCrypto(Ref ref) {
-  return AsymmetricCrypto();
+  final logger = ref.watch(appLoggerProvider);
+  return AsymmetricCrypto(logger);
 }
 
 ///
@@ -30,7 +32,9 @@ AsymmetricCrypto asymmetricCrypto(Ref ref) {
 ///
 class AsymmetricCrypto {
   static final _algorithm = Ed25519();
-  static final _log = Logger();
+  final AppLogger _log;
+
+  AsymmetricCrypto(this._log);
 
   // ============================================================
   // 🔑 KEY GENERATION

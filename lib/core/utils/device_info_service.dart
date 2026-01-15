@@ -27,12 +27,6 @@ DeviceInfoService deviceInfoService(Ref ref) {
   return DeviceInfoService(logger, symmetric, kdf, asymmetric);
 }
 
-/// Enterprise Device Info Service (odchudzony)
-/// Odpowiedzialność:
-/// - Pobieranie i agregacja danych urządzenia
-/// - Generowanie unikalnego fingerprint
-/// - Obsługa MasterKey / PIN
-/// - Delegacja operacji kryptograficznych do dedykowanych serwisów
 class DeviceInfoService {
   final AppLogger _log;
   final SymmetricCrypto _symmetric;
