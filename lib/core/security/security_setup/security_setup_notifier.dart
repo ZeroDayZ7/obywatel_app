@@ -5,7 +5,6 @@ import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
 import 'security_setup_state.dart';
@@ -43,23 +42,8 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     state = const AsyncValue.loading();
 
     try {
-      // 1️⃣ Zamieniamy PIN na bajty
-      final pinBytes = pin.codeUnits.toList();
-
-      // 2️⃣ Ustawiamy PIN w SecurityService
-      await ref.read(securityServiceProvider.notifier).setPin(pinBytes);
-
-      // 3️⃣ Generujemy klucz urządzenia od razu
-      final deviceService = ref.read(deviceInfoServiceProvider);
-      await deviceService.generateDeviceKeyPair();
-
-      // 4️⃣ Czyścimy PIN z RAM
-      pinBytes.fillRange(0, pinBytes.length, 0);
-
-      // 5️⃣ Przechowujemy tymczasowo bajty PINu na potrzeby rejestracji urządzenia
       _tempPinBytes = pin.codeUnits.toList();
 
-      // 6️⃣ Aktualizujemy stan UI
       state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -92,11 +76,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> completeSetup() async {
-    if (_tempPinBytes == null) {
-      state = AsyncValue.error(Exception("PIN not set"), StackTrace.current);
-      return;
-    }
-
+    if (_tempPinBytes == null) throw Exception('PIN not set');
     final current = state.requireValue;
     final logger = ref.read(appLoggerProvider);
 
@@ -105,9 +85,8 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     try {
       if (current.trustDevice) {
         // Przekazujemy bajty do rejestracji
-        await ref
-            .read(authControllerProvider.notifier)
-            .registerTrustedDevice(_tempPinBytes!);
+        await ref.read(securityServiceProvider.notifier).setPin(_tempPinBytes!);
+        await ref.read(authControllerProvider.notifier).registerTrustedDevice();
       }
 
       await ref
@@ -121,9 +100,6 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       logger.e('Błąd podczas kończenia setupu', error: e, stackTrace: st);
       state = AsyncValue.error(e, st);
     } finally {
-      _tempPinBytes?.fillRange(0, _tempPinBytes!.length, 0);
-      _tempPinBytes = null;
-
       logger.d('🧹 Sensitive PIN data cleared from memory (finally)');
     }
   }

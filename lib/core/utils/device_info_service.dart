@@ -1,15 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:advertising_id/advertising_id.dart';
-import 'package:cryptography/cryptography.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:obywatel_plus/core/crypto/asymmetric_crypto.dart';
-import 'package:obywatel_plus/core/crypto/kdf_service.dart';
-import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -21,57 +15,16 @@ part 'device_info_service.g.dart';
 @Riverpod(keepAlive: true)
 DeviceInfoService deviceInfoService(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
-  final symmetric = ref.watch(symmetricCryptoProvider);
-  final kdf = ref.watch(kdfServiceProvider);
-  final asymmetric = ref.watch(asymmetricCryptoProvider);
-  return DeviceInfoService(logger, symmetric, kdf, asymmetric);
+  return DeviceInfoService(logger);
 }
 
 class DeviceInfoService {
   final AppLogger _log;
-  final SymmetricCrypto _symmetric;
-  final KdfService _kdf;
-  final AsymmetricCrypto _asymmetric;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final DeviceMarketingNames _deviceMarketingNames = DeviceMarketingNames();
 
-  SimpleKeyPair? _activeKeyPair;
-  bool get isUnlocked => _activeKeyPair != null;
-
-  DeviceInfoService(this._log, this._symmetric, this._kdf, this._asymmetric);
-
-  /// Odblokowanie vault za pomocą PIN-u
-  Future<void> unlockWithPin(List<int> pinBytes) async {
-    try {
-      final deviceId = await _getOrCreateDeviceId();
-      final privateKeyBytes = <int>[];
-      _activeKeyPair = await _asymmetric.getStoredKeyPair(
-        privateKeyBytes: privateKeyBytes,
-      );
-      _log.i('Vault odblokowany dla urządzenia: $deviceId');
-    } catch (e) {
-      _activeKeyPair = null;
-      _log.e('Błąd odblokowania vault: $e');
-      rethrow;
-    }
-  }
-
-  void lock() {
-    _activeKeyPair = null;
-    _log.i('Vault zablokowany');
-  }
-
-  /// Podpisuje challenge UUID
-  Future<String> signChallenge(String challenge) async {
-    if (_activeKeyPair == null) {
-      throw Exception('Vault locked! Odblokuj najpierw.');
-    }
-    return _asymmetric.signBytes(
-      message: Uint8List.fromList(utf8.encode(challenge)),
-      keyPair: _activeKeyPair!,
-    );
-  }
+  DeviceInfoService(this._log);
 
   /// Pobiera dane urządzenia w postaci mapy
   Future<Map<String, dynamic>> collectDeviceInfo() async {
@@ -79,8 +32,11 @@ class DeviceInfoService {
     final deviceId = await _getOrCreateDeviceId();
     String? advertisingId;
 
+    // Pobieranie Advertising ID (zazwyczaj tylko mobilne)
     try {
-      if (Platform.isAndroid) advertisingId = await AdvertisingId.id(true);
+      if (Platform.isAndroid || Platform.isIOS) {
+        advertisingId = await AdvertisingId.id(true);
+      }
     } catch (e) {
       _log.w('Nie udało się pobrać Advertising ID: $e');
     }
@@ -102,6 +58,33 @@ class DeviceInfoService {
         'model': info.model,
         'isPhysicalDevice': info.isPhysicalDevice,
       });
+    } else if (Platform.isWindows) {
+      final info = await _deviceInfo.windowsInfo;
+      infoData.addAll({
+        'platform': 'windows',
+        'computerName': info.computerName,
+        'numberOfCores': info.numberOfCores,
+        'systemMemoryInMegabytes': info.systemMemoryInMegabytes,
+        'userName': info.userName,
+      });
+    } else if (Platform.isMacOS) {
+      final info = await _deviceInfo.macOsInfo;
+      infoData.addAll({
+        'platform': 'macos',
+        'computerName': info.computerName,
+        'model': info.model,
+        'arch': info.arch,
+        'systemGUID': info.systemGUID,
+      });
+    } else if (Platform.isLinux) {
+      final info = await _deviceInfo.linuxInfo;
+      infoData.addAll({
+        'platform': 'linux',
+        'name': info.name,
+        'versionId': info.versionId,
+        'machineId': info.machineId,
+        'prettyName': info.prettyName,
+      });
     }
 
     return {
@@ -112,7 +95,7 @@ class DeviceInfoService {
   }
 
   /// Generuje unikalny fingerprint urządzenia (SHA-256)
-  Future<String> getSecureFingerprint() async {
+  Future<String> getFingerprint() async {
     final data = await collectDeviceInfo();
     final info = data['device_info'] as Map<String, dynamic>;
 
@@ -126,8 +109,7 @@ class DeviceInfoService {
       data['app_device_id_secure'] ?? 'unknown',
     ];
 
-    final raw = components.map((e) => e.trim().toLowerCase()).join('|');
-    return _kdf.sha256Hash(utf8.encode(raw));
+    return components.map((e) => e.trim().toLowerCase()).join('|');
   }
 
   /// Pobiera marketingową nazwę urządzenia (iPhone 13, Pixel 7)
@@ -144,17 +126,8 @@ class DeviceInfoService {
 
   /// Encrypt / Decrypt dla nazwy urządzenia przy użyciu MasterKey
   Future<String> getEncryptedMarketingName() async {
-    final masterKey = await _getOrCreateMasterKey();
     final name = await getMarketingName();
-    return _symmetric.encryptString(clearText: name, secretKey: masterKey);
-  }
-
-  Future<String> decryptDeviceName(String encrypted) async {
-    final masterKey = await _getOrCreateMasterKey();
-    return _symmetric.decryptString(
-      encryptedBase64: encrypted,
-      secretKey: masterKey,
-    );
+    return name;
   }
 
   /// Prywatne helpery
@@ -165,17 +138,5 @@ class DeviceInfoService {
       await _storage.write(key: StorageKeys.appDeviceId, value: id);
     }
     return id;
-  }
-
-  Future<SecretKey> _getOrCreateMasterKey() async {
-    final stored = await _storage.read(key: 'device_master_key');
-    if (stored != null) return SecretKey(base64Decode(stored));
-
-    final newKey = await _symmetric.generateMasterKey();
-    return newKey;
-  }
-
-  Future<SimpleKeyPair> generateDeviceKeyPair() async {
-    return _asymmetric.generateKeyPair();
   }
 }

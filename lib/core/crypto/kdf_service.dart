@@ -16,28 +16,29 @@ KdfService kdfService(Ref ref) {
 
 class KdfService {
   static const int saltLength = 16;
-  final _sha256 = Sha256();
+  static const int _keyLengthBytes = 32;
+
   final AppLogger _log;
+  final Sha256 _sha256 = Sha256();
 
   KdfService(this._log);
 
-  static const int _iterations = 100_000;
-  static const int _keyLengthBits = 256;
-
-  final Pbkdf2 _pbkdf2 = Pbkdf2(
-    macAlgorithm: Hmac.sha256(),
-    iterations: _iterations,
-    bits: _keyLengthBits,
-  );
-
   static final Random _secureRandom = Random.secure();
+
+  /// Argon2id – RFC 9106
+  final Argon2id _argon2id = Argon2id(
+    memory: 64 * 1024, // 64 MB
+    iterations: 3,
+    parallelism: 1,
+    hashLength: _keyLengthBytes,
+  );
 
   List<int> generateSalt() {
     final salt = List<int>.generate(
       saltLength,
       (_) => _secureRandom.nextInt(256),
     );
-    _log.d('generateSalt salt $salt');
+    _log.d('Generated salt (len=${salt.length})');
     return salt;
   }
 
@@ -53,20 +54,14 @@ class KdfService {
     }
 
     try {
-      final key = await _pbkdf2.deriveKey(
+      final key = await _argon2id.deriveKey(
         secretKey: SecretKey(pinBytes),
         nonce: salt,
       );
 
       return key;
     } finally {
-      _wipe(pinBytes);
-    }
-  }
-
-  void _wipe(List<int> bytes) {
-    for (var i = 0; i < bytes.length; i++) {
-      bytes[i] = 0;
+      wipe(pinBytes);
     }
   }
 
@@ -78,5 +73,11 @@ class KdfService {
   Future<String> sha256Hash(List<int> input) async {
     final hash = await _sha256.hash(input);
     return hash.bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  void wipe(List<int> bytes) {
+    for (var i = 0; i < bytes.length; i++) {
+      bytes[i] = 0;
+    }
   }
 }

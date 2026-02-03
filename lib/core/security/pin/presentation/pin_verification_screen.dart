@@ -30,7 +30,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     _errorController = StreamController<ErrorAnimationType>.broadcast();
 
     ref.listenManual(pinVerificationProvider, (prev, next) {
-      // Obsługa błędu (shake) - używamy maybeWhen zamiast 'is _Error'
       next.maybeWhen(
         error: () {
           HapticFeedback.vibrate();
@@ -39,8 +38,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         },
         orElse: () {},
       );
-
-      // NOWOŚĆ: Czyszczenie po odblokowaniu
       final wasLocked =
           prev?.maybeWhen(locked: (_) => true, orElse: () => false) ?? false;
       final isIdle = next.maybeWhen(idle: () => true, orElse: () => false);
@@ -69,7 +66,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
 
     return limiterAsync.when(
       loading: () => const CyberBackground(
-        showCorners: false, // Opcjonalnie wyłączamy narożniki dla loaderów
+        showCorners: false,
         child: Center(child: CircularProgressIndicator()),
       ),
       error: (err, _) => CyberBackground(
@@ -93,11 +90,9 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
           orElse: () => false,
         );
 
-        // --- KLUCZOWA ZMIANA: Używamy CyberBackground zamiast Scaffold + Container + Stack ---
         return CyberBackground(
-          showCorners: true, // Chcemy narożniki na ekranie PIN
+          showCorners: true,
           child: Stack(
-            // Stack potrzebny tylko dla Overlay'a blokady
             children: [
               SafeArea(
                 child: ResponsiveContainer(

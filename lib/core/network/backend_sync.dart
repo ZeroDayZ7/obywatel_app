@@ -40,7 +40,7 @@ class BackendStateNotifier extends _$BackendStateNotifier {
     final results = await Future.wait([
       storage.read(key: _timeKey),
       storage.read(key: _offsetKey),
-      deviceInfo.getSecureFingerprint(), // Ciężka operacja - robimy ją tu RAZ
+      deviceInfo.getFingerprint(), // Ciężka operacja - robimy ją tu RAZ
     ]);
 
     final savedTime = results[0];

@@ -39,7 +39,7 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
         throw Exception('Refresh failed: No authenticated user ID found');
       }
 
-      final fingerprint = await deviceService.getSecureFingerprint();
+      final fingerprint = await deviceService.getFingerprint();
       final response = await client.post(
         '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
         data: {StorageKeys.refreshToken: token?.refreshToken},

@@ -10,7 +10,7 @@ class AppScaffold extends StatelessWidget {
   final Color? backgroundColor;
   final PreferredSizeWidget? appBar;
   final Widget? title;
-  final List<Widget>? actions; // DODANE
+  final List<Widget>? actions;
   final ContainerSize size;
   final EdgeInsetsGeometry? padding;
 
@@ -23,22 +23,17 @@ class AppScaffold extends StatelessWidget {
     this.backgroundColor,
     this.appBar,
     this.title,
-    this.actions, // DODANE
+    this.actions,
     this.size = ContainerSize.medium,
     this.padding,
   });
 
   @override
   Widget build(BuildContext context) {
-    // Przekazujemy actions do AppBar
     final PreferredSizeWidget? effectiveAppBar =
         appBar ??
         (title != null
-            ? AppBar(
-                title: title,
-                centerTitle: true,
-                actions: actions, // DODANE
-              )
+            ? AppBar(title: title, centerTitle: true, actions: actions)
             : null);
 
     Widget content = scrollable ? SingleChildScrollView(child: child) : child;

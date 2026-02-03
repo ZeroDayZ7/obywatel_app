@@ -8,44 +8,13 @@ part of 'kdf_service.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// KDFService
-///
-/// Odpowiedzialność:
-/// - wyprowadzanie klucza AES z PIN-u użytkownika
-/// - generowanie i obsługa SALT
-///
-/// NIE:
-/// - nie przechowuje danych
-/// - nie zna deviceId
-/// - nie hashuje PIN-u (to robi HashService)
 
 @ProviderFor(kdfService)
 final kdfServiceProvider = KdfServiceProvider._();
 
-/// KDFService
-///
-/// Odpowiedzialność:
-/// - wyprowadzanie klucza AES z PIN-u użytkownika
-/// - generowanie i obsługa SALT
-///
-/// NIE:
-/// - nie przechowuje danych
-/// - nie zna deviceId
-/// - nie hashuje PIN-u (to robi HashService)
-
 final class KdfServiceProvider
     extends $FunctionalProvider<KdfService, KdfService, KdfService>
     with $Provider<KdfService> {
-  /// KDFService
-  ///
-  /// Odpowiedzialność:
-  /// - wyprowadzanie klucza AES z PIN-u użytkownika
-  /// - generowanie i obsługa SALT
-  ///
-  /// NIE:
-  /// - nie przechowuje danych
-  /// - nie zna deviceId
-  /// - nie hashuje PIN-u (to robi HashService)
   KdfServiceProvider._()
     : super(
         from: null,
@@ -79,4 +48,4 @@ final class KdfServiceProvider
   }
 }
 
-String _$kdfServiceHash() => r'09918c7ef93d760f94ce395c71b46657af3e5295';
+String _$kdfServiceHash() => r'32dce641f90f5e89cf7b2a5fa1676879ddc1c65b';

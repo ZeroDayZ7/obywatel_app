@@ -7,7 +7,6 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
-import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_verification_notifier.g.dart';
@@ -84,32 +83,15 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   }
 
   Future<void> verifyPin(List<int> pinCodes) async {
-    final limiterAsync = ref.read(pinAttemptLimiterProvider);
-    if (limiterAsync.isLoading) return;
+    state = const PinVerificationState.loading();
 
-    if (limiterAsync.value?.isLocked ?? false) {
-      _startLockoutTimer(limiterAsync.value!.lockUntil!);
+    final ok = await ref.read(pinServiceProvider).verifyPin(pinCodes);
+
+    if (!ok) {
+      await _handleFailedAttempt();
       return;
     }
 
-    state = const PinVerificationState.loading();
-
-    try {
-      // Serwis robi wszystko: sprawdza hash i odblokowuje klucze
-      final success = await ref.read(pinServiceProvider).verifyPin(pinCodes);
-
-      if (success) {
-        await ref.read(pinAttemptLimiterProvider.notifier).reset();
-        await ref.read(securityServiceProvider.notifier).unlockApp();
-        state = const PinVerificationState.success();
-      } else {
-        await _handleFailedAttempt();
-      }
-    } catch (e) {
-      _log.e('Błąd weryfikacji: $e');
-      // Tutaj decydujesz czy to błąd PIN-u czy błąd techniczny
-      state = const PinVerificationState.error();
-    }
-    // Zauważ: BRAK pętli zerującej tutaj. Robi to serwis w `finally`.
+    state = const PinVerificationState.success();
   }
 }

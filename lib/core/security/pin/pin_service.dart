@@ -1,4 +1,9 @@
+import 'dart:convert';
+
+import 'package:cryptography/cryptography.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
+import 'package:obywatel_plus/core/crypto/kdf_service.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
@@ -14,12 +19,14 @@ PinService pinService(Ref ref) {
   return PinService(
     storage: ref.watch(secureStorageProvider),
     hashService: ref.watch(hashServiceProvider),
-    logger: ref.watch(appLoggerProvider),
+    kdfService: ref.watch(kdfServiceProvider),
+    crypto: ref.watch(symmetricCryptoProvider),
     deviceInfoService: ref.watch(deviceInfoServiceProvider),
+    logger: ref.watch(appLoggerProvider),
   );
 }
 
-/// Wyjątek dla nieprawidłowego PIN-u
+/// Wyjątek walidacji PIN-u
 class PinValidationException implements Exception {
   final String message;
   PinValidationException(this.message);
@@ -30,127 +37,147 @@ class PinValidationException implements Exception {
 
 /// Serwis obsługi PIN
 class PinService {
-  final DeviceInfoService _deviceInfoService;
   final SecureStorageService _storage;
   final HashService _hashService;
+  final KdfService _kdfService;
+  final SymmetricCrypto _crypto;
   final AppLogger _logger;
+
+  SecretKey? _sessionKey;
+
+  bool get isUnlocked => _sessionKey != null;
 
   PinService({
     required SecureStorageService storage,
-    required DeviceInfoService deviceInfoService,
     required HashService hashService,
+    required KdfService kdfService,
+    required SymmetricCrypto crypto,
+    required DeviceInfoService deviceInfoService,
     required AppLogger logger,
   }) : _storage = storage,
-       _deviceInfoService = deviceInfoService,
        _hashService = hashService,
+       _kdfService = kdfService,
+       _crypto = crypto,
        _logger = logger;
+
+  // ---------------------------------------------------------------------------
+  // INIT / SET PIN
+  // ---------------------------------------------------------------------------
 
   Future<void> initializeSecurity(List<int> pinBytes) async {
     try {
-      // 1. Zapisz hash PINu do weryfikacji przy loginie
       await setPin(pinBytes);
-
-      // 2. Wygeneruj i zapisz zaszyfrowany klucz prywatny urządzenia
-      // Przekazujemy pinBytes, bo są potrzebne do zaszyfrowania klucza prywatnego
-      await _deviceInfoService.generateDeviceKeyPair();
-
-      _logger.i('🔐 PIN ustawiony i klucze urządzenia wygenerowane.');
+      _logger.i('PIN ustawiony poprawnie');
     } finally {
-      for (int i = 0; i < pinBytes.length; i++) {
-        pinBytes[i] = 0;
-      }
+      _wipe(pinBytes);
     }
   }
 
-  /// Ustawia PIN: waliduje, hashuje i zeruje pamięć RAM
   Future<void> setPin(List<int> pinCodes) async {
-    _logger.d('PinService: Ustawianie PIN (Secure Flow)');
-
-    // 1. Walidacja (na poziomie bajtów/intów)
     _validatePinList(pinCodes);
 
-    // 2. Alokacja bezpiecznego bufora przez FFI
     final buffer = SecureBuffer(pinCodes.length);
-
     try {
-      // 3. Kopiowanie danych do natywnego RAMu
       for (int i = 0; i < pinCodes.length; i++) {
         buffer.view[i] = pinCodes[i];
       }
 
-      // 4. Hashowanie bezpośrednio z bufora
-      final hashed = await _hashService.hash(buffer.view);
-
-      // 5. Zapisujemy tylko HASH
-      await _storage.write(key: StorageKeys.pinHash, value: hashed);
-    } catch (e) {
-      rethrow;
+      final hash = await _hashService.hash(buffer.view);
+      await _storage.write(key: StorageKeys.pinHash, value: hash);
     } finally {
       buffer.dispose();
-
-      for (int i = 0; i < pinCodes.length; i++) {
-        pinCodes[i] = 0;
-      }
+      _wipe(pinCodes);
     }
   }
 
-  /// Weryfikuje PIN: używa natywnego bufora i czyści go po operacji
+  // ---------------------------------------------------------------------------
+  // VERIFY / UNLOCK
+  // ---------------------------------------------------------------------------
+
   Future<bool> verifyPin(List<int> pinCodes) async {
-    _logger.d('PinService: Rozpoczynam pełny proces odblokowania');
-
-    if (pinCodes.isEmpty) return false;
-
     final buffer = SecureBuffer(pinCodes.length);
 
     try {
-      for (int i = 0; i < pinCodes.length; i++) {
-        buffer.view[i] = pinCodes[i];
-      }
+      buffer.view.setRange(0, pinCodes.length, pinCodes);
 
       final storedHash = await _storage.read(key: StorageKeys.pinHash);
       if (storedHash == null) return false;
 
-      final isValid = await _hashService.verify(buffer.view, storedHash);
-      if (!isValid) return false;
-      _logger.d('PIN:$pinCodes');
-      await _deviceInfoService.unlockWithPin(pinCodes);
+      final valid = await _hashService.verify(buffer.view, storedHash);
+      if (!valid) return false;
+
+      final saltBase64 = await _storage.read(key: StorageKeys.kekSalt);
+      final encryptedMasterKey = await _storage.read(
+        key: StorageKeys.devicePrivateKey,
+      );
+
+      if (saltBase64 == null || encryptedMasterKey == null) return false;
+
+      final salt = base64Decode(saltBase64);
+
+      await _unlockSession(
+        pin: buffer.view,
+        salt: salt,
+        encryptedMasterKey: encryptedMasterKey,
+      );
 
       return true;
-    } catch (e, s) {
-      _logger.e('PinService: Błąd weryfikacji', error: e, stackTrace: s);
-      return false;
     } finally {
       buffer.dispose();
-      for (int i = 0; i < pinCodes.length; i++) {
-        pinCodes[i] = 0;
-      }
+      _wipe(pinCodes);
     }
   }
 
-  /// Prywatna metoda walidacji listy kodów PIN
+  Future<void> _unlockSession({
+    required List<int> pin,
+    required List<int> salt,
+    required String encryptedMasterKey,
+  }) async {
+    final key = await _kdfService.deriveKeyFromPin(pinBytes: pin, salt: salt);
+
+    await _crypto.decryptBytes(
+      encryptedBase64: encryptedMasterKey,
+      secretKey: key,
+    );
+
+    _sessionKey = key;
+    _logger.i('Sesja odblokowana');
+  }
+
+  void lock() {
+    _sessionKey = null;
+    _logger.i('Sesja zablokowana');
+  }
+
+  // ---------------------------------------------------------------------------
+  // HELPERS
+  // ---------------------------------------------------------------------------
+
+  Future<bool> hasPin() async {
+    final storedHash = await _storage.read(key: StorageKeys.pinHash);
+    return storedHash != null && storedHash.isNotEmpty;
+  }
+
+  Future<void> removePin() async {
+    await _storage.delete(key: StorageKeys.pinHash);
+    _logger.i('PIN usunięty');
+  }
+
   void _validatePinList(List<int> pinCodes) {
     if (pinCodes.length < 4 || pinCodes.length > 6) {
-      // POPRAWKA: Używamy PinValidationException zamiast niezdefiniowanego AppException
       throw PinValidationException('errors.pin_invalid_length');
     }
-    // Dodatkowe sprawdzenie, czy to same cyfry (ASCII 48-57)
-    for (var code in pinCodes) {
-      if (code < 48 || code > 57) {
+
+    for (final c in pinCodes) {
+      if (c < 48 || c > 57) {
         throw PinValidationException('errors.pin_not_numeric');
       }
     }
   }
 
-  /// Sprawdza, czy PIN jest ustawiony
-  Future<bool> hasPin() async {
-    final storedHash = await _storage.read(key: StorageKeys.pinHash);
-    final has = storedHash != null && storedHash.isNotEmpty;
-    return has;
-  }
-
-  /// Usuwa PIN
-  Future<void> removePin() async {
-    await _storage.delete(key: StorageKeys.pinHash);
-    _logger.i('PinService: PIN został usunięty z pamięci bezpiecznej');
+  void _wipe(List<int> data) {
+    for (int i = 0; i < data.length; i++) {
+      data[i] = 0;
+    }
   }
 }
