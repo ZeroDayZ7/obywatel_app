@@ -31,20 +31,17 @@ class SignRequest {
 @pragma('vm:entry-point')
 Future<List<int>> secureSignWorker(SignRequest request) async {
   final kdf = KdfService(AppLogger());
-
   // 1️⃣ Wyprowadzenie KEK z PIN-u i salt
   final kek = await kdf.deriveKeyFromPin(
     pinBytes: utf8.encode(request.pin),
     salt: request.salt,
   );
-
   // 2️⃣ Odszyfrowanie prywatnego klucza
   final secretBox = SecretBox.fromConcatenation(
     request.encryptedPrivateKey,
     nonceLength: 12,
     macLength: 16,
   );
-
   final clearPrivateKeyBytes = await AesGcm.with256bits().decrypt(
     secretBox,
     secretKey: kek,
@@ -56,7 +53,6 @@ Future<List<int>> secureSignWorker(SignRequest request) async {
   // 3️⃣ Obliczenie podpisu
   final privateKey = Curve.decodePrivatePoint(privateKeyBytes);
   final signature = Curve.calculateSignature(privateKey, messageBytes);
-
   // 4️⃣ Wipe wrażliwych danych
   kdf.wipe(clearPrivateKeyBytes);
   kdf.wipe(privateKeyBytes);
@@ -107,7 +103,6 @@ class CryptoService extends _$CryptoService {
   // Podpisuje challenge używając klucza z RAM
   Future<String> signWithActiveKey(String challenge) async {
     if (_activeDeviceKeyPair == null) throw Exception('No active key');
-
     final algorithm = Ed25519();
     final signature = await algorithm.sign(
       utf8.encode(challenge),
@@ -116,55 +111,18 @@ class CryptoService extends _$CryptoService {
     return base64Encode(signature.bytes);
   }
 
-  @pragma('vm:entry-point')
-  Future<List<int>> secureSignWorker(SignRequest request) async {
-    final kdf = KdfService(
-      AppLogger(),
-    ); // tutaj w workerze możesz wstrzyknąć logger
-    // Wyprowadzenie KEK z PIN-u + salt
-    final kek = await kdf.deriveKeyFromPin(
-      pinBytes: utf8.encode(request.pin),
-      salt: request.salt,
-    );
-
-    // Odszyfrowanie klucza prywatnego
-    final secretBox = SecretBox.fromConcatenation(
-      request.encryptedPrivateKey,
-      nonceLength: 12,
-      macLength: 16,
-    );
-
-    final clearPrivateKeyBytes = await AesGcm.with256bits().decrypt(
-      secretBox,
-      secretKey: kek,
-    );
-
-    // Konwersja do Uint8List
-    final uint8PrivateKey = Uint8List.fromList(clearPrivateKeyBytes);
-    final uint8Message = Uint8List.fromList(request.message);
-
-    // Obliczenie podpisu (libsignal)
-    final privateKey = Curve.decodePrivatePoint(uint8PrivateKey);
-    final signature = Curve.calculateSignature(privateKey, uint8Message);
-
-    // Wipe KEK i clearPrivateKeyBytes
-    kdf.wipe(clearPrivateKeyBytes);
-    kdf.wipe(uint8PrivateKey);
-    return signature;
-  }
-
   // Na koniec setupu: szyfrujemy i zapisujemy klucz
-  Future<void> finalizeAndPersist(String pin, List<int> salt) async {
+  // ⚡ ZMIANA: Przyjmujemy List<int> pinBytes, aby uniknąć problemów z kodowaniem Stringów
+  Future<void> finalizeAndPersist(List<int> pinBytes, List<int> salt) async {
     if (_activeDeviceKeyPair == null) return;
-
     try {
       final privateKeyData = await _activeDeviceKeyPair!.extract();
       final privKeyBytes = privateKeyData.bytes;
 
-      // Wyprowadzenie KEK z PIN-u
+      // Wyprowadzenie KEK z PIN-u (bezpośrednio z bajtów)
       final kek = await ref
           .read(kdfServiceProvider)
-          .deriveKeyFromPin(pinBytes: utf8.encode(pin), salt: salt);
+          .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
 
       // Szyfrowanie klucza prywatnego
       final secretBox = await AesGcm.with256bits().encrypt(

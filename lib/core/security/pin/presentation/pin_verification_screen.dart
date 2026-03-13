@@ -110,7 +110,10 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           resetToken: _resetToken,
                           errorController: _errorController,
                           onCompleted: (pin) {
-                            final codes = pin.codeUnits.toList();
+                            final codes = pin
+                                .split('')
+                                .map((e) => int.parse(e))
+                                .toList();
                             ref
                                 .read(pinVerificationProvider.notifier)
                                 .verifyPin(codes);

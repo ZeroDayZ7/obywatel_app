@@ -76,8 +76,8 @@ class KdfService {
   }
 
   void wipe(List<int> bytes) {
-    for (var i = 0; i < bytes.length; i++) {
-      bytes[i] = 0;
+    if (bytes is Uint8List) {
+      bytes.fillRange(0, bytes.length, 0);
     }
   }
 }

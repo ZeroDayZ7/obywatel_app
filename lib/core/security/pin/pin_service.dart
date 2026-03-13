@@ -79,7 +79,7 @@ class PinService {
     final buffer = SecureBuffer(pinCodes.length);
     try {
       for (int i = 0; i < pinCodes.length; i++) {
-        buffer.view[i] = pinCodes[i];
+        buffer.view[i] = pinCodes[i]; // 0–9 bez ASCII
       }
 
       final hash = await _hashService.hash(buffer.view);
@@ -95,10 +95,15 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<bool> verifyPin(List<int> pinCodes) async {
+      _logger.i('verifyPin called with: $pinCodes');
+    _validatePinList(pinCodes);
+
     final buffer = SecureBuffer(pinCodes.length);
 
     try {
-      buffer.view.setRange(0, pinCodes.length, pinCodes);
+      for (int i = 0; i < pinCodes.length; i++) {
+        buffer.view[i] = pinCodes[i]; // 0–9, bez +48
+      }
 
       final storedHash = await _storage.read(key: StorageKeys.pinHash);
       if (storedHash == null) return false;
@@ -124,7 +129,7 @@ class PinService {
       return true;
     } finally {
       buffer.dispose();
-      _wipe(pinCodes);
+      _wipe(pinCodes); // wyczyść oryginalny PIN
     }
   }
 
@@ -169,7 +174,7 @@ class PinService {
     }
 
     for (final c in pinCodes) {
-      if (c < 48 || c > 57) {
+      if (c < 0 || c > 9) {
         throw PinValidationException('errors.pin_not_numeric');
       }
     }

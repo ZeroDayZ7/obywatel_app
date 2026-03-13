@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_verification_notifier.g.dart';
@@ -93,5 +94,6 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     }
 
     state = const PinVerificationState.success();
+    await ref.read(securityServiceProvider.notifier).unlockManually();
   }
 }
