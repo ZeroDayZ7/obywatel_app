@@ -1,49 +1,66 @@
-Oto szczegółowa analiza Twojego kodu (Core, Security, Bootstrap) wraz z 30 konkretnymi punktami, co można poprawić, zoptymalizować lub uszczelnić. Analiza opiera się na dostarczonym kodzie oraz logach startowych.
+### I. Rozwiązanie Twojego głównego problemu (Bug po restarcie)
 
-### 🚀 Bootstrap & Inicjalizacja (StartupRunner)
+Problem polega na tym, że po wpisaniu poprawnego PIN-u po restarcie, proces weryfikacji nie informuje głównego zarządcy stanu (SecurityService), że aplikacja jest odblokowana.
 
-1. **Równoległe wykonywanie zadań (Parallel Execution):** Obecnie `StartupRunner` wykonuje zadania sekwencyjnie (`await` w pętli). Zadania niezależne od siebie, takie jak `StorageInitTask` i `DeviceIntegrityTask`, powinny być uruchamiane równolegle za pomocą `Future.wait([])`, aby skrócić czas startu aplikacji.
-2. **Timeout dla zadań startowych:** Brak mechanizmu timeoutu dla poszczególnych zadań. Jeśli `VersionCheckTask` (co widać w logach) wisi na połączeniu sieciowym, cała aplikacja wisi na Splash Screenie. Dodaj `.timeout()` do każdego `initialize()`.
-3. **Granularność komunikatów na Splash Screenie:** `AppInitStatus` ma stan `loading`, ale użytkownik nie wie, co się dzieje. Warto rozszerzyć stan o `loading(String message)`, aby `StartupRunner` mógł emitować: "Sprawdzanie integralności...", "Łączenie z serwerem...".
-4. **Obsługa błędu krytycznego (Retry Strategy):** W `ErrorApp` masz przycisk "Spróbuj ponownie", który woła `recheck()`. Warto dodać automatyczny *exponential backoff* dla błędów sieciowych podczas startu, zanim pokażesz ekran błędu.
-5. **Optymalizacja `VersionCheckTask`:** Logi pokazują błąd połączenia (`SocketException`), co blokuje start. To zadanie nie powinno być krytyczne (blokujące). Jeśli API wersji nie odpowiada, aplikacja powinna wystartować z ostrzeżeniem (lub cicho), chyba że masz *Force Update*.
-6. **Lazy Loading bazy danych:** Inicjalizacja Drift (`AppDatabase`) dzieje się synchronicznie w `database_provider.dart`. Przenieś otwarcie połączenia do osobnego `Task` w `StartupRunner`, aby mieć pewność, że baza jest gotowa i klucze szyfrujące są załadowane przed pierwszym użyciem.
+1. Brakująca aktualizacja stanu w weryfikacji: W `PinVerificationNotifier.verifyPin`, jeśli `verifyPin` zwróci `true`, ustawiasz stan na `success()`. **Brakuje tu jednak wywołania** `ref.read(securityServiceProvider.notifier).unlockManually()`. Przez to `SecurityService` wciąż uważa, że `hasLocalLock = true`.
+2. Błędna nawigacja w PinScreen: W `PinVerificationScreen` na sukcesie wywołujesz `Navigator.pop(context)`. W GoRouterze (który jest oparty na stanie) nie powinieneś robić ręcznego popa z ekranu blokady. Ekran powinien zniknąć sam, gdy Guard (`redirect_guards.dart`) zauważy, że `securityState.shouldShowLock`  uległo zmianie na `false`.
+3. Niespójność StartupRunnera: Twój `AppInitNotifier` po wykonaniu zadań zawsze zwraca `AppInitStatus.authorized()`, ignorując fakt, czy `SecurityService` nałożył lokalną blokadę (PIN). Powinien sprawdzać stan `SecurityService` i zwracać np. `AppInitStatus.lockedPin()`.
 
-### 🔐 Security Core & Cryptography
+---
 
-7. **Zabezpieczenie przed "Time-Travel":** W `PinAttemptLimiter` używasz `DateTime.now()` do blokady czasowej. Użytkownik może zmienić czas w telefonie, aby ominąć blokadę. Użyj czasu z serwera (NTP) lub `SystemClock.uptime()` (czas od uruchomienia urządzenia), aby to utrudnić.
-8. **Wyczyszczenie schowka (Clipboard):** W `SecurityService` przy przechodzeniu w stan `paused/inactive` (w `didChangeAppLifecycleState`) powinieneś programowo czyścić schowek systemowy (`Clipboard.setData(ClipboardData(text: ''))`), aby wrażliwe dane nie zostały tam skopiowane.
-9. **Handling `PlatformException` w SecureStorage:** `flutter_secure_storage` na Androidzie potrafi rzucić wyjątek, jeśli zmienią się biometrie systemowe lub klucze zostaną unieważnione. W `SecureStorageService` otocz odczyty blokiem `try-catch` i w razie błędu deszyfrowania automatycznie czyść storage (tzw. *self-healing*).
-10. **Pamięć RAM (`SecureBuffer`):** Klasa `SecureBuffer` używa `calloc`. Jeśli aplikacja zostanie ubita przez system *zanim* wywołasz `dispose()`, pamięć może nie zostać wyzerowana (zależy od OS). Dodaj Dart `Finalizer`, aby spróbować wyczyścić pamięć przy Garbage Collection, jeśli programista zapomni o `dispose`.
-11. **Generowanie Soli (Salt):** W `HashService` generujesz nową sól przy każdym hashowaniu. To poprawne dla zapisu. Przy weryfikacji (`verify`) musisz upewnić się, że wyciągasz sól z zapisanego hasha, a nie generujesz nowej – kod wygląda ok, ale warto dodać unit test (nie piszę o testach, ale sprawdź to ręcznie), czy weryfikacja faktycznie działa z wyciągniętą solą.
-12. **Zależność od `LocalAuthentication`:** W `LocalAuthProvider` sprawdzasz `authenticate`. Na Androidzie, jeśli użytkownik usunie PIN systemowy lub odciski, klucze kryptograficzne mogą stać się nieważne. Dodaj sprawdzenie `getAvailableBiometrics()` przed każdą próbą autoryzacji, aby wykryć zmiany w konfiguracji systemu.
-13. **Ukrywanie podglądu (Privacy Shield):** `SecureApplication` działa świetnie, ale na iOS warto dodać dedykowany obrazek `LaunchScreen.storyboard`, który jest pusty/rozmyty, bo system robi snapshoty jeszcze zanim Flutter narysuje `SecureGate`.
-14. **Weryfikacja integralności (Device Integrity):** `SecurityIntegrityConfig` ma `expectedPackageHash`. Upewnij się, że ten hash jest aktualizowany w procesie CI/CD przy każdym buildzie produkcyjnym, inaczej aktualizacja aplikacji zablokuje dostęp użytkownikom.
+### II. Architektura Stanu Bezpieczeństwa (SSOT - Single Source of Truth)
 
-### 🔑 Autoryzacja & Sesja
+4. Jeden "Władca Blokady": Obecnie logikę blokowania aplikacji dzieli `SessionObserver` (bezczynność) oraz `SecurityService` (cykl życia). Wszystkie te akcje powinny być delegowane do jednego punktu w `SecurityService` (metoda `lockApp()`).
+5. Usunięcie WidgetsBindingObserver z Notifiera: `SecurityService` implementuje `WidgetsBindingObserver`. W Riverpod nie zaleca się mieszania logiki cyklu życia Fluttera wewnątrz Notifierów, gdyż może to prowadzić do wycieków pamięci. Utwórz oddzielny, niemutowalny serwis `AppLifecycleObserver`, który nasłuchuje zdarzeń i wywołuje metody na `SecurityService`.
+6. Rozdzielenie AuthState i SecurityState: Twoja logika przekierowań (`rootGuard` ) miesza stany uwierzytelnienia (czy token jest ważny) z lokalną blokadą (czy trzeba wpisać PIN). Rozdziel to wyraźnie: `AuthState` odpowiada za to, Kto to jest i czy serwer go wpuszcza. `SecurityState` odpowiada za to, czy urządzenie fizycznie ufa użytkownikowi (PIN/Biometria).
+7. Optymalizacja Redirect Logic: Funkcja `appRedirectLogic`  jest wywoływana przy *każdej* zmianie stanu na nasłuchiwanych providerach. Upewnij się, że nie wywołuje ona żadnych asynchronicznych operacji (obecnie jest synchroniczna, co jest super), ale zminimalizuj też ilość obliczeń wewnątrz `rootGuard`.
+8. Spójność nazewnictwa w SecurityState: Zmienna `hasLocalLock`  jest nieintuicyjna. Zmień na `isLocked` oraz dodaj `isAppReady` (zamiast `initialized`), co poprawi czytelność warunków logicznych.
 
-15. **Wyścig (Race Condition) przy starcie:** Logi pokazują: `[Security Init: Done]` -> `AuthController initialized`. `AuthController` w metodzie `build()` woła `_restoreSession`, która też woła `securityService.init()`. To redundantne, skoro `StartupRunner` już to zrobił. `AuthController` powinien polegać na stanie zainicjowanym przez Bootstrap.
-16. **Auto-Logout (Idle Timer):** Brakuje mechanizmu automatycznego wylogowania po X minutach braku aktywności użytkownika. W `SessionService` lub `SecurityService` dodaj `Timer`, który jest resetowany przy dotknięciu ekranu (można to zrobić globalnym `Listener` na `HitTestBehavior`).
-17. **Odświeżanie Tokena (Concurrency):** `TokenRefreshInterceptor` używa `Completer` do blokowania zapytań. To dobre rozwiązanie. Upewnij się jednak, że w przypadku błędu odświeżania (`catch`), `_refreshCompleter` jest zawsze zerowany (`null`), inaczej aplikacja utknie w wiecznym oczekiwaniu na future.
-18. **Przechowywanie PINu w RAM:** `PinService` czyści PIN z pamięci po użyciu (`pinCodes[i] = 0`). Bardzo dobrze. Rozważ jednak trzymanie *tymczasowego* hasha PINu w `SecurityService` (w `SecureString`), aby przy wybudzeniu aplikacji (resume) nie pytać o PIN, jeśli minęło np. < 30 sekund.
-19. **Logika `Redirect`:** Guardy w `redirect_guards.dart` są skomplikowane. Rozważ rozdzielenie logiki: `AuthGuard` (zalogowany/niezalogowany) i `SecurityGuard` (PIN/Biometria). Obecnie mieszają się te odpowiedzialności, co może prowadzić do pętli przekierowań.
+---
 
-### 🌐 Sieć & API (Dio)
+### III. Kryptografia, PIN i Pamięć (Secure Enclave)
 
-20. **Obsługa Localhost:** W logach masz błąd `SocketException` na `localhost:8085`. Android Emulator nie widzi `localhost`. W `ServicesConfig` dodaj wykrywanie: `if (Platform.isAndroid) return '10.0.2.2:8085';`.
-21. **Cache'owanie Fingerprintu:** `DeviceInterceptor` generuje fingerprint przy *każdym* zapytaniu (`getSecureFingerprint`). To operacja kryptograficzna (hashowanie). Powinieneś to obliczyć raz (singleton/provider keepAlive) i trzymać w RAMie, zamiast liczyć od nowa dla każdego requestu HTTP.
-22. **User-Agent:** Dodaj niestandardowy nagłówek `User-Agent` w `DioFactory`, zawierający wersję aplikacji, build number i system. Ułatwi to debugowanie problemów po stronie serwera i blokowanie starych wersji.
-23. **Maskowanie Logów:** `LoggingInterceptor` maskuje `password`, `token` itp. Upewnij się, że maskuje też `pin`, `pesel` i `dowod_osobisty`, jeśli przesyłasz je w JSONie. Twoja lista `_sensitiveKeys` jest dobra, ale warto ją rozszerzyć o dane PII.
+Masz tutaj kod klasy Enterprise, ale wymaga on uproszczeń, by nie sypał się na krawędziach.
 
-### 🏗️ Architektura & Riverpod
+9. Zabezpieczenie Master Key: Obecnie KEK (Key Encryption Key) wyliczany z PIN-u szyfruje bezpośrednio klucz asymetryczny urządzenia `devicePrivateKey`. Jeśli użytkownik zmieni PIN, musisz odszyfrować ten klucz starym KEK i zaszyfrować nowym. Bezpieczniej jest wygenerować symetryczny "Master Key" (AES256). KEK z PIN-u szyfruje *tylko* ten Master Key. Master Key szyfruje klucze asymetryczne i bazę danych. Zmiana PIN-u wymaga przepakowania (re-wrap) tylko jednego, małego klucza Master Key.
+10. Ulotność _sessionKey w PinService: W `PinService` przechowujesz `_sessionKey` w pamięci RAM. Jeśli system ubije ten provider (lub zrobisz `ref.invalidate`), klucz przepadnie, a aplikacja wpadnie w niezdefiniowany stan. Jeśli klucz jest w RAM, upewnij się, że jego brak rzuca krytyczny błąd wymagający od ponownego wpisania PIN-u.
+11. Redundancja KDF (Argon2id): Używasz Argon2id w `HashService` (do hashowania PIN-u) i w `KdfService` (do wyliczania klucza z PIN-u). To ciężkie operacje dla CPU. Możesz użyć tego samego wyniku KDF (Key Derivation Function) do obu rzeczy. Po wyliczeniu klucza głównym Argon2id, jego pierwsza połowa to klucz szyfrujący (KEK), a druga połowa to hash weryfikacyjny zapisywany w pamięci. Zmniejszysz obciążenie CPU o 50% podczas logowania.
+12. Zarządzanie IsolateManagerem: `CryptoService` używa `IsolateManager`. To bardzo dobry ruch, by nie blokować UI podczas obliczeń krypto. Jednak klasa `SignRequest`  przekazuje surowy `String pin`. Przekazuj wyłącznie `List<int>` (bajty), by móc użyć `SecureBuffer` i wymusić wymazanie pamięci (memset 0) od razu po operacji wewnątrz izolatu.
+13. FFI i SecureBuffer: Twój `SecureBuffer`  to genialne rozwiązanie. Upewnij się jednak, że we wszystkich blokach w `PinService`, użycie buffera opakowane jest w solidny blok `try { ... } finally { buffer.dispose(); [cite_start]}`, aby zminimalizować ryzyko wycieków pamięci (memory leaks w C/C++ nie są zbierane przez Garbage Collector Darta).
+14. Synchronizacja stanu Biometrii: `SecurityService` ustawia w pamięci chęć użycia biometrii (`isBiometricConfigured` ). Ale sam proces lokalnego odblokowania (LocalAuthentication ) nie jest podpięty pod ekran żądania PIN-u. `PinVerificationScreen`  powinien na etapie `initState` odpalać biometrię, jeśli jest włączona.
 
-24. **Globalny `GlobalErrorListener`:** Obecnie jest w `AppBootstrapHandler`. Powinien być wyżej, nad `MaterialApp` lub w `builder` w `MaterialApp`, aby mógł obsługiwać błędy nawet spoza routingu (np. błędy w overlayach).
-25. **Użycie `ref.watch` w metodach:** W `ActiveSessions` (provider) robisz `ref.watch` wewnątrz metody `_fetch`. To zadziała, ale w Riverpod 2.x/3.x zaleca się przekazywanie zależności w konstruktorze lub czytanie ich raz w `build`.
-26. **Provider Scope:** `activePrefsProvider` rzuca `UnimplementedError` domyślnie. To ryzykowne. Lepiej, aby zwracał `AsyncValue` i był ładowany jak inne serwisy, lub użyj `ProviderContainer` w `main.dart` do inicjalizacji przed `runApp`.
-27. **Dispose Kontrolerów:** W `LoginForm` tworzysz `TextEditingController`. Pamiętaj, że w Riverpod widgety często są `const`. Upewnij się, że kontrolery są tworzone w `State` (co robisz, super) lub użyj `flutter_hooks`, żeby kod był czystszy i mniejszy.
+---
 
-### 💅 UI/UX (w kontekście kodu)
+### IV. Warstwa Sieciowa i Cykl Życia Sesji (Tokeny & DIO)
 
-28. **RepaintBoundary:** W `SplashScreen` i `PinVerificationScreen` używasz `CustomPaint` z `CyberGridPainter`. Jeśli animacja "cyber grid" jest ciągła, owiń ten widget w `RepaintBoundary`, aby nie przerysowywać całego ekranu (optymalizacja GPU).
-29. **Responsywność Dialogów:** `PinSetupDialog` ma sztywne wymiary. Na bardzo małych ekranach (np. iPhone SE) klawiatura może zasłonić przyciski. Użyj `LayoutBuilder` lub `SingleChildScrollView` wokół zawartości dialogu.
-30. **Haptyka:** W `FeedbackService` używasz wibracji. Pamiętaj, że na niektórych Androidach wibracje wymagają osobnego uprawnienia w `AndroidManifest.xml` (zależnie od wersji SDK). Sprawdź, czy masz `<uses-permission android:name="android.permission.VIBRATE"/>`.
+15. Refresh Token Race Conditions: Używasz paczki `fresh_dio`. Uważaj – funkcja odświeżania odczytuje `deviceService.getFingerprint()` oraz `authControllerProvider` asynchronicznie. Jeśli wystąpi 5 jednoczesnych requestów 401, mechanizmy odświeżania mogą na siebie wpaść, jeśli nie jest to precyzyjnie skonfigurowane. `Fresh` sobie z tym radzi, ale unikaj asynchronicznego czytania stanu z Riverpoda wewnątrz interceptora, jeśli to możliwe (wstrzykuj bezpośrednie zależności).
+16. "Zaufane urządzenie" a weryfikacja: Logika w `verifyDeviceSignature` w `AuthController`  próbuje popisać challenge kluczem z RAM (`crypto.signWithActiveKey()`). Zastanów się, czy cykl życia pozwala na to, że klucz zawsze tam jest. Jeśli użytkownik ubije aplikację podczas 2FA, aktywny klucz z RAM zniknie, a logowanie się zawiesi bez mechanizmu powrotu (fallback).
+17. Ograniczanie żądań (Rate Limiter): Twój `BackendStateNotifier` zapisuje z nagłówków stan `rateLimitRemaining`. Brakuje jednak Interceptora na wyjściu (OnRequest), który by zablokował strzał do API (rzucając lokalnie błąd HTTP 429), zanim zapytanie wyjdzie z urządzenia, jeśli limit zjechał do zera.
+18. Wycieki danych wrażliwych w logach: Twój `LoggingInterceptor` ma tablicę maskowania `_sensitiveKeys`. Rozszerz ją o `['setup_token', 'two_fa_token', 'challenge', 'X-Device-Fingerprint']`. Kody wyzwań i tokeny setupowe bywają użyteczne przy ataku typu replay.
+19. Timeout dla weryfikacji sprzętowej: W `SecuritySyncInterceptor`  wywołujesz w locie `FlutterRootJailbreakChecker`. To natywny plugin, który pod spodem skanuje setki pakietów. Wywoływanie tego co minutę  może wpływać na zużycie baterii. Skonfiguruj to na sprawdzanie wyłącznie przy zmianie cyklu życia aplikacji (AppLifecycleState.resumed) lub maksymalnie co 15 minut.
+
+---
+
+### V. Baza Danych i Persystencja
+
+20. Szyfrowanie Drift DB: Klucz do bazy danych to wygenerowany losowo string z SecureStorage (`StorageKeys.databaseKey`). To standard, ale oznacza, że jeśli ktoś sklonuje system plików telefonu (mając roota), otworzy tę bazę. Znacznie bezpieczniej jest użyć wspomnianego Master Key (zabezpieczonego PIN-em użytkownika) jako hasła pragma do SQLCipher. Dopóki appka nie jest odblokowana PIN-em, nikt nie odczyta lokalnych powiadomień ani czatów.
+21. MigrationService vs StartupRunner: Migracje bazy/SecureStorage `MigrationService.performMigrations()` muszą być absolutnie pierwszym zadaniem w `StartupRunner` `sequentialTasks`, na długo przed inicjalizacją Bazy Danych czy Serwisu Bezpieczeństwa, aby nie operowały one na starym schemacie kluczy.
+22. Przestarzałe dane w SharedPreferences: Masz osobnego providera do `SharedPreferences`, ale rzadko z niego korzystasz, bo większość leci w `SecureStorage`. Jasno zdefiniuj podział: `SharedPreferences` tylko dla ustawień UI (Theme, preferowany język), a `SecureStorage` tylko dla tokenów, identyfikatorów i flag bezpieczeństwa (`isPinSet`).
+
+---
+
+### VI. Ochrona Brute-Force (Lockout Timer)
+
+23. Odporność Timera na manipulację czasem: Twój `PinAttemptLimiter` używa `backendNotifier.getSafeNow()`. To znakomite rozwiązanie (chroni przed zmianą czasu w ustawieniach systemu operacyjnego). Upewnij się jednak, że jeśli `getSafeNow()` nie było nigdy zsynchronizowane z serwerem (np. przy pierwszym odpaleniu offline), masz bezpieczny fallback (wymuszenie weryfikacji serwerowej przy kolejnym odblokowaniu).
+24. Stan asynchroniczny w PinAttemptLimiter: Przyczyną pomniejszych glitchów UI przy błędnym PIN-ie może być to, że po błędzie uaktualniasz limiter `state = AsyncData(newState);`, a potem wywołujesz `_saveToStorage()`. Powinno to być odwrotnie lub objęte w blok transakcyjny (najpierw dysk, potem stan UI), by awaria zapisu nie spowodowała rozjazdu UI z rzeczywistością.
+25. Reset licznika błędu: Po udanym zalogowaniu / odblokowaniu PIN-em, mechanizm zliczający niepowodzenia (`attempts: 0`) z `PinAttemptLimiter`  musi być stanowczo resetowany (czyszczony z dysku). Obecnie brakuje twardego wymuszenia czyszczenia na sukcesie wewnątrz `PinVerificationNotifier.verifyPin`.
+
+---
+
+### VII. Kod i Modelowanie Danych (Utrzymanie Czystości)
+
+26. Nadmiarowość Exceptional Data: Twoje błędy API są poprawnie mapowane na `AppFailure`. Zauważ, że `AuthService`  rzuca natywne `Exception('errors.INVALID_2FA')`, co zmusza globalnego catcha do parsowania stringów. Używaj wyłącznie `AppFailure` jako throw/return w repozytoriach.
+27. Mapowanie AuthResponse: Używasz Freezed dla `AuthResponse` , a potem ręcznie budujesz `factory AuthResponse.fromMap`. Freezed posiada mechanizm własnych konwerterów JSON (`@JsonKey`), co usunie z Twojego kodu konieczność ręcznego if-owania odpowiedzi z serwera na poziomie parsera.
+**28. Ścisła kontrola zasobów (Disposables):** W aplikacjach o wysokim rygorze bezpieczeństwa musisz jawnie czyścić pamięć. Twój `AuthController.logout()` czyści sesje i inwaliduje providery, ale musisz mieć pewność, że zwalniasz też uchwyty w `CryptoService` (zerowanie `_activeDeviceKeyPair` ) i usuwasz cache wiadomości czatu (`MessageService`).
+29. Optymalizacja inicjalizacji loggera: `AppLogger`  jest instancjonowany przy starcie. W systemach zabezpieczonych warto unikać logowania całych response.data (zbyt ryzykowne pomimo maskowania). Włącz tryb debugowania pakietów sieciowych wyłącznie przy ukrytym fladze np. "Developer Mode" (7 kliknięć w wersję aplikacji).
+30. GoRouter Keys: Posiadasz `_rootNavigatorKey`. Gdy będziesz chciał zaimplementować wymuszony popup ("Sesja wygasła"), mając globalny klucz nawigatora, będziesz w stanie nałożyć go nad wszystko, omijając restrykcje stanu. Zostaw ten klucz w spokoju – jest przygotowany pod krytyczne alerty z `SessionObservera`.

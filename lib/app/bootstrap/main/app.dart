@@ -9,6 +9,7 @@ import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/router/app_router_provider.dart';
 import 'package:obywatel_plus/app/theme/app_theme.dart';
 import 'package:obywatel_plus/app/theme/theme_notifier.dart';
+import 'package:obywatel_plus/core/security/lifecycle/app_lifecycle_observer_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:secure_application/secure_application.dart';
 
@@ -19,6 +20,7 @@ class ObywatelPlusApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeProvider);
     final router = ref.watch(appRouterProvider);
+    ref.watch(appLifecycleObserverProvider);
 
     return SecureApplication(
       nativeRemoveDelay: 100,

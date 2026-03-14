@@ -1,4 +1,3 @@
-import 'package:flutter/widgets.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -21,16 +20,12 @@ abstract interface class ISecurityService {
 }
 
 @Riverpod(keepAlive: true)
-class SecurityService extends _$SecurityService
-    with WidgetsBindingObserver
-    implements ISecurityService {
+class SecurityService extends _$SecurityService implements ISecurityService {
   SecureApplicationController? _secureController;
   Future<void>? _initFuture;
 
   @override
   SecurityState build() {
-    WidgetsBinding.instance.addObserver(this);
-    ref.onDispose(() => WidgetsBinding.instance.removeObserver(this));
     return SecurityState.initial();
   }
 
@@ -48,30 +43,6 @@ class SecurityService extends _$SecurityService
   void _disablePrivacyShield() {
     _logger.d('Opening SecureGate', module: 'Security');
     _secureController?.unlock();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (_secureController == null) return;
-
-    Future.microtask(() {
-      switch (state) {
-        case AppLifecycleState.resumed:
-          _logger.d('App resumed', module: 'Security');
-          _checkIntegrityOnResume();
-          _disablePrivacyShield();
-          break;
-
-        case AppLifecycleState.inactive:
-        case AppLifecycleState.paused:
-          _logger.d('App hidden/minimized', module: 'Security');
-          _enablePrivacyShield();
-          // Clipboard.setData(const ClipboardData(text: ''));
-          break;
-        default:
-          break;
-      }
-    });
   }
 
   Future<void> _checkIntegrityOnResume() async {
@@ -238,6 +209,24 @@ class SecurityService extends _$SecurityService
       isSetupCompleted: isPinConfigured,
     );
     _logger.i('🔐 Security: Manual unlock. PIN configured: $isPinConfigured');
+  }
+
+  Future<void> onAppResumed() async {
+    if (_secureController == null) return;
+
+    _logger.d('App resumed', module: 'Security');
+
+    await _checkIntegrityOnResume();
+
+    _disablePrivacyShield();
+  }
+
+  void onAppHidden() {
+    if (_secureController == null) return;
+
+    _logger.d('App hidden/minimized', module: 'Security');
+
+    _enablePrivacyShield();
   }
 
   void debugSecurityState() {

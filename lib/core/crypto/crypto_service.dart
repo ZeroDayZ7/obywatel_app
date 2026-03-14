@@ -130,6 +130,11 @@ class CryptoService extends _$CryptoService {
         secretKey: kek,
       );
 
+      // final secretBox = await AesGcm.with256bits().encrypt(
+      //   privKeyBytes,
+      //   secretKey: _securityKeys.masterKey,
+      // );
+
       // Połączenie Nonce + CipherText + MAC
       final encryptedData = secretBox.concatenation();
 
