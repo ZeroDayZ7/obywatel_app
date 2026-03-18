@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
@@ -172,16 +173,15 @@ class AuthController extends _$AuthController {
     }
   }
 
-  Future<void> registerTrustedDevice(List<int> pinBytes) async {
+  Future<void> registerTrustedDevice() async {
     final pending = ref.read(pendingSessionProvider);
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
+    final crypto = ref.read(cryptoServiceProvider.notifier);
 
-    final keyPair = await deviceService.generateDeviceKeyPair(
-      pinBytes: pinBytes
-    );
-    final publicKey = await keyPair.extractPublicKey();
-    final fingerprint = await deviceService.getSecureFingerprint();
+    final publicKeyBytes = await crypto.generateAndHoldKeyPair();
+
+    final fingerprint = await deviceService.getFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();
 
     final challenge = state.maybeMap(
@@ -189,11 +189,11 @@ class AuthController extends _$AuthController {
       orElse: () => throw Exception('Brak challenge'),
     );
 
-    final signature = await deviceService.signChallenge(challenge, keyPair);
+    final signature = await crypto.signWithActiveKey(challenge);
 
     final response = await authService.registerTrustedDevice(
       fingerprint: fingerprint,
-      publicKey: base64Encode(publicKey.bytes),
+      publicKey: base64Encode(publicKeyBytes),
       encryptedName: encryptedName,
       platform: Platform.operatingSystem,
       signature: signature,
@@ -221,16 +221,17 @@ class AuthController extends _$AuthController {
     await state.maybeMap(
       partiallyAuthenticated: (s) async {
         try {
-          final deviceService = ref.read(deviceInfoServiceProvider);
+          // final deviceService = ref.read(deviceInfoServiceProvider);
 
-          if (!deviceService.isUnlocked) {
-            _log.e('Skarbiec jest zablokowany - wymagany PIN', module: 'AUTH');
-            state = const AuthState.error(code: 'VAULT_LOCKED');
-            return;
-          }
+          // if (!deviceService.isUnlocked) {
+          //   _log.e('Skarbiec jest zablokowany - wymagany PIN', module: 'AUTH');
+          //   state = const AuthState.error(code: 'VAULT_LOCKED');
+          //   return;
+          // }
 
           // 1. Podpisujemy challenge (s.challenge jest dostępne bezpośrednio)
-          final signature = await deviceService.signData(s.challenge);
+          final crypto = ref.read(cryptoServiceProvider.notifier);
+          final signature = await crypto.signWithActiveKey(s.challenge);
 
           // 2. Wysyłamy do backendu (s.setupToken jest dostępne bezpośrednio)
           final result = await _authService.verifyDevice(

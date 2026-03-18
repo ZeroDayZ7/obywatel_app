@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/crypto/crypto_service.dart';
+import 'package:obywatel_plus/core/crypto/kdf_service.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
@@ -36,25 +40,12 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> setPin(String pin) async {
-    // 1. Zabezpieczamy aktualny stan
     final current = state.value;
     if (current == null) return;
-
     state = const AsyncValue.loading();
 
     try {
-      // 2. KONWERSJA: Zamieniamy String na kody bajtów (List<int>)
-      // Dzięki temu utrzymujemy "bezpieczny łańcuch" danych wrażliwych.
-      final pinCodes = pin.codeUnits.toList();
-
-      // 3. Wywołujemy serwis z bajtami zamiast Stringa
-      await ref.read(securityServiceProvider.notifier).setPin(pinCodes);
-
-      // 4. Czyścimy listę bajtów z pamięci RAM zaraz po użyciu
-      pinCodes.fillRange(0, pinCodes.length, 0);
-
-      // 5. Sukces - aktualizujemy stan
-      _tempPinBytes = pin.codeUnits.toList();
+      _tempPinBytes = pin.split('').map(int.parse).toList();
       state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -63,7 +54,6 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
 
   Future<void> enableBiometric() async {
     final current = state.requireValue;
-
     final localAuth = ref.read(localAuthProvider);
     final storage = ref.read(secureStorageProvider);
 
@@ -75,7 +65,6 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     if (!success) return;
 
     await storage.write(key: StorageKeys.biometric, value: 'true');
-
     state = AsyncValue.data(current.copyWith(biometricSet: true));
   }
 
@@ -87,39 +76,48 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
   }
 
   Future<void> completeSetup() async {
-    if (_tempPinBytes == null) {
-      state = AsyncValue.error(Exception("PIN not set"), StackTrace.current);
-      return;
-    }
-
+    if (_tempPinBytes == null) throw Exception('PIN not set');
     final current = state.requireValue;
     final logger = ref.read(appLoggerProvider);
 
     state = const AsyncValue.loading();
 
     try {
-      if (current.trustDevice) {
-        // Przekazujemy bajty do rejestracji
-        await ref
-            .read(authControllerProvider.notifier)
-            .registerTrustedDevice(_tempPinBytes!);
-      }
+      final pinForHashing = List<int>.from(_tempPinBytes!);
+      await ref.read(pinServiceProvider).setPin(pinForHashing);
+
+      // 2️⃣ Generujemy salt dla KEK
+      final kdf = ref.read(kdfServiceProvider);
+      final salt = kdf.generateSalt();
+
+      // zapis salt
+      final storage = ref.read(secureStorageProvider);
+      await storage.write(key: StorageKeys.kekSalt, value: base64Encode(salt));
+
+      final crypto = ref.read(cryptoServiceProvider.notifier);
+
+      await crypto.generateAndHoldKeyPair();
+
+      await crypto.finalizeAndPersist(_tempPinBytes!, salt);
+
+      // Rejestracja urządzenia
+      await ref.read(authControllerProvider.notifier).registerTrustedDevice();
 
       await ref
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);
 
-      state = AsyncValue.data(
-        current.copyWith(trustDevice: current.trustDevice),
-      );
+      state = AsyncValue.data(current.copyWith(pinSet: true));
     } catch (e, st) {
-      logger.e('Błąd podczas kończenia setupu', error: e, stackTrace: st);
+      logger.e('Security setup failed', error: e, stackTrace: st);
       state = AsyncValue.error(e, st);
     } finally {
-      _tempPinBytes?.fillRange(0, _tempPinBytes!.length, 0);
-      _tempPinBytes = null;
-
-      logger.d('🧹 Sensitive PIN data cleared from memory (finally)');
+      if (_tempPinBytes != null) {
+        for (int i = 0; i < _tempPinBytes!.length; i++) {
+          _tempPinBytes![i] = 0;
+        }
+        _tempPinBytes = null;
+      }
     }
   }
 }

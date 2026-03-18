@@ -34,7 +34,7 @@ final class BackendStateNotifierProvider
 }
 
 String _$backendStateNotifierHash() =>
-    r'95fb12e2e7da999e447900a698458a79e33e162b';
+    r'1f03ebdb7a3ac8de99e27aae5def6049fb63a65b';
 
 abstract class _$BackendStateNotifier extends $AsyncNotifier<BackendState> {
   FutureOr<BackendState> build();

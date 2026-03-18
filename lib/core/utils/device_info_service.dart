@@ -1,159 +1,40 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:advertising_id/advertising_id.dart';
-import 'package:crypto/crypto.dart' as standard_crypto;
-import 'package:cryptography/cryptography.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:device_marketing_names/device_marketing_names.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:logger/logger.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
-// 1. Dodaj wygenerowany plik
 part 'device_info_service.g.dart';
 
-// 2. Wygeneruj provider za pomocą adnotacji @riverpod
 @Riverpod(keepAlive: true)
 DeviceInfoService deviceInfoService(Ref ref) {
-  return DeviceInfoService();
+  final logger = ref.watch(appLoggerProvider);
+  return DeviceInfoService(logger);
 }
 
 class DeviceInfoService {
-  SimpleKeyPair? _activeKeyPair;
-  bool get isUnlocked => _activeKeyPair != null;
-  final _algorithm = AesGcm.with256bits();
-  final _deviceMarketingNames = DeviceMarketingNames();
-  final _storage = const FlutterSecureStorage();
-  final _deviceInfo = DeviceInfoPlugin();
-  final _log = Logger();
+  final AppLogger _log;
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+  final DeviceMarketingNames _deviceMarketingNames = DeviceMarketingNames();
 
-  // 1. Odblokowanie (Wywoływane raz przy wejściu do apki / loginie)
-  Future<void> unlockWithPin(List<int> pinBytes) async {
-    try {
-      // Pobieramy ID urządzenia bezpośrednio ze storage wewnątrz serwisu
-      String? deviceId = await _storage.read(key: StorageKeys.appDeviceId);
+  DeviceInfoService(this._log);
 
-      if (deviceId == null) {
-        _log.e('🚨 Nie znaleziono app_device_id podczas odblokowywania!');
-        throw Exception('Urządzenie nie zostało zainicjalizowane (brak ID).');
-      }
-
-      _activeKeyPair = await getStoredKeyPair(pinBytes: pinBytes);
-
-      _log.i('🔓 Skarbiec odblokowany dla urządzenia: $deviceId');
-    } catch (e) {
-      _activeKeyPair = null;
-      _log.e('❌ Błąd odblokowania skarbca: $e');
-      rethrow;
-    }
-  }
-
-  // 2. Bezpieczne podpisywanie (Używane w całej aplikacji)
-  Future<String> signData(String data) async {
-    if (_activeKeyPair == null) {
-      throw Exception('Vault locked! Wymagane odblokowanie aplikacji.');
-    }
-
-    // ZAMIAST utf8.encode(data) zrób to:
-    final List<int> message = base64Decode(data);
-
-    // Teraz podpisujesz te same 32 bajty, które wygenerował Go
-    final signature = await Ed25519().sign(message, keyPair: _activeKeyPair!);
-
-    return base64Encode(signature.bytes);
-  }
-
-  // 3. Blokowanie (Wywoływane przy logout lub gdy apka idzie do tła)
-  void lock() {
-    _activeKeyPair = null; // Usuwamy klucz z RAM
-    _log.i('🔒 Skarbiec zablokowany');
-  }
-
-  /// Generuje klucz AES z PIN-u użytkownika przy użyciu PBKDF2
-  Future<SecretKey> deriveKeyFromPin(List<int> pinBytes, String userId) async {
-    final pbkdf2 = Pbkdf2(
-      macAlgorithm: Hmac.sha256(),
-      iterations: 10000,
-      bits: 256,
-    );
-
-    return await pbkdf2.deriveKey(
-      secretKey: SecretKey(pinBytes),
-      nonce: utf8.encode(userId),
-    );
-  }
-
-  /// Szyfruje dane za pomocą klucza z PIN-u
-  Future<String> encryptWithPin({
-    required String plainText,
-    required List<int> pinBytes,
-    required String userId,
-  }) async {
-    final secretKey = await deriveKeyFromPin(pinBytes, userId);
-    final nonce = _algorithm.newNonce();
-
-    final secretBox = await _algorithm.encrypt(
-      utf8.encode(plainText),
-      secretKey: secretKey,
-      nonce: nonce,
-    );
-
-    return base64Encode(secretBox.concatenation());
-  }
-
-  /// Deszyfruje dane za pomocą PIN-u
-  Future<String> decryptWithPin({
-    required String encryptedBase64,
-    required List<int> pinBytes,
-    required String userId,
-  }) async {
-    try {
-      final secretKey = await deriveKeyFromPin(pinBytes, userId);
-      final combinedBytes = base64Decode(encryptedBase64);
-
-      final secretBox = SecretBox.fromConcatenation(
-        combinedBytes,
-        nonceLength: _algorithm.nonceLength,
-        macLength: _algorithm.macAlgorithm.macLength,
-      );
-
-      final clearBytes = await _algorithm.decrypt(
-        secretBox,
-        secretKey: secretKey,
-      );
-
-      return utf8.decode(clearBytes);
-    } catch (e) {
-      _log.e('Błąd deszyfrowania danych PIN-em: $e');
-      return "Zaszyfrowane dane";
-    }
-  }
-
-  Future<String> getPlatformName() async {
-    if (Platform.isAndroid) return 'android';
-    if (Platform.isIOS) return 'ios';
-    if (Platform.isWindows) return 'windows';
-    if (Platform.isMacOS) return 'macos';
-    if (Platform.isLinux) return 'linux';
-    return 'unknown';
-  }
-
-  /// Pobiera wszystkie dane urządzenia i zwraca jako Map
+  /// Pobiera dane urządzenia w postaci mapy
   Future<Map<String, dynamic>> collectDeviceInfo() async {
-    final Map<String, dynamic> deviceData = {};
-    String? storedId = await _storage.read(key: StorageKeys.appDeviceId);
-
-    if (storedId == null) {
-      storedId = const Uuid().v4();
-      await _storage.write(key: StorageKeys.appDeviceId, value: storedId);
-    }
-
+    final Map<String, dynamic> infoData = {};
+    final deviceId = await _getOrCreateDeviceId();
     String? advertisingId;
+
+    // Pobieranie Advertising ID (zazwyczaj tylko mobilne)
     try {
-      if (Platform.isAndroid) {
+      if (Platform.isAndroid || Platform.isIOS) {
         advertisingId = await AdvertisingId.id(true);
       }
     } catch (e) {
@@ -162,7 +43,7 @@ class DeviceInfoService {
 
     if (Platform.isAndroid) {
       final info = await _deviceInfo.androidInfo;
-      deviceData.addAll({
+      infoData.addAll({
         'platform': 'android',
         'manufacturer': info.manufacturer,
         'model': info.model,
@@ -171,49 +52,67 @@ class DeviceInfoService {
       });
     } else if (Platform.isIOS) {
       final info = await _deviceInfo.iosInfo;
-      deviceData.addAll({
+      infoData.addAll({
         'platform': 'ios',
         'identifierForVendor': info.identifierForVendor,
         'model': info.model,
         'isPhysicalDevice': info.isPhysicalDevice,
       });
+    } else if (Platform.isWindows) {
+      final info = await _deviceInfo.windowsInfo;
+      infoData.addAll({
+        'platform': 'windows',
+        'computerName': info.computerName,
+        'numberOfCores': info.numberOfCores,
+        'systemMemoryInMegabytes': info.systemMemoryInMegabytes,
+        'userName': info.userName,
+      });
+    } else if (Platform.isMacOS) {
+      final info = await _deviceInfo.macOsInfo;
+      infoData.addAll({
+        'platform': 'macos',
+        'computerName': info.computerName,
+        'model': info.model,
+        'arch': info.arch,
+        'systemGUID': info.systemGUID,
+      });
+    } else if (Platform.isLinux) {
+      final info = await _deviceInfo.linuxInfo;
+      infoData.addAll({
+        'platform': 'linux',
+        'name': info.name,
+        'versionId': info.versionId,
+        'machineId': info.machineId,
+        'prettyName': info.prettyName,
+      });
     }
 
     return {
-      'app_device_id_secure': storedId,
+      'app_device_id_secure': deviceId,
       'advertising_id': advertisingId,
-      'device_info': deviceData,
+      'device_info': infoData,
     };
   }
 
-  /// Tworzy unikalny hash urządzenia
-  Future<String> getSecureFingerprint() async {
+  /// Generuje unikalny fingerprint urządzenia (SHA-256)
+  Future<String> getFingerprint() async {
     final data = await collectDeviceInfo();
     final info = data['device_info'] as Map<String, dynamic>;
 
-    List<String> components = [];
-    if (Platform.isAndroid) {
-      String aId = (info['androidId'] ?? '').toString();
-      if (aId == "9774d56d682e549c" || aId.isEmpty) aId = "fallback_id";
-      components.add(aId);
-      components.add(info['model'] ?? 'unknown');
-    } else if (Platform.isIOS) {
-      components.add(info['identifierForVendor'] ?? 'unknown');
-    }
+    final components = <String>[
+      Platform.isAndroid
+          ? ((info['androidId'] ?? '').toString() == '9774d56d682e549c'
+                ? 'fallback_id'
+                : info['androidId'] ?? 'unknown')
+          : (info['identifierForVendor'] ?? 'unknown'),
+      info['model'] ?? 'unknown',
+      data['app_device_id_secure'] ?? 'unknown',
+    ];
 
-    final cleanComponents = components
-        .map((e) => e.toString().trim().toLowerCase())
-        .join('|');
-
-    final String rawFingerprint =
-        "$cleanComponents|${data['app_device_id_secure']}";
-
-    // POPRAWKA: Używamy aliasu standard_crypto
-    final bytes = utf8.encode(rawFingerprint);
-    return standard_crypto.sha256.convert(bytes).toString();
+    return components.map((e) => e.trim().toLowerCase()).join('|');
   }
 
-  /// Pobiera czytelną nazwę (np. "iPhone 13")
+  /// Pobiera marketingową nazwę urządzenia (iPhone 13, Pixel 7)
   Future<String> getMarketingName() async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
@@ -225,152 +124,19 @@ class DeviceInfoService {
     return Platform.operatingSystem;
   }
 
-  /// Zarządzanie Master Key (AES)
-  Future<List<int>> generateMasterKey() async {
-    final key = await _algorithm.newSecretKey();
-    final bytes = await key.extractBytes();
-    await _storage.write(key: 'device_master_key', value: base64Encode(bytes));
-    return bytes;
-  }
-
-  Future<String> encryptDeviceName(String name, List<int> masterKey) async {
-    final secretKey = SecretKey(masterKey);
-    final nonce = _algorithm.newNonce();
-    final box = await _algorithm.encrypt(
-      utf8.encode(name),
-      secretKey: secretKey,
-      nonce: nonce,
-    );
-    return base64Encode(box.concatenation());
-  }
-
-  /// Klucze asymetryczne (Ed25519) - ZASZYFROWANE PIN-em
-  /// Tworzy parę kluczy urządzenia i szyfruje klucz prywatny PIN-em.
-  /// Używa app_device_id jako soli, aby umożliwić odblokowanie skarbca przed zalogowaniem.
-  Future<SimpleKeyPair> generateDeviceKeyPair({
-    required List<int> pinBytes,
-  }) async {
-    final algorithm = Ed25519();
-    final keyPair = await algorithm.newKeyPair();
-    final privateKeyBytes = await keyPair.extractPrivateKeyBytes();
-
-    // 1. Pobieramy ID urządzenia (identycznie jak w unlockWithPin)
-    String? deviceId = await _storage.read(key: StorageKeys.appDeviceId);
-
-    // Failsafe: jeśli jakimś cudem go nie ma, generujemy go teraz
-    if (deviceId == null) {
-      deviceId = const Uuid().v4();
-      await _storage.write(key: StorageKeys.appDeviceId, value: deviceId);
-      _log.w(
-        '⚠️ Generowanie kluczy: app_device_id był pusty, utworzono nowy: $deviceId',
-      );
-    }
-
-    // 2. Konwertujemy klucz prywatny na String
-    final String rawKey = base64Encode(privateKeyBytes);
-
-    // 3. Szyfrujemy PIN-em, używając deviceId jako nonce/userId w PBKDF2
-    final encryptedKey = await encryptWithPin(
-      plainText: rawKey,
-      pinBytes: pinBytes,
-      userId: deviceId,
-    );
-
-    // 4. Zapisujemy zaszyfrowany klucz
-    await _storage.write(
-      key: 'device_private_key_encrypted',
-      value: encryptedKey,
-    );
-
-    // Przypisujemy do pamięci RAM, żeby skarbiec był od razu gotowy po setupie
-    _activeKeyPair = keyPair;
-
-    _log.i(
-      '✅ Wygenerowano parę kluczy urządzenia. Zaszyfrowano przy użyciu ID: $deviceId',
-    );
-    return keyPair;
-  }
-
-  Future<SimpleKeyPair> getStoredKeyPair({required List<int> pinBytes}) async {
-    // 1. Pobieramy ID urządzenia bezpośrednio tutaj
-    final deviceId = await _storage.read(key: StorageKeys.appDeviceId);
-
-    if (deviceId == null) {
-      _log.e('🚨 Brak app_device_id w storage podczas pobierania kluczy!');
-      throw Exception('Urządzenie nie jest zainicjalizowane.');
-    }
-
-    // 2. Pobieramy zaszyfrowany klucz
-    final encryptedKey = await _storage.read(
-      key: 'device_private_key_encrypted',
-    );
-
-    if (encryptedKey == null) {
-      throw Exception('Brak zaszyfrowanego klucza w bezpiecznej pamięci.');
-    }
-
-    // 3. Deszyfrujemy, używając pobranego deviceId jako soli
-    final decryptedRaw = await decryptWithPin(
-      encryptedBase64: encryptedKey,
-      pinBytes: pinBytes,
-      userId: deviceId, // używamy lokalnie pobranego ID
-    );
-
-    if (decryptedRaw == "Zaszyfrowane dane") {
-      throw Exception('Niepoprawny PIN (błąd deszyfrowania klucza).');
-    }
-
-    final privateKeyBytes = base64Decode(decryptedRaw);
-    return Ed25519().newKeyPairFromSeed(privateKeyBytes);
-  }
-
-  /// Helper łączący pobieranie nazwy i szyfrowanie
+  /// Encrypt / Decrypt dla nazwy urządzenia przy użyciu MasterKey
   Future<String> getEncryptedMarketingName() async {
-    String? storedMasterKey = await _storage.read(key: 'device_master_key');
-    List<int> masterKeyBytes;
-
-    if (storedMasterKey == null) {
-      masterKeyBytes = await generateMasterKey();
-    } else {
-      masterKeyBytes = base64Decode(storedMasterKey);
-    }
-
     final name = await getMarketingName();
-    return encryptDeviceName(name, masterKeyBytes);
+    return name;
   }
 
-  Future<String> decryptDeviceName(String encryptedBase64) async {
-    try {
-      final storedMasterKey = await _storage.read(key: 'device_master_key');
-      if (storedMasterKey == null) return "Unknown Device";
-
-      final masterKeyBytes = base64Decode(storedMasterKey);
-      final secretKey = SecretKey(masterKeyBytes);
-      final combinedBytes = base64Decode(encryptedBase64);
-
-      final box = SecretBox.fromConcatenation(
-        combinedBytes,
-        nonceLength: 12,
-        macLength: 16,
-      );
-
-      final clearBytes = await _algorithm.decrypt(box, secretKey: secretKey);
-      return utf8.decode(clearBytes);
-    } catch (e) {
-      _log.e('Błąd deszyfrowania nazwy urządzenia: $e');
-      return "Encrypted Device";
+  /// Prywatne helpery
+  Future<String> _getOrCreateDeviceId() async {
+    var id = await _storage.read(key: StorageKeys.appDeviceId);
+    if (id == null) {
+      id = const Uuid().v4();
+      await _storage.write(key: StorageKeys.appDeviceId, value: id);
     }
-  }
-
-  /// Podpisuje challenge (UUID) przy użyciu klucza prywatnego urządzenia
-  Future<String> signChallenge(String challenge, SimpleKeyPair keyPair) async {
-    try {
-      final message = utf8.encode(challenge);
-      final signature = await Ed25519().sign(message, keyPair: keyPair);
-      return base64Encode(signature.bytes);
-    } catch (e) {
-      _log.e('Błąd podczas podpisywania challenge: $e');
-      throw Exception('Nie udało się podpisać wyzwania bezpieczeństwa.');
-    }
+    return id;
   }
 }

@@ -1,4 +1,3 @@
-import 'package:obywatel_plus/core/utils/device_info_service.dart'; // Dodaj ten import
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import 'active_sessions_service.dart';
@@ -11,31 +10,13 @@ class ActiveSessions extends _$ActiveSessions {
   @override
   Future<List<UserSession>> build() async {
     final service = ref.watch(activeSessionsServiceProvider);
-    final deviceInfo = ref.watch(deviceInfoServiceProvider);
-
-    return _fetch(service, deviceInfo);
+    return _fetch(service);
   }
 
-  Future<List<UserSession>> _fetch(
-    ActiveSessionsService service,
-    DeviceInfoService deviceInfo,
-  ) async {
+  Future<List<UserSession>> _fetch(ActiveSessionsService service) async {
+    // Pobieramy sesje bez żadnej obróbki
     final sessions = await service.getActiveSessions();
-
-    final decryptedSessions = await Future.wait(
-      sessions.map((session) async {
-        try {
-          final clearName = await deviceInfo.decryptDeviceName(
-            session.deviceName,
-          );
-          return session.copyWith(deviceName: clearName);
-        } catch (e) {
-          return session.copyWith(deviceName: "Unknown Device");
-        }
-      }),
-    );
-
-    return decryptedSessions;
+    return sessions;
   }
 
   Future<void> terminateSession(int sessionId) async {
@@ -46,7 +27,6 @@ class ActiveSessions extends _$ActiveSessions {
       await service.terminateSession(sessionId);
 
       ref.invalidateSelf();
-
       return await future;
     });
   }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'pin_service.dart';
+part of 'kdf_service.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -9,43 +9,43 @@ part of 'pin_service.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(pinService)
-final pinServiceProvider = PinServiceProvider._();
+@ProviderFor(kdfService)
+final kdfServiceProvider = KdfServiceProvider._();
 
-final class PinServiceProvider
-    extends $FunctionalProvider<PinService, PinService, PinService>
-    with $Provider<PinService> {
-  PinServiceProvider._()
+final class KdfServiceProvider
+    extends $FunctionalProvider<KdfService, KdfService, KdfService>
+    with $Provider<KdfService> {
+  KdfServiceProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
-        name: r'pinServiceProvider',
+        name: r'kdfServiceProvider',
         isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
 
   @override
-  String debugGetCreateSourceHash() => _$pinServiceHash();
+  String debugGetCreateSourceHash() => _$kdfServiceHash();
 
   @$internal
   @override
-  $ProviderElement<PinService> $createElement($ProviderPointer pointer) =>
+  $ProviderElement<KdfService> $createElement($ProviderPointer pointer) =>
       $ProviderElement(pointer);
 
   @override
-  PinService create(Ref ref) {
-    return pinService(ref);
+  KdfService create(Ref ref) {
+    return kdfService(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PinService value) {
+  Override overrideWithValue(KdfService value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<PinService>(value),
+      providerOverride: $SyncValueProvider<KdfService>(value),
     );
   }
 }
 
-String _$pinServiceHash() => r'430f3fe5bf5a0d3e38aee61c8c76cec52952fd8b';
+String _$kdfServiceHash() => r'32dce641f90f5e89cf7b2a5fa1676879ddc1c65b';

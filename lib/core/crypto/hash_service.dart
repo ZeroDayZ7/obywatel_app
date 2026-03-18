@@ -106,13 +106,14 @@ class _HashJob {
 
 Future<List<int>> _computeHashInIsolate(_HashJob job) async {
   try {
-    final secretKey = await job.algorithm.deriveKeyFromPassword(
-      password: String.fromCharCodes(job.bytes),
+    final secretKey = await job.algorithm.deriveKey(
+      secretKey: SecretKey(job.bytes),
       nonce: job.salt,
     );
 
     final result = await secretKey.extractBytes();
 
+    // Wipe PIN bytes
     job.bytes.fillRange(0, job.bytes.length, 0);
 
     return result;

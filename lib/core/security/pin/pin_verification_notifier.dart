@@ -1,12 +1,13 @@
 import 'dart:async';
 
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_verification_notifier.g.dart';
@@ -14,7 +15,7 @@ part 'pin_verification_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class PinVerificationNotifier extends _$PinVerificationNotifier {
   Timer? _lockoutTimer;
-  // AppLogger get _log => ref.read(appLoggerProvider);
+  AppLogger get _log => ref.read(appLoggerProvider);
 
   @override
   PinVerificationState build() {
@@ -56,50 +57,43 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     });
   }
 
-  Future<void> verifyPin(List<int> pinCodes) async {
-    final limiterAsync = ref.read(pinAttemptLimiterProvider);
-    if (limiterAsync.isLoading) return;
+  Future<void> _handleFailedAttempt() async {
+    // 1. Zarejestruj próbę (zapis do storage/zwiększenie licznika)
+    await ref.read(pinAttemptLimiterProvider.notifier).registerFailedAttempt();
 
-    final limiterData = limiterAsync.value;
-    if (limiterData != null && limiterData.isLocked) {
-      _startLockoutTimer(limiterData.lockUntil!);
+    // 2. Pobierz aktualny stan po zwiększeniu licznika
+    final updatedLimiter = ref.read(pinAttemptLimiterProvider).value;
+
+    if (updatedLimiter != null && updatedLimiter.isLocked) {
+      // 3. Jeśli licznik przekroczył limit, oblicz pozostały czas
+      final now = ref.read(backendStateProvider.notifier).getSafeNow();
+      final initialRemaining = updatedLimiter.lockUntil!.difference(now);
+
+      // 4. Ustaw stan zablokowania i uruchom licznik w UI
+      state = PinVerificationState.locked(remaining: initialRemaining);
+      _startLockoutTimer(updatedLimiter.lockUntil!);
+
+      _log.w('Aplikacja zablokowana na: ${initialRemaining.inSeconds}s');
+    } else {
+      // 5. Jeśli to tylko zwykły błąd (jeszcze są próby)
+      state = const PinVerificationState.error();
+      _log.w(
+        'Błędny PIN. Pozostałe próby: ${updatedLimiter != null ? 5 - updatedLimiter.attempts : "nieznane"}',
+      );
+    }
+  }
+
+  Future<void> verifyPin(List<int> pinCodes) async {
+    state = const PinVerificationState.loading();
+
+    final ok = await ref.read(pinServiceProvider).verifyPin(pinCodes);
+
+    if (!ok) {
+      await _handleFailedAttempt();
       return;
     }
 
-    state = const PinVerificationState.loading();
-
-    // Używamy wygenerowanego pinServiceProvider
-    final isValid = await ref.read(pinServiceProvider).verifyPin(pinCodes);
-
-    if (isValid) {
-      await ref.read(pinAttemptLimiterProvider.notifier).reset();
-      await ref.read(deviceInfoServiceProvider).unlockWithPin(pinCodes);
-      await ref.read(securityServiceProvider.notifier).unlockApp();
-      state = const PinVerificationState.success();
-    } else {
-      // 1. Zarejestruj próbę (to jest asynchroniczne)
-      await ref
-          .read(pinAttemptLimiterProvider.notifier)
-          .registerFailedAttempt();
-
-      // 2. Pobierz aktualny stan limitera
-      final updatedLimiter = ref.read(pinAttemptLimiterProvider).value;
-
-      if (updatedLimiter != null && updatedLimiter.isLocked) {
-        // 3. OD RAU ustaw stan weryfikacji na locked, żeby UI nie mignął błędem
-        final now = ref.read(backendStateProvider.notifier).getSafeNow();
-        final initialRemaining = updatedLimiter.lockUntil!.difference(now);
-
-        state = PinVerificationState.locked(remaining: initialRemaining);
-        _startLockoutTimer(updatedLimiter.lockUntil!);
-      } else {
-        state = const PinVerificationState.error();
-      }
-    }
-
-    // Bezpieczeństwo: czyścimy bajty w pamięci
-    for (int i = 0; i < pinCodes.length; i++) {
-      pinCodes[i] = 0;
-    }
+    state = const PinVerificationState.success();
+    await ref.read(securityServiceProvider.notifier).unlockManually();
   }
 }

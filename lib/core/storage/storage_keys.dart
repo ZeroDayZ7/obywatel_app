@@ -6,8 +6,15 @@ class StorageKeys {
   static const challenge = 'challenge';
   static const isTrusted = 'is_trusted';
   static const twoFaToken = 'two_fa_token';
-  static const twoFaRequired= '2fa_required';
+  static const twoFaRequired = '2fa_required';
   static const appDeviceId = 'app_device_id';
+  static const kekSalt = 'kek_salt';
+
+  // Device Identity & Cryptography
+  static const devicePrivateKey = 'device_private_key_enc';
+  static const devicePublicKey = 'device_public_key';
+  static const deviceKeySignature = 'device_key_signature';
+  static const identityKeyPair = 'identity_key_pair_enc';
 
   static const userPin = 'user_pin';
   static const pinHash = 'pin_hash';

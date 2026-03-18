@@ -16,7 +16,7 @@ class DeviceFingerprintInterceptor extends Interceptor {
     try {
       // Pobieramy serwis przez ref (riverpod)
       final deviceInfoService = ref.read(deviceInfoServiceProvider);
-      final fingerprint = await deviceInfoService.getSecureFingerprint();
+      final fingerprint = await deviceInfoService.getFingerprint();
 
       if (fingerprint.isNotEmpty) {
         options.headers[StorageKeys.headerFingerPrint] = fingerprint;
