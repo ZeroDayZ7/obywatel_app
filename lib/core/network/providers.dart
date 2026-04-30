@@ -47,8 +47,8 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
       );
 
       return OAuth2Token(
-        accessToken: response.data[StorageKeys.accessToken],
-        refreshToken: response.data[StorageKeys.refreshToken],
+        accessToken: response.data[StorageKeys.accessToken] as String,
+        refreshToken: response.data[StorageKeys.refreshToken] as String?,
       );
     },
     shouldRefresh: (response) => response?.statusCode == 401,

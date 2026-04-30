@@ -9,8 +9,10 @@ class NotificationApi {
 
   Future<List<NotificationModel>> fetchNotifications() async {
     final response = await _dio.get(ApiEndpoints.notifications);
-    final List<dynamic> data = response.data;
-    return data.map((json) => NotificationModel.fromJson(json)).toList();
+    final List<dynamic> data = response.data as List<dynamic>;
+    return data
+        .map((json) => NotificationModel.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> markAsRead(String id) async {

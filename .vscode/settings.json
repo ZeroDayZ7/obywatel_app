@@ -1,22 +1,4 @@
 {
-  "java.configuration.updateBuildConfiguration": "automatic",
-  "dart.lineLength": 80,
-  "editor.codeActionsOnSave": {
-    "source.organizeImports": "explicit",
-    "source.fixAll": "explicit"
-  },
-  "[dart]": {
-    "editor.formatOnSave": false,
-    "editor.codeActionsOnSave": {
-      "source.organizeImports": "always",
-      "source.fixAll": "always"
-    },
-    "editor.suggest.snippetsPreventQuickSuggestions": false,
-    "editor.selectionHighlight": false
-  },
-  "dart.analysisExcludedFolders": ["build", ".dart_tool"],
-  "dart.updateImportsOnRename": true,
-  "dart.completeFunctionCalls": true,
   // (Explorer)
   "files.exclude": {
     ".dart_tool": true,
@@ -31,7 +13,7 @@
     "linux": true,
     "macos": true,
     "web": true,
-    // "windows": true,
+    "windows": true,
     "test": true,
     ".gitattributes": true,
     "pubspec.lock": true,
@@ -76,5 +58,22 @@
     "**/*.g.dart": true,
     "**/*.txt": true
     // "android": true,
-  }
+  },
+  "dart.lineLength": 80,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+  "[dart]": {
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "always",
+      "source.fixAll": "always"
+    },
+    "editor.suggest.snippetsPreventQuickSuggestions": false,
+    "editor.selectionHighlight": false
+  },
+  "dart.analysisExcludedFolders": ["build", ".dart_tool"],
+  "dart.updateImportsOnRename": true,
+  "dart.completeFunctionCalls": true
 }

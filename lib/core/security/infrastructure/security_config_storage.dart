@@ -25,10 +25,16 @@ class SecurityConfigStorageImpl implements SecurityConfigStorage {
     final json = jsonDecode(raw) as Map<String, dynamic>;
 
     return SecurityConfig(
-      method: AuthMethod.values.firstWhere((e) => e.name == json['method']),
-      failedAttempts: json['failedAttempts'] ?? 0,
+      method: AuthMethod.values.firstWhere(
+        (e) => e.name == json['method'] as String,
+      ),
+      failedAttempts:
+          (json['failedAttempts'] as int?) ??
+          0,
       lockUntil: json['lockUntil'] != null
-          ? DateTime.parse(json['lockUntil'])
+          ? DateTime.parse(
+              json['lockUntil'] as String,
+            )
           : null,
     );
   }

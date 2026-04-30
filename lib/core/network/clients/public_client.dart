@@ -7,15 +7,17 @@ class PublicApiClient {
 
   PublicApiClient({required this.dio, required this.logger});
 
-  Future<Response> get(String path, {Map<String, dynamic>? queryParams}) =>
-      dio.get(path, queryParameters: queryParams);
+  Future<Response<dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParams,
+  }) => dio.get<dynamic>(path, queryParameters: queryParams);
 
-  Future<Response> post(String path, {dynamic data}) =>
-      dio.post(path, data: data);
+  Future<Response<dynamic>> post(String path, {dynamic data}) =>
+      dio.post<dynamic>(path, data: data);
 
-  Future<Response> put(String path, {dynamic data}) =>
-      dio.put(path, data: data);
+  Future<Response<dynamic>> put(String path, {dynamic data}) =>
+      dio.put<dynamic>(path, data: data);
 
-  Future<Response> delete(String path, {Object? data}) =>
-      dio.delete(path, data: data);
+  Future<Response<dynamic>> delete(String path, {Object? data}) =>
+      dio.delete<dynamic>(path, data: data);
 }

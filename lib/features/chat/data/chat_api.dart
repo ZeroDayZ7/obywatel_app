@@ -16,7 +16,7 @@ class ChatApi {
     final response = await client.get(ChatEndpoints.messages(chatId));
 
     final data = response.data as List<dynamic>;
-    return data.map((json) => MessageDto.fromJson(json).toDomain()).toList();
+    return (data).map((json) => MessageDto.fromJson(json as Map<String, dynamic>).toDomain()).toList();
   }
 
   // REST – wysyłanie wiadomości (opcjonalnie)

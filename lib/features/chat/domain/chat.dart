@@ -41,7 +41,7 @@ class Chat extends Equatable {
     return Chat(
       id: map['id'] as String,
       name: map['name'] as String,
-      participants: List<String>.from(map['participants'] ?? []),
+      participants: List<String>.from(map['participants'] as Iterable? ?? []),
       avatarUrl: map['avatarUrl'] as String?,
       createdAt: DateTime.parse(map['createdAt'] as String),
     );

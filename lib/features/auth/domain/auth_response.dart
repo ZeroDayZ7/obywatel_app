@@ -47,7 +47,9 @@ sealed class AuthResponse with _$AuthResponse {
         user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
         rbac: data['rbac'] == null
             ? RbacData(permissions: [])
-            : RbacData.fromJson(data['rbac']),
+            : RbacData.fromJson(
+                data['rbac'] as Map<String, dynamic>,
+              ),
       );
     }
 

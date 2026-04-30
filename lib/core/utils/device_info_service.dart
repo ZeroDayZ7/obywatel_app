@@ -103,10 +103,12 @@ class DeviceInfoService {
       Platform.isAndroid
           ? ((info['androidId'] ?? '').toString() == '9774d56d682e549c'
                 ? 'fallback_id'
-                : info['androidId'] ?? 'unknown')
-          : (info['identifierForVendor'] ?? 'unknown'),
-      info['model'] ?? 'unknown',
-      data['app_device_id_secure'] ?? 'unknown',
+                : (info['androidId'] as String? ??
+                      'unknown'))
+          : (info['identifierForVendor'] as String? ??
+                'unknown'),
+      (info['model'] as String? ?? 'unknown'),
+      (data['app_device_id_secure'] as String? ?? 'unknown'),
     ];
 
     return components.map((e) => e.trim().toLowerCase()).join('|');

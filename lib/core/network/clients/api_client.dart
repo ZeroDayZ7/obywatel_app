@@ -9,30 +9,38 @@ class ApiClient {
 
   ApiClient({required this.dio, required this.storage, required this.logger});
 
-  Future<Response> get(
+  Future<Response<dynamic>> get(
     String path, {
     Map<String, dynamic>? queryParams,
     Options? options,
-  }) => dio.get(path, queryParameters: queryParams, options: options);
+  }) => dio.get<dynamic>(path, queryParameters: queryParams, options: options);
 
-  Future<Response> post(
+  Future<Response<dynamic>> post(
     String path, {
     dynamic data,
     Options? options,
-  }) => dio.post(path, data: data, options: options);
+  }) => dio.post<dynamic>(path, data: data, options: options);
 
-  Future<Response> put(String path, {dynamic data, Options? options}) =>
-      dio.put(path, data: data, options: options);
+  Future<Response<dynamic>> put(
+    String path, {
+    dynamic data,
+    Options? options,
+  }) => dio.put<dynamic>(path, data: data, options: options);
 
-  Future<Response> delete(String path, {Object? data, Options? options}) =>
-      dio.delete(path, data: data, options: options);
+  Future<Response<dynamic>> delete(
+    String path, {
+    Object? data,
+    Options? options,
+  }) => dio.delete<dynamic>(path, data: data, options: options);
 
-  Future<Response> upload(String path, FormData formData, {Options? options}) =>
-      dio.post(
-        path,
-        data: formData,
-        options:
-            options ??
-            Options(headers: {'Content-Type': 'multipart/form-data'}),
-      );
+  Future<Response<dynamic>> upload(
+    String path,
+    FormData formData, {
+    Options? options,
+  }) => dio.post<dynamic>(
+    path,
+    data: formData,
+    options:
+        options ?? Options(headers: {'Content-Type': 'multipart/form-data'}),
+  );
 }

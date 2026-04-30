@@ -173,8 +173,8 @@ class ResetPasswordNotifier extends _$ResetPasswordNotifier {
           .verifyCode(code, token);
 
       state = ResetPasswordState.codeVerified(
-        token: response['reset_token'] ?? token,
-        challenge: response['challenge'],
+        token: (response['reset_token'] as String?) ?? token,
+        challenge: response['challenge'] as String?,
       );
     } catch (e) {
       ref.read(globalNotificationProvider.notifier).showFromError(e);

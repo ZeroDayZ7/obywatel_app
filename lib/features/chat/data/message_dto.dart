@@ -29,7 +29,7 @@ class MessageDto {
     text: json['text'] as String,
     timestamp: json['timestamp'] as String,
     status: json['status'] as int,
-    synced: json['synced'] ?? false,
+    synced: (json['synced'] as bool?) ?? false,
     imageUrl: json['imageUrl'] as String?,
   );
 

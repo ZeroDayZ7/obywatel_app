@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:cryptography/cryptography.dart';
 
 class MessageCryptoService {
@@ -59,6 +60,6 @@ class MessageCryptoService {
       aad: aad,
     );
 
-    return jsonDecode(utf8.decode(decrypted));
+    return jsonDecode(utf8.decode(decrypted)) as Map<String, dynamic>;
   }
 }

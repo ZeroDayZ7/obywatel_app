@@ -45,7 +45,7 @@ class Message extends Equatable {
       timestamp: DateTime.parse(json['timestamp'] as String),
       isMe: currentUserId != null ? json['senderId'] == currentUserId : false,
       status: MessageStatus.values[json['status'] as int],
-      synced: json['synced'] ?? false,
+      synced: (json['synced'] as bool?) ?? false,
       imageUrl: json['imageUrl'] as String?,
     );
   }

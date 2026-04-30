@@ -30,7 +30,7 @@ class LoggingInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
     final maskedResponse = _maskSensitiveData(response.data);
     logger.i('⬅️ ${response.statusCode} ${response.requestOptions.uri}');
     if (maskedResponse != null) {

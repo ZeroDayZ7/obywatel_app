@@ -23,7 +23,7 @@ class AuthService {
       data: {'email': email, 'password': passwordBytes},
     );
 
-    return AuthResponse.fromMap(response.data);
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
   /// Weryfikacja 2FA
@@ -45,7 +45,7 @@ class AuthService {
       throw Exception('errors.INVALID_2FA');
     }
 
-    return AuthResponse.fromMap(response.data);
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
   /// Register Device
@@ -96,15 +96,11 @@ class AuthService {
     final response = await _apiClient.post(
       ApiEndpoints.verifyDevice,
       data: {'signature': signature},
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $setupToken',
-        },
-      ),
+      options: Options(headers: {'Authorization': 'Bearer $setupToken'}),
     );
 
     // Zwróci AuthResponse.fullSuccess z AccessToken i RefreshToken
-    return AuthResponse.fromJson(response.data);
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 }
 
