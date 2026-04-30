@@ -9,17 +9,8 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return AppBar(
-      title: Text(
-        apiConstants.appName,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-          color: theme.colorScheme.onSurface,
-        ),
-      ),
+      title: Text(apiConstants.appName),
       centerTitle: true,
       elevation: 0,
       actions: [

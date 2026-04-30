@@ -8,4 +8,5 @@ class AppTextStyles {
   static const body = TextStyle(fontSize: 14);
 
   static const button = TextStyle(fontSize: 16, fontWeight: FontWeight.w600);
+  static const appBar = TextStyle(fontSize: 20);
 }

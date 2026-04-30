@@ -18,8 +18,17 @@ class HomeGridItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    final adjustedColor = isDark
+        ? Color.lerp(color, Colors.white, 0.2) ?? color
+        : color;
+
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -31,36 +40,33 @@ class HomeGridItem extends StatelessWidget {
                 height: 52,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      color.withValues(alpha: 0.2),
-                      color.withValues(alpha: 0.2),
-                    ],
-                  ),
+
+                  color: adjustedColor.withValues(alpha: 0.12),
                   border: Border.all(
-                    color: color.withValues(alpha: 0.2),
+                    color: adjustedColor.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
-                child: Icon(icon, size: 26, color: color),
+                child: Icon(icon, size: 26, color: adjustedColor),
               ),
               if (badgeCount != null && badgeCount! > 0)
                 Positioned(
                   top: -4,
                   right: -4,
                   child: Container(
-                    padding: EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent,
+                      color: colorScheme.error,
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
+                      border: Border.all(
+                        color: colorScheme.surface,
+                        width: 1.5,
+                      ),
                     ),
                     child: Text(
                       '$badgeCount',
-                      style: TextStyle(
-                        color: Colors.white,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onError,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -73,10 +79,9 @@ class HomeGridItem extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 11,
               fontWeight: FontWeight.w700,
-              color: Colors.white,
               letterSpacing: 0.3,
             ),
             maxLines: 1,

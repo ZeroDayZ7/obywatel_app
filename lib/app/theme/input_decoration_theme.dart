@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'app_colors.dart';
 
 InputDecorationTheme buildInputDecorationTheme(
@@ -7,7 +8,7 @@ InputDecorationTheme buildInputDecorationTheme(
 ) {
   return InputDecorationTheme(
     labelStyle: TextStyle(
-      color: isDark ? Colors.white70 : AppColors.textSecondary,
+      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
     ),
     floatingLabelStyle: TextStyle(color: colorScheme.primary),
     errorStyle: TextStyle(color: AppColors.error, fontWeight: FontWeight.w500),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/app_bar_theme.dart';
 
 import 'app_colors.dart';
 import 'app_text_styles.dart';
@@ -14,12 +15,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: mode,
       colorScheme: colorScheme,
-      appBarTheme: AppBarTheme(
-        elevation: 0,
-        backgroundColor: isDark ? Colors.black : Colors.white,
-        foregroundColor: isDark ? Colors.cyan[400] : Colors.black,
-        centerTitle: true,
-      ),
+      appBarTheme: buildAppBarTheme(isDark),
       textTheme: _textTheme(isDark),
       extensions: [_shadowTheme(isDark), _toastTheme(isDark)],
     );
@@ -30,7 +26,7 @@ class AppTheme {
         ? const ColorScheme.dark(
             primary: Colors.cyan,
             secondary: Colors.cyanAccent,
-            surface: Colors.black,
+            surface: AppColors.backgroundDark,
             onSurface: Colors.white,
             onSecondary: Colors.black,
             error: AppColors.error,
@@ -39,15 +35,19 @@ class AppTheme {
             primary: Colors.cyan,
             secondary: Colors.cyan,
             surface: AppColors.backgroundLight,
-            onSurface: AppColors.textPrimary,
+            onSurface: AppColors.textPrimaryLight,
             onSecondary: Colors.white,
             error: AppColors.error,
           );
   }
 
   static TextTheme _textTheme(bool isDark) {
-    final color = isDark ? Colors.white : AppColors.textPrimary;
-    final secondary = isDark ? Colors.white70 : AppColors.textSecondary;
+    final color = isDark
+        ? AppColors.textPrimaryDark
+        : AppColors.textPrimaryLight;
+    final secondary = isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondaryLight;
 
     return TextTheme(
       headlineMedium: AppTextStyles.headline.copyWith(color: color),
