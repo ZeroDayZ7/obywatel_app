@@ -11,8 +11,6 @@ class HomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       title: Text(apiConstants.appName),
-      centerTitle: true,
-      elevation: 0,
       actions: [
         IconButton(icon: const Icon(Icons.search), onPressed: () {}),
         const SizedBox(width: 8),

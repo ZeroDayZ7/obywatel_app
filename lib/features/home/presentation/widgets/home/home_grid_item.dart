@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/widgets/badge.dart';
 
 class HomeGridItem extends StatelessWidget {
   final IconData icon;
@@ -19,7 +20,6 @@ class HomeGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
     final adjustedColor = isDark
@@ -32,57 +32,30 @@ class HomeGridItem extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-
-                  color: adjustedColor.withValues(alpha: 0.12),
-                  border: Border.all(
-                    color: adjustedColor.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
+          AppBadge(
+            count: badgeCount ?? 0,
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                color: adjustedColor.withValues(alpha: 0.12),
+                border: Border.all(
+                  color: adjustedColor.withValues(alpha: 0.2),
+                  width: 1.5,
                 ),
-                child: Icon(icon, size: 26, color: adjustedColor),
               ),
-              if (badgeCount != null && badgeCount! > 0)
-                Positioned(
-                  top: -4,
-                  right: -4,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: colorScheme.surface,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      '$badgeCount',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onError,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+              child: Icon(icon, size: 28, color: adjustedColor),
+            ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             label,
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

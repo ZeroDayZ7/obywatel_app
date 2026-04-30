@@ -12,7 +12,10 @@ class LogoutTile extends StatelessWidget {
       leading: const Icon(Icons.logout, color: Colors.redAccent),
       title: Text(
         LocaleKeys.drawer_logout.tr(),
-        style: const TextStyle(color: Colors.redAccent),
+        style: const TextStyle(
+          color: Colors.redAccent,
+          fontWeight: FontWeight.bold,
+        ),
       ),
       onTap: onLogout,
     );
