@@ -33,8 +33,11 @@ class AppRoutes {
   static const settingsNotifications = 'notifications';
   static const settingsActiveSession = 'active-session';
   static const settingsChangePin = 'change-pin';
-  
+
   static const chats = '/chats';
+  static const chatGroups = '/chats/groups';
+  static const chatSettings = '/chats/settings';
+
   static const chatDetail = '/chats/:username';
   static const contacts = '/contacts';
   static const explore = '/explore';

@@ -45,6 +45,7 @@ class _ContactsScreenState extends State<ContactsScreen> {
       backgroundColor: _bgDark,
       appBar: AppAppBar(
         title: 'Kontakty',
+        onBackButtonPressed: () => Navigator.of(context).pop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.search, color: Colors.white),

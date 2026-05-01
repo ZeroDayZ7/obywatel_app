@@ -5,10 +5,12 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool showBackButton;
   final bool centerTitle;
+  final VoidCallback onBackButtonPressed; // Dodano pole
 
   const AppAppBar({
     super.key,
     required this.title,
+    required this.onBackButtonPressed, // Poprawiony wymagany parametr
     this.actions,
     this.showBackButton = true,
     this.centerTitle = true,
@@ -16,11 +18,39 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(title),
-      centerTitle: centerTitle,
-      automaticallyImplyLeading: showBackButton,
-      actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: primaryColor.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: primaryColor.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: AppBar(
+        title: Text(title),
+        centerTitle: centerTitle,
+        automaticallyImplyLeading:
+            false, // Wyłączamy automat, by użyć własnej akcji
+        leading: showBackButton
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: onBackButtonPressed,
+              )
+            : null,
+        elevation: 0,
+        actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+      ),
     );
   }
 

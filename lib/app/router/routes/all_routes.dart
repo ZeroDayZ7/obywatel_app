@@ -11,7 +11,7 @@ import 'placeholder_routes.dart';
 import 'settings_routes.dart';
 import 'work_and_career_routes.dart';
 
-List<GoRoute> getAllRoutes() {
+List<RouteBase> getAllRoutes() {
   return [
     ...authRoutes,
     ...homeRoutes,

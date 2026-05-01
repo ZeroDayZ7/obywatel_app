@@ -1,5 +1,6 @@
-// lib/features/chat/presentation/chat/widgets/bottom_nav_bar.dart
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/widgets/app_bottom_nav_bar.dart';
+
 import 'chat_colors.dart';
 
 class CyberpunkBottomNavBar extends StatelessWidget {
@@ -14,45 +15,25 @@ class CyberpunkBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: CyberpunkColors.background.withValues(alpha: 0.95),
-        border: Border(
-          top: BorderSide(
-            color: CyberpunkColors.primary.withValues(alpha: 0.3),
-            width: 1,
-          ),
+    return AppBottomNavBar(
+      currentIndex: currentIndex,
+      onTap: onTap,
+      backgroundColor: CyberpunkColors.background,
+      primaryColor: CyberpunkColors.primary,
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.chat_bubble_rounded),
+          label: 'Chats',
         ),
-        boxShadow: [
-          BoxShadow(
-            color: CyberpunkColors.primary.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
-      ),
-      child: BottomNavigationBar(
-        currentIndex: currentIndex,
-        onTap: onTap,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        selectedItemColor: CyberpunkColors.primary,
-        unselectedItemColor: Colors.grey.shade400,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat_bubble_rounded),
-            label: 'Chats',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.group_rounded),
-            label: 'Groups',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: 'Settings',
-          ),
-        ],
-      ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.group_rounded),
+          label: 'Groups',
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.settings_rounded),
+          label: 'Settings',
+        ),
+      ],
     );
   }
 }

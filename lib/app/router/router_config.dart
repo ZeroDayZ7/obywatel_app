@@ -11,7 +11,7 @@ import 'redirect/redirect_logic.dart';
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
-GoRouter createRouter({required Ref ref, required List<GoRoute> routes}) {
+GoRouter createRouter({required Ref ref, required List<RouteBase> routes}) {
   final refreshListenable = ref.watch(authRefreshListenableProvider.notifier);
 
   return GoRouter(

@@ -23,6 +23,7 @@ class DocumentsScreen extends StatelessWidget {
       size: ContainerSize.medium,
       appBar: AppAppBar(
         title: 'Dokumenty',
+        onBackButtonPressed: () => Navigator.of(context).pop(),
         actions: [
           IconButton(icon: const Icon(Icons.search), onPressed: () {}),
           IconButton(
