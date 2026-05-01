@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bottom_nav_bar.dart';
 
-import 'chat_colors.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_colors.dart';
 
 class CyberpunkBottomNavBar extends StatelessWidget {
   final int currentIndex;

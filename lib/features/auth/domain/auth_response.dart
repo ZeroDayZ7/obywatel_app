@@ -1,7 +1,7 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
-import 'auth_models.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_models.dart';
 
 part 'auth_response.freezed.dart';
 part 'auth_response.g.dart';

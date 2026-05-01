@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'section_model.dart';
+import 'package:obywatel_plus/features/work_and_career/model/section_model.dart';
 
 final List<Section> workAndCareerSections = [
   Section(

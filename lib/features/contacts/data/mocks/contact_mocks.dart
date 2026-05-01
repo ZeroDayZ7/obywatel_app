@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/models/ui_contact.dart';
+import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';
 
 class ContactMocks {
   static const Color primaryNeon = Color(0xFF00F0FF);

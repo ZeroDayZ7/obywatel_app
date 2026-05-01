@@ -12,7 +12,7 @@ class MessageService {
     try {
       return await messageRepository.getMessages(chatId);
     } catch (e) {
-      throw ChatApiException(null, "Nie udało się pobrać wiadomości: $e");
+      throw ChatApiException(null, 'Nie udało się pobrać wiadomości: $e');
     }
   }
 
@@ -21,7 +21,7 @@ class MessageService {
     try {
       await messageRepository.saveMessage(message);
     } catch (e) {
-      throw ChatStorageException("Nie udało się zapisać wiadomości: $e");
+      throw ChatStorageException('Nie udało się zapisać wiadomości: $e');
     }
   }
 
@@ -30,7 +30,7 @@ class MessageService {
     try {
       await messageRepository.saveMessages(messages);
     } catch (e) {
-      throw ChatStorageException("Nie udało się zapisać wiadomości: $e");
+      throw ChatStorageException('Nie udało się zapisać wiadomości: $e');
     }
   }
 
@@ -39,7 +39,7 @@ class MessageService {
     try {
       return await messageRepository.getUnsyncedMessages(chatId);
     } catch (e) {
-      throw ChatStorageException("Nie udało się pobrać wiadomości offline: $e");
+      throw ChatStorageException('Nie udało się pobrać wiadomości offline: $e');
     }
   }
 
@@ -49,7 +49,7 @@ class MessageService {
       await messageRepository.markAsSynced(messageId);
     } catch (e) {
       throw ChatStorageException(
-        "Nie udało się oznaczyć wiadomości jako wysłanej: $e",
+        'Nie udało się oznaczyć wiadomości jako wysłanej: $e',
       );
     }
   }
@@ -59,7 +59,7 @@ class MessageService {
     try {
       await messageRepository.deleteMessage(messageId);
     } catch (e) {
-      throw ChatStorageException("Nie udało się usunąć wiadomości: $e");
+      throw ChatStorageException('Nie udało się usunąć wiadomości: $e');
     }
   }
 }

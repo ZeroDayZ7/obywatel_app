@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'app_lifecycle_observer.dart';
+import 'package:obywatel_plus/core/security/lifecycle/app_lifecycle_observer.dart';
 
 final appLifecycleObserverProvider = Provider<AppLifecycleObserver>((ref) {
   final observer = AppLifecycleObserver(ref);

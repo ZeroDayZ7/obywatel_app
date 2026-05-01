@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/chat/domain/message.dart';
-import 'message_bubble.dart';
-import 'date_divider.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/message_bubble.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/user_chat/date_divider.dart';
 
 class MessageList extends StatelessWidget {
   final List<Message> messages;

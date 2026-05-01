@@ -11,7 +11,7 @@ import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
-import 'security_setup_state.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 
 final securitySetupProvider =
     AsyncNotifierProvider<SecuritySetupNotifier, SecuritySetupState>(

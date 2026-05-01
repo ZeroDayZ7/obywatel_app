@@ -49,7 +49,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
     const symbols = '!@#\$&*~';
     final rnd = Random.secure();
 
-    String pass = "";
+    String pass = '';
     pass += letters[rnd.nextInt(letters.length)];
     pass += numbers[rnd.nextInt(numbers.length)];
     pass += symbols[rnd.nextInt(symbols.length)];
@@ -74,7 +74,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
         .read(globalNotificationProvider.notifier)
         .show(
           AppNotification(
-            messageKey: "Hasło wygenerowane i skopiowane",
+            messageKey: 'Hasło wygenerowane i skopiowane',
             type: NotificationType.success,
           ),
         );
@@ -92,7 +92,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "Ustaw nowe hasło",
+                'Ustaw nowe hasło',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -100,7 +100,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
               IconButton(
                 onPressed: _generateStrongPassword,
                 icon: const Icon(Icons.auto_fix_high),
-                tooltip: "Generuj silne hasło",
+                tooltip: 'Generuj silne hasło',
               ),
             ],
           ),
@@ -132,7 +132,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
               prefixIcon: const Icon(Icons.lock_reset),
             ),
             validator: (val) =>
-                val != _passController.text ? "Hasła nie są identyczne" : null,
+                val != _passController.text ? 'Hasła nie są identyczne' : null,
           ),
           const SizedBox(height: 24),
           _PasswordRequirementsList(password: _passController.text),
@@ -171,22 +171,22 @@ class _PasswordRequirementsList extends StatelessWidget {
 
     return Column(
       children: [
-        _buildReq(context, "Minimum 8 znaków", password.length >= 8, hintColor),
+        _buildReq(context, 'Minimum 8 znaków', password.length >= 8, hintColor),
         _buildReq(
           context,
-          "Przynajmniej jedna litera",
+          'Przynajmniej jedna litera',
           RegExp(r'[A-Za-z]').hasMatch(password),
           hintColor,
         ),
         _buildReq(
           context,
-          "Przynajmniej jedna cyfra",
+          'Przynajmniej jedna cyfra',
           RegExp(r'\d').hasMatch(password),
           hintColor,
         ),
         _buildReq(
           context,
-          "Znak specjalny (!@#\$&*~)",
+          'Znak specjalny (!@#\$&*~)',
           RegExp(r'[!@#\$&*~]').hasMatch(password),
           hintColor,
         ),

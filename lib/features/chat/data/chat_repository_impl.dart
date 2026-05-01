@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:obywatel_plus/features/chat/data/chat_api.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
-import '../domain/chat.dart';
-import '../domain/message.dart';
-import '../domain/chat_repository.dart';
-import '../application/message_service.dart';
+import 'package:obywatel_plus/features/chat/domain/chat.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
+import 'package:obywatel_plus/features/chat/domain/chat_repository.dart';
+import 'package:obywatel_plus/features/chat/application/message_service.dart';
 
 class ChatRepositoryImpl implements ChatRepository {
   final ChatApi api;
@@ -28,7 +28,7 @@ class ChatRepositoryImpl implements ChatRepository {
     // na razie zwracamy pusty / tymczasowy obiekt
     return Chat(
       id: chatId,
-      name: "Czat $chatId",
+      name: 'Czat $chatId',
       participants: const [],
       avatarUrl: null,
       createdAt: DateTime.now(),
@@ -62,7 +62,7 @@ class ChatRepositoryImpl implements ChatRepository {
         final message = Message(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           chatId: chatId,
-          senderId: "server",
+          senderId: 'server',
           text: data.toString(),
           timestamp: DateTime.now(),
           isMe: false,

@@ -16,20 +16,20 @@ class UserChatScreen extends StatefulWidget {
 class _UserChatScreenState extends State<UserChatScreen> {
   final List<Message> messages = [
     Message(
-      id: "1",
-      chatId: "local",
-      senderId: "me",
-      text: "Cześć! Jak się masz?",
+      id: '1',
+      chatId: 'local',
+      senderId: 'me',
+      text: 'Cześć! Jak się masz?',
       timestamp: DateTime.now().subtract(const Duration(hours: 1)),
       isMe: true,
       status: MessageStatus.read,
       imageUrl: null,
     ),
     Message(
-      id: "2",
-      chatId: "local",
-      senderId: "user2",
-      text: "Hej! Wszystko dobrze, a u Ciebie?",
+      id: '2',
+      chatId: 'local',
+      senderId: 'user2',
+      text: 'Hej! Wszystko dobrze, a u Ciebie?',
       timestamp: DateTime.now().subtract(const Duration(minutes: 55)),
       isMe: false,
       status: MessageStatus.read,
@@ -47,8 +47,8 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
     final newMessage = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      chatId: "local",
-      senderId: "me",
+      chatId: 'local',
+      senderId: 'me',
       text: text,
       timestamp: DateTime.now(),
       isMe: true,

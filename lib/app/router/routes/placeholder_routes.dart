@@ -1,7 +1,7 @@
 // placeholder_routes.dart
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/router/extensions/go_router_extensions.dart';
 import 'package:obywatel_plus/app/router/placeholder_screen.dart';
-import '../app_routes.dart';
-import '../extensions/go_router_extensions.dart';
 
 final placeholderRoutes = [
   AppRoutes.explore.go(const PlaceholderScreen('Odkryj')),

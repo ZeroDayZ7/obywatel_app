@@ -21,7 +21,7 @@ class MessageCryptoService {
     final nonce = cipher.newNonce();
 
     // AAD — chroni metadane
-    final aad = utf8.encode("v$version|msg");
+    final aad = utf8.encode('v$version|msg');
 
     final secretBox = await cipher.encrypt(
       plainText,
@@ -43,7 +43,7 @@ class MessageCryptoService {
 
     final messageVersion = data.first;
     if (messageVersion != version) {
-      throw Exception("Unsupported encryption version: $messageVersion");
+      throw Exception('Unsupported encryption version: $messageVersion');
     }
 
     final nonce = data.sublist(1, 13);
@@ -52,7 +52,7 @@ class MessageCryptoService {
 
     final secretBox = SecretBox(cipherText, nonce: nonce, mac: Mac(macBytes));
 
-    final aad = utf8.encode("v$version|msg");
+    final aad = utf8.encode('v$version|msg');
 
     final decrypted = await cipher.decrypt(
       secretBox,

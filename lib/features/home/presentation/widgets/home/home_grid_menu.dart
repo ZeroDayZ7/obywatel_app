@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/home/presentation/config/home_menu_items.dart';
 
-import 'home_grid_item.dart';
+import 'package:obywatel_plus/features/home/presentation/widgets/home/home_grid_item.dart';
 
 class HomeGridMenu extends StatelessWidget {
   final Map<String, int> badgeCounts;

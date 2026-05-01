@@ -1,5 +1,5 @@
 // Environment configuration
-import 'constants_dev.dart' if (dart.vm.product) 'constants_prod.dart';
+import 'package:obywatel_plus/app/config/constants_dev.dart' if (dart.vm.product) 'constants_prod.dart';
 
 // import 'constants_dev.dart'
 // import 'constants_prod.dart'

@@ -11,9 +11,9 @@ extension DateFormatter on DateTime {
     final timeStr = DateFormat.Hm().format(this);
 
     if (dateToCheck == today) {
-      return "${LocaleKeys.common_today.tr()}, $timeStr";
+      return '${LocaleKeys.common_today.tr()}, $timeStr';
     } else if (dateToCheck == yesterday) {
-      return "${LocaleKeys.common_yesterday.tr()}, $timeStr";
+      return '${LocaleKeys.common_yesterday.tr()}, $timeStr';
     } else {
       return DateFormat('dd.MM.yyyy, HH:mm').format(this);
     }

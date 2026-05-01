@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import '../../storage/secure_storage_provider.dart';
-import '../../storage/storage_keys.dart';
-import '../domain/auth_method.dart';
-import '../domain/security_config.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/security/domain/auth_method.dart';
+import 'package:obywatel_plus/core/security/domain/security_config.dart';
 
 abstract class SecurityConfigStorage {
   Future<SecurityConfig?> load();

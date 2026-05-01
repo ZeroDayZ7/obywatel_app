@@ -4,7 +4,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart'; // Import Twojego enuma
 import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart'; // Import Twojego ResponsiveContainer
 
-import 'lock_timer_text.dart';
+import 'package:obywatel_plus/core/security/pin/presentation/widget/lock_timer_text.dart';
 
 class LockoutOverlay extends StatelessWidget {
   const LockoutOverlay({super.key});

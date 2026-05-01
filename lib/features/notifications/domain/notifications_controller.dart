@@ -4,7 +4,7 @@ import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 
 part 'notifications_controller.g.dart';
 

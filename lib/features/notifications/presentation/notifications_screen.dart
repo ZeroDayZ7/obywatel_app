@@ -9,9 +9,9 @@ import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 
-import '../domain/notifications_controller.dart';
-import 'widgets/notification_card.dart';
-import 'widgets/notification_details_sheet.dart';
+import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
+import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_card.dart';
+import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_details_sheet.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});

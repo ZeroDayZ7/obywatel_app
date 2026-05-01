@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 
 class AppLifecycleObserver with WidgetsBindingObserver {
   final Ref ref;

@@ -2,14 +2,13 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
+import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
+import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
+import 'package:obywatel_plus/core/database/tables/notifications.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-
-import 'daos/crypto_keys_dao.dart';
-import 'daos/notifications_dao.dart';
-import 'tables/crypto_keys.dart';
-import 'tables/notifications.dart';
 
 part 'database.g.dart';
 

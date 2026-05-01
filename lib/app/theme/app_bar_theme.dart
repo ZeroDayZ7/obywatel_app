@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'app_colors.dart';
+import 'package:obywatel_plus/app/theme/app_colors.dart';
 
 AppBarTheme buildAppBarTheme(bool isDark) {
   final foreground = isDark

@@ -31,7 +31,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
               Text(LocaleKeys.errors_general.tr()),
               TextButton(
                 onPressed: () => ref.invalidate(activeSessionsProvider),
-                child: const Text("Retry"),
+                child: const Text('Retry'),
               ),
             ],
           ),
@@ -42,7 +42,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
               ? ListView(
                   children: const [
                     SizedBox(height: 100),
-                    Center(child: Text("No active sessions found")),
+                    Center(child: Text('No active sessions found')),
                   ],
                 )
               : ListView.separated(
@@ -77,11 +77,11 @@ class _SessionTile extends ConsumerWidget {
     return SettingsCard(
       icon: session.isCurrent ? Icons.phonelink_setup : Icons.devices,
       title: session.deviceName,
-      subtitle: "Platform: ${session.platform}\nLast activity: $formattedDate",
+      subtitle: 'Platform: ${session.platform}\nLast activity: $formattedDate',
       onTap: () {},
       trailing: session.isCurrent
           ? Badge(
-              label: const Text("Current"),
+              label: const Text('Current'),
               backgroundColor: Colors.green.withValues(alpha: 0.1),
               textColor: Colors.green,
             )
@@ -96,12 +96,12 @@ class _SessionTile extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Terminate Session?"),
-        content: const Text("This device will be logged out."),
+        title: const Text('Terminate Session?'),
+        content: const Text('This device will be logged out.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel"),
+            child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () {
@@ -110,7 +110,7 @@ class _SessionTile extends ConsumerWidget {
                   .terminateSession(session.id);
               Navigator.pop(context);
             },
-            child: const Text("Terminate", style: TextStyle(color: Colors.red)),
+            child: const Text('Terminate', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/theme/app_bar_theme.dart';
-
-import 'app_colors.dart';
-import 'app_text_styles.dart';
-import 'extensions/shadow_theme.dart';
-import 'extensions/toast_theme.dart';
+import 'package:obywatel_plus/app/theme/app_colors.dart';
+import 'package:obywatel_plus/app/theme/app_text_styles.dart';
+import 'package:obywatel_plus/app/theme/extensions/shadow_theme.dart';
+import 'package:obywatel_plus/app/theme/extensions/toast_theme.dart';
 
 class AppTheme {
   static ThemeData buildTheme(Brightness mode) {

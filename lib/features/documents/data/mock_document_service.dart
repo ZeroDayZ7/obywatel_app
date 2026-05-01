@@ -1,4 +1,4 @@
-import '../domain/models/document_model.dart';
+import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 
 class MockDocumentService {
   static DocumentModel getMockIdCard() {

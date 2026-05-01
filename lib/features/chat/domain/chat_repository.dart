@@ -1,5 +1,5 @@
-import 'chat.dart';
-import 'message.dart';
+import 'package:obywatel_plus/features/chat/domain/chat.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 
 abstract class ChatRepository {
   /// Pobiera informacje o czacie (np. nazwa, uczestnicy, avatar).

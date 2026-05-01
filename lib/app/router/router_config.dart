@@ -2,11 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/router/redirect/redirect_logic.dart';
 import 'package:obywatel_plus/core/errors/presentation/error_screen.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_refresh_provider.dart';
-
-import 'app_routes.dart';
-import 'redirect/redirect_logic.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;

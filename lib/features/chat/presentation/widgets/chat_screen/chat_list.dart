@@ -1,6 +1,6 @@
 // lib/features/chat/presentation/chat/widgets/chat_list.dart
 import 'package:flutter/material.dart';
-import 'chat_list_item.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_list_item.dart';
 import 'package:go_router/go_router.dart';
 
 class CyberpunkChatList extends StatelessWidget {

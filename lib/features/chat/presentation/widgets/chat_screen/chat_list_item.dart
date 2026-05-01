@@ -1,6 +1,6 @@
 // lib/features/chat/presentation/chat/widgets/chat_list_item.dart
 import 'package:flutter/material.dart';
-import 'chat_colors.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_colors.dart';
 
 class CyberpunkChatItem extends StatelessWidget {
   final String username;

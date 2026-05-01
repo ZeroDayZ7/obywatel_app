@@ -200,7 +200,7 @@ class AuthController extends _$AuthController {
       accessToken: pending?.setupToken,
     );
 
-    await _handleAuthResponse(response, "");
+    await _handleAuthResponse(response, '');
   }
 
   Future<void> logout() async {
@@ -240,7 +240,7 @@ class AuthController extends _$AuthController {
           );
 
           // 3. Obsługujemy odpowiedź
-          await _handleAuthResponse(result, "");
+          await _handleAuthResponse(result, '');
         } catch (e) {
           _log.e('Błąd podczas weryfikacji urządzenia: $e', module: 'AUTH');
           _handleError(e);

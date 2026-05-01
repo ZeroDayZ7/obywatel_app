@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';
 
-import 'contacts_online_avatar.dart';
+import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_online_avatar.dart';
 
 class ContactsOnlineSection extends StatelessWidget {
   final List<UIContact> contacts;

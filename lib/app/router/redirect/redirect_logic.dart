@@ -2,9 +2,8 @@
 // lib/app/router/redirect/redirect_logic.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/redirect/redirect_guards.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-
-import 'redirect_guards.dart';
 
 String? appRedirectLogic(Ref ref, GoRouterState state) {
   final logger = ref.read(appLoggerProvider);

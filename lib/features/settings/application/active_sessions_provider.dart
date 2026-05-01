@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'active_sessions_service.dart';
-import 'user_session.dart';
+import 'package:obywatel_plus/features/settings/application/active_sessions_service.dart';
+import 'package:obywatel_plus/features/settings/application/user_session.dart';
 
 part 'active_sessions_provider.g.dart';
 

@@ -1,4 +1,4 @@
-import 'message.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 
 /// Repository odpowiedzialne WYŁĄCZNIE za warstwę danych lokalnych:
 /// - zapis wiadomości offline

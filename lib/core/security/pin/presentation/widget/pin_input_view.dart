@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/glow_icon.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class PinInputView extends StatelessWidget {
@@ -29,7 +30,10 @@ class PinInputView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _buildLockIcon(),
+        const AppGlowIcon(
+          icon: Icons.lock_person_outlined,
+          color: Color(0xFF00f0ff),
+        ),
         const SizedBox(height: 40),
         Text(
           LocaleKeys.pinVerification_title.tr(),
@@ -54,49 +58,17 @@ class PinInputView extends StatelessWidget {
         const SizedBox(height: 50),
         _buildPinField(context),
         const SizedBox(height: 60),
-        // Wykorzystanie AppButton bez zbędnych kontenerów
+
         AppButton(
-          labelKey: LocaleKeys
-              .pinVerification_unlock_button, // Przekazujemy klucz (enterprise zazwyczaj tak robi)
-          onPressed: isLoading
-              ? null
-              : () {
-                  // Logika ręcznego odblokowania, jeśli potrzebna
-                },
+          labelKey: LocaleKeys.pinVerification_unlock_button,
+          onPressed: isLoading ? null : () {},
           isLoading: isLoading,
         ),
       ],
     );
   }
 
-  Widget _buildLockIcon() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: const Color(0xFF00f0ff).withValues(alpha: 0.05),
-        border: Border.all(
-          color: const Color(0xFF00f0ff).withValues(alpha: 0.3),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF00f0ff).withValues(alpha: 0.1),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
-      child: const Icon(
-        Icons.lock_person_outlined,
-        size: 50,
-        color: Color(0xFF00f0ff),
-      ),
-    );
-  }
-
   Widget _buildPinField(BuildContext context) {
-    // Naprawiony błąd lintera: Usunięto niepotrzebny Container
     return SizedBox(
       width: 280,
       child: PinCodeTextField(

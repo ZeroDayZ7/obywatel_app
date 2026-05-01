@@ -1,9 +1,8 @@
 // lib/app/router/app_router_provider.dart
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/router_config.dart';
+import 'package:obywatel_plus/app/router/routes/all_routes.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
-import 'router_config.dart';
-import 'routes/all_routes.dart';
 
 part 'app_router_provider.g.dart';
 

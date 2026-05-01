@@ -72,7 +72,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
       error: (err, _) => CyberBackground(
         child: Center(
           child: Text(
-            "Błąd: $err",
+            'Błąd: $err',
             style: const TextStyle(color: Colors.white),
           ),
         ),

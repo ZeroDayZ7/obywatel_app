@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 
 class InputMargins {
   static const vertical = EdgeInsets.symmetric(vertical: Spacing.sm);

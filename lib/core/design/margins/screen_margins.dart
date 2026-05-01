@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 
 class ScreenMargins {
   static const all = EdgeInsets.all(Spacing.lg);  // 16px

@@ -10,7 +10,7 @@ import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/settings/presentation/sheets/language_selector_sheet.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
 
-import 'sheets/theme_selector_sheet.dart';
+import 'package:obywatel_plus/features/settings/presentation/sheets/theme_selector_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

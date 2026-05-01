@@ -3,7 +3,7 @@ import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'user_session.dart';
+import 'package:obywatel_plus/features/settings/application/user_session.dart';
 
 part 'active_sessions_service.g.dart';
 

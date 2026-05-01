@@ -11,7 +11,7 @@ class VersionInfo extends StatelessWidget {
         const Icon(Icons.shield_outlined, size: 14, color: Colors.white30),
         const SizedBox(width: 8),
         Text(
-          "SECURE CONNECTION v1.0.0",
+          'SECURE CONNECTION v1.0.0',
           style: TextStyle(
             color: Colors.white.withValues(alpha: 0.3),
             fontSize: 10,

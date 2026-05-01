@@ -1,5 +1,5 @@
 // lib/config/constants_dev.dart
-import 'constants_base.dart';
+import 'package:obywatel_plus/app/config/constants_base.dart';
 
 class ApiConstants extends ApiConstantsBase {
   final bool isProduction = false;
@@ -19,8 +19,8 @@ class ApiConstants extends ApiConstantsBase {
       apiFingerprint = null,
       defaultEmail = 'user@example.com',
       defaultPassword = 'QQh!bY9i5tC@mRGD',
-      appName = "Obywatel+ Dev",
-      appDescription = "Government Operating System Dev",
+      appName = 'Obywatel+ Dev',
+      appDescription = 'Government Operating System Dev',
       inactivityTimeout = const Duration(minutes: 15),
       super(
         minSplashDuration: const Duration(milliseconds: 5500),

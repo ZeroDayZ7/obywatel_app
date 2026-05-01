@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/layout_tokens.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 
-import 'login_form.dart';
+import 'package:obywatel_plus/features/auth/presentation/login/login_form.dart';
 
 class ProfessionalLoginWidget extends ConsumerWidget {
   const ProfessionalLoginWidget({super.key});

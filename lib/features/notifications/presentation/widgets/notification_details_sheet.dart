@@ -7,7 +7,7 @@ import 'package:obywatel_plus/core/errors/global_error_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
 
-import 'notification_card.dart';
+import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_card.dart';
 
 class NotificationDetailsSheet {
   static void show(

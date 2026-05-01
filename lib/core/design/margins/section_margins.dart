@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 
 class SectionMargins {
   static const defaultPadding = EdgeInsets.symmetric(

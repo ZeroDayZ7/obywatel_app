@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../tokens/spacing.dart';
+import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 
 class HeaderFooterMargins {
   static const header = EdgeInsets.only(top: Spacing.lg, bottom: Spacing.md);

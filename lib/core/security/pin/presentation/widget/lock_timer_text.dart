@@ -39,7 +39,7 @@ class LockReasonText extends ConsumerWidget {
     final state = ref.watch(pinVerificationProvider);
     final remaining = state.maybeWhen(
       locked: (rem) => formatDuration(rem),
-      orElse: () => "0s",
+      orElse: () => '0s',
     );
 
     return Text(

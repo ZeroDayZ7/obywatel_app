@@ -33,7 +33,7 @@ class CodeInputWidget extends StatelessWidget {
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 28, letterSpacing: 6),
-          decoration: const InputDecoration(counterText: ""),
+          decoration: const InputDecoration(counterText: ''),
         ),
         const SizedBox(height: 16),
         AppButton(

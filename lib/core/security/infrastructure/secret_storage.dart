@@ -1,5 +1,5 @@
-import '../../storage/secure_storage_provider.dart';
-import '../../storage/storage_keys.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 abstract class SecretStorage {
   Future<void> save(String hash);

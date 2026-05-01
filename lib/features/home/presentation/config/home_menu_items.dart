@@ -109,4 +109,11 @@ final List<Map<String, dynamic>> homeMenuItems = [
     'route': AppRoutes.help,
     'color': Color(0xFF88FF00),
   },
+    {
+    'id': 'test',
+    'icon': Icons.text_snippet,
+    'labelKey': 'Test',
+    'route': AppRoutes.test, 
+    'color': Color(0xFF0099FF),
+  },
 ];

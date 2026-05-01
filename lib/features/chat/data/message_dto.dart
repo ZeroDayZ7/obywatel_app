@@ -1,4 +1,4 @@
-import '../domain/message.dart';
+import 'package:obywatel_plus/features/chat/domain/message.dart';
 
 class MessageDto {
   final String id;

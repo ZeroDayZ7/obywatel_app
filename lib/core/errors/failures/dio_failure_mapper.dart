@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-import 'app_failure.dart';
+import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
 
 AppFailure mapDioToFailure(DioException e) {
   switch (e.type) {

@@ -1,7 +1,7 @@
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'notification_settings_state.dart';
+import 'package:obywatel_plus/features/settings/domain/notification_settings_state.dart';
 
 part 'notification_settings_notifier.g.dart';
 

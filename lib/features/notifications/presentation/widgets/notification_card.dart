@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/utils/date_formatter.dart';
 
-import '../../domain/notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 
 class NotificationBadge extends StatelessWidget {
   final bool isNew;

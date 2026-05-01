@@ -1,7 +1,7 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:vibration/vibration.dart';
 
-import 'device_capabilities_state.dart';
+import 'package:obywatel_plus/core/utils/device_capabilities_state.dart';
 
 part 'device_capabilities_provider.g.dart';
 

@@ -30,7 +30,7 @@ class MessageBubble extends StatelessWidget {
             const CircleAvatar(
               radius: 16,
               backgroundColor: Colors.purpleAccent,
-              child: Text("U"),
+              child: Text('U'),
             ),
           const SizedBox(width: 4),
           AnimatedContainer(
@@ -105,7 +105,7 @@ class MessageBubble extends StatelessWidget {
             const CircleAvatar(
               radius: 16,
               backgroundColor: Colors.cyanAccent,
-              child: Text("M"),
+              child: Text('M'),
             ),
         ],
       ),
