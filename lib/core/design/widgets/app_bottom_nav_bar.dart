@@ -5,7 +5,7 @@ class AppBottomNavBar extends StatelessWidget {
   final ValueChanged<int> onTap;
   final List<BottomNavigationBarItem> items;
   final Color? backgroundColor;
-  final Color? primaryColor; // Zmienione z activeColor na primaryColor
+  final Color? primaryColor;
 
   const AppBottomNavBar({
     super.key,
@@ -13,13 +13,13 @@ class AppBottomNavBar extends StatelessWidget {
     required this.onTap,
     required this.items,
     this.backgroundColor,
-    this.primaryColor, // Zmienione tutaj
+    this.primaryColor,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Używamy przekazanego primaryColor lub bierzemy z motywu
+
     final activeCol = primaryColor ?? theme.colorScheme.primary;
     final bg = backgroundColor ?? theme.colorScheme.surface;
 

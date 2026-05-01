@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/core/design/widgets/app_app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/contacts/data/mocks/contact_mocks.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';

@@ -12,7 +12,6 @@ class GlobalErrorListener extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Nasłuchiwanie na globalne powiadomienia
     ref.listen<AppNotification?>(globalNotificationProvider, (prev, next) {
       if (next != null) {
         _handleNotification(context, ref, next);
@@ -27,11 +26,9 @@ class GlobalErrorListener extends ConsumerWidget {
     WidgetRef ref,
     AppNotification notification,
   ) {
-    // 1. Feedback haptyczny/fizyczny
     final feedbackType = _mapToFeedback(notification.type);
     ref.read(feedbackServiceProvider).trigger(feedbackType);
 
-    // 2. Wyświetlenie UI
     _showAdaptiveSnackBar(context, notification);
   }
 
@@ -42,10 +39,8 @@ class GlobalErrorListener extends ConsumerWidget {
     final size = MediaQuery.sizeOf(context);
     final bool isDesktop = size.width > 600;
 
-    // Pobieramy styl na podstawie typu notyfikacji za pomocą Pattern Matching
     final style = _getStyle(notification.type);
 
-    // Czyścimy poprzednie powiadomienia, aby uniknąć kolejkowania
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -95,7 +90,6 @@ class GlobalErrorListener extends ConsumerWidget {
     );
   }
 
-  // Mapowanie typu notyfikacji na fizyczny feedback
   FeedbackType _mapToFeedback(NotificationType type) {
     return switch (type) {
       NotificationType.error => FeedbackType.error,
@@ -105,7 +99,6 @@ class GlobalErrorListener extends ConsumerWidget {
     };
   }
 
-  // Mapowanie wizualne (Kolory i Ikony)
   _ToastStyle _getStyle(NotificationType type) {
     return switch (type) {
       NotificationType.error => _ToastStyle(
@@ -128,7 +121,6 @@ class GlobalErrorListener extends ConsumerWidget {
   }
 }
 
-/// Prywatna klasa pomocnicza dla stylizacji
 class _ToastStyle {
   final Color color;
   final IconData icon;

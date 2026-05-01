@@ -10,26 +10,23 @@ class GlobalNotification extends _$GlobalNotification {
   @override
   AppNotification? build() => null;
 
-  /// Wyświetla dowolną notyfikację (Success, Info, Error)
   void show(AppNotification notification) {
     state = notification;
-    
-    // Używamy mikro-zadania zamiast 100ms, aby zresetować stan natychmiast
-    // po tym, jak Listener w UI go przechwyci.
+
     Future.microtask(() => state = null);
   }
 
-  /// Wyświetla notyfikację błędu na podstawie dowolnego obiektu błędu
   void showFromError(Object error, [StackTrace? stack]) {
     final failure = _mapToFailure(error);
-    
-    show(AppNotification(
-      messageKey: failure.messageKey,
-      type: NotificationType.error,
-    ));
+
+    show(
+      AppNotification(
+        messageKey: failure.messageKey,
+        type: NotificationType.error,
+      ),
+    );
   }
 
-  /// Centralna logika mapowania błędów (zastępuje AppException.fromDio)
   AppFailure _mapToFailure(Object e) {
     if (e is AppFailure) return e;
 
@@ -38,11 +35,10 @@ class GlobalNotification extends _$GlobalNotification {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.receiveTimeout ||
         DioExceptionType.sendTimeout ||
-        DioExceptionType.connectionError =>
-          const AppFailure.network(),
-          
+        DioExceptionType.connectionError => const AppFailure.network(),
+
         DioExceptionType.badResponse => _handleBadResponse(e),
-        
+
         _ => const AppFailure.unknown(),
       };
     }
@@ -50,7 +46,6 @@ class GlobalNotification extends _$GlobalNotification {
     return const AppFailure.unknown();
   }
 
-  /// Prywatna metoda do obsługi błędów 4xx i 5xx
   AppFailure _handleBadResponse(DioException e) {
     final status = e.response?.statusCode;
     final data = e.response?.data;
