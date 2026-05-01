@@ -14,6 +14,7 @@ class AppScaffold extends StatelessWidget {
   final List<Widget>? actions;
   final ContainerSize size;
   final EdgeInsetsGeometry? padding;
+  final Widget? bottomNavigationBar;
 
   const AppScaffold({
     super.key,
@@ -28,6 +29,7 @@ class AppScaffold extends StatelessWidget {
     this.actions,
     this.size = ContainerSize.medium,
     this.padding,
+    this.bottomNavigationBar,
   });
 
   @override
@@ -56,6 +58,7 @@ class AppScaffold extends StatelessWidget {
       drawer: drawer,
       backgroundColor: backgroundColor,
       body: content,
+      bottomNavigationBar: bottomNavigationBar,
     );
   }
 }
