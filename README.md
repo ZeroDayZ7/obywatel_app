@@ -13,19 +13,13 @@ A **secure, multi-platform citizen application** designed for digital ID managem
 - **Advanced Security** – PIN, biometrics, and encrypted storage.
 - **Real-Time Notifications** – Stay up-to-date with official alerts.
 
----
-
 ## 🛠 Tech Stack
 
 - **Frontend:** Flutter + Riverpod
-- **Backend:** GO  
-  Repository: `Http-server-v2`
-
-- **Database:** MySQL
+- **Backend:** GO - *Repository:* [services_obywatel_app](https://github.com/ZeroDayZ7/services_obywatel_app)
+- **Database:** MySQL, PostgreSQL
 - **Authentication:** JWT + secure session management
 - **State Management:** Riverpod
-
----
 
 ## 🔒 Security Highlights
 
@@ -33,27 +27,6 @@ A **secure, multi-platform citizen application** designed for digital ID managem
 - Encrypted local storage for sensitive data
 - Immediate logout on compromised devices
 - PIN protection with attempt throttling
-
----
-
-## ⚡ Quick Start
-
-1. Clone the repo
-2. Install dependencies
-
-```bash
-flutter pub get
-```
-
-3. Run the app:
-
-```bash
-flutter run
-```
-
-4. Check the docs directory for more information.
-
----
 
 ## 📄 License
 
