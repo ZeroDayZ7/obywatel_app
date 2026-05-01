@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/grid_painter.dart';
 import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
@@ -64,35 +63,29 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
       ),
     );
 
-    return limiterAsync.when(
-      loading: () => const CyberBackground(
-        showCorners: false,
-        child: Center(child: CircularProgressIndicator()),
-      ),
-      error: (err, _) => CyberBackground(
-        child: Center(
+    return Scaffold(
+      body: limiterAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(
           child: Text(
-            'Błąd: $err',
+            'Error: $err',
             style: const TextStyle(color: Colors.white),
           ),
         ),
-      ),
-      data: (limiter) {
-        final isLocked = isLockedUI || limiter.isLocked;
-        final verificationState = ref.watch(pinVerificationProvider);
+        data: (limiter) {
+          final isLocked = isLockedUI || limiter.isLocked;
+          final verificationState = ref.watch(pinVerificationProvider);
 
-        final isLoading = verificationState.maybeWhen(
-          loading: () => true,
-          orElse: () => false,
-        );
-        final isError = verificationState.maybeWhen(
-          error: () => true,
-          orElse: () => false,
-        );
+          final isLoading = verificationState.maybeWhen(
+            loading: () => true,
+            orElse: () => false,
+          );
+          final isError = verificationState.maybeWhen(
+            error: () => true,
+            orElse: () => false,
+          );
 
-        return CyberBackground(
-          showCorners: true,
-          child: Stack(
+          return Stack(
             children: [
               SafeArea(
                 child: ResponsiveContainer(
@@ -126,9 +119,9 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
               ),
               if (isLocked) const LockoutOverlay(),
             ],
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

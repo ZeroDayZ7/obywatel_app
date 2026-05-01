@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
-import 'package:obywatel_plus/features/home/presentation/config/drawer_items.dart';
+import 'package:obywatel_plus/features/home/config/drawer_items.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_header.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_tile.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';

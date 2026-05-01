@@ -26,18 +26,13 @@ class AppNameSection extends StatelessWidget {
               fontWeight: FontWeight.w900,
               letterSpacing: 4,
               color: Colors.white,
-              shadows: [
-                Shadow(
-                  color: colorScheme.primary.withValues(alpha: 0.5),
-                  blurRadius: 20,
-                ),
-              ],
+  
             ),
             textAlign: TextAlign.center,
           ),
         ),
         Container(
-          width: 200,
+          width: 250,
           height: 2,
           margin: const EdgeInsets.only(top: 10),
           decoration: BoxDecoration(
@@ -49,13 +44,6 @@ class AppNameSection extends StatelessWidget {
                 Colors.transparent,
               ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
           ),
         ),
         const SizedBox(height: 30),

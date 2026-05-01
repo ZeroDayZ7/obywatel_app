@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/features/home/presentation/config/drawer_items.dart';
+import 'package:obywatel_plus/features/home/config/drawer_items.dart';
 
 class DrawerTile extends StatelessWidget {
   final DrawerItem item;

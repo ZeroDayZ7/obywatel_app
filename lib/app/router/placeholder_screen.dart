@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/widgets/app_app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   final String title;
@@ -7,16 +9,19 @@ class PlaceholderScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
-      appBar: AppBar(
-        title: Text(title),
-        backgroundColor: const Color(0xFF0A0A0F),
+    return AppScaffold(
+      appBar: AppAppBar(
+        title: title,
+        onBackButtonPressed: () => Navigator.of(context).pop(),
       ),
-      body: Center(
-        child: Text(
-          '$title - w budowie',
-          style: const TextStyle(color: Colors.white70),
+
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40.0),
+          child: Text(
+            '$title - w budowie',
+            style: const TextStyle(color: Colors.white70, fontSize: 16),
+          ),
         ),
       ),
     );
