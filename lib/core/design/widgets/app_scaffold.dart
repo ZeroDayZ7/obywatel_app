@@ -15,6 +15,7 @@ class AppScaffold extends StatelessWidget {
   final ContainerSize size;
   final EdgeInsetsGeometry? padding;
   final Widget? bottomNavigationBar;
+  final Widget? floatingActionButton;
 
   const AppScaffold({
     super.key,
@@ -30,6 +31,7 @@ class AppScaffold extends StatelessWidget {
     this.size = ContainerSize.medium,
     this.padding,
     this.bottomNavigationBar,
+    this.floatingActionButton,
   });
 
   @override
@@ -59,6 +61,7 @@ class AppScaffold extends StatelessWidget {
       backgroundColor: backgroundColor,
       body: content,
       bottomNavigationBar: bottomNavigationBar,
+      floatingActionButton: floatingActionButton,
     );
   }
 }

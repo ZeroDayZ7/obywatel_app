@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 
 /// Główne kafelki menu na ekranie Home.
 final List<Map<String, dynamic>> homeMenuItems = [
@@ -108,12 +108,5 @@ final List<Map<String, dynamic>> homeMenuItems = [
     'labelKey': LocaleKeys.homeMenu_help,
     'route': AppRoutes.help,
     'color': Color(0xFF88FF00),
-  },
-  {
-    'id': 'security',
-    'icon': Icons.security,
-    'labelKey': LocaleKeys.homeMenu_security,
-    'route': AppRoutes.settingsSecurity,
-    'color': Color(0xFF0099FF),
   },
 ];
