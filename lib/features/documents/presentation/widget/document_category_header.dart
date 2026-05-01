@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/margins/app_margins.dart';
 
 class DocumentCategoryHeader extends StatelessWidget {
   final String title;
@@ -9,7 +10,7 @@ class DocumentCategoryHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
+        padding: CardMargins.small,
         child: Text(
           title,
           style: const TextStyle(

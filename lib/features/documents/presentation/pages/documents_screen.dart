@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
+import 'package:obywatel_plus/core/design/widgets/app_app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/documents/data/mock_document_service.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_card.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_category_header.dart';
@@ -12,9 +15,11 @@ class DocumentsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dokumenty'),
+    return AppScaffold(
+      scrollable: false,
+      size: ContainerSize.medium,
+      appBar: AppAppBar(
+        title: 'Dokumenty',
         actions: [
           IconButton(icon: const Icon(Icons.search), onPressed: () {}),
           IconButton(
@@ -23,14 +28,15 @@ class DocumentsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: CustomScrollView(
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           const DocumentCategoryHeader(title: 'Tożsamość i Obywatelstwo'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.4,
@@ -42,9 +48,8 @@ class DocumentsScreen extends StatelessWidget {
                   color: Colors.blue,
                   isVerified: true,
                   onTap: () => context.push(
-                    AppRoutes.idCard,
-                    extra:
-                        MockDocumentService.getMockIdCard(),
+                    '${AppRoutes.documents}/${AppRoutes.idCard}',
+                    extra: MockDocumentService.getMockIdCard(),
                   ),
                 ),
                 DocumentCard(
@@ -56,12 +61,13 @@ class DocumentsScreen extends StatelessWidget {
               ]),
             ),
           ),
+
           const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 200,
                 mainAxisSpacing: 12,
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.4,
@@ -95,6 +101,7 @@ class DocumentsScreen extends StatelessWidget {
               ]),
             ),
           ),
+
           const DocumentCategoryHeader(title: 'Edukacja'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -105,10 +112,14 @@ class DocumentsScreen extends StatelessWidget {
                 expiry: 'Ważna do 31.10.2026',
                 icon: Icons.school,
                 color: Colors.indigo,
-                onTap: () {},
+                onTap: () => context.push(
+                  '${AppRoutes.documents}/${AppRoutes.idCard}',
+                  extra: MockDocumentService.getMockStudentCard(),
+                ),
               ),
             ),
           ),
+
           const DocumentCategoryHeader(title: 'Transport i Podróże'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
