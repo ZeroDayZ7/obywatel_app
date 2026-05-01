@@ -27,12 +27,10 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
     });
   }
 
-  /// Pomocnicza metoda owijająca widok w detektor aktywności
   Widget _wrapWithInactivityDetector(Widget child) {
     return Listener(
-      behavior: HitTestBehavior.translucent, // Ważne: dotyk przechodzi głębiej
+      behavior: HitTestBehavior.translucent,
       onPointerDown: (_) {
-        // Resetujemy timer przy każdym dotknięciu
         ref.read(sessionObserverProvider.notifier).onUserInteraction();
       },
       child: GlobalErrorListener(child: child),
@@ -41,7 +39,6 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
 
   @override
   Widget build(BuildContext context) {
-    // Inicjalizujemy/obserwujemy observera
     ref.watch(sessionObserverProvider);
 
     final status = ref.watch(appInitProvider);
@@ -50,7 +47,7 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
       loading: () => const SplashScreen(),
       blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
       forceUpdate: () => const ForceUpdateScreen(),
-      // Owijamy stany, w których użytkownik może wchodzić w interakcję
+
       unauthenticated: () => _wrapWithInactivityDetector(widget.child),
       lockedPin: () => _wrapWithInactivityDetector(widget.child),
       authorized: () => _wrapWithInactivityDetector(widget.child),

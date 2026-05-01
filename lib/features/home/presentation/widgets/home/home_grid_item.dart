@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/tokens/border_radius.dart';
 import 'package:obywatel_plus/core/design/widgets/badge.dart';
 
 class HomeGridItem extends StatelessWidget {
@@ -20,9 +21,8 @@ class HomeGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final adjustedColor =
-        Color.lerp(
+    
+    final adjustedColor = Color.lerp(
           color,
           theme.colorScheme.onSurface,
           theme.brightness == Brightness.dark ? 0.2 : 0.0,
@@ -41,9 +41,11 @@ class HomeGridItem extends StatelessWidget {
               width: 56,
               height: 56,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadius.radiusLg,
                 color: adjustedColor.withValues(alpha: 0.12),
-                border: Border.all(color: adjustedColor.withValues(alpha: 0.2)),
+                border: Border.all(
+                  color: adjustedColor.withValues(alpha: 0.2),
+                ),
               ),
               child: Icon(icon, size: 28, color: adjustedColor),
             ),

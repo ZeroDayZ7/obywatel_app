@@ -1,11 +1,9 @@
-// lib/app/bootstrap/app_init_provider.dart
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
-// import 'package:obywatel_plus/app/bootstrap/logic/version/version_provider.dart';
+import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-// import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
@@ -22,11 +20,11 @@ class AppInitNotifier extends _$AppInitNotifier {
 
   Future<void> _runBootstrap() async {
     final logger = ref.read(appLoggerProvider);
+    final stopwatch = Stopwatch()..start();
 
     try {
       final runner = StartupRunner(
         logger: logger,
-        // Grupa 1: Muszą być gotowe najpierw (Infrastruktura)
         sequentialTasks: [
           StorageInitTask(
             storage: ref.read(secureStorageProvider),
@@ -35,14 +33,19 @@ class AppInitNotifier extends _$AppInitNotifier {
           ),
           SecurityInitTask(ref.read(securityServiceProvider.notifier)),
         ],
-        // Grupa 2: Mogą działać w tle jednocześnie (Sieć / System)
-        parallelTasks: [
-          // DeviceIntegrityTask(ref.read(deviceIntegrityFacadeProvider)),
-          // VersionCheckTask(ref.read(versionProvider.notifier)),
-        ],
+        parallelTasks: [],
       );
 
-      state = await runner.run();
+      final result = await runner.run();
+
+      stopwatch.stop();
+      final elapsed = stopwatch.elapsed;
+
+      if (elapsed < apiConstants.minSplashDuration) {
+        await Future.delayed(apiConstants.minSplashDuration - elapsed);
+      }
+
+      state = result;
     } catch (e, st) {
       logger.e(
         '💥 Bootstrap failed at provider level',

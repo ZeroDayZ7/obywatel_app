@@ -86,7 +86,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
       alignment: Alignment.center,
       child: Material(
         color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(Corners.xl),
+        borderRadius: AppRadius.radiusXl,
         elevation: 12,
         clipBehavior: Clip.antiAlias,
         child: Padding(

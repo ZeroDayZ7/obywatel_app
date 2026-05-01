@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/core/design/tokens/border_radius.dart';
 
 class AppLogo extends StatelessWidget {
   final double size;
@@ -8,7 +9,7 @@ class AppLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: AppRadius.radiusLg,
       child: Image.asset(
         'assets/images/logo.jpg',
         width: size,

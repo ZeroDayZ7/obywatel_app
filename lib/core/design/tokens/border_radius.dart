@@ -1,10 +1,22 @@
-class Corners {
-  static const none = 0.0;
+import 'package:flutter/material.dart';
 
-  static const xs = 4.0;
-  static const sm = 6.0;
-  static const md = 8.0;
-  static const lg = 12.0;
-  static const xl = 20.0;
-  static const xxl = 32.0;
+class AppRadius {
+  static const double none = 0.0;
+  static const double xs = 4.0;
+  static const double sm = 6.0;
+  static const double md = 8.0;
+  static const double lg = 12.0;
+  static const double xl = 20.0;
+  static const double xxl = 32.0;
+  static const double circular = 999.0;
+
+  static const BorderRadius radiusXs = BorderRadius.all(Radius.circular(xs));
+  static const BorderRadius radiusSm = BorderRadius.all(Radius.circular(sm));
+  static const BorderRadius radiusMd = BorderRadius.all(Radius.circular(md));
+  static const BorderRadius radiusLg = BorderRadius.all(Radius.circular(lg));
+  static const BorderRadius radiusXl = BorderRadius.all(Radius.circular(xl));
+  static const BorderRadius radiusXxl = BorderRadius.all(Radius.circular(xxl));
+  static const BorderRadius radiusFull = BorderRadius.all(
+    Radius.circular(circular),
+  );
 }
