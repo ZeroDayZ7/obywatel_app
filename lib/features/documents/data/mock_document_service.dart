@@ -1,21 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
+import '../domain/models/document_model.dart';
 
 class MockDocumentService {
   static DocumentModel getMockIdCard() {
-    return DocumentModel(
+    return const DocumentModel(
       id: '1',
       title: 'Dowód osobisty',
-      type: DocumentType.identity,
+      category: DocumentCategory.identity,
+      iconName: 'badge',
+      colorHex: 'FF2196F3',
       qrData: 'USER_SECURE_TOKEN_123',
-      themeColor: Colors.blue,
+      isVerified: true,
       fields: [
-        DocumentField(label: 'Imię', value: 'Jan', icon: Icons.person),
-        DocumentField(label: 'Nazwisko', value: 'Kowalski', icon: Icons.badge),
+        DocumentField(label: 'Imię', value: 'Jan', iconName: 'person'),
+        DocumentField(label: 'Nazwisko', value: 'Kowalski', iconName: 'badge'),
         DocumentField(
           label: 'PESEL',
           value: '90010112345',
-          icon: Icons.fingerprint,
+          iconName: 'fingerprint',
           isSensitive: true,
         ),
       ],
@@ -24,19 +25,20 @@ class MockDocumentService {
   }
 
   static DocumentModel getMockStudentCard() {
-    return DocumentModel(
+    return const DocumentModel(
       id: '2',
       title: 'Legitymacja studencka',
-      type: DocumentType.education,
+      category: DocumentCategory.education,
+      iconName: 'school',
+      colorHex: 'FF3F51B5',
       qrData: 'STUDENT_AUTH_TOKEN_99',
-      themeColor: Colors.indigo,
       fields: [
         DocumentField(
           label: 'Uczelnia',
           value: 'Politechnika Warszawska',
-          icon: Icons.school,
+          iconName: 'school',
         ),
-        DocumentField(label: 'Nr Albumu', value: '302192', icon: Icons.numbers),
+        DocumentField(label: 'Nr Albumu', value: '302192', iconName: 'numbers'),
       ],
       expiryDate: '31.10.2026',
     );

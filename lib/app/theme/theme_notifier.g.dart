@@ -8,15 +8,12 @@ part of 'theme_notifier.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Notifier zarządzający trybem motywu (Jasny/Ciemny/Systemowy)
 
 @ProviderFor(ThemeNotifier)
 final themeProvider = ThemeNotifierProvider._();
 
-/// Notifier zarządzający trybem motywu (Jasny/Ciemny/Systemowy)
 final class ThemeNotifierProvider
     extends $NotifierProvider<ThemeNotifier, ThemeMode> {
-  /// Notifier zarządzający trybem motywu (Jasny/Ciemny/Systemowy)
   ThemeNotifierProvider._()
     : super(
         from: null,
@@ -45,8 +42,6 @@ final class ThemeNotifierProvider
 }
 
 String _$themeNotifierHash() => r'd0c0f81a9aebc5f318768e36aba8e639a2d21bd8';
-
-/// Notifier zarządzający trybem motywu (Jasny/Ciemny/Systemowy)
 
 abstract class _$ThemeNotifier extends $Notifier<ThemeMode> {
   ThemeMode build();
