@@ -4,6 +4,7 @@ import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dar
 
 class AppScaffold extends StatelessWidget {
   final Widget child;
+  final Widget? drawer;
   final bool useSafeArea;
   final AlignmentGeometry alignment;
   final bool scrollable;
@@ -17,6 +18,7 @@ class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,
     required this.child,
+    this.drawer,
     this.useSafeArea = true,
     this.alignment = Alignment.topCenter,
     this.scrollable = true,
@@ -51,6 +53,7 @@ class AppScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: effectiveAppBar,
+      drawer: drawer,
       backgroundColor: backgroundColor,
       body: content,
     );

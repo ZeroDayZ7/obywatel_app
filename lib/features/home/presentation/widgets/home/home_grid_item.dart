@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/widgets/badge.dart';
+import 'package:obywatel_plus/core/design/widgets/badge.dart';
 
 class HomeGridItem extends StatelessWidget {
   final IconData icon;
@@ -20,11 +20,14 @@ class HomeGridItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
-    final adjustedColor = isDark
-        ? Color.lerp(color, Colors.white, 0.2) ?? color
-        : color;
+    final adjustedColor =
+        Color.lerp(
+          color,
+          theme.colorScheme.onSurface,
+          theme.brightness == Brightness.dark ? 0.2 : 0.0,
+        ) ??
+        color;
 
     return GestureDetector(
       onTap: onTap,
@@ -40,10 +43,7 @@ class HomeGridItem extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(16),
                 color: adjustedColor.withValues(alpha: 0.12),
-                border: Border.all(
-                  color: adjustedColor.withValues(alpha: 0.2),
-                  width: 1.5,
-                ),
+                border: Border.all(color: adjustedColor.withValues(alpha: 0.2)),
               ),
               child: Icon(icon, size: 28, color: adjustedColor),
             ),
@@ -54,7 +54,6 @@ class HomeGridItem extends StatelessWidget {
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium?.copyWith(
               fontSize: 12,
-              fontWeight: FontWeight.w800,
               letterSpacing: 0.2,
             ),
             maxLines: 1,

@@ -11,36 +11,32 @@ class HomeGridMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final crossAxisCount = constraints.maxWidth > 600 ? 5 : 4;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: homeMenuItems.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-          ),
-          itemBuilder: (context, index) {
-            final item = homeMenuItems[index];
-            final color = item['color'] as Color;
-            final label = (item['labelKey'] as String).tr();
-            final route = item['route'] as String?;
-            final badgeCount = badgeCounts[item['id']] ?? 0;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: homeMenuItems.length,
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 100,
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        mainAxisExtent: 110,
+      ),
+      itemBuilder: (context, index) {
+        final item = homeMenuItems[index];
+        final color = item['color'] as Color;
+        final label = (item['labelKey'] as String).tr();
+        final route = item['route'] as String?;
+        final badgeCount = badgeCounts[item['id']] ?? 0;
 
-            return HomeGridItem(
-              icon: item['icon'] as IconData,
-              color: color,
-              label: label,
-              badgeCount: badgeCount,
-              onTap: () {
-                if (route != null && route.isNotEmpty) {
-                  context.push(route);
-                }
-              },
-            );
+        return HomeGridItem(
+          icon: item['icon'] as IconData,
+          color: color,
+          label: label,
+          badgeCount: badgeCount,
+          onTap: () {
+            if (route != null && route.isNotEmpty) {
+              context.push(route);
+            }
           },
         );
       },
