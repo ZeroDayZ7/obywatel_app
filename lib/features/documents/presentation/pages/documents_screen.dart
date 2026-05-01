@@ -13,6 +13,9 @@ import 'package:obywatel_plus/features/documents/presentation/widget/wide_docume
 class DocumentsScreen extends StatelessWidget {
   const DocumentsScreen({super.key});
 
+  static const double _cardWidth = 160.0;
+  static const double _cardHeight = 115.0;
+
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
@@ -34,71 +37,91 @@ class DocumentsScreen extends StatelessWidget {
           const DocumentCategoryHeader(title: 'Tożsamość i Obywatelstwo'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.4,
-              ),
-              delegate: SliverChildListDelegate([
-                DocumentCard(
-                  title: 'Dowód osobisty',
-                  icon: Icons.badge,
-                  color: Colors.blue,
-                  isVerified: true,
-                  onTap: () => context.push(
-                    '${AppRoutes.documents}/${AppRoutes.idCard}',
-                    extra: MockDocumentService.getMockIdCard(),
+            sliver: SliverToBoxAdapter(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Dowód osobisty',
+                      icon: Icons.badge,
+                      color: Colors.blue,
+                      isVerified: true,
+                      onTap: () => context.push(
+                        '${AppRoutes.documents}/${AppRoutes.idCard}',
+                        extra: MockDocumentService.getMockIdCard(),
+                      ),
+                    ),
                   ),
-                ),
-                DocumentCard(
-                  title: 'Paszport',
-                  icon: Icons.public,
-                  color: Colors.red.shade900,
-                  onTap: () {},
-                ),
-              ]),
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Paszport',
+                      icon: Icons.public,
+                      color: Colors.red.shade900,
+                      onTap: () {},
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
           const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
           SliverPadding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 200,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.4,
+            sliver: SliverToBoxAdapter(
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Prawo jazdy',
+                      icon: Icons.directions_car,
+                      color: Colors.green,
+                      status: 'Kat. B, A',
+                      onTap: () {},
+                    ),
+                  ),
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Karta Dużej Rodziny',
+                      icon: Icons.family_restroom,
+                      color: Colors.orange,
+                      onTap: () {},
+                    ),
+                  ),
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Legitymacja emeryta',
+                      icon: Icons.elderly,
+                      color: Colors.teal,
+                      onTap: () {},
+                    ),
+                  ),
+                  SizedBox(
+                    width: _cardWidth,
+                    height: _cardHeight,
+                    child: DocumentCard(
+                      title: 'Pozwolenie na broń',
+                      icon: Icons.security,
+                      color: Colors.blueGrey,
+                      onTap: () {},
+                    ),
+                  ),
+                ],
               ),
-              delegate: SliverChildListDelegate([
-                DocumentCard(
-                  title: 'Prawo jazdy',
-                  icon: Icons.directions_car,
-                  color: Colors.green,
-                  status: 'Kat. B, A',
-                  onTap: () {},
-                ),
-                DocumentCard(
-                  title: 'Karta Dużej Rodziny',
-                  icon: Icons.family_restroom,
-                  color: Colors.orange,
-                  onTap: () {},
-                ),
-                DocumentCard(
-                  title: 'Legitymacja emeryta',
-                  icon: Icons.elderly,
-                  color: Colors.teal,
-                  onTap: () {},
-                ),
-                DocumentCard(
-                  title: 'Pozwolenie na broń',
-                  icon: Icons.security,
-                  color: Colors.blueGrey,
-                  onTap: () {},
-                ),
-              ]),
             ),
           ),
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/core/design/tokens/border_radius.dart';
-import 'package:obywatel_plus/core/design/widgets/badge.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/badge.dart';
 
 class HomeGridItem extends StatelessWidget {
   final IconData icon;
