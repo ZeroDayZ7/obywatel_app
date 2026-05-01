@@ -18,12 +18,12 @@ class AppTheme {
       appBarTheme: buildAppBarTheme(isDark),
       textTheme: _textTheme(isDark),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        backgroundColor: Colors.transparent,
-        selectedItemColor: colorScheme.primary,
-        unselectedItemColor: isDark ? Colors.white30 : Colors.black38,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
-      ),
+      backgroundColor: Colors.transparent,
+      selectedItemColor: colorScheme.primary,
+      unselectedItemColor: isDark ? Colors.white30 : Colors.black38,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
+    ),
       extensions: [_shadowTheme(isDark), _toastTheme(isDark)],
     );
   }

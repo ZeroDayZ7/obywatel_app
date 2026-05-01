@@ -17,10 +17,8 @@ class ContactsBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Pobieramy kolory z motywu zamiast z parametrów
     final theme = Theme.of(context);
     final navTheme = theme.bottomNavigationBarTheme;
-    final isDark = theme.brightness == Brightness.dark;
 
     return ClipRRect(
       child: BackdropFilter(
@@ -28,10 +26,6 @@ class ContactsBottomNav extends StatelessWidget {
         child: BottomNavigationBar(
           onTap: onTap,
           currentIndex: currentIndex,
-          // Automatyczne kolory z motywu:
-          backgroundColor: isDark
-              ? theme.colorScheme.surface.withAlpha(128)
-              : Colors.white.withAlpha(180),
           selectedItemColor: navTheme.selectedItemColor,
           unselectedItemColor: navTheme.unselectedItemColor,
           type: navTheme.type ?? BottomNavigationBarType.fixed,
