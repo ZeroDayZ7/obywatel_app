@@ -5,10 +5,10 @@ import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/documents/data/mock_document_service.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/document_card.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/document_category_header.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/ticket_tile.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/wide_document_card.dart';
+import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_card.dart';
+import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_category_header.dart';
+import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/ticket_tile.dart';
+import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/wide_document_card.dart';
 
 class DocumentsScreen extends StatelessWidget {
   const DocumentsScreen({super.key});
