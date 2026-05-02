@@ -1,7 +1,6 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bottom_nav_bar.dart';
-
-import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_colors.dart';
 
 class CyberpunkBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -15,22 +14,25 @@ class CyberpunkBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final navTheme = theme.bottomNavigationBarTheme;
+
     return AppBottomNavBar(
       currentIndex: currentIndex,
       onTap: onTap,
-      backgroundColor: CyberpunkColors.background,
-      primaryColor: CyberpunkColors.primary,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.chat_bubble_rounded),
+      primaryColor: navTheme.selectedItemColor,
+      backgroundColor: theme.colorScheme.surface,
+      items: [
+        const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.chat_bubble_2),
           label: 'Chats',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.group_rounded),
+        const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.group),
           label: 'Groups',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.settings_rounded),
+        const BottomNavigationBarItem(
+          icon: Icon(CupertinoIcons.settings),
           label: 'Settings',
         ),
       ],

@@ -5,12 +5,12 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final List<Widget>? actions;
   final bool showBackButton;
   final bool centerTitle;
-  final VoidCallback onBackButtonPressed; // Dodano pole
+  final VoidCallback onBackButtonPressed;
 
   const AppAppBar({
     super.key,
     required this.title,
-    required this.onBackButtonPressed, // Poprawiony wymagany parametr
+    required this.onBackButtonPressed,
     this.actions,
     this.showBackButton = true,
     this.centerTitle = true,
@@ -40,8 +40,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: AppBar(
         title: Text(title),
         centerTitle: centerTitle,
-        automaticallyImplyLeading:
-            false, // Wyłączamy automat, by użyć własnej akcji
+        automaticallyImplyLeading: false,
         leading: showBackButton
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),

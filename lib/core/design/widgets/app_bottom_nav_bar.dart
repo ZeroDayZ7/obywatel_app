@@ -40,11 +40,21 @@ class AppBottomNavBar extends StatelessWidget {
       child: BottomNavigationBar(
         currentIndex: currentIndex,
         onTap: onTap,
-        backgroundColor: Colors.transparent,
         elevation: 0,
         selectedItemColor: activeCol,
         unselectedItemColor: theme.unselectedWidgetColor.withValues(alpha: 0.6),
         type: BottomNavigationBarType.fixed,
+        selectedFontSize: 12,
+        unselectedFontSize: 12,
+        selectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w400,
+          letterSpacing: 0.5,
+        ),
+
         items: items,
       ),
     );

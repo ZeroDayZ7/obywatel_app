@@ -3,12 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
-import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_bottom_nav.dart';
 
-class ContactsShellWrapper extends StatelessWidget {
+class AppShellWrapper extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
+  final List<String> titles;
+  final Widget Function(int currentIndex, ValueChanged<int> onTap)
+  navBarBuilder;
 
-  const ContactsShellWrapper({super.key, required this.navigationShell});
+  const AppShellWrapper({
+    super.key,
+    required this.navigationShell,
+    required this.titles,
+    required this.navBarBuilder,
+  });
 
   void _onTap(int index) {
     navigationShell.goBranch(
@@ -19,20 +26,13 @@ class ContactsShellWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Tytuły dopasowane do indeksów branchy w routerze
-    final titles = ['Kontakty', 'Ulubione', 'Ustawienia'];
-
     return AppScaffold(
-      backgroundColor: const Color(0xFF0A0E27),
       scrollable: false,
       appBar: AppAppBar(
         title: titles[navigationShell.currentIndex],
         onBackButtonPressed: () => context.go(AppRoutes.home),
       ),
-      bottomNavigationBar: ContactsBottomNav(
-        currentIndex: navigationShell.currentIndex,
-        onTap: _onTap,
-      ),
+      bottomNavigationBar: navBarBuilder(navigationShell.currentIndex, _onTap),
       child: navigationShell,
     );
   }
