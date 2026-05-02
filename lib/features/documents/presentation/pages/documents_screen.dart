@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
-import 'package:obywatel_plus/features/documents/data/mock_document_service.dart';
+import 'package:obywatel_plus/features/documents/application/documents_provider.dart';
+import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_card.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_category_header.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/ticket_tile.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/wide_document_card.dart';
 
-class DocumentsScreen extends StatelessWidget {
+class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
-  static const double _cardWidth = 160.0;
-  static const double _cardHeight = 115.0;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final documentsAsync = ref.watch(documentsProvider);
+
     return AppScaffold(
       scrollable: false,
       size: ContainerSize.medium,
@@ -25,153 +26,136 @@ class DocumentsScreen extends StatelessWidget {
         title: 'Dokumenty',
         onBackButtonPressed: () => Navigator.of(context).pop(),
         actions: [
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
           IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            onPressed: () {},
+            icon: const Icon(Icons.refresh),
+            onPressed: () => ref.read(documentsProvider.notifier).refresh(),
           ),
         ],
       ),
+      child: documentsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Błąd: $err')),
+        data: (documents) => _DocumentsList(documents: documents),
+      ),
+    );
+  }
+}
+
+class _DocumentsList extends StatelessWidget {
+  final List<DocumentModel> documents;
+  const _DocumentsList({required this.documents});
+
+  @override
+  Widget build(BuildContext context) {
+    final identityDocs = documents
+        .where((d) => d.category == DocumentCategory.identity)
+        .toList();
+    final permissionsDocs = documents
+        .where((d) => d.category == DocumentCategory.permissions)
+        .toList();
+    final educationDocs = documents
+        .where((d) => d.category == DocumentCategory.education)
+        .toList();
+    final transportDocs = documents
+        .where((d) => d.category == DocumentCategory.transport)
+        .toList();
+
+    return RefreshIndicator(
+      onRefresh: () => ProviderScope.containerOf(
+        context,
+      ).read(documentsProvider.notifier).refresh(),
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          const DocumentCategoryHeader(title: 'Tożsamość i Obywatelstwo'),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Dowód osobisty',
-                      icon: Icons.badge,
-                      color: Colors.blue,
-                      isVerified: true,
-                      onTap: () => context.push(
-                        '${AppRoutes.documents}/${AppRoutes.idCard}',
-                        extra: MockDocumentService.getMockIdCard(),
-                      ),
+          if (identityDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Tożsamość i Obywatelstwo'),
+            _DocumentGrid(docs: identityDocs),
+          ],
+          if (permissionsDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
+            _DocumentGrid(docs: permissionsDocs),
+          ],
+          if (educationDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Edukacja'),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => WideDocumentCard(
+                    title: educationDocs[index].title,
+                    subtitle: educationDocs[index].subtitle ?? '',
+                    expiry: educationDocs[index].expiryDate != null
+                        ? 'Ważna do ${educationDocs[index].expiryDate}'
+                        : '',
+                    icon: educationDocs[index].icon,
+                    color: educationDocs[index].themeColor,
+                    onTap: () => context.push(
+                      '${AppRoutes.documents}/detail/${educationDocs[index].id}',
+                      extra: educationDocs[index],
                     ),
                   ),
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Paszport',
-                      icon: Icons.public,
-                      color: Colors.red.shade900,
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Prawo jazdy',
-                      icon: Icons.directions_car,
-                      color: Colors.green,
-                      status: 'Kat. B, A',
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Karta Dużej Rodziny',
-                      icon: Icons.family_restroom,
-                      color: Colors.orange,
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Legitymacja emeryta',
-                      icon: Icons.elderly,
-                      color: Colors.teal,
-                      onTap: () {},
-                    ),
-                  ),
-                  SizedBox(
-                    width: _cardWidth,
-                    height: _cardHeight,
-                    child: DocumentCard(
-                      title: 'Pozwolenie na broń',
-                      icon: Icons.security,
-                      color: Colors.blueGrey,
-                      onTap: () {},
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const DocumentCategoryHeader(title: 'Edukacja'),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: WideDocumentCard(
-                title: 'Legitymacja studencka',
-                subtitle: 'Politechnika Warszawska',
-                expiry: 'Ważna do 31.10.2026',
-                icon: Icons.school,
-                color: Colors.indigo,
-                onTap: () => context.push(
-                  '${AppRoutes.documents}/${AppRoutes.idCard}',
-                  extra: MockDocumentService.getMockStudentCard(),
+                  childCount: educationDocs.length,
                 ),
               ),
             ),
-          ),
-
-          const DocumentCategoryHeader(title: 'Transport i Podróże'),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                const TicketTile(
-                  title: 'Bilet okresowy - ZTM Warszawa',
-                  subtitle: '90-dniowy • Strefa 1+2',
-                  icon: Icons.directions_bus,
-                  color: Colors.red,
+          ],
+          if (transportDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Transport i Podróże'),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) => TicketTile(
+                    title: transportDocs[index].title,
+                    subtitle: transportDocs[index].subtitle ?? '',
+                    icon: transportDocs[index].icon,
+                    color: transportDocs[index].themeColor,
+                    onTap: () => context.push(
+                      '${AppRoutes.documents}/detail/${transportDocs[index].id}',
+                      extra: transportDocs[index],
+                    ),
+                  ),
+                  childCount: transportDocs.length,
                 ),
-                TicketTile(
-                  title: 'Karta lojalnościowa PKP',
-                  subtitle: 'Intercity Premium',
-                  icon: Icons.train,
-                  color: Colors.orange.shade800,
-                ),
-                TicketTile(
-                  title: 'Bilet lotniczy: WAW -> JFK',
-                  subtitle: '24 Maj 2026 • LOT Polish Airlines',
-                  icon: Icons.flight_takeoff,
-                  color: Colors.blue.shade800,
-                ),
-              ]),
+              ),
             ),
-          ),
+          ],
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
+      ),
+    );
+  }
+}
+
+class _DocumentGrid extends StatelessWidget {
+  final List<DocumentModel> docs;
+  const _DocumentGrid({required this.docs});
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 12,
+          crossAxisSpacing: 12,
+          childAspectRatio: 160 / 115,
+        ),
+        delegate: SliverChildBuilderDelegate((context, index) {
+          final doc = docs[index];
+          return DocumentCard(
+            title: doc.title,
+            icon: doc.icon,
+            color: doc.themeColor,
+            isVerified: doc.isVerified,
+            status: doc.status,
+            onTap: () => context.push(
+              '${AppRoutes.documents}/detail/${doc.id}',
+              extra: doc,
+            ),
+          );
+        }, childCount: docs.length),
       ),
     );
   }

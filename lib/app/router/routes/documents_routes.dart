@@ -9,9 +9,11 @@ final documentsRoutes = [
   AppRoutes.documents.go(
     const DocumentsScreen(),
     routes: [
-      AppRoutes.idCard.goWithState((state) {
-        final doc = state.extra as DocumentModel;
-        return DocumentDetailsScreen(document: doc);
+      'detail/:id'.goWithState((state) {
+        final id = state.pathParameters['id']!;
+        final doc = state.extra as DocumentModel?;
+
+        return DocumentDetailsScreen(documentId: id, initialDocument: doc);
       }),
     ],
   ),

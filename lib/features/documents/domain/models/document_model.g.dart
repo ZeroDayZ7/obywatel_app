@@ -59,4 +59,5 @@ const _$DocumentCategoryEnumMap = {
   DocumentCategory.work: 'work',
   DocumentCategory.education: 'education',
   DocumentCategory.transport: 'transport',
+  DocumentCategory.permissions: 'permissions',
 };

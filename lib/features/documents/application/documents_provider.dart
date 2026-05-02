@@ -7,9 +7,22 @@ part 'documents_provider.g.dart';
 @riverpod
 class DocumentsNotifier extends _$DocumentsNotifier {
   @override
-  Future<List<DocumentModel>> build() {
+  FutureOr<List<DocumentModel>> build() {
     return ref.watch(documentRepositoryProvider).fetchDocuments();
   }
 
-  // Tutaj możesz dodać metody typu refresh() lub addDocument()
+  Future<void> refresh() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(documentRepositoryProvider).fetchDocuments(),
+    );
+  }
+}
+
+@riverpod
+class DocumentDetailNotifier extends _$DocumentDetailNotifier {
+  @override
+  FutureOr<DocumentModel> build(String id) {
+    return ref.watch(documentRepositoryProvider).fetchDocumentById(id);
+  }
 }

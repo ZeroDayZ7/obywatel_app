@@ -18,6 +18,7 @@ class ObywatelPlusApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    debugPrint('= 2 = / -> const ObywatelPlusApp');
     final themeMode = ref.watch(themeProvider);
     final router = ref.watch(appRouterProvider);
     ref.watch(appLifecycleObserverProvider);

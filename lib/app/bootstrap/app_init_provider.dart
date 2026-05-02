@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
@@ -19,6 +20,7 @@ class AppInitNotifier extends _$AppInitNotifier {
   Future<void> initialize() async => await _runBootstrap();
 
   Future<void> _runBootstrap() async {
+    debugPrint('= 4 = / _runBootstrap');
     final logger = ref.read(appLoggerProvider);
     final stopwatch = Stopwatch()..start();
 

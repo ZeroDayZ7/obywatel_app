@@ -15,11 +15,11 @@ final documentRepositoryProvider = DocumentRepositoryProvider._();
 final class DocumentRepositoryProvider
     extends
         $FunctionalProvider<
-          DocumentRepository,
-          DocumentRepository,
-          DocumentRepository
+          IDocumentRepository,
+          IDocumentRepository,
+          IDocumentRepository
         >
-    with $Provider<DocumentRepository> {
+    with $Provider<IDocumentRepository> {
   DocumentRepositoryProvider._()
     : super(
         from: null,
@@ -36,23 +36,23 @@ final class DocumentRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<DocumentRepository> $createElement(
+  $ProviderElement<IDocumentRepository> $createElement(
     $ProviderPointer pointer,
   ) => $ProviderElement(pointer);
 
   @override
-  DocumentRepository create(Ref ref) {
+  IDocumentRepository create(Ref ref) {
     return documentRepository(ref);
   }
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(DocumentRepository value) {
+  Override overrideWithValue(IDocumentRepository value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<DocumentRepository>(value),
+      providerOverride: $SyncValueProvider<IDocumentRepository>(value),
     );
   }
 }
 
 String _$documentRepositoryHash() =>
-    r'8ba3e620ad094139072f86d7c02b65608fab8e01';
+    r'dd435d3f69d034d40341ee2ebc1b517a070e96bf';

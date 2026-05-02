@@ -32,6 +32,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
   };
 
   await runZonedGuarded<Future<void>>(() async {
+    debugPrint('= 1 = / Start application -> runZonedGuarded');
     WidgetsFlutterBinding.ensureInitialized();
     await EasyLocalization.ensureInitialized();
 
