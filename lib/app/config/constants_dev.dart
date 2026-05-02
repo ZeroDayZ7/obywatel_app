@@ -24,5 +24,6 @@ class ApiConstants extends ApiConstantsBase {
       inactivityTimeout = const Duration(minutes: 15),
       super(
         minSplashDuration: const Duration(milliseconds: 3500),
+        appVersion: '1.0.0-DEV',
       );
 }

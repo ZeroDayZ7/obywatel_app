@@ -23,5 +23,8 @@ class ApiConstants extends ApiConstantsBase {
       appName = 'Obywatel Plus',
       appDescription = 'Government Operating System',
       inactivityTimeout = const Duration(minutes: 5),
-      super(minSplashDuration: const Duration(milliseconds: 500));
+      super(
+        minSplashDuration: const Duration(milliseconds: 500),
+        appVersion: '1.0.0',
+      );
 }
