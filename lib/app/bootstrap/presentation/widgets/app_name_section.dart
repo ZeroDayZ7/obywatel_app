@@ -22,11 +22,10 @@ class AppNameSection extends StatelessWidget {
           child: Text(
             apiConstants.appName.toUpperCase(),
             style: TextStyle(
-              fontSize: 36,
+              fontSize: 18,
               fontWeight: FontWeight.w900,
-              letterSpacing: 4,
+              letterSpacing: 2,
               color: Colors.white,
-  
             ),
             textAlign: TextAlign.center,
           ),
