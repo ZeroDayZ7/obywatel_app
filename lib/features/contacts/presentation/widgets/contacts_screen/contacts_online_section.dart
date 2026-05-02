@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';
-
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_online_avatar.dart';
 
 class ContactsOnlineSection extends StatelessWidget {
@@ -24,7 +23,7 @@ class ContactsOnlineSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(12.0),
             child: Text(
               'DOSTĘPNI W SIECI',
               style: TextStyle(
