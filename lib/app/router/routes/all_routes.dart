@@ -4,6 +4,7 @@ import 'package:obywatel_plus/app/router/routes/auth_routes.dart';
 import 'package:obywatel_plus/app/router/routes/chat_routes.dart';
 import 'package:obywatel_plus/app/router/routes/contacts_routes.dart';
 import 'package:obywatel_plus/app/router/routes/documents_routes.dart';
+import 'package:obywatel_plus/app/router/routes/health_routes.dart';
 import 'package:obywatel_plus/app/router/routes/home_routes.dart';
 import 'package:obywatel_plus/app/router/routes/notifications_routes.dart';
 import 'package:obywatel_plus/app/router/routes/other_routes.dart';
@@ -19,6 +20,7 @@ List<RouteBase> getAllRoutes() {
     ...settingsRoutes,
     ...workAndCareerRoutes,
     ...documentsRoutes,
+    ...healthRoutes,
     ...chatRoutes,
     ...contactsRoutes,
     ...placeholderRoutes,

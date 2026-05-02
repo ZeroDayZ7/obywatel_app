@@ -11,35 +11,29 @@ class AppRoutes {
   static const test = '/test';
   static const update = '/update';
 
-  // Nowe ścieżki dla Settings
   static const setPin = 'set_pin';
-
   static const patternLock = 'pattern_lock';
   static const fingerprint = 'fingerprint';
-
   static const securitySetup = '/security_setup';
 
-  // Ścieżki dla HomeScreen dashboard
   static const profile = '/profile';
-
   static const documents = '/documents';
   static const idCard = 'id_card';
-
   static const notifications = '/notifications';
   static const notificationsTrash = 'trash';
-  // Settings
+
   static const settings = '/settings';
   static const settingsSecurity = 'security';
   static const settingsNotifications = 'notifications';
   static const settingsActiveSession = 'active-session';
   static const settingsChangePin = 'change-pin';
-  // chats
+
   static const chatTitles = ['Messages', 'Groups', 'Settings'];
   static const chats = '/chats';
   static const chatGroups = '/chats/groups';
   static const chatSettings = '/chats/settings';
   static const chatDetail = '/chats/:username';
-  // contacts
+
   static const contactsTitles = ['Kontakty', 'Ulubione', 'Ustawienia'];
   static const contacts = '/contacts';
   static const contactsFavorites = '/contacts/favorites';
@@ -48,13 +42,20 @@ class AppRoutes {
   static const explore = '/explore';
   static const payments = '/payments';
   static const store = '/store';
+
   static const health = '/health';
+  static const healthPrescriptions = 'prescriptions';
+  static const healthReferrals = 'referrals';
+  static const healthHistory = 'history';
+  static const healthVaccinations = 'vaccinations';
+  static const healthInsurance = 'insurance';
+
   static const education = '/education';
   static const games = '/games';
   static const videos = '/videos';
   static const favorites = '/favorites';
   static const help = '/help';
-  // work_and_career
+
   static const workAndCareer = '/work_and_career';
   static const workAndCareerJobOffers = 'job_offers';
   static const workAndCareerMyCV = 'my_cv';
