@@ -51,7 +51,7 @@ class ChatSettingsScreen extends StatelessWidget {
             child: AppButton(
               labelKey: 'Wipe All Data',
               onPressed: () {},
-              variant: AppButtonVariant.secondary, // Używamy Twojego AppButton
+              variant: AppButtonVariant.secondary, 
             ),
           ),
         ],

@@ -44,7 +44,7 @@ class MessageDto {
     'imageUrl': imageUrl,
   };
 
-  /// DTO → DOMAIN
+  
   Message toDomain({String? currentUserId}) {
     return Message(
       id: id,
@@ -59,7 +59,7 @@ class MessageDto {
     );
   }
 
-  /// DOMAIN → DTO
+  
   factory MessageDto.fromDomain(Message message) => MessageDto(
     id: message.id,
     chatId: message.chatId,

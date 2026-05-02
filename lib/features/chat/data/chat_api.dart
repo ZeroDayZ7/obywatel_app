@@ -1,4 +1,4 @@
-// lib/features/chat/data/remote/chat_api.dart
+
 import 'package:obywatel_plus/core/network/clients/api_client.dart' show ApiClient;
 import 'package:obywatel_plus/features/chat/core/chat_endpoints.dart'
     show ChatEndpoints;
@@ -11,7 +11,7 @@ class ChatApi {
 
   ChatApi({required this.client});
 
-  // REST – pobranie historii
+  
   Future<List<Message>> getChatMessages(String chatId) async {
     final response = await client.get(ChatEndpoints.messages(chatId));
 
@@ -19,13 +19,13 @@ class ChatApi {
     return (data).map((json) => MessageDto.fromJson(json as Map<String, dynamic>).toDomain()).toList();
   }
 
-  // REST – wysyłanie wiadomości (opcjonalnie)
+  
   Future<void> sendMessage(String chatId, Message message) async {
     final dto = MessageDto.fromDomain(message);
     await client.post(ChatEndpoints.sendMessage(chatId), data: dto.toJson());
   }
 
-  // WS – połączenie WebSocket
+  
   Future<WebSocketChannel> connectWebSocket({
     required String chatId,
     required String token,

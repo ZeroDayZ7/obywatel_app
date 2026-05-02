@@ -5,14 +5,14 @@ import 'package:cryptography/cryptography.dart';
 class MessageCryptoService {
   final cipher = AesGcm.with256bits();
 
-  // ───────────────────────────────────────────────────
-  // Wspólny klucz wyliczony z Diffie–Hellman (X25519)
-  // ───────────────────────────────────────────────────
+  
+  
+  
   final SecretKey sharedSecretKey;
 
   MessageCryptoService({required this.sharedSecretKey});
 
-  // FORMUŁA: version(1B) + nonce(12B) + ciphertext + mac(16B)
+  
   static const int version = 1;
 
   Future<String> encrypt(Map<String, dynamic> json) async {
@@ -20,7 +20,7 @@ class MessageCryptoService {
 
     final nonce = cipher.newNonce();
 
-    // AAD — chroni metadane
+    
     final aad = utf8.encode('v$version|msg');
 
     final secretBox = await cipher.encrypt(

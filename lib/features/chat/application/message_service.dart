@@ -7,7 +7,7 @@ class MessageService {
 
   MessageService({required this.messageRepository});
 
-  /// Pobierz historię wiadomości dla czatu
+  
   Future<List<Message>> getMessages(String chatId) async {
     try {
       return await messageRepository.getMessages(chatId);
@@ -16,7 +16,7 @@ class MessageService {
     }
   }
 
-  /// Zapisz wiadomość lokalnie
+  
   Future<void> saveMessage(Message message) async {
     try {
       await messageRepository.saveMessage(message);
@@ -25,7 +25,7 @@ class MessageService {
     }
   }
 
-  /// Zapisz wiele wiadomości lokalnie
+  
   Future<void> saveMessages(List<Message> messages) async {
     try {
       await messageRepository.saveMessages(messages);
@@ -34,7 +34,7 @@ class MessageService {
     }
   }
 
-  /// Pobierz wiadomości offline (do wysłania)
+  
   Future<List<Message>> getUnsyncedMessages(String chatId) async {
     try {
       return await messageRepository.getUnsyncedMessages(chatId);
@@ -43,7 +43,7 @@ class MessageService {
     }
   }
 
-  /// Oznacz wiadomość jako zsynchronizowaną
+  
   Future<void> markAsSynced(String messageId) async {
     try {
       await messageRepository.markAsSynced(messageId);
@@ -54,7 +54,7 @@ class MessageService {
     }
   }
 
-  /// Usuwanie wiadomości lokalnie
+  
   Future<void> deleteMessage(String messageId) async {
     try {
       await messageRepository.deleteMessage(messageId);

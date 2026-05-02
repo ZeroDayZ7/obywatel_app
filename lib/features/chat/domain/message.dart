@@ -9,16 +9,16 @@ class Message extends Equatable {
   final String text;
   final DateTime timestamp;
 
-  /// Optional image (photo, attachment)
+  
   final String? imageUrl;
 
-  /// Local UI flag
+  
   final bool isMe;
 
-  /// Message sync status
+  
   final MessageStatus status;
 
-  /// Whether the message is synced with backend
+  
   final bool synced;
 
   const Message({
@@ -33,9 +33,9 @@ class Message extends Equatable {
     this.synced = false,
   });
 
-  // ============================================================
-  // JSON → Domain
-  // ============================================================
+  
+  
+  
   factory Message.fromJson(Map<String, dynamic> json, {String? currentUserId}) {
     return Message(
       id: json['id'] as String,
@@ -50,9 +50,9 @@ class Message extends Equatable {
     );
   }
 
-  // ============================================================
-  // Domain → JSON
-  // ============================================================
+  
+  
+  
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -66,9 +66,9 @@ class Message extends Equatable {
     };
   }
 
-  // ============================================================
-  // copyWith()
-  // ============================================================
+  
+  
+  
   Message copyWith({
     String? id,
     String? chatId,

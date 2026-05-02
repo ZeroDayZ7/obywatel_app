@@ -62,7 +62,7 @@ class _UserChatScreenState extends State<UserChatScreen> {
 
     _controller.clear();
 
-    // auto-scroll
+    
     Future.delayed(const Duration(milliseconds: 100), () {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(

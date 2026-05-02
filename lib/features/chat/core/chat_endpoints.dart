@@ -1,4 +1,4 @@
-// lib/features/chat/config/chat_endpoints.dart
+
 import 'package:obywatel_plus/features/chat/core/chat_config.dart';
 
 class ChatEndpoints {

@@ -16,16 +16,16 @@ class ChatRepositoryImpl implements ChatRepository {
   WebSocketChannel? _socket;
   final _messagesController = StreamController<Message>.broadcast();
 
-  // @override
+  
   Stream<Message> get messagesStream => _messagesController.stream;
 
-  // ============================================================
-  // GET CHAT INFO
-  // ============================================================
+  
+  
+  
   @override
   Future<Chat> getChat(String chatId) async {
-    // jeżeli w przyszłości dodasz endpoint — tutaj go podłączymy
-    // na razie zwracamy pusty / tymczasowy obiekt
+    
+    
     return Chat(
       id: chatId,
       name: 'Czat $chatId',
@@ -35,19 +35,19 @@ class ChatRepositoryImpl implements ChatRepository {
     );
   }
 
-  // ============================================================
-  // GET MESSAGES (REST)
-  // ============================================================
+  
+  
+  
   @override
   Future<List<Message>> getMessages(String chatId) async {
-    // API ZWRACA JUŻ Message, NIE DTO
+    
     final msgs = await api.getChatMessages(chatId);
     return msgs;
   }
 
-  // ============================================================
-  // CONNECT WEBSOCKET
-  // ============================================================
+  
+  
+  
   @override
   Future<WebSocketChannel> connectWebSocket({
     required String chatId,
@@ -57,8 +57,8 @@ class ChatRepositoryImpl implements ChatRepository {
 
     _socket!.stream.listen(
       (data) {
-        // Na razie WS zwraca raw string — brak parsera w MessageService
-        // więc tylko logujemy/dummy message
+        
+        
         final message = Message(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           chatId: chatId,
@@ -80,29 +80,29 @@ class ChatRepositoryImpl implements ChatRepository {
     return _socket!;
   }
 
-  // ============================================================
-  // SEND MESSAGE (REST + WS)
-  // ============================================================
+  
+  
+  
   @override
   Future<void> sendMessage(Message message) async {
-    // 1. wyślij do REST
+    
     await api.sendMessage(message.chatId, message);
 
-    // 2. wyślij przez WebSocket (jeśli jest)
+    
     if (_socket != null) {
       _socket!.sink.add(message.text);
     }
 
-    // 3. zapisz lokalnie
+    
     await messageService.saveMessage(message);
 
-    // 4. wyemituj stream
+    
     _messagesController.add(message);
   }
 
-  // ============================================================
-  // SYNC OFFLINE
-  // ============================================================
+  
+  
+  
   @override
   Future<void> syncOfflineMessages(
     String chatId,
@@ -114,9 +114,9 @@ class ChatRepositoryImpl implements ChatRepository {
     }
   }
 
-  // ============================================================
-  // DISPOSE
-  // ============================================================
+  
+  
+  
   void dispose() {
     _socket?.sink.close();
     _messagesController.close();
