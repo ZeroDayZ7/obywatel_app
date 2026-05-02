@@ -20,7 +20,7 @@ class ApiConstants extends ApiConstantsBase {
           '6D739691D5F16774369B7C96A8F1C946753204A4440375A81689D6C84B2BA510',
       defaultEmail = 'user@example.com',
       defaultPassword = 'Zaq1@wsx',
-      appName = 'Obywatel+',
+      appName = 'Obywatel Plus',
       appDescription = 'Government Operating System',
       inactivityTimeout = const Duration(minutes: 5),
       super(minSplashDuration: const Duration(milliseconds: 500));

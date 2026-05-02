@@ -19,10 +19,10 @@ class ApiConstants extends ApiConstantsBase {
       apiFingerprint = null,
       defaultEmail = 'user@example.com',
       defaultPassword = 'QQh!bY9i5tC@mRGD',
-      appName = 'Obywatel+ Dev',
+      appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',
       inactivityTimeout = const Duration(minutes: 15),
       super(
-        minSplashDuration: const Duration(milliseconds: 500),
+        minSplashDuration: const Duration(milliseconds: 3500),
       );
 }
