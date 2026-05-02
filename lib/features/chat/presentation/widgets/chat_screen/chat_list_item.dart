@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_colors.dart';
 
-class CyberpunkChatItem extends StatelessWidget {
+class ChatItem extends StatelessWidget {
   final String username;
   final String lastMessage;
   final String time;
@@ -10,7 +10,7 @@ class CyberpunkChatItem extends StatelessWidget {
   final bool isOnline;
   final VoidCallback? onTap;
 
-  const CyberpunkChatItem({
+  const ChatItem({
     super.key,
     required this.username,
     required this.lastMessage,

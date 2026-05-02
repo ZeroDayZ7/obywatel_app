@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/bottom_nav_bar.dart';
 
 class ChatShellWrapper extends StatelessWidget {
@@ -13,18 +14,17 @@ class ChatShellWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final titles = ['Messages', 'Groups', 'Chat Settings'];
 
-    return Scaffold(
+    return AppScaffold(
+      scrollable: false,
       appBar: AppAppBar(
         title: titles[navigationShell.currentIndex],
-        showBackButton: true,
-
         onBackButtonPressed: () => context.go(AppRoutes.home),
       ),
-      body: navigationShell,
       bottomNavigationBar: CyberpunkBottomNavBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(index),
       ),
+      child: navigationShell,
     );
   }
 }

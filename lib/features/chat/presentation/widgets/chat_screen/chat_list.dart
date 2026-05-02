@@ -1,12 +1,12 @@
 // lib/features/chat/presentation/chat/widgets/chat_list.dart
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_list_item.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_list_item.dart';
 
-class CyberpunkChatList extends StatelessWidget {
+class ChatList extends StatelessWidget {
   final List<Map<String, dynamic>> chats;
 
-  const CyberpunkChatList({super.key, required this.chats});
+  const ChatList({super.key, required this.chats});
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +15,7 @@ class CyberpunkChatList extends StatelessWidget {
       itemCount: chats.length,
       itemBuilder: (context, index) {
         final chat = chats[index];
-        return CyberpunkChatItem(
+        return ChatItem(
           username: chat['username'] as String,
           lastMessage: chat['lastMessage'] as String,
           time: chat['time'] as String,

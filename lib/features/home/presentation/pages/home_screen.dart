@@ -16,7 +16,6 @@ class HomeScreen extends StatelessWidget {
       appBar: const HomeAppBar(),
       drawer: const MainDrawer(),
       size: ContainerSize.medium,
-      scrollable: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [HomeGridMenu(badgeCounts: badgeCounts)],

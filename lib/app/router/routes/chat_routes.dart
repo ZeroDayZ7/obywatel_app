@@ -1,9 +1,9 @@
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/features/chat/presentation/screens/chat_groups_screen.dart';
-import 'package:obywatel_plus/features/chat/presentation/screens/chat_screen.dart';
-import 'package:obywatel_plus/features/chat/presentation/screens/chat_settings_screen.dart';
-import 'package:obywatel_plus/features/chat/presentation/screens/chat_shell_wrapper.dart';
+import 'package:obywatel_plus/features/chat/presentation/pages/chat_groups_screen.dart';
+import 'package:obywatel_plus/features/chat/presentation/pages/chat_screen.dart';
+import 'package:obywatel_plus/features/chat/presentation/pages/chat_settings_screen.dart';
+import 'package:obywatel_plus/features/chat/presentation/pages/chat_shell_wrapper.dart';
 
 final List<RouteBase> chatRoutes = [
   StatefulShellRoute.indexedStack(

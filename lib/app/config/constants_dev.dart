@@ -23,6 +23,6 @@ class ApiConstants extends ApiConstantsBase {
       appDescription = 'Government Operating System Dev',
       inactivityTimeout = const Duration(minutes: 15),
       super(
-        minSplashDuration: const Duration(milliseconds: 5500),
+        minSplashDuration: const Duration(milliseconds: 500),
       );
 }

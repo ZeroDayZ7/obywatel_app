@@ -25,11 +25,11 @@ class ContactsBottomNav extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(
           icon: Icon(CupertinoIcons.person_2),
-          label: 'Kontakty',
+          label: 'Wszyscy',
         ),
         BottomNavigationBarItem(
-          icon: Icon(CupertinoIcons.chat_bubble),
-          label: 'Czaty',
+          icon: Icon(CupertinoIcons.star),
+          label: 'Ulubione',
         ),
         BottomNavigationBarItem(
           icon: Icon(CupertinoIcons.settings),
