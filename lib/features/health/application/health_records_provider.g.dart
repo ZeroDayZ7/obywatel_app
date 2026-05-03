@@ -51,7 +51,7 @@ final class HealthRecordsNotifierProvider
 }
 
 String _$healthRecordsNotifierHash() =>
-    r'5af9869476ad6fa7546e71590992f8b5ee66befb';
+    r'b2049792b3fbf955f1771d4ac17008a3ae558561';
 
 final class HealthRecordsNotifierFamily extends $Family
     with

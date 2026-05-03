@@ -4,7 +4,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
-import 'package:obywatel_plus/features/auth/presentation/login/login_form.dart';
+import 'package:obywatel_plus/features/auth/presentation/login/widgets/login_form.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});

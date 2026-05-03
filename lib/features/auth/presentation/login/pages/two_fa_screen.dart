@@ -55,7 +55,6 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     return AppScaffold(
       size: ContainerSize.narrow,
       alignment: Alignment.center,
-      appBar: AppBar(title: Text(LocaleKeys.login_2fa_title.tr())),
       child: Form(
         key: _formKey,
         child: Column(
