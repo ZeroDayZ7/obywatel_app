@@ -18,7 +18,7 @@ class ApiConstants extends ApiConstantsBase {
       enableSSLPinning = false,
       apiFingerprint = null,
       defaultEmail = 'user@example.com',
-      defaultPassword = 'QQh!bY9i5tC@mRGD',
+      defaultPassword = 'Zaq1@wsx',
       appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',
       inactivityTimeout = const Duration(minutes: 15),

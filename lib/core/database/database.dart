@@ -49,7 +49,7 @@ class AppDatabase extends _$AppDatabase {
 QueryExecutor openConnection(String encryptionKey) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dbFolder.path, 'app_encrypted.sqlite'));
+    final file = File(p.join(dbFolder.path, 'obywatel_plus_encrypted.sqlite'));
 
     return NativeDatabase.createInBackground(
       file,
