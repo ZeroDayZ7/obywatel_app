@@ -7,7 +7,6 @@ class AppScaffold extends StatelessWidget {
   final Widget? drawer;
   final bool useSafeArea;
   final AlignmentGeometry alignment;
-  final bool scrollable;
   final Color? backgroundColor;
   final PreferredSizeWidget? appBar;
   final Widget? title;
@@ -23,7 +22,6 @@ class AppScaffold extends StatelessWidget {
     this.drawer,
     this.useSafeArea = true,
     this.alignment = Alignment.topCenter,
-    this.scrollable = true,
     this.backgroundColor,
     this.appBar,
     this.title,
@@ -42,13 +40,11 @@ class AppScaffold extends StatelessWidget {
             ? AppBar(title: title, centerTitle: true, actions: actions)
             : null);
 
-    Widget content = scrollable ? SingleChildScrollView(child: child) : child;
-
-    content = ResponsiveContainer(
+    Widget content = ResponsiveContainer(
       alignment: alignment,
       size: size,
       padding: padding,
-      child: content,
+      child: child,
     );
 
     if (useSafeArea) {

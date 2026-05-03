@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/router/router_config.dart';
 
 extension GoRouteExtensions on String {
   GoRoute go(Widget screen, {List<GoRoute> routes = const []}) {
     return GoRoute(
       path: this,
-      parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) =>
           MaterialPage(key: state.pageKey, child: screen),
       routes: routes,
@@ -19,7 +17,6 @@ extension GoRouteExtensions on String {
   }) {
     return GoRoute(
       path: this,
-      parentNavigatorKey: rootNavigatorKey,
       pageBuilder: (context, state) =>
           MaterialPage(key: state.pageKey, child: builder(state)),
       routes: routes,

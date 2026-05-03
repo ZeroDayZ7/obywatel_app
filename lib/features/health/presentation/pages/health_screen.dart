@@ -1,92 +1,108 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/design/widgets/app_card.dart';
 
 class HealthScreen extends StatelessWidget {
   const HealthScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF121212),
-      appBar: AppBar(
-        title: const Text('Zdrowie'),
-        backgroundColor: const Color(0xFF1E1E2E),
-        foregroundColor: Colors.white,
-        centerTitle: true,
+    return CustomScrollView(
+      slivers: [
+        const SliverPadding(padding: EdgeInsets.all(16), sliver: _HealthGrid()),
+      ],
+    );
+  }
+}
+
+class _HealthGrid extends StatelessWidget {
+  const _HealthGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final items = [
+      _HealthItem(
+        'E-recepty',
+        AppRoutes.healthPrescriptions,
+        Icons.medication_liquid,
+        Colors.blue,
       ),
-      body: GridView.count(
-        padding: const EdgeInsets.all(16),
+      _HealthItem(
+        'Skierowania',
+        AppRoutes.healthReferrals,
+        Icons.assignment,
+        Colors.purple,
+      ),
+      _HealthItem(
+        'Historia',
+        AppRoutes.healthHistory,
+        Icons.history,
+        Colors.orange,
+      ),
+      _HealthItem(
+        'Szczepienia',
+        AppRoutes.healthVaccinations,
+        Icons.vaccines,
+        Colors.green,
+      ),
+    ];
+
+    return SliverGrid(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = items[index];
+
+        return _buildHealthCard(
+          context,
+          title: item.title,
+          route: '${AppRoutes.health}/${item.route}',
+          icon: item.icon,
+          color: item.color,
+        );
+      }, childCount: items.length),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 1.1,
+        childAspectRatio: 1.2,
+      ),
+    );
+  }
+
+  Widget _buildHealthCard(
+    BuildContext context, {
+    required String title,
+    required String route,
+    required IconData icon,
+    required Color color,
+  }) {
+    return AppCard(
+      onTap: () => context.push(route),
+      themeColor: color,
+      icon: Icon(icon, color: color, size: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHealthTile(
-            context,
-            title: 'E-recepty',
-            icon: Icons.medication_liquid,
-            color: Colors.blue,
-            path: '${AppRoutes.health}/prescriptions',
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
-          _buildHealthTile(
-            context,
-            title: 'Skierowania',
-            icon: Icons.assignment,
-            color: Colors.purple,
-            path: '${AppRoutes.health}/referrals',
-          ),
-          _buildHealthTile(
-            context,
-            title: 'Historia',
-            icon: Icons.history,
-            color: Colors.orange,
-            path: '${AppRoutes.health}/history',
-          ),
-          _buildHealthTile(
-            context,
-            title: 'Szczepienia',
-            icon: Icons.vaccines,
-            color: Colors.green,
-            path: '${AppRoutes.health}/vaccinations',
+          const SizedBox(height: 4),
+          Text(
+            'Zobacz szczegóły',
+            style: TextStyle(fontSize: 11, color: color),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildHealthTile(
-    BuildContext context, {
-    required String title,
-    required IconData icon,
-    required Color color,
-    required String path,
-  }) {
-    return InkWell(
-      onTap: () => context.push(path),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFF1E1E2E),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha:0.3)),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 12),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+class _HealthItem {
+  final String title;
+  final String route;
+  final IconData icon;
+  final Color color;
+
+  _HealthItem(this.title, this.route, this.icon, this.color);
 }

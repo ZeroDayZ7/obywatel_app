@@ -18,7 +18,6 @@ class ActiveSessionsScreen extends ConsumerWidget {
     return AppScaffold(
       title: Text(LocaleKeys.settings_security_active_sessions.tr()),
       size: ContainerSize.medium,
-      scrollable: false,
       padding: EdgeInsets.zero,
       child: sessionsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),

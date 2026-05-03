@@ -1,20 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
+  final Widget? leading;
   final bool showBackButton;
   final bool centerTitle;
-  final VoidCallback onBackButtonPressed;
+  final VoidCallback? onBackButtonPressed;
 
   const AppAppBar({
     super.key,
     required this.title,
-    required this.onBackButtonPressed,
+    this.onBackButtonPressed,
     this.actions,
+    this.leading,
     this.showBackButton = true,
     this.centerTitle = true,
   });
+
+  void _defaultBack(BuildContext context) {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go(AppRoutes.home);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +53,29 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
         title: Text(title),
         centerTitle: centerTitle,
         automaticallyImplyLeading: false,
-        leading: showBackButton
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: onBackButtonPressed,
-              )
-            : null,
+
+        leading:
+            leading ??
+            (showBackButton
+                ? IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed:
+                        onBackButtonPressed ?? () => _defaultBack(context),
+                  )
+                : null),
+
         elevation: 0,
-        actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+
+        actions: [
+          if (actions != null) ...actions!,
+
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            onPressed: () => context.go(AppRoutes.home),
+          ),
+
+          const SizedBox(width: 8),
+        ],
       ),
     );
   }

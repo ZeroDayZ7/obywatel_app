@@ -17,7 +17,6 @@ class TrashScreen extends ConsumerWidget {
     return AppScaffold(
       title: Text(LocaleKeys.notifications_trash_title.tr()),
       size: ContainerSize.medium,
-      scrollable: false,
       padding: EdgeInsets.zero,
       actions: [
         trashAsync.maybeWhen(

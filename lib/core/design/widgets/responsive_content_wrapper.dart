@@ -43,7 +43,7 @@ class ResponsiveContainer extends StatelessWidget {
         child: Padding(
           padding:
               padding ??
-              const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+              const EdgeInsets.symmetric(horizontal: 12.0, vertical: 2.0),
           child: child,
         ),
       ),

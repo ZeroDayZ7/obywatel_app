@@ -20,7 +20,6 @@ class NotificationsSettingsScreen extends ConsumerWidget {
     return AppScaffold(
       title: Text(LocaleKeys.settings_notifications_settings_title.tr()),
       size: ContainerSize.medium,
-      scrollable: true,
       // Jeśli caps nie są jeszcze zainicjalizowane, pokazujemy loader
       child: !caps.initialized
           ? const Center(child: CircularProgressIndicator())

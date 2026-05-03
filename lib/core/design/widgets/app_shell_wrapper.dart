@@ -27,7 +27,6 @@ class AppShellWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      scrollable: false,
       appBar: AppAppBar(
         title: titles[navigationShell.currentIndex],
         onBackButtonPressed: () => context.go(AppRoutes.home),

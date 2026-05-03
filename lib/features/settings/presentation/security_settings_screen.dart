@@ -21,7 +21,6 @@ class SecuritySettingsScreen extends ConsumerWidget {
     return AppScaffold(
       title: Text(LocaleKeys.settings_security_title.tr()),
       size: ContainerSize.medium,
-      scrollable: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

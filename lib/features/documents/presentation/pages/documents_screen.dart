@@ -20,7 +20,6 @@ class DocumentsScreen extends ConsumerWidget {
     final documentsAsync = ref.watch(documentsProvider);
 
     return AppScaffold(
-      scrollable: false,
       size: ContainerSize.medium,
       appBar: AppAppBar(
         title: 'Dokumenty',
@@ -77,46 +76,40 @@ class _DocumentsList extends StatelessWidget {
           ],
           if (educationDocs.isNotEmpty) ...[
             const DocumentCategoryHeader(title: 'Edukacja'),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => WideDocumentCard(
-                    title: educationDocs[index].title,
-                    subtitle: educationDocs[index].subtitle ?? '',
-                    expiry: educationDocs[index].expiryDate != null
-                        ? 'Ważna do ${educationDocs[index].expiryDate}'
-                        : '',
-                    icon: educationDocs[index].icon,
-                    color: educationDocs[index].themeColor,
-                    onTap: () => context.push(
-                      '${AppRoutes.documents}/detail/${educationDocs[index].id}',
-                      extra: educationDocs[index],
-                    ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => WideDocumentCard(
+                  title: educationDocs[index].title,
+                  subtitle: educationDocs[index].subtitle ?? '',
+                  expiry: educationDocs[index].expiryDate != null
+                      ? 'Ważna do ${educationDocs[index].expiryDate}'
+                      : '',
+                  icon: educationDocs[index].icon,
+                  color: educationDocs[index].themeColor,
+                  onTap: () => context.push(
+                    '${AppRoutes.documents}/detail/${educationDocs[index].id}',
+                    extra: educationDocs[index],
                   ),
-                  childCount: educationDocs.length,
                 ),
+                childCount: educationDocs.length,
               ),
             ),
           ],
           if (transportDocs.isNotEmpty) ...[
             const DocumentCategoryHeader(title: 'Transport i Podróże'),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) => TicketTile(
-                    title: transportDocs[index].title,
-                    subtitle: transportDocs[index].subtitle ?? '',
-                    icon: transportDocs[index].icon,
-                    color: transportDocs[index].themeColor,
-                    onTap: () => context.push(
-                      '${AppRoutes.documents}/detail/${transportDocs[index].id}',
-                      extra: transportDocs[index],
-                    ),
+            SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) => TicketTile(
+                  title: transportDocs[index].title,
+                  subtitle: transportDocs[index].subtitle ?? '',
+                  icon: transportDocs[index].icon,
+                  color: transportDocs[index].themeColor,
+                  onTap: () => context.push(
+                    '${AppRoutes.documents}/detail/${transportDocs[index].id}',
+                    extra: transportDocs[index],
                   ),
-                  childCount: transportDocs.length,
                 ),
+                childCount: transportDocs.length,
               ),
             ),
           ],
@@ -133,30 +126,27 @@ class _DocumentGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SliverPadding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 160 / 115,
-        ),
-        delegate: SliverChildBuilderDelegate((context, index) {
-          final doc = docs[index];
-          return DocumentCard(
-            title: doc.title,
-            icon: doc.icon,
-            color: doc.themeColor,
-            isVerified: doc.isVerified,
-            status: doc.status,
-            onTap: () => context.push(
-              '${AppRoutes.documents}/detail/${doc.id}',
-              extra: doc,
-            ),
-          );
-        }, childCount: docs.length),
+    return SliverGrid(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        childAspectRatio: 160 / 115,
       ),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final doc = docs[index];
+        return DocumentCard(
+          title: doc.title,
+          icon: doc.icon,
+          color: doc.themeColor,
+          isVerified: doc.isVerified,
+          status: doc.status,
+          onTap: () => context.push(
+            '${AppRoutes.documents}/detail/${doc.id}',
+            extra: doc,
+          ),
+        );
+      }, childCount: docs.length),
     );
   }
 }

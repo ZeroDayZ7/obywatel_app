@@ -12,7 +12,6 @@ class WorkAndCareerHome extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      scrollable: false,
       appBar: AppAppBar(
         title: LocaleKeys.workAndCareer_title.tr(),
         onBackButtonPressed: () => context.pop(),
