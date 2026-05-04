@@ -23,7 +23,6 @@ class DocumentsScreen extends ConsumerWidget {
       size: ContainerSize.medium,
       appBar: AppAppBar(
         title: 'Dokumenty',
-        onBackButtonPressed: () => Navigator.of(context).pop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

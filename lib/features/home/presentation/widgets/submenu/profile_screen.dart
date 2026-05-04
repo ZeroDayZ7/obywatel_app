@@ -1,34 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
+import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/user_badge.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        centerTitle: true,
+    return AppScaffold(
+      size: ContainerSize.medium,
+      appBar: AppAppBar(
+        title: 'Profile',
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),
-            onPressed: () {
-              Navigator.pushNamed(context, '/edit-profile');
-            },
+            onPressed: () => context.push('/edit-profile'),
           ),
         ],
       ),
-      body: SingleChildScrollView(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Avatar + name + rank
             Row(
               children: [
                 const CircleAvatar(
-                  radius: 50,
+                  radius: 44,
                   backgroundImage: AssetImage(
                     'assets/images/avatar_placeholder.png',
                   ),
@@ -37,26 +38,24 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'John Doe',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 4),
-                      Text(
+                      const SizedBox(height: 4),
+                      const Text(
                         'Citizen ID: 123456789',
-                        style: TextStyle(fontSize: 16, color: Colors.grey),
+                        style: TextStyle(color: Colors.grey),
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Rank: Gold Member',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.blueAccent,
-                        ),
+                      const SizedBox(height: 8),
+                      UserBadge(
+                        type: UserBadgeType.supporter,
+                        label: 'Gold Member',
+                        subtitle: 'Premium Supporter',
                       ),
                     ],
                   ),
@@ -65,7 +64,6 @@ class ProfileScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Contact info cards
             _ProfileCard(
               icon: Icons.email,
               title: 'Email',
@@ -81,9 +79,9 @@ class ProfileScreen extends StatelessWidget {
               title: 'Address',
               value: '123 Main Street, Warsaw, Poland',
             ),
+
             const SizedBox(height: 24),
 
-            // Actions row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [

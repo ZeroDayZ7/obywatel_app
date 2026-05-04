@@ -12,7 +12,6 @@ class PlaceholderScreen extends StatelessWidget {
     return AppScaffold(
       appBar: AppAppBar(
         title: title,
-        onBackButtonPressed: () => Navigator.of(context).pop(),
       ),
 
       child: Center(
