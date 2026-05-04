@@ -6,6 +6,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_status_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'backend_sync.freezed.dart';
@@ -30,7 +31,7 @@ sealed class BackendState with _$BackendState {
 @Riverpod(keepAlive: true)
 class BackendStateNotifier extends _$BackendStateNotifier {
   static const _timeKey = 'last_sync_server_time';
-  static const _offsetKey = 'last_sync_time_offset'; // Dodany brakujący klucz
+  static const _offsetKey = 'last_sync_time_offset';
 
   @override
   FutureOr<BackendState> build() async {
@@ -40,7 +41,7 @@ class BackendStateNotifier extends _$BackendStateNotifier {
     final results = await Future.wait([
       storage.read(key: _timeKey),
       storage.read(key: _offsetKey),
-      deviceInfo.getFingerprint(), // Ciężka operacja - robimy ją tu RAZ
+      deviceInfo.getFingerprint(),
     ]);
 
     final savedTime = results[0];
@@ -68,11 +69,14 @@ class BackendStateNotifier extends _$BackendStateNotifier {
     int? rateLimit,
     String? requestId,
   }) {
-    // Używamy update, bo stan jest asynchroniczny (FutureOr)
     update((s) {
       Duration newOffset = s.timeOffset;
       if (serverTime != null) {
-        newOffset = serverTime.difference(DateTime.now());
+        final calculatedOffset = serverTime.difference(DateTime.now());
+        if (s.serverTime == null ||
+            (calculatedOffset - s.timeOffset).abs().inSeconds > 1) {
+          newOffset = calculatedOffset;
+        }
       }
 
       return s.copyWith(
@@ -112,7 +116,6 @@ class BackendStateNotifier extends _$BackendStateNotifier {
   }
 
   Future<void> persistServerTime() async {
-    // Pobieramy aktualną wartość (jeśli istnieje)
     final currentState = state.value;
     if (currentState == null || currentState.serverTime == null) return;
 
@@ -165,7 +168,6 @@ class SecuritySyncInterceptor extends Interceptor {
     }
 
     if (!Platform.isAndroid && !Platform.isIOS) {
-      // Optymalizacja: na Windows nie wywołujemy notifiers.update zbyt często
       options.headers['X-Device-Secure'] = 'true';
       return super.onRequest(options, handler);
     }
@@ -197,7 +199,10 @@ class SecuritySyncInterceptor extends Interceptor {
   }
 
   @override
-  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+  void onResponse(
+    Response<dynamic> response,
+    ResponseInterceptorHandler handler,
+  ) {
     final h = response.headers;
     final log = ref.read(appLoggerProvider);
 
@@ -217,7 +222,6 @@ class SecuritySyncInterceptor extends Interceptor {
       module: 'NETWORK',
     );
 
-    // Wywołujemy notifiera - on sam zadba o update asynchronicznego stanu
     ref
         .read(backendStateProvider.notifier)
         .updateFromHeaders(
@@ -232,13 +236,30 @@ class SecuritySyncInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     final requestId = err.response?.headers.value('x-request-id');
-    ref
-        .read(appLoggerProvider)
-        .e(
-          'API Error: ${err.requestOptions.path}',
-          module: 'NETWORK',
-          error: 'ID: $requestId | ${err.message}',
-        );
+    final statusCode = err.response?.statusCode;
+    final path = err.requestOptions.path;
+    final log = ref.read(appLoggerProvider);
+
+    log.e(
+      'API Error: $path',
+      module: 'NETWORK',
+      error: 'ID: $requestId | ${err.message}',
+    );
+
+    final isAuthPath =
+        path.contains('login') ||
+        path.contains('register') ||
+        path.contains('password-reset');
+
+    if (statusCode == 401 && !isAuthPath) {
+      log.w(
+        '🔑 Session invalid on protected path ($path). Triggering force logout...',
+        module: 'SECURITY',
+      );
+
+      ref.read(sessionStatusProvider.notifier).reportInvalidSession();
+    }
+
     super.onError(err, handler);
   }
 }

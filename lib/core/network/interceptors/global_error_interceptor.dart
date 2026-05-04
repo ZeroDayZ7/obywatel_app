@@ -8,13 +8,17 @@ class GlobalErrorInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    // Logujemy tylko ogólne informacje.
-    // Szczegóły (zmaskowane!) wypisze nam LoggingInterceptor.
-    logger.e('💥 Global Error Handler: [${err.type}] ${err.message}');
+    // NIE robimy tutaj UI rzeczy ani resetów sesji.
+    // Interceptor tylko dokumentuje fakt wystąpienia błędu.
 
-    // Tutaj możesz dodać logikę analityczną (np. wysyłkę do Sentry/Crashlytics)
-    // ale bez wysyłania wrażliwych danych z err.response?.data
+    if (err.type == DioExceptionType.connectionTimeout) {
+      logger.e(
+        '🌐 Network Timeout: Check your internet connection',
+        module: 'NETWORK',
+      );
+    }
 
+    // Przekazujemy błąd do konkretnego Controlera, który wywołał request
     handler.next(err);
   }
 }

@@ -13,23 +13,26 @@ class FeedbackService {
   FeedbackService(this._ref);
 
   Future<void> trigger(FeedbackType type) async {
-    final settings = _ref.read(notificationSettingsProvider);
-    if (!settings.appNotifications) return;
+    bool canVibrate = false;
+    bool canSound = false;
+    bool canShowAppNotifications = true;
 
-    // Tworzymy listę zadań, które mają się wydarzyć
+    try {
+      final settings = _ref.read(notificationSettingsProvider);
+      canVibrate = settings.vibration;
+      canSound = settings.sound;
+      canShowAppNotifications = settings.appNotifications;
+    } catch (_) {
+      // Jeśli rzuci błąd (bo provider usunięty), canVibrate zostaje false.
+      // To zapobiega "żarciu" powiadomień i błędom w logach.
+    }
+
+    if (!canShowAppNotifications) return;
+
     final List<Future<void>> tasks = [];
+    if (canVibrate) tasks.add(_vibrate(type));
+    if (canSound) tasks.add(_playSound(type));
 
-    // Sprawdzamy wibracje
-    if (settings.vibration) {
-      tasks.add(_vibrate(type));
-    }
-
-    // Sprawdzamy dźwięk
-    if (settings.sound) {
-      tasks.add(_playSound(type));
-    }
-
-    // Uruchamiamy wszystkie zadania z listy W TYM SAMYM MOMENCIE
     if (tasks.isNotEmpty) {
       await Future.wait(tasks);
     }

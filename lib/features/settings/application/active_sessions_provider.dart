@@ -1,7 +1,6 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:obywatel_plus/features/settings/application/active_sessions_service.dart';
 import 'package:obywatel_plus/features/settings/application/user_session.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'active_sessions_provider.g.dart';
 
@@ -14,7 +13,6 @@ class ActiveSessions extends _$ActiveSessions {
   }
 
   Future<List<UserSession>> _fetch(ActiveSessionsService service) async {
-    // Pobieramy sesje bez żadnej obróbki
     final sessions = await service.getActiveSessions();
     return sessions;
   }

@@ -121,7 +121,7 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {
-    state = const AuthState.authenticating();
+    // state = const AuthState.authenticating();
     try {
       final result = await _authService.login(email, passwordBytes);
 
@@ -131,7 +131,7 @@ class AuthController extends _$AuthController {
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
-      state = const AuthState.unauthenticated();
+      // state = const AuthState.unauthenticated();
     }
   }
 

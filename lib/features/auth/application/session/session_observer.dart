@@ -35,12 +35,23 @@ class SessionObserver extends _$SessionObserver {
     });
 
     // 2. SPRZĄTANIE I LOGOWANIE (Twój kod)
+    // 2. SPRZĄTANIE I LOGOWANIE
     ref.listen(authControllerProvider, (previous, next) {
       next.maybeMap(
         unauthenticated: (_) {
-          logger.i('👋 Cleaning up session and stopping timer');
-          _inactivityTimer?.cancel(); // Zatrzymujemy timer po wylogowaniu
-          ref.read(sessionStatusProvider.notifier).reset();
+          // Używamy gettera .isLoading z klasy AuthState,
+          // aby sprawdzić czy poprzedni stan to ładowanie/logowanie
+          final wasAuthenticating = previous?.isLoading ?? false;
+
+          if (!wasAuthenticating) {
+            logger.i('👋 Cleaning up session and stopping timer');
+            _inactivityTimer?.cancel();
+            ref.read(sessionStatusProvider.notifier).reset();
+          } else {
+            logger.d(
+              '❌ Login failed (previous was authenticating) - skipping cleanup',
+            );
+          }
         },
         // Gdy użytkownik pomyślnie wejdzie do aplikacji, odpalamy timer
         authenticated: (_) => onUserInteraction(),

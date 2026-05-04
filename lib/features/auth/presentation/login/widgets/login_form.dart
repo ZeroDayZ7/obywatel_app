@@ -68,6 +68,9 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          
+          const SizedBox(height: 16),
+          
           AppTextField(
             controller: _emailController,
             labelKey: LocaleKeys.common_email,

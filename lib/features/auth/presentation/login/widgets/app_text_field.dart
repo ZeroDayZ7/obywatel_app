@@ -58,6 +58,31 @@ class _AppTextFieldState extends State<AppTextField> {
       decoration: InputDecoration(
         labelText: widget.labelKey.tr(),
         hintText: widget.hintKey?.tr(),
+        helperText: ' ',
+        errorMaxLines: 1,
+
+        labelStyle: TextStyle(
+          color: Colors.grey, // normalny stan
+        ),
+        floatingLabelStyle: TextStyle(
+          color: Colors.blue, // focus / wpisywanie
+        ),
+
+        // hoverColor: Colors.transparent,
+        // enabledBorder: OutlineInputBorder(
+        //   borderSide: BorderSide(color: Colors.grey),
+        // ),
+        // focusedBorder: OutlineInputBorder(
+        //   borderSide: BorderSide(color: Colors.blue),
+        // ),
+        // errorBorder: OutlineInputBorder(
+        //   borderSide: BorderSide(color: Colors.red),
+        // ),
+
+        // focusedErrorBorder: OutlineInputBorder(
+        //   borderSide: BorderSide(color: Colors.redAccent),
+        // ),
+
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.isPassword
             ? IconButton(
