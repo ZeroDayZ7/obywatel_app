@@ -6,7 +6,7 @@
     ".flutter-plugins-dependencies": true,
     ".metadata": true,
     "**/.kotlin": true,
-    // "**/build": true,
+    "**/build": true,
     "analysis_options.yaml": true,
     "obywatel_app.iml": true,
     "ios": true,
@@ -14,6 +14,7 @@
     "macos": true,
     "web": true,
     "windows": true,
+    "android": true,
     "test": true,
     ".gitattributes": true,
     "pubspec.lock": true,
@@ -23,7 +24,6 @@
     "flutter_launcher_icons.yaml": true
     // "**/*.freezed.dart": true,
     // "**/*.g.dart": true,
-    // "android": true
   },
 
   // (Search)
