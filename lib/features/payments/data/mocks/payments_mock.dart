@@ -45,17 +45,70 @@ class PaymentsMock {
     ),
   ];
 
-  static final transactions = List.generate(
-    12,
-    (index) => PaymentTransaction(
-      id: 'tx_$index',
-      title: index % 2 == 0 ? 'Supermarket Eco' : 'Zwrot podatku',
-      amount: index % 2 == 0 ? -124.00 - index : 2150.00 + index * 10,
-      date: DateTime.now().subtract(Duration(days: index)),
-      type: index % 2 == 0 ? TransactionType.expense : TransactionType.income,
-      category: index % 2 == 0
-          ? TransactionCategory.shopping
-          : TransactionCategory.refund,
+  static final transactions = [
+    PaymentTransaction(
+      id: 'tx_1',
+      title: 'Biedronka - zakupy',
+      amount: -124.30,
+      date: DateTime.now().subtract(const Duration(days: 1)),
+      type: TransactionType.expense,
+      category: TransactionCategory.shopping,
     ),
-  );
+    PaymentTransaction(
+      id: 'tx_2',
+      title: 'Wypłata - firma XYZ',
+      amount: 8500.00,
+      date: DateTime.now().subtract(const Duration(days: 2)),
+      type: TransactionType.income,
+      category: TransactionCategory.salary,
+    ),
+    PaymentTransaction(
+      id: 'tx_3',
+      title: 'ZUS składka',
+      amount: -1450.00,
+      date: DateTime.now().subtract(const Duration(days: 3)),
+      type: TransactionType.expense,
+      category: TransactionCategory.tax,
+    ),
+    PaymentTransaction(
+      id: 'tx_4',
+      title: 'Zwrot podatku 2025',
+      amount: 2150.00,
+      date: DateTime.now().subtract(const Duration(days: 4)),
+      type: TransactionType.income,
+      category: TransactionCategory.refund,
+    ),
+    PaymentTransaction(
+      id: 'tx_5',
+      title: 'Netflix subscription',
+      amount: -49.99,
+      date: DateTime.now().subtract(const Duration(days: 5)),
+      type: TransactionType.expense,
+      category: TransactionCategory.subscription,
+    ),
+    PaymentTransaction(
+      id: 'tx_6',
+      title: 'Przelew od Jan Kowalski',
+      amount: 300.00,
+      date: DateTime.now().subtract(const Duration(days: 6)),
+      type: TransactionType.income,
+      category: TransactionCategory.transfer,
+    ),
+    PaymentTransaction(
+      id: 'tx_7',
+      title: 'Żabka - szybkie zakupy',
+      amount: -18.70,
+      date: DateTime.now().subtract(const Duration(days: 7)),
+      type: TransactionType.expense,
+      category: TransactionCategory.shopping,
+    ),
+    PaymentTransaction(
+      id: 'tx_8',
+      title: 'Pensja - bonus kwartalny',
+      amount: 12000.00,
+      date: DateTime.now().subtract(const Duration(days: 8)),
+      type: TransactionType.income,
+      category: TransactionCategory.salary,
+    ),
+  ];
 }

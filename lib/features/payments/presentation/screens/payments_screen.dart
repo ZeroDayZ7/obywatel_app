@@ -17,12 +17,12 @@ class PaymentsScreen extends ConsumerWidget {
     return AppScaffold(
       appBar: AppAppBar(
         title: 'Finanse',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.analytics_outlined),
-            onPressed: () {},
-          ),
-        ],
+        // actions: [
+        //   IconButton(
+        //     icon: const Icon(Icons.analytics_outlined),
+        //     onPressed: () {},
+        //   ),
+        // ],
       ),
       child: stateAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -32,7 +32,7 @@ class PaymentsScreen extends ConsumerWidget {
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

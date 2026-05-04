@@ -45,8 +45,7 @@ class BalanceCard extends StatelessWidget {
           Text(
             '${balance.total.toStringAsFixed(2)} ${balance.currency}',
             style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1,
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 20),
