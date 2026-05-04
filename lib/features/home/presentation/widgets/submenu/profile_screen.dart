@@ -23,7 +23,7 @@ class ProfileScreen extends StatelessWidget {
         ],
       ),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
           children: [
             Row(

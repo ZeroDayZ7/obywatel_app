@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
 
 class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -24,7 +23,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go(AppRoutes.home);
+      context.pop();
     }
   }
 
@@ -53,7 +52,6 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
         title: Text(title),
         centerTitle: centerTitle,
         automaticallyImplyLeading: false,
-
         leading:
             leading ??
             (showBackButton
@@ -63,19 +61,8 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
                         onBackButtonPressed ?? () => _defaultBack(context),
                   )
                 : null),
-
         elevation: 0,
-
-        actions: [
-          if (actions != null) ...actions!,
-
-          IconButton(
-            icon: const Icon(Icons.home_outlined),
-            onPressed: () => context.go(AppRoutes.home),
-          ),
-
-          const SizedBox(width: 8),
-        ],
+        actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
       ),
     );
   }
