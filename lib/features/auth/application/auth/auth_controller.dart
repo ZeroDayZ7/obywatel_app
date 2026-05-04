@@ -6,7 +6,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/providers.dart';

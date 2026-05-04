@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 

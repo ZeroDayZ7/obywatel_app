@@ -5,7 +5,6 @@ import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/force_update_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
-import 'package:obywatel_plus/core/errors/global_error_listener.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_observer.dart';
 
 class AppBootstrapHandler extends ConsumerStatefulWidget {
@@ -33,7 +32,7 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
       onPointerDown: (_) {
         ref.read(sessionObserverProvider.notifier).onUserInteraction();
       },
-      child: GlobalErrorListener(child: child),
+      child: child,
     );
   }
 

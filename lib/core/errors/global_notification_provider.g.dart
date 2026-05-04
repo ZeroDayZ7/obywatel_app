@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'global_error_provider.dart';
+part of 'global_notification_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
@@ -13,7 +13,7 @@ part of 'global_error_provider.dart';
 final globalNotificationProvider = GlobalNotificationProvider._();
 
 final class GlobalNotificationProvider
-    extends $NotifierProvider<GlobalNotification, AppNotification?> {
+    extends $NotifierProvider<GlobalNotification, List<AppNotification>> {
   GlobalNotificationProvider._()
     : super(
         from: null,
@@ -33,28 +33,28 @@ final class GlobalNotificationProvider
   GlobalNotification create() => GlobalNotification();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AppNotification? value) {
+  Override overrideWithValue(List<AppNotification> value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<AppNotification?>(value),
+      providerOverride: $SyncValueProvider<List<AppNotification>>(value),
     );
   }
 }
 
 String _$globalNotificationHash() =>
-    r'f4c207cf04ee652d63f7e2563730bfe7e0043b1a';
+    r'b20481d086ad784c85f5f99941c2452e94fdec80';
 
-abstract class _$GlobalNotification extends $Notifier<AppNotification?> {
-  AppNotification? build();
+abstract class _$GlobalNotification extends $Notifier<List<AppNotification>> {
+  List<AppNotification> build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<AppNotification?, AppNotification?>;
+    final ref = this.ref as $Ref<List<AppNotification>, List<AppNotification>>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<AppNotification?, AppNotification?>,
-              AppNotification?,
+              AnyNotifier<List<AppNotification>, List<AppNotification>>,
+              List<AppNotification>,
               Object?,
               Object?
             >;

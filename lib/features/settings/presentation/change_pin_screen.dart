@@ -8,7 +8,7 @@ import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/text_field.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_state.dart';
 

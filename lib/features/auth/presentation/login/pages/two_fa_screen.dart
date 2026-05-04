@@ -7,7 +7,7 @@ import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';

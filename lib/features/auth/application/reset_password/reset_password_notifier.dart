@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';

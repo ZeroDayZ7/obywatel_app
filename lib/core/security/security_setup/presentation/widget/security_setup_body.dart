@@ -59,7 +59,7 @@ class SecuritySetupBody extends ConsumerWidget {
               border: Border.all(
                 color: state.trustDevice
                     ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                    : Colors.transparent,
+                    : const Color.fromARGB(0, 255, 0, 0),
               ),
             ),
             child: SwitchListTile(

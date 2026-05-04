@@ -3,10 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
-
 import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_card.dart';
 
 class NotificationDetailsSheet {

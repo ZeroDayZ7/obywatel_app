@@ -1,21 +1,29 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'global_error_provider.g.dart';
+// 1. Part musi być NA KOŃCU importów
+part 'global_notification_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class GlobalNotification extends _$GlobalNotification {
   @override
-  AppNotification? build() => null;
+  List<AppNotification> build() => [];
 
+  /// Pokazuje powiadomienie i dodaje je do stosu
   void show(AppNotification notification) {
-    state = notification;
+    state = [...state, notification];
 
-    Future.microtask(() => state = null);
+    // Automatyczne usuwanie po czasie zdefiniowanym w modelu
+    Future.delayed(notification.duration, () {
+      remove(notification.id);
+    });
   }
 
+  /// Pokazuje błąd na podstawie obiektu Exception/Failure
   void showFromError(Object error, [StackTrace? stack]) {
     final failure = _mapToFailure(error);
 
@@ -27,6 +35,16 @@ class GlobalNotification extends _$GlobalNotification {
     );
   }
 
+  /// Usuwa konkretne powiadomienie ze stanu
+  void remove(String id) {
+    state = [
+      for (final n in state)
+        if (n.id != id) n,
+    ];
+  }
+
+  // --- PRYWATNA LOGIKA MAPOWANIA (Wewnątrz klasy!) ---
+
   AppFailure _mapToFailure(Object e) {
     if (e is AppFailure) return e;
 
@@ -36,9 +54,7 @@ class GlobalNotification extends _$GlobalNotification {
         DioExceptionType.receiveTimeout ||
         DioExceptionType.sendTimeout ||
         DioExceptionType.connectionError => const AppFailure.network(),
-
         DioExceptionType.badResponse => _handleBadResponse(e),
-
         _ => const AppFailure.unknown(),
       };
     }

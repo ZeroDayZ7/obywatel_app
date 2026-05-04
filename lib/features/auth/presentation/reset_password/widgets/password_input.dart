@@ -7,7 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart'; // DODAJ TEN IMPORT
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
-import 'package:obywatel_plus/core/errors/global_error_provider.dart';
+import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
 
