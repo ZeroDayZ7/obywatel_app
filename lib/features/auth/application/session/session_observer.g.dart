@@ -41,7 +41,7 @@ final class SessionObserverProvider
   }
 }
 
-String _$sessionObserverHash() => r'da366d0d79dc49baaa62da6441d1e4285869a0a1';
+String _$sessionObserverHash() => r'ca9ca572f95162f12ddd7085db2d53b10fb88073';
 
 abstract class _$SessionObserver extends $Notifier<void> {
   void build();
