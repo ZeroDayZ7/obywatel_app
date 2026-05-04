@@ -22,6 +22,7 @@
     "LICENSE": true,
     "devtools_options.yaml": true,
     "flutter_launcher_icons.yaml": true
+    // "**/": true
     // "**/*.freezed.dart": true,
     // "**/*.g.dart": true,
   },

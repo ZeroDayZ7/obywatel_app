@@ -1,61 +1,40 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/core/design/widgets/ui/app_switch.dart';
-import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
-import 'package:obywatel_plus/core/design/widgets/ui/section_header.dart';
-import 'package:obywatel_plus/core/design/widgets/ui/settings_tile.dart';
+import 'package:obywatel_plus/core/design/models/action_item.dart';
+import 'package:obywatel_plus/core/design/widgets/action_group.dart';
+import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
+import 'package:obywatel_plus/features/chat/presentation/config/chat_settings_config.dart';
 
 class ChatSettingsScreen extends StatelessWidget {
   const ChatSettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const AppSectionHeader(title: 'Security'),
-          AppSwitch(
-            title: 'End-to-End Encryption',
-            value: true,
-            onChanged: (v) {},
-          ),
-          AppSwitch(title: 'Stealth Mode', value: false, onChanged: (v) {}),
+    final sections = ChatSettingsConfig.getSections();
 
-          const SizedBox(height: 24),
+    return ListView.builder(
+      itemCount: sections.length,
+      itemBuilder: (context, index) {
+        final section = sections[index];
+        final items = section['items'] as List<ActionItem>;
 
-          const AppSectionHeader(title: 'Appearance'),
-          AppSettingsTile(
-            icon: Icons.palette,
-            title: 'Chat Wallpaper',
-            onTap: () {},
-          ),
-          AppSettingsTile(
-            icon: Icons.font_download,
-            title: 'Font Size',
-            onTap: () {},
-          ),
-
-          const SizedBox(height: 24),
-
-          const AppSectionHeader(title: 'Notifications'),
-          AppSwitch(
-            title: 'Push Notifications',
-            value: true,
-            onChanged: (v) {},
-          ),
-
-          const SizedBox(height: 32),
-
-          Center(
-            child: AppButton(
-              labelKey: 'Wipe All Data',
-              onPressed: () {},
-              variant: AppButtonVariant.secondary, 
-            ),
-          ),
-        ],
-      ),
+        return ActionGroup(
+          title: section['title'] as String?,
+          children: items
+              .map(
+                (item) => ActionTile(
+                  icon: item.icon,
+                  title: item.title,
+                  showArrow: item.type == ActionType.navigation,
+                  onTap: item.onTap,
+                  onToggle: item.type == ActionType.toggle
+                      ? item.onToggle
+                      : null,
+                  value: item.initialValue,
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
