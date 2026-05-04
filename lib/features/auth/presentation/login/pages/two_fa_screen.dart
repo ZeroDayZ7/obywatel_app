@@ -30,6 +30,12 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     await ref.read(authControllerProvider.notifier).verifyTwoFa(code);
   }
 
+  void _onCodeChanged(String value) {
+    if (value.length == 6) {
+      _submitCode();
+    }
+  }
+
   @override
   void dispose() {
     _codeController.dispose();
@@ -69,6 +75,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               controller: _codeController,
               autofocus: true,
               enabled: !isLoading,
+              onChanged: _onCodeChanged,
               keyboardType: TextInputType.number,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,

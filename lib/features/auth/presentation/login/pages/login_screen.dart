@@ -11,43 +11,44 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
     return AppScaffold(
       size: ContainerSize.narrow,
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+
+      alignment: Alignment.topCenter,
+      child: Stack(
         children: [
-          Column(
-            children: [
-              Text(
-                LocaleKeys.login_welcome_back.tr(),
-                style: textTheme.headlineMedium,
-                textAlign: TextAlign.center,
+          Align(
+            alignment: Alignment.topCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 30.0),
+              child: Image.asset(
+                'assets/images/logo.png',
+                height: 120,
+                fit: BoxFit.contain,
               ),
-              const SizedBox(height: 8),
-              Text(
-                LocaleKeys.login_welcome_message.tr(),
-                style: textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-            ],
+            ),
           ),
 
-          // Formularz z marginesem sekcji
-          const LoginForm(),
-
-          const SizedBox(height: 8),
-
-          // Przycisk "Nie masz konta"
-          AppButton(
-            labelKey: LocaleKeys.login_no_account,
-            variant: AppButtonVariant.text,
-            onPressed: () {
-              // Akcja rejestracji
-            },
-            fullWidth: false,
+          Align(
+            alignment: Alignment.center,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  LocaleKeys.login_welcome_message.tr(),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                const LoginForm(),
+                const SizedBox(height: 8),
+                AppButton(
+                  labelKey: LocaleKeys.login_no_account,
+                  variant: AppButtonVariant.text,
+                  onPressed: () {},
+                  fullWidth: false,
+                ),
+              ],
+            ),
           ),
         ],
       ),
