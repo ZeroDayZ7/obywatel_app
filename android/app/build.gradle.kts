@@ -33,10 +33,10 @@ android {
     buildTypes {
             release {
                 // Włącza obfuskację kodu (Minification)
-                isMinifyEnabled = true
+                isMinifyEnabled = false
                 
                 // Usuwa nieużywane zasoby (obrazy, stringi itp.)
-                isShrinkResources = true
+                isShrinkResources = false
                 
                 // Wskazuje pliki z regułami ochrony kodu
                 proguardFiles(

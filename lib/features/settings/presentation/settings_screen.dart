@@ -8,9 +8,8 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 import 'package:obywatel_plus/features/settings/presentation/sheets/language_selector_sheet.dart';
-import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
-
 import 'package:obywatel_plus/features/settings/presentation/sheets/theme_selector_sheet.dart';
+import 'package:obywatel_plus/features/settings/presentation/widgets/settings_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
