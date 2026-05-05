@@ -68,6 +68,7 @@ class WorkAndCareerConfig {
             onTap: () => context.push(
               '${AppRoutes.workAndCareer}/${AppRoutes.workEmploymentMap}',
             ),
+            isEnabled: false,
           ),
         ],
       },
