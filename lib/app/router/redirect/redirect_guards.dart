@@ -10,7 +10,6 @@ String? rootGuard(Ref ref, GoRouterState state) {
   final securityState = ref.read(securityServiceProvider);
   final path = state.uri.path;
 
-  // Szybkie flagi dla czytelności
   final isPinScreen = path == AppRoutes.pin;
   final isLoginScreen = path == AppRoutes.login;
   final is2FaScreen = path == AppRoutes.twoFaVerify;
@@ -18,21 +17,20 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
-  // 1️⃣ LOCK SCREEN (PIN) - Zawsze pierwszy
-  // Jeśli system wymaga PINu, nie pozwalamy na nic innego.
+  // LOCK SCREEN (PIN)
   if (securityState.shouldShowLock) {
     return isPinScreen ? null : AppRoutes.pin;
   }
 
-  // 2️⃣ LOADING / INITIAL
+  // LOADING / INITIAL
   if (authState.isLoading || authState.isInitial) return null;
 
-  // 3️⃣ UNATHENTICATED
+  // UNATHENTICATED
   if (authState.isUnauthenticated) {
     return publicRoutes.contains(path) ? null : AppRoutes.login;
   }
 
-  // 4️⃣ KROKI POŚREDNIE (2FA / Setup)
+  //  KROKI POŚREDNIE (2FA / Setup)
   if (authState.isTwoFaRequired) {
     return is2FaScreen ? null : AppRoutes.twoFaVerify;
   }
@@ -41,9 +39,8 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return isSetupScreen ? null : AppRoutes.securitySetup;
   }
 
-  // 5️⃣ ZALOGOWANY (FULL SUCCESS)
+  //  ZALOGOWANY
   if (authState.isAuthenticated) {
-    // Jeśli user jest zalogowany i wszystko ustawione, a próbuje wejść na ekrany logowania/pin/setup
     final isAtAuthFlow =
         isLoginScreen || is2FaScreen || isPinScreen || isSetupScreen;
     if (isAtAuthFlow) return AppRoutes.home;
