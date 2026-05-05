@@ -14,6 +14,7 @@ class ActionItem {
   final bool initialValue;
   final Function(bool)? onToggle;
   final bool isEnabled;
+  final bool isHidden;
 
   ActionItem({
     required this.icon,
@@ -25,5 +26,6 @@ class ActionItem {
     this.initialValue = false,
     this.onToggle,
     this.isEnabled = true,
+    this.isHidden = false,
   });
 }

@@ -25,20 +25,27 @@ class WorkAndCareerHome extends ConsumerWidget {
           final section = sections[index];
           final items = section['items'] as List<ActionItem>;
 
+          final visibleItems = items.where((item) => !item.isHidden).toList();
+
+          if (visibleItems.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
           return ActionGroup(
             title: section['title'] as String?,
-            children: items
-                .map(
-                  (item) => ActionTile(
-                    icon: item.icon,
-                    title: item.title,
-                    isDanger: item.isDanger,
-                    isEnabled: item.isEnabled,
-                    showArrow: item.type == ActionType.navigation,
-                    onTap: item.onTap,
-                  ),
-                )
-                .toList(),
+            children: visibleItems.map((item) {
+              return ActionTile(
+                icon: item.icon,
+                title: item.title,
+                subtitle: item.subtitle,
+                isDanger: item.isDanger,
+                isEnabled: item.isEnabled,
+                showArrow: item.type == ActionType.navigation,
+                onTap: item.onTap,
+                value: item.initialValue,
+                onToggle: item.onToggle,
+              );
+            }).toList(),
           );
         },
       ),

@@ -50,6 +50,8 @@ class WorkAndCareerConfig {
             onTap: () => context.push(
               '${AppRoutes.workAndCareer}/${AppRoutes.workInternships}',
             ),
+            // isEnabled: false,
+            // isHidden: true,
           ),
           ActionItem(
             icon: Icons.handshake,

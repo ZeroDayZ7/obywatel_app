@@ -43,22 +43,49 @@ class FeedbackService {
     if (!hasVibrator) return;
 
     switch (type) {
+      // --- CUSTOM PATTERNS ---
       case FeedbackType.securityAlert:
         await Vibration.vibrate(
           pattern: [0, 200, 100, 200, 100, 500],
           intensities: [0, 255, 0, 255, 0, 255],
         );
+        break;
+
       case FeedbackType.error:
         await HapticFeedback.heavyImpact();
         await Vibration.vibrate(duration: 400);
+        break;
+
       case FeedbackType.success:
         await HapticFeedback.mediumImpact();
+        break;
+
       case FeedbackType.warning:
         await HapticFeedback.lightImpact();
         await Future.delayed(const Duration(milliseconds: 50));
         await HapticFeedback.lightImpact();
+        break;
+
       case FeedbackType.info:
         await HapticFeedback.selectionClick();
+        break;
+
+      // --- NEW RAW HAPTIC TYPES ---
+      case FeedbackType.light:
+        await HapticFeedback.lightImpact();
+        break;
+
+      case FeedbackType.medium:
+        await HapticFeedback.mediumImpact();
+        break;
+
+      case FeedbackType.heavy:
+        await HapticFeedback.heavyImpact();
+        break;
+
+      case FeedbackType.selection:
+        await HapticFeedback.selectionClick();
+        break;
     }
   }
 

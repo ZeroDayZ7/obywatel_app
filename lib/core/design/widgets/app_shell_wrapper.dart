@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
 
@@ -29,7 +28,6 @@ class AppShellWrapper extends StatelessWidget {
     return AppScaffold(
       appBar: AppAppBar(
         title: titles[navigationShell.currentIndex],
-        onBackButtonPressed: () => context.go(AppRoutes.home),
       ),
       bottomNavigationBar: navBarBuilder(navigationShell.currentIndex, _onTap),
       child: navigationShell,

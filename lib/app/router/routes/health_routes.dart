@@ -10,12 +10,10 @@ final healthRoutes = [
       return HealthShellWrapper(state: state, child: child);
     },
     routes: [
-      // Główny ekran zdrowia
       GoRoute(
         path: AppRoutes.health,
         builder: (context, state) => const HealthScreen(),
         routes: [
-          // Podstrony (zostaną wstrzyknięte jako 'child' do HealthShellWrapper)
           GoRoute(
             path: AppRoutes.healthPrescriptions,
             builder: (context, state) =>

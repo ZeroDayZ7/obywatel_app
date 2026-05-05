@@ -2,11 +2,11 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/core/design/widgets/app_bottom_nav_bar.dart';
 
-class CyberpunkBottomNavBar extends StatelessWidget {
+class ChatBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
-  const CyberpunkBottomNavBar({
+  const ChatBottomNavBar({
     super.key,
     required this.currentIndex,
     required this.onTap,
