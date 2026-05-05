@@ -6,14 +6,17 @@ import 'package:obywatel_plus/features/home/presentation/widgets/home/home_grid_
 
 class HomeGridMenu extends StatelessWidget {
   final Map<String, int> badgeCounts;
+
   const HomeGridMenu({super.key, required this.badgeCounts});
 
   @override
   Widget build(BuildContext context) {
+    final visibleItems = homeMenuItems.where((item) => !item.isHidden).toList();
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: homeMenuItems.length,
+      itemCount: visibleItems.length,
       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 100,
         mainAxisSpacing: 16,
@@ -21,20 +24,21 @@ class HomeGridMenu extends StatelessWidget {
         mainAxisExtent: 110,
       ),
       itemBuilder: (context, index) {
-        final item = homeMenuItems[index];
-        final color = item['color'] as Color;
-        final label = (item['labelKey'] as String).tr();
-        final route = item['route'] as String?;
-        final badgeCount = badgeCounts[item['id']] ?? 0;
+        final item = visibleItems[index];
+        final label = item.labelKey.tr();
+        final badgeCount = badgeCounts[item.id] ?? 0;
 
         return HomeGridItem(
-          icon: item['icon'] as IconData,
-          color: color,
+          icon: item.icon,
+          color: item.color,
           label: label,
           badgeCount: badgeCount,
+          isEnabled: item.isEnabled,
           onTap: () {
-            if (route != null && route.isNotEmpty) {
-              context.push(route);
+            if (!item.isEnabled) return;
+
+            if (item.route != null && item.route!.isNotEmpty) {
+              context.push(item.route!);
             }
           },
         );
