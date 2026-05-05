@@ -23,7 +23,6 @@ class HelpScreen extends ConsumerWidget {
       title: Text(LocaleKeys.help_title.tr()),
       size: ContainerSize.medium,
       child: ListView.builder(
-        padding: const EdgeInsets.all(16),
         itemCount: sections.length,
         itemBuilder: (context, index) {
           final section = sections[index];

@@ -38,7 +38,6 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('= 3 = / AppBootstrapHandler');
     ref.watch(sessionObserverProvider);
 
     final status = ref.watch(appInitProvider);
