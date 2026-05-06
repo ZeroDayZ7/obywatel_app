@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
+import 'package:obywatel_plus/core/security/pin/presentation/pin_verification_screen.dart';
 
 class TestScreen extends ConsumerWidget {
   const TestScreen({super.key});
@@ -96,6 +97,33 @@ class TestScreen extends ConsumerWidget {
                 title: 'Custom Action Item',
                 onTap: () {
                   // Tu możesz dodać testowanie modalów, dialogów itp.
+                },
+              ),
+            ],
+          ),
+          ActionGroup(
+            title: 'Active Feature Sandboxes',
+            children: [
+              ActionTile(
+                icon: Icons.lock_outline,
+                title: 'Test Pin Verification Screen',
+                onTap: () {
+                  // Opcja 1: Jeśli masz zdefiniowany route w GoRouter
+                  // context.push('/auth/pin-test');
+
+                  // Opcja 2: Szybki "Full Screen" bez definiowania route (do testów)
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const PinVerificationScreen(),
+                    ),
+                  );
+                },
+              ),
+              ActionTile(
+                icon: Icons.style_outlined,
+                title: 'Component Library / Design System',
+                onTap: () {
+                  // Tu możesz dodać kolejny ekran z samymi przyciskami, inputami itp.
                 },
               ),
             ],

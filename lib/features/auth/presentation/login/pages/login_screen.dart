@@ -13,44 +13,44 @@ class LoginScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppScaffold(
       size: ContainerSize.narrow,
-
-      alignment: Alignment.topCenter,
-      child: Stack(
-        children: [
-          Align(
-            alignment: Alignment.topCenter,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 30.0),
-              child: Image.asset(
-                'assets/images/logo.png',
-                height: 120,
-                fit: BoxFit.contain,
+      child: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              padding: EdgeInsets.fromLTRB(
+                24,
+                0,
+                24,
+                0,
               ),
-            ),
-          ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      LocaleKeys.login_welcome_message.tr(),
+                      textAlign: TextAlign.center,
+                    ),
 
-          Align(
-            alignment: Alignment.center,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  LocaleKeys.login_welcome_message.tr(),
-                  textAlign: TextAlign.center,
+                    const SizedBox(height: 32),
+
+                    const LoginForm(),
+
+                    const SizedBox(height: 12),
+
+                    AppButton(
+                      labelKey: LocaleKeys.login_no_account,
+                      variant: AppButtonVariant.text,
+                      onPressed: () {},
+                      fullWidth: false,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 24),
-                const LoginForm(),
-                const SizedBox(height: 8),
-                AppButton(
-                  labelKey: LocaleKeys.login_no_account,
-                  variant: AppButtonVariant.text,
-                  onPressed: () {},
-                  fullWidth: false,
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

@@ -6,7 +6,7 @@
     ".flutter-plugins-dependencies": true,
     ".metadata": true,
     "**/.kotlin": true,
-    // "**/build": true,
+    "**/build": true,
     "analysis_options.yaml": true,
     "obywatel_app.iml": true,
     "ios": true,
@@ -58,7 +58,6 @@
     "**/*.freezed.dart": true,
     "**/*.g.dart": true,
     "**/*.txt": true
-    // "android": true,
   },
   "dart.lineLength": 80,
   "editor.codeActionsOnSave": {
