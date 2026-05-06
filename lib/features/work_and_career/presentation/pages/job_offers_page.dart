@@ -11,8 +11,8 @@ class JobOffersPage extends ConsumerWidget {
 
     return state.when(
       data: (offers) => ListView.builder(
-        // Dodajemy padding, żeby lista nie dotykała krawędzi ekranu
-        // padding: const EdgeInsets.symmetric(vertical: 8),
+        
+        
         itemCount: offers.length,
         itemBuilder: (_, i) => ListTile(
           title: Text(offers[i].title),

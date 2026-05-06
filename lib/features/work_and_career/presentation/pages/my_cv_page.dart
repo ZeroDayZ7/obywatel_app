@@ -12,7 +12,7 @@ class MyCVScreen extends ConsumerWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // HEADER
+        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -57,7 +57,7 @@ class MyCVScreen extends ConsumerWidget {
 
         const SizedBox(height: 24),
 
-        // DOŚWIADCZENIE
+        
         _SectionHeader(
           title: 'Doświadczenie',
           actionLabel: 'Dodaj',
@@ -80,7 +80,7 @@ class MyCVScreen extends ConsumerWidget {
 
         const SizedBox(height: 24),
 
-        // EDUKACJA
+        
         _SectionHeader(
           title: 'Edukacja',
           actionLabel: 'Dodaj',
@@ -97,7 +97,7 @@ class MyCVScreen extends ConsumerWidget {
 
         const SizedBox(height: 24),
 
-        // UMIEJĘTNOŚCI
+        
         _SectionHeader(
           title: 'Umiejętności',
           actionLabel: 'Edytuj',
