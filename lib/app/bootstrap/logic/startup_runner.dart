@@ -1,4 +1,3 @@
-// lib/app/bootstrap/logic/startup_runner.dart
 import 'dart:async';
 
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
@@ -19,13 +18,11 @@ class StartupRunner {
   Future<AppInitStatus> run() async {
     logger.i('🚀 StartupRunner: Starting bootstrap sequence...');
 
-    // 1. Wykonaj zadania sekwencyjne (np. bazy danych, storage)
     for (final task in sequentialTasks) {
       final status = await _executeTask(task);
-      if (status != null) return status; // Przerwij jeśli błąd/wymagana akcja
+      if (status != null) return status;
     }
 
-    // 2. Wykonaj zadania równoległe (np. API, Integrity)
     if (parallelTasks.isNotEmpty) {
       logger.i(
         '⚡ Starting parallel tasks: ${parallelTasks.map((e) => e.name).toList()}',
@@ -49,7 +46,7 @@ class StartupRunner {
       logger.i('⏳ Task [${task.name}] starting...');
 
       final result = await task.initialize().timeout(
-        const Duration(seconds: 15),
+        const Duration(seconds: 35),
         onTimeout: () => throw TimeoutException('Task ${task.name} timed out'),
       );
       return result;

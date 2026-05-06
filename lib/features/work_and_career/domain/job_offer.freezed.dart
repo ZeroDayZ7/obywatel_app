@@ -120,10 +120,7 @@ return $default(_that);case _:
 final _that = this;
 switch (_that) {
 case _JobOffer():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -182,10 +179,7 @@ return $default(_that.id,_that.title,_that.company,_that.location,_that.salary,_
 @optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String company,  String location,  String salary,  String type)  $default,) {final _that = this;
 switch (_that) {
 case _JobOffer():
-return $default(_that.id,_that.title,_that.company,_that.location,_that.salary,_that.type);case _:
-  throw StateError('Unexpected subclass');
-
-}
+return $default(_that.id,_that.title,_that.company,_that.location,_that.salary,_that.type);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///

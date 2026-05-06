@@ -8,7 +8,14 @@ part 'secure_storage_provider.g.dart';
 @riverpod
 SecureStorageService secureStorage(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
-  return SecureStorageService(const FlutterSecureStorage(), logger);
+
+  const androidOptions = AndroidOptions(
+    resetOnError: true,
+  );
+
+  const storage = FlutterSecureStorage(aOptions: androidOptions);
+
+  return SecureStorageService(storage, logger);
 }
 
 class SecureStorageService {
