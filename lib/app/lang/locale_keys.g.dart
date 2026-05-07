@@ -193,7 +193,7 @@ abstract class  LocaleKeys {
   static const homeMenu_favorites = 'homeMenu.favorites';
   static const homeMenu_settings = 'homeMenu.settings';
   static const homeMenu_help = 'homeMenu.help';
-  static const homeMenu_security = 'homeMenu.security';
+  static const homeMenu_test = 'homeMenu.test';
   static const homeMenu = 'homeMenu';
   static const system_initialization = 'system.initialization';
   static const system_privacy_title = 'system.privacy_title';

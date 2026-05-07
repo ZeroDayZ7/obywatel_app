@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 
-class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
+class AppAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   final Widget? leading;
@@ -19,16 +22,20 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.centerTitle = true,
   });
 
-  void _defaultBack(BuildContext context) {
+  void _defaultBack(BuildContext context, WidgetRef ref) {
+    final logger = ref.read(appLoggerProvider);
+
     if (context.canPop()) {
+      logger.i('AppAppBar: Navigating back');
       context.pop();
     } else {
-      context.pop();
+      logger.w('AppAppBar:  Navigating to home');
+      context.go(AppRoutes.home);
     }
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
 
@@ -58,7 +65,7 @@ class AppAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ? IconButton(
                     icon: const Icon(Icons.arrow_back),
                     onPressed:
-                        onBackButtonPressed ?? () => _defaultBack(context),
+                        onBackButtonPressed ?? () => _defaultBack(context, ref),
                   )
                 : null),
         elevation: 0,
