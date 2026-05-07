@@ -23,7 +23,7 @@ class ContactsOnlineSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
             child: Text(
               'DOSTĘPNI W SIECI',
               style: TextStyle(
@@ -38,7 +38,7 @@ class ContactsOnlineSection extends StatelessWidget {
             height: 90,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: onlineOnes.length,
               itemBuilder: (context, index) => ContactsOnlineAvatar(
                 contact: onlineOnes[index],

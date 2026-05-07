@@ -2,8 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart'; // Import Twojego enuma
-import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart'; // Import Twojego ResponsiveContainer
-
+import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart'; // Import Twojego ResponsiveContainer
 import 'package:obywatel_plus/core/security/pin/presentation/widget/lock_timer_text.dart';
 
 class LockoutOverlay extends StatelessWidget {

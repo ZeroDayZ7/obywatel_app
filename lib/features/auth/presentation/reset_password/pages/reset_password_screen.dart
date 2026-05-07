@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/code_input.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/method_selection.dart';

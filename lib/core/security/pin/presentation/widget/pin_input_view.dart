@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class PinInputView extends StatelessWidget {
@@ -24,8 +23,8 @@ class PinInputView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    const accent = Color(0xFF00f0ff);
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -33,10 +32,9 @@ class PinInputView extends StatelessWidget {
         Text(
           LocaleKeys.pinVerification_title.tr(),
           textAlign: TextAlign.center,
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.2,
+          style: textTheme.headlineMedium?.copyWith(
+            color: colorScheme.onSurface,
+            fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 12),
@@ -45,19 +43,17 @@ class PinInputView extends StatelessWidget {
           child: Text(
             LocaleKeys.pinVerification_subtitle.tr(),
             textAlign: TextAlign.center,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: Colors.white.withValues(alpha: 0.6),
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
         ),
         const SizedBox(height: 32),
-
-        // PIN
         AbsorbPointer(
           absorbing: !isEnabled,
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 150),
-            opacity: isEnabled ? 1 : 0.5,
+            opacity: isEnabled ? 1.0 : 0.5,
             child: PinCodeTextField(
               key: ValueKey(resetToken),
               appContext: context,
@@ -69,21 +65,23 @@ class PinInputView extends StatelessWidget {
               keyboardType: TextInputType.number,
               animationType: AnimationType.fade,
               errorAnimationController: errorController,
-              cursorColor: accent,
+              cursorColor: colorScheme.primary,
+              mainAxisAlignment: MainAxisAlignment.center,
               pinTheme: PinTheme(
                 shape: PinCodeFieldShape.box,
-                borderRadius: BorderRadius.circular(8),
-                fieldHeight: 54,
-                fieldWidth: 48,
-                borderWidth: 1.5,
-                activeColor: accent,
-                selectedColor: accent,
+                borderRadius: BorderRadius.circular(6),
+                fieldHeight: 48,
+                fieldWidth: 40,
+                fieldOuterPadding: const EdgeInsets.symmetric(horizontal: 4),
+                borderWidth: 2,
+                activeColor: colorScheme.primary,
+                selectedColor: colorScheme.primary,
                 inactiveColor: isError
-                    ? AppColors.error
-                    : Colors.white.withValues(alpha: 0.15),
-                activeFillColor: Colors.transparent,
-                selectedFillColor: accent.withValues(alpha: 0.12),
-                inactiveFillColor: Colors.transparent,
+                    ? colorScheme.error
+                    : colorScheme.outlineVariant,
+                activeFillColor: colorScheme.surfaceContainerHighest,
+                selectedFillColor: colorScheme.primaryContainer,
+                inactiveFillColor: colorScheme.surface,
               ),
               onCompleted: onCompleted,
               onChanged: (_) {},

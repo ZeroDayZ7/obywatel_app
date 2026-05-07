@@ -11,7 +11,6 @@ class ChatList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: chats.length,
       itemBuilder: (context, index) {
         final chat = chats[index];

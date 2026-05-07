@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 
 class PlaceholderScreen extends StatelessWidget {
   final String title;
