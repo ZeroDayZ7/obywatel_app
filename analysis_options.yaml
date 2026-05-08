@@ -44,6 +44,7 @@ analyzer:
     unused_element: error
     dead_code: error
     avoid_print: warning
+    todo: ignore
 
   language:
     strict-casts: true

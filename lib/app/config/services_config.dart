@@ -18,7 +18,7 @@ class ServicesConfig {
   /// Authentication service base URL
   /// Used for login, logout, token refresh, etc.
   static String get authBaseUrl => apiConstants.isProduction
-      ? 'https://api-obywatel.local'
+      ? 'https://localhost-0.tail400384.ts.net'
       : 'http://localhost:8081';
 
   /// Version service base URL
