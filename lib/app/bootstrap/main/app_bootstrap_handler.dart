@@ -4,6 +4,7 @@ import 'package:obywatel_plus/app/bootstrap/app_init_provider.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/force_update_screen.dart';
+import 'package:obywatel_plus/app/bootstrap/presentation/maintenance_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_observer.dart';
 
@@ -46,6 +47,11 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
       loading: () => const SplashScreen(),
       blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
       forceUpdate: () => const ForceUpdateScreen(),
+
+      maintenance: (message, endTime) => MaintenanceScreen(
+        message: message,
+        endTime: endTime,
+      ),
 
       unauthenticated: () => _wrapWithInactivityDetector(widget.child),
       lockedPin: () => _wrapWithInactivityDetector(widget.child),

@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/main/app_bootstrap_handler.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/privacy_overlay.dart';
 import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/app/lang/lang_config.dart';
 import 'package:obywatel_plus/app/router/app_router_provider.dart';
 import 'package:obywatel_plus/app/theme/app_theme.dart';
 import 'package:obywatel_plus/app/theme/theme_notifier.dart';
@@ -44,7 +45,7 @@ class ObywatelPlusApp extends ConsumerWidget {
 
             // Konfiguracja języka
             locale: context.locale,
-            supportedLocales: context.supportedLocales,
+            supportedLocales: LangConfig.supportedLocales,
             localizationsDelegates: context.localizationDelegates,
 
             // Konfiguracja nawigacji

@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/bootstrap/main/app_observer.dart';
+import 'package:obywatel_plus/app/lang/lang_config.dart';
+import 'package:obywatel_plus/core/errors/presentation/global_error_screen.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
@@ -24,11 +26,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     if (kDebugMode) {
       return ErrorWidget(details.exception);
     }
-    return const Scaffold(
-      body: Center(
-        child: Text('Coś poszło nie tak 🧱', style: TextStyle(fontSize: 16)),
-      ),
-    );
+    return GlobalErrorScreen(error: details.exception);
   };
 
   await runZonedGuarded<Future<void>>(() async {
@@ -37,13 +35,13 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
     final prefsInstance = await SharedPreferences.getInstance();
     final sharedService = SharedPreferencesService(prefsInstance, _logger);
-    final observer = AppObserver();
+    final observer = AppObserver(_logger);
 
     runApp(
       EasyLocalization(
-        supportedLocales: const [Locale('pl'), Locale('en')],
-        path: 'assets/translations',
-        fallbackLocale: const Locale('pl'),
+        supportedLocales: LangConfig.supportedLocales,
+        path: LangConfig.translationsPath,
+        fallbackLocale: LangConfig.fallbackLocale,
         saveLocale: true,
         useOnlyLangCode: true,
         child: ProviderScope(
@@ -51,8 +49,8 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
             activePrefsProvider.overrideWithValue(sharedService),
             appLoggerProvider.overrideWithValue(_logger),
           ],
-          // observers: kDebugMode ? [] : [],
-          observers: kDebugMode ? [observer] : [],
+          observers: [observer],
+          // observers: kDebugMode ? [observer] : [],
           child: await builder(),
         ),
       ),

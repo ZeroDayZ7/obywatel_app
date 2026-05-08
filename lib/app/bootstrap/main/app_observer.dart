@@ -1,13 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 final class AppObserver extends ProviderObserver {
-  @override
-  void didAddProvider(ProviderObserverContext context, Object? value) {
-    debugPrint(
-      '🟢 Dodano provider: ${context.provider.name ?? context.provider.runtimeType}',
-    );
-  }
+  const AppObserver(this._logger);
+
+  final AppLogger _logger;
 
   @override
   void didUpdateProvider(
@@ -15,16 +12,34 @@ final class AppObserver extends ProviderObserver {
     Object? previousValue,
     Object? newValue,
   ) {
-    debugPrint(
-      '🔄 Zmieniono provider: ${context.provider.name ?? context.provider.runtimeType}',
-    );
-    debugPrint('   ze: $previousValue na: $newValue');
+    final name = context.provider.name ?? context.provider.runtimeType;
+
+    if (newValue is AsyncValue && newValue.hasError) {
+      _logger.e(
+        'Async Error w providerze: $name',
+        module: 'Riverpod',
+        error: newValue.error,
+        stackTrace: newValue.stackTrace,
+      );
+      return;
+    }
+
+    _logger.d('Provider $name zmienił stan', module: 'Riverpod');
   }
 
   @override
-  void didDisposeProvider(ProviderObserverContext context) {
-    debugPrint(
-      '❌ Usunięto provider: ${context.provider.name ?? context.provider.runtimeType}',
+  void providerDidFail(
+    ProviderObserverContext context,
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    final name = context.provider.name ?? context.provider.runtimeType;
+
+    _logger.e(
+      'Krytyczny błąd providera: $name',
+      module: 'Riverpod',
+      error: error,
+      stackTrace: stackTrace,
     );
   }
 }

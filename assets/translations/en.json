@@ -21,6 +21,12 @@
     "send_code": "Wyślij kod",
     "processing": "Przetwarzanie..."
   },
+  "maintenance": {
+    "title": "PRZERWA TECHNICZNA",
+    "default_msg": "Aktualnie optymalizujemy system i bazę danych, aby zapewnić najwyższy standard bezpieczeństwa Twoich danych.",
+    "eta": "PLANOWANY POWRÓT",
+    "retry": "SPRAWDŹ PONOWNIE"
+  },
   "security_setup": {
     "additional_security": "Dodatkowe zabezpieczenie",
     "pin_or_biometric": "Ustaw PIN lub biometrię...",

@@ -5,12 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/app_loader.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/lockout_overlay.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/pin_input_view.dart';
-import 'package:obywatel_plus/core/security/pin/presentation/widget/pin_loading_indicator.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
@@ -112,7 +112,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           },
                         ),
 
-                        if (isLoading) const PinLoadingIndicator(),
+                        if (isLoading) AppLoader(),
                       ],
                     ),
                   ),

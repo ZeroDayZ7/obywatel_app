@@ -55,7 +55,7 @@ extension AppInitStatusPatterns on AppInitStatus {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Loading value)?  loading,TResult Function( _Unauthenticated value)?  unauthenticated,TResult Function( _LockedPin value)?  lockedPin,TResult Function( _Authorized value)?  authorized,TResult Function( _ForceUpdate value)?  forceUpdate,TResult Function( _Blocked value)?  blocked,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Loading value)?  loading,TResult Function( _Unauthenticated value)?  unauthenticated,TResult Function( _LockedPin value)?  lockedPin,TResult Function( _Authorized value)?  authorized,TResult Function( _ForceUpdate value)?  forceUpdate,TResult Function( _Maintenance value)?  maintenance,TResult Function( _Blocked value)?  blocked,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Loading() when loading != null:
@@ -63,7 +63,8 @@ return loading(_that);case _Unauthenticated() when unauthenticated != null:
 return unauthenticated(_that);case _LockedPin() when lockedPin != null:
 return lockedPin(_that);case _Authorized() when authorized != null:
 return authorized(_that);case _ForceUpdate() when forceUpdate != null:
-return forceUpdate(_that);case _Blocked() when blocked != null:
+return forceUpdate(_that);case _Maintenance() when maintenance != null:
+return maintenance(_that);case _Blocked() when blocked != null:
 return blocked(_that);case _:
   return orElse();
 
@@ -82,7 +83,7 @@ return blocked(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Loading value)  loading,required TResult Function( _Unauthenticated value)  unauthenticated,required TResult Function( _LockedPin value)  lockedPin,required TResult Function( _Authorized value)  authorized,required TResult Function( _ForceUpdate value)  forceUpdate,required TResult Function( _Blocked value)  blocked,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Loading value)  loading,required TResult Function( _Unauthenticated value)  unauthenticated,required TResult Function( _LockedPin value)  lockedPin,required TResult Function( _Authorized value)  authorized,required TResult Function( _ForceUpdate value)  forceUpdate,required TResult Function( _Maintenance value)  maintenance,required TResult Function( _Blocked value)  blocked,}){
 final _that = this;
 switch (_that) {
 case _Loading():
@@ -90,7 +91,8 @@ return loading(_that);case _Unauthenticated():
 return unauthenticated(_that);case _LockedPin():
 return lockedPin(_that);case _Authorized():
 return authorized(_that);case _ForceUpdate():
-return forceUpdate(_that);case _Blocked():
+return forceUpdate(_that);case _Maintenance():
+return maintenance(_that);case _Blocked():
 return blocked(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
@@ -105,7 +107,7 @@ return blocked(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Loading value)?  loading,TResult? Function( _Unauthenticated value)?  unauthenticated,TResult? Function( _LockedPin value)?  lockedPin,TResult? Function( _Authorized value)?  authorized,TResult? Function( _ForceUpdate value)?  forceUpdate,TResult? Function( _Blocked value)?  blocked,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Loading value)?  loading,TResult? Function( _Unauthenticated value)?  unauthenticated,TResult? Function( _LockedPin value)?  lockedPin,TResult? Function( _Authorized value)?  authorized,TResult? Function( _ForceUpdate value)?  forceUpdate,TResult? Function( _Maintenance value)?  maintenance,TResult? Function( _Blocked value)?  blocked,}){
 final _that = this;
 switch (_that) {
 case _Loading() when loading != null:
@@ -113,7 +115,8 @@ return loading(_that);case _Unauthenticated() when unauthenticated != null:
 return unauthenticated(_that);case _LockedPin() when lockedPin != null:
 return lockedPin(_that);case _Authorized() when authorized != null:
 return authorized(_that);case _ForceUpdate() when forceUpdate != null:
-return forceUpdate(_that);case _Blocked() when blocked != null:
+return forceUpdate(_that);case _Maintenance() when maintenance != null:
+return maintenance(_that);case _Blocked() when blocked != null:
 return blocked(_that);case _:
   return null;
 
@@ -131,14 +134,15 @@ return blocked(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function()?  lockedPin,TResult Function()?  authorized,TResult Function()?  forceUpdate,TResult Function( String? reason)?  blocked,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  loading,TResult Function()?  unauthenticated,TResult Function()?  lockedPin,TResult Function()?  authorized,TResult Function()?  forceUpdate,TResult Function( String? message,  DateTime? estimatedEndTime)?  maintenance,TResult Function( String? reason)?  blocked,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Loading() when loading != null:
 return loading();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _LockedPin() when lockedPin != null:
 return lockedPin();case _Authorized() when authorized != null:
 return authorized();case _ForceUpdate() when forceUpdate != null:
-return forceUpdate();case _Blocked() when blocked != null:
+return forceUpdate();case _Maintenance() when maintenance != null:
+return maintenance(_that.message,_that.estimatedEndTime);case _Blocked() when blocked != null:
 return blocked(_that.reason);case _:
   return orElse();
 
@@ -157,14 +161,15 @@ return blocked(_that.reason);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function()  lockedPin,required TResult Function()  authorized,required TResult Function()  forceUpdate,required TResult Function( String? reason)  blocked,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  loading,required TResult Function()  unauthenticated,required TResult Function()  lockedPin,required TResult Function()  authorized,required TResult Function()  forceUpdate,required TResult Function( String? message,  DateTime? estimatedEndTime)  maintenance,required TResult Function( String? reason)  blocked,}) {final _that = this;
 switch (_that) {
 case _Loading():
 return loading();case _Unauthenticated():
 return unauthenticated();case _LockedPin():
 return lockedPin();case _Authorized():
 return authorized();case _ForceUpdate():
-return forceUpdate();case _Blocked():
+return forceUpdate();case _Maintenance():
+return maintenance(_that.message,_that.estimatedEndTime);case _Blocked():
 return blocked(_that.reason);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -179,14 +184,15 @@ return blocked(_that.reason);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function()?  lockedPin,TResult? Function()?  authorized,TResult? Function()?  forceUpdate,TResult? Function( String? reason)?  blocked,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  loading,TResult? Function()?  unauthenticated,TResult? Function()?  lockedPin,TResult? Function()?  authorized,TResult? Function()?  forceUpdate,TResult? Function( String? message,  DateTime? estimatedEndTime)?  maintenance,TResult? Function( String? reason)?  blocked,}) {final _that = this;
 switch (_that) {
 case _Loading() when loading != null:
 return loading();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _LockedPin() when lockedPin != null:
 return lockedPin();case _Authorized() when authorized != null:
 return authorized();case _ForceUpdate() when forceUpdate != null:
-return forceUpdate();case _Blocked() when blocked != null:
+return forceUpdate();case _Maintenance() when maintenance != null:
+return maintenance(_that.message,_that.estimatedEndTime);case _Blocked() when blocked != null:
 return blocked(_that.reason);case _:
   return null;
 
@@ -354,6 +360,74 @@ String toString() {
 
 
 
+
+/// @nodoc
+
+
+class _Maintenance implements AppInitStatus {
+  const _Maintenance({this.message, this.estimatedEndTime});
+  
+
+ final  String? message;
+ final  DateTime? estimatedEndTime;
+
+/// Create a copy of AppInitStatus
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$MaintenanceCopyWith<_Maintenance> get copyWith => __$MaintenanceCopyWithImpl<_Maintenance>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Maintenance&&(identical(other.message, message) || other.message == message)&&(identical(other.estimatedEndTime, estimatedEndTime) || other.estimatedEndTime == estimatedEndTime));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,message,estimatedEndTime);
+
+@override
+String toString() {
+  return 'AppInitStatus.maintenance(message: $message, estimatedEndTime: $estimatedEndTime)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$MaintenanceCopyWith<$Res> implements $AppInitStatusCopyWith<$Res> {
+  factory _$MaintenanceCopyWith(_Maintenance value, $Res Function(_Maintenance) _then) = __$MaintenanceCopyWithImpl;
+@useResult
+$Res call({
+ String? message, DateTime? estimatedEndTime
+});
+
+
+
+
+}
+/// @nodoc
+class __$MaintenanceCopyWithImpl<$Res>
+    implements _$MaintenanceCopyWith<$Res> {
+  __$MaintenanceCopyWithImpl(this._self, this._then);
+
+  final _Maintenance _self;
+  final $Res Function(_Maintenance) _then;
+
+/// Create a copy of AppInitStatus
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? message = freezed,Object? estimatedEndTime = freezed,}) {
+  return _then(_Maintenance(
+message: freezed == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
+as String?,estimatedEndTime: freezed == estimatedEndTime ? _self.estimatedEndTime : estimatedEndTime // ignore: cast_nullable_to_non_nullable
+as DateTime?,
+  ));
+}
+
+
+}
 
 /// @nodoc
 

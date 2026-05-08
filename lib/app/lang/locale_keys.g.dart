@@ -24,6 +24,11 @@ abstract class  LocaleKeys {
   static const common_send_code = 'common.send_code';
   static const common_processing = 'common.processing';
   static const common = 'common';
+  static const maintenance_title = 'maintenance.title';
+  static const maintenance_default_msg = 'maintenance.default_msg';
+  static const maintenance_eta = 'maintenance.eta';
+  static const maintenance_retry = 'maintenance.retry';
+  static const maintenance = 'maintenance';
   static const security_setup_additional_security = 'security_setup.additional_security';
   static const security_setup_pin_or_biometric = 'security_setup.pin_or_biometric';
   static const security_setup_finish_setup = 'security_setup.finish_setup';

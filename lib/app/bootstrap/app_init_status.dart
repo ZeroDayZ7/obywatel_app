@@ -15,5 +15,10 @@ sealed class AppInitStatus with _$AppInitStatus {
 
   const factory AppInitStatus.forceUpdate() = _ForceUpdate;
 
+  const factory AppInitStatus.maintenance({
+    String? message,
+    DateTime? estimatedEndTime,
+  }) = _Maintenance;
+
   const factory AppInitStatus.blocked({String? reason}) = _Blocked;
 }

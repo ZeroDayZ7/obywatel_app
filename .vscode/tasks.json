@@ -14,6 +14,24 @@
       "problemMatcher": ["$dart-build_runner"]
     },
     {
+      "label": "Flutter: Generate Locale Keys",
+      "type": "shell",
+      "command": "dart run ${workspaceFolder}/scripts/generate_locale_keys.dart",
+      "problemMatcher": [],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": true,
+        "clear": false
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
       "label": "Run scrcpy (device 5200d78bfa479449)",
       "type": "shell",
       "command": "scrcpy -s 5200d78bfa479449",
