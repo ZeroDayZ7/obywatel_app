@@ -46,21 +46,15 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   }
 
   Future<void> _checkIntegrityOnResume() async {
-    final isAllowed = await ref
-        .read(deviceIntegrityFacadeProvider)
-        .isDeviceAllowed();
+    final isAllowed = await ref.read(deviceIntegrityFacadeProvider).isDeviceAllowed();
 
     if (!isAllowed) {
-      _logger.e(
-        '🛑 Security violation detected on resume!',
-        module: 'Security',
-      );
+      _logger.e('🛑 Security violation detected on resume!', module: 'Security');
 
       // Natychmiastowa reakcja: blokujemy stan aplikacji
       state = state.copyWith(
         hasLocalLock: true,
-        initialized:
-            false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
+        initialized: false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
       );
 
       // ref.read(authControllerProvider.notifier).logout();
@@ -90,19 +84,13 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     // Podwójne sprawdzenie, czy stan nie jest już gotowy
     if (state.initialized) return;
 
-    final [
-      bool isPinConfigured,
-      bool setupCompleted,
-      bool isLocalLockEnabled,
-      bool isBiometricEnabled,
-    ] = await Future.wait([
+    final [bool isPinConfigured, bool setupCompleted, bool isLocalLockEnabled, bool isBiometricEnabled] = await Future.wait([
       _pinService.hasPin(),
-      _readBool(StorageKeys.setupCompleted),
-      _readBool(StorageKeys.localLockEnabled),
-      _readBool(StorageKeys.isBiometricConfigured),
+      _secureStorage.readBool(key: StorageKeys.setupCompleted),
+      _secureStorage.readBool(key: StorageKeys.localLockEnabled),
+      _secureStorage.readBool(key: StorageKeys.isBiometricConfigured),
     ]);
 
-    // Poprawione wywołanie (dodane nawiasy)
     if (!isBiometricEnabled) {
       await _checkBiometricsAvailability();
     }
@@ -125,17 +113,6 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     _logger.i('🔐 Security Init: Done');
   }
 
-  Future<bool> _readBool(String key) async {
-    final value = await _secureStorage.read(key: key);
-    final boolResult = value == 'true';
-
-    return boolResult;
-  }
-
-  Future<void> _writeBool(String key, bool value) async {
-    await _secureStorage.write(key: key, value: value.toString());
-  }
-
   Future<void> setPin(List<int> pinCodes) async {
     await _pinService.setPin(pinCodes);
     state = state.copyWith(isPinConfigured: true);
@@ -145,17 +122,12 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
-    await _writeBool(StorageKeys.setupCompleted, true);
-    await _writeBool(StorageKeys.localLockEnabled, true);
-    await _writeBool(StorageKeys.isPinConfigured, true);
-    await _writeBool(StorageKeys.isBiometricConfigured, enableBiometric);
+    await _secureStorage.writeBool(key: StorageKeys.setupCompleted, value: true);
+    await _secureStorage.writeBool(key: StorageKeys.localLockEnabled, value: true);
+    await _secureStorage.writeBool(key: StorageKeys.isPinConfigured, value: true);
+    await _secureStorage.writeBool(key: StorageKeys.isBiometricConfigured, value: enableBiometric);
 
-    state = state.copyWith(
-      hasLocalLock: false,
-      isPinConfigured: true,
-      isBiometricEnabled: enableBiometric,
-      isSetupCompleted: true,
-    );
+    state = state.copyWith(hasLocalLock: false, isPinConfigured: true, isBiometricEnabled: enableBiometric, isSetupCompleted: true);
 
     _logger.i('✅ Security Setup Completed');
     debugSecurityState();
@@ -202,12 +174,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       _logger.e('Failed to check PIN status', error: e);
     }
 
-    state = state.copyWith(
-      hasLocalLock: false,
-      initialized: true,
-      isPinConfigured: isPinConfigured,
-      isSetupCompleted: isPinConfigured,
-    );
+    state = state.copyWith(hasLocalLock: false, initialized: true, isPinConfigured: isPinConfigured, isSetupCompleted: isPinConfigured);
     _logger.i('🔐 Security: Manual unlock. PIN configured: $isPinConfigured');
   }
 
