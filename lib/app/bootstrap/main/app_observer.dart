@@ -7,39 +7,29 @@ final class AppObserver extends ProviderObserver {
   final AppLogger _logger;
 
   @override
-  void didUpdateProvider(
-    ProviderObserverContext context,
-    Object? previousValue,
-    Object? newValue,
-  ) {
+  void didUpdateProvider(ProviderObserverContext context, Object? previousValue, Object? newValue) {
     final name = context.provider.name ?? context.provider.runtimeType;
 
     if (newValue is AsyncValue && newValue.hasError) {
-      _logger.e(
-        'Async Error w providerze: $name',
-        module: 'Riverpod',
-        error: newValue.error,
-        stackTrace: newValue.stackTrace,
-      );
+      _logger.e('Async Error w providerze: $name', module: 'Riverpod', error: newValue.error, stackTrace: newValue.stackTrace);
       return;
     }
 
-    _logger.d('Provider $name zmienił stan', module: 'Riverpod');
+    _logger.d('''
+Provider $name zmienił stan
+
+POP:
+$previousValue
+
+NEW:
+$newValue
+''', module: 'Riverpod');
   }
 
   @override
-  void providerDidFail(
-    ProviderObserverContext context,
-    Object error,
-    StackTrace stackTrace,
-  ) {
+  void providerDidFail(ProviderObserverContext context, Object error, StackTrace stackTrace) {
     final name = context.provider.name ?? context.provider.runtimeType;
 
-    _logger.e(
-      'Krytyczny błąd providera: $name',
-      module: 'Riverpod',
-      error: error,
-      stackTrace: stackTrace,
-    );
+    _logger.e('Krytyczny błąd providera: $name', module: 'Riverpod', error: error, stackTrace: stackTrace);
   }
 }

@@ -190,9 +190,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   void onAppHidden() {
     if (_secureController == null) return;
-
     _logger.d('App hidden/minimized', module: 'Security');
-
     _enablePrivacyShield();
   }
 

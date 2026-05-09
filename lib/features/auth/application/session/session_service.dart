@@ -1,3 +1,5 @@
+import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -6,24 +8,39 @@ part 'session_service.g.dart';
 
 @Riverpod(keepAlive: true)
 SessionService sessionService(Ref ref) {
-  return SessionService(ref.watch(secureStorageProvider));
+  return SessionService(
+    ref.watch(secureStorageProvider),
+    ref.watch(appLoggerProvider),
+  );
 }
 
 typedef SessionData = ({String accessToken, String userId});
 
 class SessionService {
   final SecureStorageService _storage;
-  SessionService(this._storage);
+  final AppLogger _logger;
+
+  SessionService(this._storage, this._logger);
 
   Future<SessionData?> getSessionDetails() async {
-    final token = await _storage.read(key: StorageKeys.accessToken);
-    final userId = await _storage.read(key: StorageKeys.userId);
+    try {
+      final results = await Future.wait([
+        _storage.read(key: StorageKeys.accessToken),
+        _storage.read(key: StorageKeys.userId),
+      ]);
 
-    if (token == null || token.isEmpty || userId == null || userId.isEmpty) {
+      final token = results[0];
+      final userId = results[1];
+
+      if (token == null || token.isEmpty || userId == null || userId.isEmpty) {
+        return null;
+      }
+
+      return (accessToken: token, userId: userId);
+    } catch (e, st) {
+      _logger.e('Failed to fetch session details', error: e, stackTrace: st);
       return null;
     }
-
-    return (accessToken: token, userId: userId);
   }
 
   /// Pobiera Access Token z Secure Storage
@@ -42,8 +59,16 @@ class SessionService {
     required String accessToken,
     required String refreshToken,
   }) async {
-    await _storage.write(key: StorageKeys.accessToken, value: accessToken);
-    await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
+    try {
+      await Future.wait([
+        _storage.write(key: StorageKeys.accessToken, value: accessToken),
+        _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
+      ]);
+      _logger.d('Tokens updated successfully');
+    } catch (e, st) {
+      _logger.e('Failed to update tokens', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 
   Future<void> saveSession({
@@ -51,14 +76,34 @@ class SessionService {
     required String refreshToken,
     required String userId,
   }) async {
-    await _storage.write(key: StorageKeys.accessToken, value: accessToken);
-    await _storage.write(key: StorageKeys.refreshToken, value: refreshToken);
-    await _storage.write(key: StorageKeys.userId, value: userId);
+    try {
+      await Future.wait([
+        _storage.write(key: StorageKeys.accessToken, value: accessToken),
+        _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
+        _storage.write(key: StorageKeys.userId, value: userId),
+      ]);
+      _logger.i('Session saved for user: $userId');
+    } catch (e, st) {
+      _logger.e('Failed to save session', error: e, stackTrace: st);
+      rethrow;
+    }
   }
 
   Future<void> clearSession() async {
-    await _storage.delete(key: StorageKeys.accessToken);
-    await _storage.delete(key: StorageKeys.refreshToken);
-    await _storage.delete(key: StorageKeys.userId);
+    try {
+      await Future.wait([
+        _storage.delete(key: StorageKeys.accessToken),
+        _storage.delete(key: StorageKeys.refreshToken),
+        _storage.delete(key: StorageKeys.userId),
+      ]);
+      _logger.i('Session cleared successfully');
+    } catch (e, st) {
+      _logger.e(
+        'Critical error while clearing session',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
+    }
   }
 }

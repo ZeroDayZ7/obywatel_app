@@ -67,7 +67,7 @@
     "**/docs": true,
     "**/*.txt": true
   },
-  "dart.lineLength": 200,
+  "dart.lineLength": 80,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "explicit",
     "source.fixAll": "explicit"
