@@ -7,11 +7,10 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
-
-import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 
 final securitySetupProvider =
     AsyncNotifierProvider<SecuritySetupNotifier, SecuritySetupState>(
@@ -36,6 +35,7 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       pinSet: pinSet,
       biometricAvailable: biometricAvailable,
       biometricSet: biometricSet,
+      trustDevice: false,
     );
   }
 

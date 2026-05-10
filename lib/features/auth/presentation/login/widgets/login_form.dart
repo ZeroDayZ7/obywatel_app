@@ -51,8 +51,10 @@ class _LoginFormState extends ConsumerState<LoginForm> {
 
     await ref.read(authControllerProvider.notifier).login(email, passwordBytes);
 
-    _passwordController.clear();
-    passwordBytes.fillRange(0, passwordBytes.length, 0);
+    if (apiConstants.isProduction) {
+      _passwordController.clear();
+      passwordBytes.fillRange(0, passwordBytes.length, 0);
+    }
   }
 
   @override
@@ -68,9 +70,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          
           const SizedBox(height: 16),
-          
+
           AppTextField(
             controller: _emailController,
             labelKey: LocaleKeys.common_email,

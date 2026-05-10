@@ -114,14 +114,14 @@ class AuthController extends _$AuthController {
         } catch (e) {
           logger.e('❌ Błąd podczas finalizacji sesji: $e');
           _handleError(e);
-          state = const AuthState.unauthenticated();
+          setUnauthenticated();
         }
       },
     );
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {
-    // state = const AuthState.authenticating();
+    state = const AuthState.authenticating();
     try {
       final result = await _authService.login(email, passwordBytes);
 
@@ -131,7 +131,7 @@ class AuthController extends _$AuthController {
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
-      // state = const AuthState.unauthenticated();
+      setUnauthenticated();
     }
   }
 
@@ -163,7 +163,6 @@ class AuthController extends _$AuthController {
 
       await _handleAuthResponse(result, currentEmail);
     } catch (e) {
-      ref.read(globalNotificationProvider.notifier).showFromError(e);
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
         email: currentEmail,
@@ -212,7 +211,7 @@ class AuthController extends _$AuthController {
       ref.invalidate(securityServiceProvider);
       ref.invalidate(appDatabaseProvider);
       ref.invalidate(notificationsControllerProvider);
-      state = const AuthState.unauthenticated();
+      setUnauthenticated();
     }
   }
 
@@ -244,7 +243,7 @@ class AuthController extends _$AuthController {
         } catch (e) {
           _log.e('Błąd podczas weryfikacji urządzenia: $e', module: 'AUTH');
           _handleError(e);
-          state = const AuthState.unauthenticated();
+          setUnauthenticated();
         }
       },
       // Dla wszystkich innych stanów nie rób nic
