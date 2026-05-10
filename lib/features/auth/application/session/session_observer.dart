@@ -1,5 +1,3 @@
-// lib/features/auth/application/session/session_observer.dart
-
 import 'dart:async';
 
 import 'package:obywatel_plus/app/config/env.dart';
@@ -16,15 +14,12 @@ part 'session_observer.g.dart';
 class SessionObserver extends _$SessionObserver {
   Timer? _inactivityTimer;
 
-  // Konfiguracja czasu bezczynności (np. 5 minut)
   late final Duration _timeout = apiConstants.inactivityTimeout;
-  // static const _timeout = Duration(minutes: 5);
 
   @override
   void build() {
     final logger = ref.read(appLoggerProvider);
 
-    // 1. REAKCJA NA WYGAŚNIĘCIE SESJI (Twój kod z 401/Invalid)
     ref.listen(sessionStatusProvider, (previous, next) {
       if (next == SessionStatus.expired) {
         logger.w(
@@ -34,13 +29,9 @@ class SessionObserver extends _$SessionObserver {
       }
     });
 
-    // 2. SPRZĄTANIE I LOGOWANIE (Twój kod)
-    // 2. SPRZĄTANIE I LOGOWANIE
     ref.listen(authControllerProvider, (previous, next) {
       next.maybeMap(
         unauthenticated: (_) {
-          // Używamy gettera .isLoading z klasy AuthState,
-          // aby sprawdzić czy poprzedni stan to ładowanie/logowanie
           final wasAuthenticating = previous?.isLoading ?? false;
 
           if (!wasAuthenticating) {
@@ -53,19 +44,16 @@ class SessionObserver extends _$SessionObserver {
             );
           }
         },
-        // Gdy użytkownik pomyślnie wejdzie do aplikacji, odpalamy timer
+
         authenticated: (_) => onUserInteraction(),
         orElse: () {},
       );
     });
 
-    // Zabezpieczenie przed wyciekiem pamięci
     ref.onDispose(() => _inactivityTimer?.cancel());
   }
 
-  /// Metoda wołana przy każdym dotknięciu ekranu w AppBootstrapHandler
   void onUserInteraction() {
-    // Sprawdzamy tylko czy użytkownik jest zalogowany
     final authState = ref.read(authControllerProvider);
     final isUserActive = authState.maybeMap(
       authenticated: (_) => true,
@@ -74,20 +62,16 @@ class SessionObserver extends _$SessionObserver {
 
     if (!isUserActive) return;
 
-    // Resetujemy timer
     _inactivityTimer?.cancel();
     _inactivityTimer = Timer(_timeout, () => _handleInactivity());
   }
 
-  /// Wyzwalane, gdy przez 5 minut nie było żadnego dotyku
   void _handleInactivity() {
     final logger = ref.read(appLoggerProvider);
     logger.i(
       '⏰ User inactive for ${_timeout.inMinutes} min. Locking application...',
     );
 
-    // Zmieniamy stan w SecurityService na zablokowany
-    // Router automatycznie przekieruje na ekran PIN
     ref.read(securityServiceProvider.notifier).lockApp();
   }
 }

@@ -43,17 +43,19 @@ class SessionService {
     }
   }
 
-  /// Pobiera Access Token z Secure Storage
   Future<String?> getAccessToken() async {
     return _storage.read(key: StorageKeys.accessToken);
   }
 
-  /// Pobiera Refresh Token z Secure Storage
   Future<String?> getRefreshToken() async {
     return _storage.read(key: StorageKeys.refreshToken);
   }
 
-  Future<String?> getUserId() async => _storage.read(key: StorageKeys.userId);
+  Future<String?> getUserId() async {
+    final rawId = await _storage.read(key: StorageKeys.userId);
+    if (rawId == null || rawId.isEmpty) return null;
+    return rawId;
+  }
 
   Future<void> updateTokens({
     required String accessToken,
