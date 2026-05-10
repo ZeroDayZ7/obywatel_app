@@ -15,6 +15,9 @@ class AppTextField extends StatefulWidget {
   final String? autofillHints;
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
+  final ValueChanged<String>? onChanged;
+  final bool autofocus;
+  final TextAlign textAlign;
 
   const AppTextField({
     super.key,
@@ -30,6 +33,9 @@ class AppTextField extends StatefulWidget {
     this.autofillHints,
     this.textInputAction,
     this.onFieldSubmitted,
+    this.onChanged,
+    this.autofocus = false,
+    this.textAlign = TextAlign.start,
   });
 
   @override
@@ -52,8 +58,18 @@ class _AppTextFieldState extends State<AppTextField> {
       obscureText: widget.isPassword ? _obscureText : false,
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onFieldSubmitted,
+      onChanged: widget.onChanged,
+      autofocus: widget.autofocus,
+      textAlign: widget.textAlign,
       autofillHints: widget.autofillHints != null
           ? [widget.autofillHints!]
+          : null,
+      style: widget.textAlign == TextAlign.center
+          ? const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 8.0,
+            )
           : null,
       decoration: InputDecoration(
         labelText: widget.labelKey.tr(),

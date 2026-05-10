@@ -20,7 +20,6 @@ class SecuritySetupBody extends ConsumerWidget {
     final asyncState = ref.watch(securitySetupProvider);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
           const InfoCard(

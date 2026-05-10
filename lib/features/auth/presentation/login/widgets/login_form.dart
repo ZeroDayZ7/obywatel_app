@@ -22,7 +22,6 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
-
   late final TextEditingController _emailController;
   late final TextEditingController _passwordController;
 
@@ -60,6 +59,8 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
+    final iconColor = Colors.green.shade700;
+
     final isLoading = authState.maybeWhen(
       authenticating: () => true,
       orElse: () => false,
@@ -71,23 +72,22 @@ class _LoginFormState extends ConsumerState<LoginForm> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const SizedBox(height: 16),
-
           AppTextField(
             controller: _emailController,
             labelKey: LocaleKeys.common_email,
             enabled: !isLoading,
+            prefixIcon: Icon(Icons.alternate_email, color: iconColor),
             validator: Validators.validateEmail,
             keyboardType: TextInputType.emailAddress,
             autofillHints: AutofillHints.email,
             inputFormatters: [LengthLimitingTextInputFormatter(40)],
           ),
-
           const SizedBox(height: 16),
-
           AppTextField(
             controller: _passwordController,
             labelKey: LocaleKeys.common_password,
             enabled: !isLoading,
+            prefixIcon: Icon(Icons.lock_outline, color: iconColor),
             isPassword: true,
             validator: Validators.validatePassword,
             autofillHints: AutofillHints.password,
@@ -95,9 +95,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             textInputAction: TextInputAction.done,
             onFieldSubmitted: (_) => _handleLogin(),
           ),
-
           const SizedBox(height: 24),
-
           AppButton(
             labelKey: LocaleKeys.login_submit,
             onPressed: isLoading ? null : _handleLogin,
@@ -105,9 +103,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
             fullWidth: true,
             isLoading: isLoading,
           ),
-
           const SizedBox(height: 16),
-
           Align(
             alignment: Alignment.centerRight,
             child: AppButton(

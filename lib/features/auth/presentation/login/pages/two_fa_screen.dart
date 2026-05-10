@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/presentation/login/widgets/app_text_field.dart';
 
 class TwoFaScreen extends ConsumerStatefulWidget {
   const TwoFaScreen({super.key});
@@ -43,6 +44,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
+    final iconColor = Colors.green.shade700;
 
     return AppScaffold(
       size: ContainerSize.narrow,
@@ -57,33 +59,23 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
-            TextFormField(
+            AppTextField(
               controller: _codeController,
+              labelKey: LocaleKeys.login_2fa_code,
               autofocus: true,
               enabled: !isLoading,
               onChanged: _onCodeChanged,
+              textAlign: TextAlign.center,
+              prefixIcon: Icon(Icons.security, color: iconColor),
+              validator: Validators.validateTwoFaCode,
               keyboardType: TextInputType.number,
+              autofillHints: AutofillHints.oneTimeCode,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submitCode(),
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(6),
               ],
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 8.0,
-              ),
-              decoration: InputDecoration(
-                labelText: LocaleKeys.login_2fa_code.tr(),
-                contentPadding: const EdgeInsets.symmetric(
-                  vertical: 10,
-                  horizontal: 10,
-                ),
-              ),
-              validator: Validators.validateTwoFaCode,
-              autofillHints: const [AutofillHints.oneTimeCode],
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _submitCode(),
             ),
             const SizedBox(height: 24),
             AppButton(
@@ -98,9 +90,8 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               labelKey: LocaleKeys.common_cancel,
               onPressed: isLoading
                   ? null
-                  : () {
-                      ref.read(authControllerProvider.notifier).cancelTwoFa();
-                    },
+                  : () =>
+                        ref.read(authControllerProvider.notifier).cancelTwoFa(),
               variant: AppButtonVariant.text,
               fullWidth: true,
             ),

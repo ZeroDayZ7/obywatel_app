@@ -48,7 +48,6 @@ class SecuritySetupScreen extends ConsumerWidget {
           ],
         ),
         error: (error, stack) {
-          // Obsługa SESSION_EXPIRED
           if (error == 'SESSION_EXPIRED') {
             return RetryView(
               onRetry: () {
@@ -58,7 +57,6 @@ class SecuritySetupScreen extends ConsumerWidget {
             );
           }
 
-          // Inne błędy – zwykły Retry
           return RetryView(
             onRetry: () {
               ref.invalidate(securitySetupProvider);

@@ -15,7 +15,6 @@ class ResetPasswordScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // FIX: Używamy resetPasswordNotifierProvider zamiast resetPasswordServiceProvider
     final state = ref.watch(resetPasswordProvider);
     final notifier = ref.read(resetPasswordProvider.notifier);
 
@@ -23,17 +22,14 @@ class ResetPasswordScreen extends ConsumerWidget {
       size: ContainerSize.narrow,
       alignment: Alignment.center,
       appBar: AppBar(title: Text(LocaleKeys.common_reset_password.tr())),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _ResetPasswordBody(state: state, notifier: notifier),
-      ),
+      child: _ResetPasswordBody(state: state, notifier: notifier),
     );
   }
 }
 
 class _ResetPasswordBody extends StatefulWidget {
   final ResetPasswordState state;
-  // FIX: ResetPasswordNotifier to nazwa klasy z pliku notifiera
+
   final ResetPasswordNotifier notifier;
 
   const _ResetPasswordBody({required this.state, required this.notifier});
@@ -55,14 +51,10 @@ class _ResetPasswordBodyState extends State<_ResetPasswordBody> {
 
   @override
   Widget build(BuildContext context) {
-    // FIX: Sprawdzamy typ wygenerowany przez Freezed (zazwyczaj _Loading)
-    // Jeśli build_runner jeszcze nie skończył, może podkreślać na czerwono.
     final bool isLoading = widget.state.maybeMap(
       loading: (_) => true,
       orElse: () => false,
     );
-
-    // Wewnątrz _ResetPasswordBodyState w metodzie build:
 
     return widget.state.when(
       initial: () => MethodSelectionWidget(
@@ -74,8 +66,6 @@ class _ResetPasswordBodyState extends State<_ResetPasswordBody> {
         isLoading: isLoading,
       ),
       loading: () {
-        // Zamiast samego spinnera, możesz zwrócić ostatni widoczny stan ze spinnerem overlay,
-        // ale na razie zostańmy przy Twoim rozwiązaniu:
         return const Center(child: CircularProgressIndicator());
       },
       codeSent: (input, method, resendTime, canResend, token) =>
@@ -86,10 +76,10 @@ class _ResetPasswordBodyState extends State<_ResetPasswordBody> {
             canResend: canResend,
             isLoading: isLoading,
           ),
-      // POPRAWKA TUTAJ: Dodajemy drugi parametr (challenge)
+
       codeVerified: (token, challenge) => PasswordInputWidget(
         notifier: widget.notifier,
-        code: codeController.text, // Kod z kontrolera potrzebny do podpisu
+        code: codeController.text,
         isLoading: isLoading,
       ),
       completed: () => const SuccessWidget(),
