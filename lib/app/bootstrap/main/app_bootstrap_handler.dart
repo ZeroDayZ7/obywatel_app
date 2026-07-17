@@ -55,7 +55,7 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
 
       unauthenticated: () => _wrapWithInactivityDetector(widget.child),
       lockedPin: () => _wrapWithInactivityDetector(widget.child),
-      authorized: () => _wrapWithInactivityDetector(widget.child),
+      ready: () => _wrapWithInactivityDetector(widget.child),
     );
   }
 }

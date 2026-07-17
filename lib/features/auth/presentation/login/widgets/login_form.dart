@@ -45,7 +45,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     if (!_formKey.currentState!.validate()) return;
 
     final email = _emailController.text.trim();
-    final passwordStr = _passwordController.text.trim();
+    final passwordStr = _passwordController.text;
     final passwordBytes = utf8.encode(passwordStr);
 
     await ref.read(authControllerProvider.notifier).login(email, passwordBytes);

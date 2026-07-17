@@ -1,4 +1,4 @@
-// lib\app\bootstrap\app_init_status.dart
+// lib/app/bootstrap/app_init_status.dart
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'app_init_status.freezed.dart';
@@ -11,7 +11,7 @@ sealed class AppInitStatus with _$AppInitStatus {
 
   const factory AppInitStatus.lockedPin() = _LockedPin;
 
-  const factory AppInitStatus.authorized() = _Authorized;
+  const factory AppInitStatus.ready() = _Ready;
 
   const factory AppInitStatus.forceUpdate() = _ForceUpdate;
 
