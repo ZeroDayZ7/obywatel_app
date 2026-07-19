@@ -53,12 +53,15 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  if (authState.isPartiallyAuthenticated || !securityState.isSetupCompleted) {
-    if (path != AppRoutes.securitySetup) {
-      // logger.i('[ RedirectGuard ]: Security setup incomplete');
-      return AppRoutes.securitySetup;
+  if (authState.isPartiallyAuthenticated) {
+    if (!securityState.isSetupCompleted) {
+      if (path != AppRoutes.securitySetup) {
+        return AppRoutes.securitySetup;
+      }
+      return null;
     }
-    return null;
+
+    return AppRoutes.home;
   }
   //  ZALOGOWANY
   if (authState.isAuthenticated) {

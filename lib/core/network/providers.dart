@@ -41,7 +41,7 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
 
       final fingerprint = await deviceService.getFingerprint();
       final response = await client.post(
-        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
+        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refresh}',
         data: {StorageKeys.refreshToken: token?.refreshToken},
         options: Options(headers: {'X-Device-Fingerprint': fingerprint}),
       );
