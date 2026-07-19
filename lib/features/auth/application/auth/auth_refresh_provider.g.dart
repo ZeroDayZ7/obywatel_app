@@ -42,7 +42,7 @@ final class AuthRefreshListenableProvider
 }
 
 String _$authRefreshListenableHash() =>
-    r'e97a609efc0407ede659b6573c6d7e021a496efa';
+    r'fc47c270645961bd1f5d87c2e84ac8c72128478e';
 
 abstract class _$AuthRefreshListenable extends $Notifier<void> {
   void build();

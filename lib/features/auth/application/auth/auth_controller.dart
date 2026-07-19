@@ -36,17 +36,47 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> _restoreSession() async {
-    final session = await _sessionService.getSessionDetails();
+    final refreshToken = await _sessionService.getRefreshToken();
 
-    if (session == null) {
+    if (refreshToken == null || refreshToken.isEmpty) {
       state = const AuthState.unauthenticated();
       return;
     }
 
-    // Tutaj dostęp do:
-    // session.userId
-    // session.accessToken
-    state = AuthState.authenticated(userId: session.userId);
+    // Mamy Refresh Token w Secure Storage.
+    // Nie robimy jeszcze strzału do API - czekamy na PIN / odblokowanie skarbca.
+    final session = await _sessionService.getSessionDetails();
+
+    if (session != null) {
+      state = AuthState.authenticated(
+        userId: session.userId,
+        refreshToken: refreshToken,
+      );
+    } else {
+      state = const AuthState.unauthenticated();
+    }
+  }
+
+  /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
+  Future<bool> unlockWithPinAndValidateSession() async {
+    try {
+      // 1. Zdejmujemy lokalną blokadę ekranu (używamy Twojej istniejącej metody unlockApp)
+      await ref.read(securityServiceProvider.notifier).unlockApp();
+
+      // 2. Skarbiec / UI jest odblokowany -> wykonujemy weryfikację podpisu / odświeżenie sesji
+      await verifyDeviceSignature();
+
+      return true;
+    } catch (e) {
+      _log.e(
+        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u: $e',
+        module: 'AUTH',
+      );
+
+      // Jeśli sesja na backendzie wygasła / refresh token jest nieprawidłowy, wylogowujemy
+      await logout();
+      return false;
+    }
   }
 
   Future<void> _handleAuthResponse(AuthResponse result, String email) async {
