@@ -31,8 +31,40 @@ class AuthController extends _$AuthController {
 
   @override
   AuthState build() {
-    // Zaczynamy od czystego stanu początkowego bez kombinowania z restore
+    // Sprawdzamy obecność zapisanej sesji po uruchomieniu dostawcy
+    _checkInitialSession();
+    
     return const AuthState.initial();
+  }
+
+  /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
+  Future<void> _checkInitialSession() async {
+    try {
+      final refreshToken = await _sessionService.getRefreshToken();
+      final hasSession = refreshToken != null && refreshToken.isNotEmpty;
+
+      if (!hasSession) {
+        _log.i('Brak zapisanej sesji na urządzeniu -> AuthState.unauthenticated', module: 'AUTH');
+        state = const AuthState.unauthenticated();
+        return;
+      }
+
+      final securityState = ref.read(securityServiceProvider);
+
+      // Jeśli mamy sesję na dysku, ale aplikacja wymaga PIN-u, zostajemy w trybie oczekiwania na odblokowanie
+      if (securityState.shouldShowLock) {
+        _log.i('Aplikacja zablokowana PIN-em -> oczekiwanie na odblokowanie lokalne.', module: 'AUTH');
+        return;
+      }
+
+      // Jeśli sesja istnieje i nie ma lokalnej blokady, weryfikujemy ją na backendzie
+      _log.i('Zapisana sesja odnaleziona -> weryfikacja /auth/me', module: 'AUTH');
+      final result = await _authService.fetchAuthMe();
+      await _handleAuthResponse(result, '');
+    } catch (e) {
+      _log.w('Nie udało się przywrócić sesji początkowej: $e. Przejście w unauthenticated.', module: 'AUTH');
+      state = const AuthState.unauthenticated();
+    }
   }
 
   /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
