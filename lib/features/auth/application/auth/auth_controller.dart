@@ -29,70 +29,99 @@ class AuthController extends _$AuthController {
   SessionService get _sessionService => ref.read(sessionServiceProvider);
   AppLogger get _log => ref.read(appLoggerProvider);
 
+  static const String _logModule = 'AUTH';
+
   @override
   AuthState build() {
+    _log.i('Inicjalizacja AuthController...', module: _logModule);
     // Sprawdzamy obecność zapisanej sesji po uruchomieniu dostawcy
     _checkInitialSession();
-    
+
     return const AuthState.initial();
   }
 
   /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
+  /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
   Future<void> _checkInitialSession() async {
+    _log.d(
+      'Sprawdzanie początkowego stanu sesji na urządzeniu...',
+      module: _logModule,
+    );
+
     try {
       final refreshToken = await _sessionService.getRefreshToken();
       final hasSession = refreshToken != null && refreshToken.isNotEmpty;
 
       if (!hasSession) {
-        _log.i('Brak zapisanej sesji na urządzeniu -> AuthState.unauthenticated', module: 'AUTH');
+        _log.i(
+          'Brak zapisanej sesji na urządzeniu -> AuthState.unauthenticated',
+          module: _logModule,
+        );
         state = const AuthState.unauthenticated();
         return;
       }
 
-      final securityState = ref.read(securityServiceProvider);
-
-      // Jeśli mamy sesję na dysku, ale aplikacja wymaga PIN-u, zostajemy w trybie oczekiwania na odblokowanie
-      if (securityState.shouldShowLock) {
-        _log.i('Aplikacja zablokowana PIN-em -> oczekiwanie na odblokowanie lokalne.', module: 'AUTH');
-        return;
-      }
-
-      // Jeśli sesja istnieje i nie ma lokalnej blokady, weryfikujemy ją na backendzie
-      _log.i('Zapisana sesja odnaleziona -> weryfikacja /auth/me', module: 'AUTH');
-      final result = await _authService.fetchAuthMe();
-      await _handleAuthResponse(result, '');
-    } catch (e) {
-      _log.w('Nie udało się przywrócić sesji początkowej: $e. Przejście w unauthenticated.', module: 'AUTH');
+      _log.i(
+        'Zapisana sesja odnaleziona na dysku -> AuthState.locked()',
+        module: _logModule,
+      );
+      state = const AuthState.locked();
+    } catch (e, stack) {
+      _log.e(
+        'Błąd podczas odczytu sesji z dysku -> zmiana stanu na unauthenticated',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
       state = const AuthState.unauthenticated();
     }
   }
 
   /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
   Future<bool> unlockWithPinAndValidateSession() async {
+    _log.i(
+      'Rozpoczęcie procedury odblokowywania PIN-em...',
+      module: _logModule,
+    );
+
+    // Przestawiamy stan na "w trakcie autoryzacji", żeby Guard nie przekierował nas na /login
+    state = const AuthState.authenticating();
+
     try {
       // 1. Odblokowujemy lokalny skarbiec PIN-em
+      _log.d(
+        '1/3 Odblokowywanie lokalnego skarbca (securityService)...',
+        module: _logModule,
+      );
       await ref.read(securityServiceProvider.notifier).unlockApp();
 
-      // 2. Jeśli jesteśmy w stanie partiallyAuthenticated, weryfikujemy urządzenie
-      final isPartiallyAuth = state.maybeMap(
-        partiallyAuthenticated: (_) => true,
-        orElse: () => false,
-      );
-
-      if (isPartiallyAuth) {
-        await verifyDeviceSignature();
-        return true;
+      // 2. Przywracamy tokeny z dysku do Fresh (jeśli zostały zaszyfrowane w SecureStorage)
+      final refreshToken = await _sessionService.getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) {
+        _log.w('Brak refresh_token na dysku. Sesja wygasła.');
+        await logout();
+        return false;
       }
 
-      // 3. W pozostałych przypadkach odświeżamy/sprawdzamy sesję przez /auth/me
+      // 3. Pobieranie danych sesji z API (/auth/me)
+      _log.d(
+        '2/3 Pobieranie danych sesji z API (/auth/me)...',
+        module: _logModule,
+      );
       final result = await _authService.fetchAuthMe();
       await _handleAuthResponse(result, '');
 
+      _log.i(
+        '✅ Sesja pomyślnie odblokowana i zweryfikowana.',
+        module: _logModule,
+      );
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       _log.e(
-        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u: $e',
-        module: 'AUTH',
+        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u. Wylogowywanie...',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
       );
 
       await logout();
@@ -166,6 +195,24 @@ class AuthController extends _$AuthController {
         }
       },
     );
+  }
+
+  Future<void> dumpRamState(Ref ref, AppLogger log) async {
+    final authState = ref.read(authControllerProvider);
+    final securityState = ref.read(securityServiceProvider);
+    final pendingSession = ref.read(pendingSessionProvider);
+    final freshToken = await ref.read(authFreshProvider).token;
+
+    log.i('''
+🧠 ===== AKTUALNY STAN PAMIĘCI RAM =====
+1. AuthState: $authState
+2. SecurityState: $securityState
+3. Fresh OAuth2Token (RAM):
+   • AccessToken: ${freshToken?.accessToken ?? 'BRAK'}
+   • RefreshToken: ${freshToken?.refreshToken ?? 'BRAK'}
+4. PendingSession: $pendingSession
+========================================
+''', module: 'DIAGNOSTICS');
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {

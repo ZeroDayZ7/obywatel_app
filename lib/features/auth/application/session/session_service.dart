@@ -29,9 +29,6 @@ class SessionService {
       await Future.wait([
         _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
         _storage.write(key: StorageKeys.userId, value: userId),
-        _storage.delete(
-          key: StorageKeys.accessToken,
-        ), // Czyścimy stary token z dysku, jeśli istniał
       ]);
       _logger.i('Session saved safely for user: $userId');
     } catch (e, st) {
@@ -53,7 +50,6 @@ class SessionService {
   Future<void> clearSession() async {
     try {
       await Future.wait([
-        _storage.delete(key: StorageKeys.accessToken),
         _storage.delete(key: StorageKeys.refreshToken),
         _storage.delete(key: StorageKeys.userId),
       ]);

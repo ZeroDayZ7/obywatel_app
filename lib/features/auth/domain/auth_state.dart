@@ -7,6 +7,7 @@ sealed class AuthState with _$AuthState {
   const AuthState._();
 
   const factory AuthState.initial() = _Initial;
+  const factory AuthState.locked() = _Locked; // <--- DODANY STAN LOCK
   const factory AuthState.unauthenticated() = _Unauthenticated;
   const factory AuthState.authenticating() = _Authenticating;
   const factory AuthState.twoFaRequired({
@@ -27,6 +28,7 @@ sealed class AuthState with _$AuthState {
   const factory AuthState.error({required String code}) = _Error;
 
   bool get isInitial => this is _Initial;
+  bool get isLocked => this is _Locked; // <--- GETTER
   bool get isUnauthenticated => this is _Unauthenticated;
   bool get isLoading => this is _Authenticating;
   bool get isTwoFaRequired => this is _TwoFaRequired;

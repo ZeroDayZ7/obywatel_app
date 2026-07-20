@@ -29,10 +29,12 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  // 2. LOCK SCREEN (PIN)
-  if (securityState.shouldShowLock) {
+  // 2. WERYFIKACJA BLOKADY (Kolejność: Security Service -> Auth State)
+  final isAppLocked = securityState.shouldShowLock || authState.isLocked;
+
+  if (isAppLocked) {
     if (!isPinScreen) {
-      // logger.i('[ RedirectGuard ]: App locked, forcing PIN screen');
+      // logger.i('[ RedirectGuard ]: Application is locked, forcing PIN screen');
       return AppRoutes.pin;
     }
     return null;
