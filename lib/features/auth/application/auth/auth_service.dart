@@ -48,6 +48,12 @@ class AuthService {
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
+  /// Pobranie aktualnej sesji / dane z /auth/me
+  Future<AuthResponse> fetchAuthMe() async {
+    final response = await _apiClient.get(ApiEndpoints.authMe);
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
+  }
+
   /// Register Device
   Future<AuthResponse> registerTrustedDevice({
     required String fingerprint,

@@ -31,40 +31,30 @@ class AuthController extends _$AuthController {
 
   @override
   AuthState build() {
-    _restoreSession();
+    // Zaczynamy od czystego stanu początkowego bez kombinowania z restore
     return const AuthState.initial();
-  }
-
-  Future<void> _restoreSession() async {
-    final refreshToken = await _sessionService.getRefreshToken();
-
-    if (refreshToken == null || refreshToken.isEmpty) {
-      state = const AuthState.unauthenticated();
-      return;
-    }
-
-    // Mamy Refresh Token w Secure Storage.
-    // Nie robimy jeszcze strzału do API - czekamy na PIN / odblokowanie skarbca.
-    final session = await _sessionService.getSessionDetails();
-
-    if (session != null) {
-      state = AuthState.authenticated(
-        userId: session.userId,
-        refreshToken: refreshToken,
-      );
-    } else {
-      state = const AuthState.unauthenticated();
-    }
   }
 
   /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
   Future<bool> unlockWithPinAndValidateSession() async {
     try {
-      // 1. Zdejmujemy lokalną blokadę ekranu (używamy Twojej istniejącej metody unlockApp)
+      // 1. Odblokowujemy lokalny skarbiec PIN-em
       await ref.read(securityServiceProvider.notifier).unlockApp();
 
-      // 2. Skarbiec / UI jest odblokowany -> wykonujemy weryfikację podpisu / odświeżenie sesji
-      await verifyDeviceSignature();
+      // 2. Jeśli jesteśmy w stanie partiallyAuthenticated, weryfikujemy urządzenie
+      final isPartiallyAuth = state.maybeMap(
+        partiallyAuthenticated: (_) => true,
+        orElse: () => false,
+      );
+
+      if (isPartiallyAuth) {
+        await verifyDeviceSignature();
+        return true;
+      }
+
+      // 3. W pozostałych przypadkach odświeżamy/sprawdzamy sesję przez /auth/me
+      final result = await _authService.fetchAuthMe();
+      await _handleAuthResponse(result, '');
 
       return true;
     } catch (e) {
@@ -73,7 +63,6 @@ class AuthController extends _$AuthController {
         module: 'AUTH',
       );
 
-      // Jeśli sesja na backendzie wygasła / refresh token jest nieprawidłowy, wylogowujemy
       await logout();
       return false;
     }
@@ -87,24 +76,20 @@ class AuthController extends _$AuthController {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
       preTrust: (setupToken, challenge, isTrusted, userId) async {
-        // 1. Najpierw ustawiamy stan partiallyAuthenticated
         state = AuthState.partiallyAuthenticated(
           setupToken: setupToken,
           challenge: challenge,
           userId: userId,
         );
 
-        // 2. Aktualizujemy PendingSession dla zachowania spójności
         final pending = PendingSession(setupToken: setupToken, userId: userId);
         logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
 
-        // 3. LOGIKA AUTOMATYCZNEJ WERYFIKACJI (Silent Auth)
         if (isTrusted) {
           logger.i(
             '🛡️ Urządzenie jest zaufane (isTrusted: true). Uruchamiam automatyczną weryfikację podpisu...',
           );
-
           await verifyDeviceSignature();
         } else {
           logger.w(
@@ -118,12 +103,13 @@ class AuthController extends _$AuthController {
             '✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji dla: ${user.userId}',
           );
 
+          // 1. Zapis na dysku tylko refreshTokena i userId
           await _sessionService.saveSession(
-            accessToken: accessToken,
             refreshToken: refreshToken,
             userId: user.userId,
           );
 
+          // 2. Wrzucenie tokenów do Fresh (trafią do RAM w SecureTokenStorage)
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -235,7 +221,9 @@ class AuthController extends _$AuthController {
   Future<void> logout() async {
     try {
       final refreshToken = await _sessionService.getRefreshToken();
-      await _authService.logout(refreshToken);
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _authService.logout(refreshToken);
+      }
     } finally {
       await _sessionService.clearSession();
       ref.invalidate(securityServiceProvider);
@@ -246,29 +234,17 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> verifyDeviceSignature() async {
-    // Używamy mapOrNull, który wykona kod TYLKO dla stanu partiallyAuthenticated
     await state.maybeMap(
       partiallyAuthenticated: (s) async {
         try {
-          // final deviceService = ref.read(deviceInfoServiceProvider);
-
-          // if (!deviceService.isUnlocked) {
-          //   _log.e('Skarbiec jest zablokowany - wymagany PIN', module: 'AUTH');
-          //   state = const AuthState.error(code: 'VAULT_LOCKED');
-          //   return;
-          // }
-
-          // 1. Podpisujemy challenge (s.challenge jest dostępne bezpośrednio)
           final crypto = ref.read(cryptoServiceProvider.notifier);
           final signature = await crypto.signWithActiveKey(s.challenge);
 
-          // 2. Wysyłamy do backendu (s.setupToken jest dostępne bezpośrednio)
           final result = await _authService.verifyDevice(
             setupToken: s.setupToken,
             signature: signature,
           );
 
-          // 3. Obsługujemy odpowiedź
           await _handleAuthResponse(result, '');
         } catch (e) {
           _log.e('Błąd podczas weryfikacji urządzenia: $e', module: 'AUTH');
@@ -276,7 +252,6 @@ class AuthController extends _$AuthController {
           setUnauthenticated();
         }
       },
-      // Dla wszystkich innych stanów nie rób nic
       orElse: () async {
         _log.w('Próba weryfikacji podpisu w złym stanie: ${state.runtimeType}');
       },

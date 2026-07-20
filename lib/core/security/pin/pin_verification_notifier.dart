@@ -7,7 +7,7 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
-import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'pin_verification_notifier.g.dart';
@@ -94,6 +94,20 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     }
 
     state = const PinVerificationState.success();
-    await ref.read(securityServiceProvider.notifier).unlockManually();
+
+    // KLUCZOWA ZMIANA:
+    // Wywołujemy odblokowanie ORAZ walidację sesji w AuthController.
+    // Metoda ta sama odblokuje SecurityService (lokalny skarbiec)
+    // ORAZ strzeli do backendu po sesję (/auth/me), przestawiając AuthState na .authenticated.
+    final sessionValid = await ref
+        .read(authControllerProvider.notifier)
+        .unlockWithPinAndValidateSession();
+
+    if (!sessionValid) {
+      _log.w(
+        'Sesja nieprawidłowa po podaniu PIN-u. Przekierowanie do logowania.',
+      );
+      state = const PinVerificationState.error();
+    }
   }
 }

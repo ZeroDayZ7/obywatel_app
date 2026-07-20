@@ -14,37 +14,30 @@ SessionService sessionService(Ref ref) {
   );
 }
 
-typedef SessionData = ({String accessToken, String userId});
-
 class SessionService {
   final SecureStorageService _storage;
   final AppLogger _logger;
 
   SessionService(this._storage, this._logger);
 
-  Future<SessionData?> getSessionDetails() async {
+  /// Zapisuje na dysku wyłącznie refresh token oraz userId
+  Future<void> saveSession({
+    required String refreshToken,
+    required String userId,
+  }) async {
     try {
-      final results = await Future.wait([
-        _storage.read(key: StorageKeys.accessToken),
-        _storage.read(key: StorageKeys.userId),
+      await Future.wait([
+        _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
+        _storage.write(key: StorageKeys.userId, value: userId),
+        _storage.delete(
+          key: StorageKeys.accessToken,
+        ), // Czyścimy stary token z dysku, jeśli istniał
       ]);
-
-      final token = results[0];
-      final userId = results[1];
-
-      if (token == null || token.isEmpty || userId == null || userId.isEmpty) {
-        return null;
-      }
-
-      return (accessToken: token, userId: userId);
+      _logger.i('Session saved safely for user: $userId');
     } catch (e, st) {
-      _logger.e('Failed to fetch session details', error: e, stackTrace: st);
-      return null;
+      _logger.e('Failed to save session', error: e, stackTrace: st);
+      rethrow;
     }
-  }
-
-  Future<String?> getAccessToken() async {
-    return _storage.read(key: StorageKeys.accessToken);
   }
 
   Future<String?> getRefreshToken() async {
@@ -55,40 +48,6 @@ class SessionService {
     final rawId = await _storage.read(key: StorageKeys.userId);
     if (rawId == null || rawId.isEmpty) return null;
     return rawId;
-  }
-
-  Future<void> updateTokens({
-    required String accessToken,
-    required String refreshToken,
-  }) async {
-    try {
-      await Future.wait([
-        _storage.write(key: StorageKeys.accessToken, value: accessToken),
-        _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
-      ]);
-      _logger.d('Tokens updated successfully');
-    } catch (e, st) {
-      _logger.e('Failed to update tokens', error: e, stackTrace: st);
-      rethrow;
-    }
-  }
-
-  Future<void> saveSession({
-    required String accessToken,
-    required String refreshToken,
-    required String userId,
-  }) async {
-    try {
-      await Future.wait([
-        _storage.write(key: StorageKeys.accessToken, value: accessToken),
-        _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
-        _storage.write(key: StorageKeys.userId, value: userId),
-      ]);
-      _logger.i('Session saved for user: $userId');
-    } catch (e, st) {
-      _logger.e('Failed to save session', error: e, stackTrace: st);
-      rethrow;
-    }
   }
 
   Future<void> clearSession() async {
