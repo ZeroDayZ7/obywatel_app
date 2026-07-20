@@ -1,8 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
-import 'package:obywatel_plus/features/auth/domain/auth_models.dart';
-
 part 'auth_response.freezed.dart';
 part 'auth_response.g.dart';
 
@@ -18,18 +16,16 @@ sealed class AuthResponse with _$AuthResponse {
     required String userId,
   }) = _PreTrust;
 
+  /// Czysty sukces uwierzytelnienia – zwraca TYLKO tokeny dostępowe.
+  /// Dane profilu, role i uprawnienia pobierane są osobnym strzałem hydratacyjnym (/auth/me).
   const factory AuthResponse.fullSuccess({
     required String accessToken,
     required String refreshToken,
-    required UserProfile user,
-    required RbacData rbac,
   }) = _FullSuccess;
 
-  // TA LINIA JEST KLUCZOWA - bez niej json_serializable ignoruje ten plik
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
       _$AuthResponseFromJson(json);
 
-  // Twoja własna logika mapowania
   factory AuthResponse.fromMap(Map<String, dynamic> data) {
     if (data[StorageKeys.twoFaRequired] == true) {
       return AuthResponse.twoFaRequired(
@@ -44,12 +40,6 @@ sealed class AuthResponse with _$AuthResponse {
       return AuthResponse.fullSuccess(
         accessToken: data[StorageKeys.accessToken]?.toString() ?? '',
         refreshToken: refreshToken,
-        user: UserProfile.fromJson(data['user'] as Map<String, dynamic>),
-        rbac: data['rbac'] == null
-            ? RbacData(permissions: [])
-            : RbacData.fromJson(
-                data['rbac'] as Map<String, dynamic>,
-              ),
       );
     }
 

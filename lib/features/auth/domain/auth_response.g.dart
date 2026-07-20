@@ -37,8 +37,6 @@ Map<String, dynamic> _$PreTrustToJson(_PreTrust instance) => <String, dynamic>{
 _FullSuccess _$FullSuccessFromJson(Map<String, dynamic> json) => _FullSuccess(
   accessToken: json['accessToken'] as String,
   refreshToken: json['refreshToken'] as String,
-  user: UserProfile.fromJson(json['user'] as Map<String, dynamic>),
-  rbac: RbacData.fromJson(json['rbac'] as Map<String, dynamic>),
   $type: json['runtimeType'] as String?,
 );
 
@@ -46,7 +44,5 @@ Map<String, dynamic> _$FullSuccessToJson(_FullSuccess instance) =>
     <String, dynamic>{
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
-      'user': instance.user,
-      'rbac': instance.rbac,
       'runtimeType': instance.$type,
     };

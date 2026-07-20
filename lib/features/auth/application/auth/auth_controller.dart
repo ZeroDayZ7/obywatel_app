@@ -34,7 +34,7 @@ class AuthController extends _$AuthController {
   @override
   AuthState build() {
     _log.i('Inicjalizacja AuthController...', module: _logModule);
-    _checkInitialSession();
+    Future.microtask(() => _checkInitialSession());
     return const AuthState.initial();
   }
 
@@ -104,19 +104,9 @@ class AuthController extends _$AuthController {
         '2/3 Pobieranie danych sesji z API (/auth/me)...',
         module: _logModule,
       );
-      await _authService.fetchAuthMe();
+      final user = await _authService.fetchAuthMe();
 
-      // 4. Pobieramy userId i accessToken bezpośrednio z zarejestrowanej sesji
-      final userId = 'Empty';
-      final freshToken = await ref.read(authFreshProvider).token;
-      final accessToken = freshToken?.accessToken ?? '';
-
-      state = AuthState.authenticated(
-        userId: userId,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-        isDeviceTrusted: true,
-      );
+      state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
       _log.i(
         '✅ Sesja pomyślnie odblokowana i zweryfikowana.',
@@ -165,7 +155,8 @@ class AuthController extends _$AuthController {
           );
         }
       },
-      fullSuccess: (accessToken, refreshToken, user, rbac) async {
+      // FIX 1: Dostosowano parametry (tylko accessToken i refreshToken)
+      fullSuccess: (accessToken, refreshToken) async {
         try {
           logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
 
@@ -175,17 +166,20 @@ class AuthController extends _$AuthController {
           // 2. Wrzucenie tokena do Fresh (RAM)
           await ref
               .read(authFreshProvider)
-              .setToken(OAuth2Token(accessToken: accessToken));
+              .setToken(
+                OAuth2Token(
+                  accessToken: accessToken,
+                  refreshToken: refreshToken,
+                ),
+              );
 
-          // 3. Pobranie ID użytkownika z zachowanej sesji
-          final savedUserId = await _sessionService.getUserId() ?? '';
+          ref.read(pendingSessionProvider.notifier).clear();
 
-          state = AuthState.authenticated(
-            userId: savedUserId,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            isDeviceTrusted: true,
-          );
+          // FIX 2: Hydratacja profilu użytkownika osobnym strzałem na /auth/me
+          logger.i('🔄 Pobieranie profilu użytkownika z /auth/me...');
+          final user = await _authService.fetchAuthMe();
+
+          state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
           logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
         } catch (e) {
@@ -254,7 +248,6 @@ class AuthController extends _$AuthController {
         codeBytes,
         currentToken,
       );
-      codeBytes.fillRange(0, codeBytes.length, 0);
 
       await _handleAuthResponse(result, currentEmail);
     } catch (e) {
@@ -264,6 +257,8 @@ class AuthController extends _$AuthController {
         tempToken: currentToken,
       );
       _handleError(e);
+    } finally {
+      codeBytes.fillRange(0, codeBytes.length, 0);
     }
   }
 
@@ -305,6 +300,7 @@ class AuthController extends _$AuthController {
       }
     } finally {
       await _sessionService.clearSession();
+      await ref.read(authFreshProvider).clearToken();
       ref.invalidate(securityServiceProvider);
       ref.invalidate(appDatabaseProvider);
       ref.invalidate(notificationsControllerProvider);
