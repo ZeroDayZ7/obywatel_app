@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';

@@ -14,7 +14,7 @@ class ApiConstants extends ApiConstantsBase {
   final Duration inactivityTimeout;
 
   const ApiConstants()
-    : baseUrl = 'http://localhost:8081',
+    : baseUrl = 'https://localhost-0.tail400384.ts.net',
       enableSSLPinning = true,
       apiFingerprint =
           '6D739691D5F16774369B7C96A8F1C946753204A4440375A81689D6C84B2BA510',

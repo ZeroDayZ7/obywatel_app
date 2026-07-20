@@ -15,7 +15,6 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserProfile {
 
-// ZMIEŃ 'uid' na 'user_id' – to jest powód błędu!
 @JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'display_name') String get displayName;@JsonKey(name: 'last_login') String get lastLogin; String get role;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
@@ -210,7 +209,6 @@ class _UserProfile implements UserProfile {
   const _UserProfile({@JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'display_name') required this.displayName, @JsonKey(name: 'last_login') required this.lastLogin, required this.role});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
-// ZMIEŃ 'uid' na 'user_id' – to jest powód błędu!
 @override@JsonKey(name: 'user_id') final  String userId;
 @override@JsonKey(name: 'display_name') final  String displayName;
 @override@JsonKey(name: 'last_login') final  String lastLogin;

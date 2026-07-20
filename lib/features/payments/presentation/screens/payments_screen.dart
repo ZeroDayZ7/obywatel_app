@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/payments/application/payments_provider.dart';
 import 'package:obywatel_plus/features/payments/presentation/widgets/balance_card.dart';
 import 'package:obywatel_plus/features/payments/presentation/widgets/quick_actions_row.dart';

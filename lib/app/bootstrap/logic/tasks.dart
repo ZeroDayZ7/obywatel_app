@@ -8,7 +8,6 @@ import 'package:obywatel_plus/core/security/security/security_service_provider.d
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 
-// 1. Storage Init - używa konkretnych serwisów (bo to warstwa core/infra)
 class StorageInitTask implements StartupTask {
   final SecureStorageService storage;
   final SharedPreferencesService prefs;
@@ -44,9 +43,8 @@ class StorageInitTask implements StartupTask {
   }
 }
 
-// 2. Security Init - teraz operuje na interfejsie klasy SecurityService
+// 2. Security Init
 class SecurityInitTask implements StartupTask {
-  // Zakładamy, że SecurityNotifier implementuje ten interfejs
   final ISecurityService securityService;
 
   SecurityInitTask(this.securityService);
@@ -90,7 +88,6 @@ class VersionCheckTask implements StartupTask {
 
   @override
   Future<AppInitStatus?> initialize() async {
-    // Najpierw wymuszamy pobranie danych z API
     await version.check();
 
     if (version.forceUpdate) {

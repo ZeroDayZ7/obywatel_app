@@ -7,7 +7,8 @@
     ".metadata": true,
     "**/.kotlin": true,
     "**/build": true,
-    "analysis_options.yaml": true,
+    "raw_assets/": true,
+    // "analysis_options.yaml": true,
     "obywatel_app.iml": true,
     "ios": true,
     "linux": true,
@@ -22,9 +23,13 @@
     "LICENSE": true,
     "devtools_options.yaml": true,
     "flutter_launcher_icons.yaml": true
+    // "**/errors/": true,
+    // "**/logger/": true,
+    // "**/": true
+    // "**/": true
     // "**/": true
     // "**/*.freezed.dart": true,
-    // "**/*.g.dart": true,
+    // "**/*.g.dart": true
   },
 
   // (Search)
@@ -35,6 +40,7 @@
     ".metadata": true,
     "**/.kotlin": true,
     "**/build": true,
+    "raw_assets/": true,
     "analysis_options.yaml": true,
     "obywatel_app.iml": true,
     "ios": true,
@@ -57,6 +63,8 @@
     "flutter_launcher_icons.yaml": true,
     "**/*.freezed.dart": true,
     "**/*.g.dart": true,
+    "**/assets": true,
+    "**/docs": true,
     "**/*.txt": true
   },
   "dart.lineLength": 80,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/core/design/widgets/app_shell_wrapper.dart';
+import 'package:obywatel_plus/core/design/widgets/shell/app_shell_wrapper.dart';
 
 StatefulShellRoute buildShellRoute({
   required List<String> titles,

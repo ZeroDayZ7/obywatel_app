@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/core/design/widgets/app_bar.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 
 class AppShellWrapper extends StatelessWidget {
   final StatefulNavigationShell navigationShell;

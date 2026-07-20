@@ -38,7 +38,7 @@ class StartupRunner {
     }
 
     logger.i('🎉 StartupRunner: All tasks finished successfully.');
-    return const AppInitStatus.authorized();
+    return const AppInitStatus.ready();
   }
 
   Future<AppInitStatus?> _executeTask(StartupTask task) async {

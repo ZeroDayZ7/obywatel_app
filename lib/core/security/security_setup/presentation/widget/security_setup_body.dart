@@ -18,7 +18,6 @@ class SecuritySetupBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(securitySetupProvider);
-    final theme = Theme.of(context);
 
     return SingleChildScrollView(
       child: Column(
@@ -30,64 +29,53 @@ class SecuritySetupBody extends ConsumerWidget {
           ),
           const SizedBox(height: 30),
 
-          // Kafelek PIN
-          PinTile(pinSet: state.pinSet, onSetup: () => _setupPin(context, ref)),
+          /// 1. Sekcja "Zaufaj temu urządzeniu" - teraz jako pierwsza (Punkt wejścia)
+          _buildTrustDeviceSwitch(context, ref),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
 
-          // Kafelek Biometrii (widoczny tylko jeśli urządzenie wspiera)
-          if (state.biometricAvailable)
-            BiometricTile(
-              enabled: state.biometricSet,
-              onSetup: state.pinSet
-                  ? () => ref
-                        .read(securitySetupProvider.notifier)
-                        .enableBiometric()
-                  : null,
-            ),
+          /// 2. Animowany kontener dla opcji PIN i Biometrii
+          /// Pojawia się tylko gdy trustDevice == true
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SizeTransition(sizeFactor: animation, child: child),
+              );
+            },
+            child: state.trustDevice
+                ? Column(
+                    key: const ValueKey('security_options_visible'),
+                    children: [
+                      // Kafelek PIN
+                      PinTile(
+                        pinSet: state.pinSet,
+                        onSetup: () => _setupPin(context, ref),
+                      ),
 
-          const SizedBox(height: 32),
+                      const SizedBox(height: 16),
 
-          // Sekcja "Zaufaj temu urządzeniu" (Trust Device Switch)
-          // Serwer nie wie kim jesteś, ale dzięki temu nie zapyta o 2FA
-          Container(
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest.withValues(
-                alpha: 0.3,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: state.trustDevice
-                    ? theme.colorScheme.primary.withValues(alpha: 0.5)
-                    : const Color.fromARGB(0, 255, 0, 0),
-              ),
-            ),
-            child: SwitchListTile(
-              secondary: Icon(
-                state.trustDevice
-                    ? Icons.verified_user
-                    : Icons.enhanced_encryption_outlined,
-                color: state.trustDevice ? theme.colorScheme.primary : null,
-              ),
-              title: Text(
-                LocaleKeys.security_setup_trust_device_title.tr(),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              subtitle: Text(
-                LocaleKeys.security_setup_trust_device_desc.tr(),
-                style: theme.textTheme.bodySmall,
-              ),
-              value: state.trustDevice,
-              onChanged: (value) {
-                ref
-                    .read(securitySetupProvider.notifier)
-                    .toggleTrustDevice(value);
-              },
-            ),
+                      // Kafelek Biometrii (widoczny tylko jeśli urządzenie wspiera)
+                      if (state.biometricAvailable)
+                        BiometricTile(
+                          enabled: state.biometricSet,
+                          onSetup: state.pinSet
+                              ? () => ref
+                                    .read(securitySetupProvider.notifier)
+                                    .enableBiometric()
+                              : null,
+                        ),
+                    ],
+                  )
+                : const SizedBox.shrink(
+                    key: ValueKey('security_options_hidden'),
+                  ),
           ),
 
           const SizedBox(height: 40),
 
+          /// 3. Przycisk kończący
           AppButton(
             labelKey: LocaleKeys.security_setup_finish_setup,
             onPressed: state.canFinish && asyncState is! AsyncLoading
@@ -104,6 +92,43 @@ class SecuritySetupBody extends ConsumerWidget {
 
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  /// Wyodrębniony widget Switcha dla czystości kodu
+  Widget _buildTrustDeviceSwitch(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: state.trustDevice
+              ? theme.colorScheme.primary.withValues(alpha: 0.5)
+              : Colors.transparent,
+        ),
+      ),
+      child: SwitchListTile(
+        secondary: Icon(
+          state.trustDevice
+              ? Icons.verified_user
+              : Icons.enhanced_encryption_outlined,
+          color: state.trustDevice ? theme.colorScheme.primary : null,
+        ),
+        title: Text(
+          LocaleKeys.security_setup_trust_device_title.tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          LocaleKeys.security_setup_trust_device_desc.tr(),
+          style: theme.textTheme.bodySmall,
+        ),
+        value: state.trustDevice,
+        onChanged: (value) {
+          ref.read(securitySetupProvider.notifier).toggleTrustDevice(value);
+        },
       ),
     );
   }

@@ -8,16 +8,17 @@ sealed class SecuritySetupState with _$SecuritySetupState {
     required bool pinSet,
     required bool biometricAvailable,
     required bool biometricSet,
-    @Default(true) bool trustDevice,
+    @Default(false) bool trustDevice,
   }) = _SecuritySetupState;
 
   const SecuritySetupState._();
 
-  bool get canFinish => pinSet;
+  bool get canFinish => pinSet && trustDevice;
 
   factory SecuritySetupState.initial() => const SecuritySetupState(
     pinSet: false,
     biometricAvailable: false,
     biometricSet: false,
+    trustDevice: false,
   );
 }

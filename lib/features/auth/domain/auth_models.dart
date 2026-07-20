@@ -6,7 +6,6 @@ part 'auth_models.g.dart';
 @freezed
 sealed class UserProfile with _$UserProfile {
   const factory UserProfile({
-    // ZMIEŃ 'uid' na 'user_id' – to jest powód błędu!
     @JsonKey(name: 'user_id') required String userId,
     @JsonKey(name: 'display_name') required String displayName,
     @JsonKey(name: 'last_login') required String lastLogin,

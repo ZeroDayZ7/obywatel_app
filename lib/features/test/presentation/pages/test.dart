@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/bootstrap/presentation/maintenance_screen.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
+import 'package:obywatel_plus/core/errors/presentation/global_error_screen.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
-import 'package:obywatel_plus/core/security/pin/presentation/pin_verification_screen.dart';
 
 class TestScreen extends ConsumerWidget {
   const TestScreen({super.key});
@@ -114,7 +115,7 @@ class TestScreen extends ConsumerWidget {
                   // Opcja 2: Szybki "Full Screen" bez definiowania route (do testów)
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const PinVerificationScreen(),
+                      builder: (context) => const MaintenanceScreen(),
                     ),
                   );
                 },
@@ -123,7 +124,13 @@ class TestScreen extends ConsumerWidget {
                 icon: Icons.style_outlined,
                 title: 'Component Library / Design System',
                 onTap: () {
-                  // Tu możesz dodać kolejny ekran z samymi przyciskami, inputami itp.
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const GlobalErrorScreen(
+                        error: 'Testowy błąd systemu SOC-001',
+                      ),
+                    ),
+                  );
                 },
               ),
             ],

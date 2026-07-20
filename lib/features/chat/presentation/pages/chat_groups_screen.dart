@@ -8,7 +8,6 @@ class ChatGroupsScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
       itemCount: 10,
       itemBuilder: (context, index) {
         return Card(

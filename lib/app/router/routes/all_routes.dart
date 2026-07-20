@@ -19,7 +19,7 @@ List<RouteBase> getAllRoutes() {
     ...homeRoutes,
     ...notificationsRoutes,
     ...settingsRoutes,
-    ...workAndCareerRoutes,
+    workAndCareerRoutes,
     ...documentsRoutes,
     ...healthRoutes,
     ...chatRoutes,

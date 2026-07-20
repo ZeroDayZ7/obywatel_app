@@ -31,22 +31,41 @@ class AuthController extends _$AuthController {
 
   @override
   AuthState build() {
-    _restoreSession();
+    // Zaczynamy od czystego stanu początkowego bez kombinowania z restore
     return const AuthState.initial();
   }
 
-  Future<void> _restoreSession() async {
-    final session = await _sessionService.getSessionDetails();
+  /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
+  Future<bool> unlockWithPinAndValidateSession() async {
+    try {
+      // 1. Odblokowujemy lokalny skarbiec PIN-em
+      await ref.read(securityServiceProvider.notifier).unlockApp();
 
-    if (session == null) {
-      state = const AuthState.unauthenticated();
-      return;
+      // 2. Jeśli jesteśmy w stanie partiallyAuthenticated, weryfikujemy urządzenie
+      final isPartiallyAuth = state.maybeMap(
+        partiallyAuthenticated: (_) => true,
+        orElse: () => false,
+      );
+
+      if (isPartiallyAuth) {
+        await verifyDeviceSignature();
+        return true;
+      }
+
+      // 3. W pozostałych przypadkach odświeżamy/sprawdzamy sesję przez /auth/me
+      final result = await _authService.fetchAuthMe();
+      await _handleAuthResponse(result, '');
+
+      return true;
+    } catch (e) {
+      _log.e(
+        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u: $e',
+        module: 'AUTH',
+      );
+
+      await logout();
+      return false;
     }
-
-    // Tutaj dostęp do:
-    // session.userId
-    // session.accessToken
-    state = AuthState.authenticated(userId: session.userId);
   }
 
   Future<void> _handleAuthResponse(AuthResponse result, String email) async {
@@ -57,24 +76,20 @@ class AuthController extends _$AuthController {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
       preTrust: (setupToken, challenge, isTrusted, userId) async {
-        // 1. Najpierw ustawiamy stan partiallyAuthenticated
         state = AuthState.partiallyAuthenticated(
           setupToken: setupToken,
           challenge: challenge,
           userId: userId,
         );
 
-        // 2. Aktualizujemy PendingSession dla zachowania spójności
         final pending = PendingSession(setupToken: setupToken, userId: userId);
         logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
 
-        // 3. LOGIKA AUTOMATYCZNEJ WERYFIKACJI (Silent Auth)
         if (isTrusted) {
           logger.i(
             '🛡️ Urządzenie jest zaufane (isTrusted: true). Uruchamiam automatyczną weryfikację podpisu...',
           );
-
           await verifyDeviceSignature();
         } else {
           logger.w(
@@ -88,12 +103,13 @@ class AuthController extends _$AuthController {
             '✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji dla: ${user.userId}',
           );
 
+          // 1. Zapis na dysku tylko refreshTokena i userId
           await _sessionService.saveSession(
-            accessToken: accessToken,
             refreshToken: refreshToken,
             userId: user.userId,
           );
 
+          // 2. Wrzucenie tokenów do Fresh (trafią do RAM w SecureTokenStorage)
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -114,14 +130,14 @@ class AuthController extends _$AuthController {
         } catch (e) {
           logger.e('❌ Błąd podczas finalizacji sesji: $e');
           _handleError(e);
-          state = const AuthState.unauthenticated();
+          setUnauthenticated();
         }
       },
     );
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {
-    // state = const AuthState.authenticating();
+    state = const AuthState.authenticating();
     try {
       final result = await _authService.login(email, passwordBytes);
 
@@ -131,7 +147,7 @@ class AuthController extends _$AuthController {
     } catch (e) {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
-      // state = const AuthState.unauthenticated();
+      setUnauthenticated();
     }
   }
 
@@ -163,7 +179,6 @@ class AuthController extends _$AuthController {
 
       await _handleAuthResponse(result, currentEmail);
     } catch (e) {
-      ref.read(globalNotificationProvider.notifier).showFromError(e);
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
         email: currentEmail,
@@ -206,48 +221,37 @@ class AuthController extends _$AuthController {
   Future<void> logout() async {
     try {
       final refreshToken = await _sessionService.getRefreshToken();
-      await _authService.logout(refreshToken);
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _authService.logout(refreshToken);
+      }
     } finally {
       await _sessionService.clearSession();
       ref.invalidate(securityServiceProvider);
       ref.invalidate(appDatabaseProvider);
       ref.invalidate(notificationsControllerProvider);
-      state = const AuthState.unauthenticated();
+      setUnauthenticated();
     }
   }
 
   Future<void> verifyDeviceSignature() async {
-    // Używamy mapOrNull, który wykona kod TYLKO dla stanu partiallyAuthenticated
     await state.maybeMap(
       partiallyAuthenticated: (s) async {
         try {
-          // final deviceService = ref.read(deviceInfoServiceProvider);
-
-          // if (!deviceService.isUnlocked) {
-          //   _log.e('Skarbiec jest zablokowany - wymagany PIN', module: 'AUTH');
-          //   state = const AuthState.error(code: 'VAULT_LOCKED');
-          //   return;
-          // }
-
-          // 1. Podpisujemy challenge (s.challenge jest dostępne bezpośrednio)
           final crypto = ref.read(cryptoServiceProvider.notifier);
           final signature = await crypto.signWithActiveKey(s.challenge);
 
-          // 2. Wysyłamy do backendu (s.setupToken jest dostępne bezpośrednio)
           final result = await _authService.verifyDevice(
             setupToken: s.setupToken,
             signature: signature,
           );
 
-          // 3. Obsługujemy odpowiedź
           await _handleAuthResponse(result, '');
         } catch (e) {
           _log.e('Błąd podczas weryfikacji urządzenia: $e', module: 'AUTH');
           _handleError(e);
-          state = const AuthState.unauthenticated();
+          setUnauthenticated();
         }
       },
-      // Dla wszystkich innych stanów nie rób nic
       orElse: () async {
         _log.w('Próba weryfikacji podpisu w złym stanie: ${state.runtimeType}');
       },

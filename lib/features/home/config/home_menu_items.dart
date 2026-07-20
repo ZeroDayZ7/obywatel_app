@@ -113,7 +113,7 @@ final List<HomeMenuItem> homeMenuItems = [
   HomeMenuItem(
     id: 'test',
     icon: Icons.text_snippet,
-    labelKey: 'Test',
+     labelKey: LocaleKeys.homeMenu_test,
     route: AppRoutes.test,
     color: const Color(0xFF0099FF),
     // isHidden: true,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
+import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
 
 class AppScaffold extends StatelessWidget {
   final Widget child;

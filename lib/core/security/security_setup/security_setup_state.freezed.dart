@@ -203,7 +203,7 @@ return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.t
 
 
 class _SecuritySetupState extends SecuritySetupState {
-  const _SecuritySetupState({required this.pinSet, required this.biometricAvailable, required this.biometricSet, this.trustDevice = true}): super._();
+  const _SecuritySetupState({required this.pinSet, required this.biometricAvailable, required this.biometricSet, this.trustDevice = false}): super._();
   
 
 @override final  bool pinSet;

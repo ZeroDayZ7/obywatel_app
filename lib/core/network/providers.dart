@@ -11,8 +11,6 @@ import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
-import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
-import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
@@ -24,24 +22,10 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
     tokenStorage: ref.watch(tokenStorageProvider),
     refreshToken: (token, client) async {
       final deviceService = ref.read(deviceInfoServiceProvider);
-      final authState = ref.read(authControllerProvider);
-
-      final userId = authState.maybeWhen(
-        authenticated: (id, accessToken, refreshToken, isDeviceTrusted) => id,
-        orElse: () => '',
-      );
-      // final userId = authState.maybeWhen(
-      //   authenticated: (id, _, _, _) => id,
-      //   orElse: () => '',
-      // );
-
-      if (userId.isEmpty) {
-        throw Exception('Refresh failed: No authenticated user ID found');
-      }
 
       final fingerprint = await deviceService.getFingerprint();
       final response = await client.post(
-        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refreshToken}',
+        '${ServicesConfig.authBaseUrl}${ApiEndpoints.refresh}',
         data: {StorageKeys.refreshToken: token?.refreshToken},
         options: Options(headers: {'X-Device-Fingerprint': fingerprint}),
       );

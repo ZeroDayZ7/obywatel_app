@@ -9,27 +9,18 @@ part 'auth_refresh_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 class AuthRefreshListenable extends _$AuthRefreshListenable
-    implements Listenable {
-  final ChangeNotifier _notifier = ChangeNotifier();
-
-  @override
-  void addListener(VoidCallback listener) => _notifier.addListener(listener);
-
-  @override
-  void removeListener(VoidCallback listener) =>
-      _notifier.removeListener(listener);
-
+    with ChangeNotifier {
   @override
   void build() {
     ref.listen<AuthState>(authControllerProvider, (previous, next) {
       if (previous != next) {
-        (_notifier as dynamic).notifyListeners();
+        notifyListeners();
       }
     });
 
     ref.listen<SecurityState>(securityServiceProvider, (previous, next) {
       if (previous != next) {
-        (_notifier as dynamic).notifyListeners();
+        notifyListeners();
       }
     });
   }

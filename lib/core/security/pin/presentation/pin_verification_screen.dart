@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/responsive_content_wrapper.dart';
+import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
+import 'package:obywatel_plus/core/design/widgets/ui/app_loader.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
@@ -37,6 +38,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         },
         orElse: () {},
       );
+
       final wasLocked =
           prev?.maybeWhen(locked: (_) => true, orElse: () => false) ?? false;
       final isIdle = next.maybeWhen(idle: () => true, orElse: () => false);
@@ -67,10 +69,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
       body: limiterAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(
-          child: Text(
-            'Error: $err',
-            style: const TextStyle(color: Colors.white),
-          ),
+          child: Text('Error: $err'),
         ),
         data: (limiter) {
           final isLocked = isLockedUI || limiter.isLocked;
@@ -80,6 +79,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
             loading: () => true,
             orElse: () => false,
           );
+
           final isError = verificationState.maybeWhen(
             error: () => true,
             orElse: () => false,
@@ -91,32 +91,34 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                 child: ResponsiveContainer(
                   size: ContainerSize.narrow,
                   alignment: Alignment.center,
-                  child: AbsorbPointer(
-                    absorbing: isLocked,
-                    child: Opacity(
-                      opacity: isLocked ? 0.3 : 1.0,
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 40),
-                        child: PinInputView(
-                          isLoading: isLoading,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: Column(
+                      children: [
+                        PinInputView(
+                          isEnabled: !isLoading && !isLocked,
                           isError: isError,
                           resetToken: _resetToken,
                           errorController: _errorController,
                           onCompleted: (pin) {
                             final codes = pin
                                 .split('')
-                                .map((e) => int.parse(e))
+                                .map(int.parse)
                                 .toList();
+
                             ref
                                 .read(pinVerificationProvider.notifier)
                                 .verifyPin(codes);
                           },
                         ),
-                      ),
+
+                        if (isLoading) AppLoader(),
+                      ],
                     ),
                   ),
                 ),
               ),
+
               if (isLocked) const LockoutOverlay(),
             ],
           );

@@ -1,8 +1,6 @@
+import 'package:obywatel_plus/features/auth/application/session/pending_session_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import 'package:obywatel_plus/features/auth/application/session/pending_session_state.dart';
-
-// To jest potrzebne do generowania kodu
 part 'pending_session_provider.g.dart';
 
 @Riverpod(keepAlive: true)

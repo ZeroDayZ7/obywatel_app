@@ -6,7 +6,7 @@ import 'package:obywatel_plus/core/design/models/action_item.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
-import 'package:obywatel_plus/core/design/widgets/app_scaffold.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/config/help_config.dart';
 
 class HelpScreen extends ConsumerWidget {

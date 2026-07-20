@@ -34,49 +34,73 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final selectionColor = Colors.green.withValues(alpha: 0.1);
+    final activeColor = Colors.green.shade700;
+
     return Form(
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           SegmentedButton<bool>(
+            style: SegmentedButton.styleFrom(
+              backgroundColor: theme.colorScheme.surface,
+              selectedBackgroundColor: selectionColor,
+              selectedForegroundColor: activeColor,
+              side: BorderSide(color: theme.dividerColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             segments: [
               ButtonSegment(
                 value: true,
                 label: Text(LocaleKeys.common_email.tr()),
+                icon: const Icon(Icons.email_outlined),
               ),
               ButtonSegment(
                 value: false,
                 label: Text(LocaleKeys.common_phone.tr()),
+                icon: const Icon(Icons.phone_android_outlined),
               ),
             ],
             selected: {_isEmail},
             onSelectionChanged: (v) => setState(() => _isEmail = v.first),
           ),
-          const SizedBox(height: 16),
-          if (_isEmail)
-            TextFormField(
-              controller: _emailCtrl,
-              decoration: InputDecoration(
-                labelText: LocaleKeys.common_email.tr(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                border: const UnderlineInputBorder(),
-              ),
-              validator: Validators.validateEmail,
-              keyboardType: TextInputType.emailAddress,
-            )
-          else
-            TextFormField(
-              controller: _phoneCtrl,
-              decoration: InputDecoration(
-                labelText: LocaleKeys.common_phone.tr(),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                border: const UnderlineInputBorder(),
-              ),
-              validator: Validators.validatePhone,
-              keyboardType: TextInputType.phone,
-            ),
           const SizedBox(height: 24),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: SizedBox(
+              key: ValueKey(_isEmail),
+              height: 80,
+              child: _isEmail
+                  ? TextFormField(
+                      controller: _emailCtrl,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(Icons.email, color: activeColor),
+                        labelText: LocaleKeys.common_email.tr(),
+                        border: const UnderlineInputBorder(),
+                      ),
+                      validator: Validators.validateEmail,
+                      keyboardType: TextInputType.emailAddress,
+                    )
+                  : TextFormField(
+                      controller: _phoneCtrl,
+                      decoration: InputDecoration(
+                        prefixIcon: Icon(
+                          Icons.phone_android,
+                          color: activeColor,
+                        ),
+                        labelText: LocaleKeys.common_phone.tr(),
+                        border: const UnderlineInputBorder(),
+                      ),
+                      validator: Validators.validatePhone,
+                      keyboardType: TextInputType.phone,
+                    ),
+            ),
+          ),
+          const SizedBox(height: 16),
           AppButton(
             labelKey: LocaleKeys.common_send_code.tr(),
             isLoading: widget.isLoading,
