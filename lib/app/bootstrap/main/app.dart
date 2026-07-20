@@ -13,6 +13,7 @@ import 'package:obywatel_plus/app/theme/theme_notifier.dart';
 import 'package:obywatel_plus/core/errors/global_notification_overlay.dart';
 import 'package:obywatel_plus/core/security/lifecycle/app_lifecycle_observer_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_observer.dart';
 import 'package:secure_application/secure_application.dart';
 
 class ObywatelPlusApp extends ConsumerWidget {
@@ -58,7 +59,16 @@ class ObywatelPlusApp extends ConsumerWidget {
                     opacity: 0.8,
                     lockedBuilder: (context, controller) =>
                         PrivacyOverlay(controller: controller!),
-                    child: child!,
+                    // 1. Owiń bezpośrednio wewnętrzny 'child' routera w Listener:
+                    child: Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: (_) {
+                        ref
+                            .read(sessionObserverProvider.notifier)
+                            .onUserInteraction();
+                      },
+                      child: child!,
+                    ),
                   ),
                 ),
               );

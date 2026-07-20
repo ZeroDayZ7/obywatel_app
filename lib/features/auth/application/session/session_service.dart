@@ -21,16 +21,11 @@ class SessionService {
   SessionService(this._storage, this._logger);
 
   /// Zapisuje na dysku wyłącznie refresh token oraz userId
-  Future<void> saveSession({
-    required String refreshToken,
-    required String userId,
-  }) async {
+  Future<void> saveSession({required String refreshToken}) async {
     try {
       await Future.wait([
         _storage.write(key: StorageKeys.refreshToken, value: refreshToken),
-        _storage.write(key: StorageKeys.userId, value: userId),
       ]);
-      _logger.i('Session saved safely for user: $userId');
     } catch (e, st) {
       _logger.e('Failed to save session', error: e, stackTrace: st);
       rethrow;
@@ -51,7 +46,6 @@ class SessionService {
     try {
       await Future.wait([
         _storage.delete(key: StorageKeys.refreshToken),
-        _storage.delete(key: StorageKeys.userId),
       ]);
       _logger.i('Session cleared successfully');
     } catch (e, st) {

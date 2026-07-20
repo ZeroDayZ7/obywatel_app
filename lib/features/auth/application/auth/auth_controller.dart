@@ -34,13 +34,10 @@ class AuthController extends _$AuthController {
   @override
   AuthState build() {
     _log.i('Inicjalizacja AuthController...', module: _logModule);
-    // Sprawdzamy obecność zapisanej sesji po uruchomieniu dostawcy
     _checkInitialSession();
-
     return const AuthState.initial();
   }
 
-  /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
   /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
   Future<void> _checkInitialSession() async {
     _log.d(
@@ -84,7 +81,6 @@ class AuthController extends _$AuthController {
       module: _logModule,
     );
 
-    // Przestawiamy stan na "w trakcie autoryzacji", żeby Guard nie przekierował nas na /login
     state = const AuthState.authenticating();
 
     try {
@@ -95,7 +91,7 @@ class AuthController extends _$AuthController {
       );
       await ref.read(securityServiceProvider.notifier).unlockApp();
 
-      // 2. Przywracamy tokeny z dysku do Fresh (jeśli zostały zaszyfrowane w SecureStorage)
+      // 2. Weryfikujemy dostępność refreshTokena na dysku
       final refreshToken = await _sessionService.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         _log.w('Brak refresh_token na dysku. Sesja wygasła.');
@@ -108,8 +104,19 @@ class AuthController extends _$AuthController {
         '2/3 Pobieranie danych sesji z API (/auth/me)...',
         module: _logModule,
       );
-      final result = await _authService.fetchAuthMe();
-      await _handleAuthResponse(result, '');
+      await _authService.fetchAuthMe();
+
+      // 4. Pobieramy userId i accessToken bezpośrednio z zarejestrowanej sesji
+      final userId = 'Empty';
+      final freshToken = await ref.read(authFreshProvider).token;
+      final accessToken = freshToken?.accessToken ?? '';
+
+      state = AuthState.authenticated(
+        userId: userId,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+        isDeviceTrusted: true,
+      );
 
       _log.i(
         '✅ Sesja pomyślnie odblokowana i zweryfikowana.',
@@ -160,28 +167,21 @@ class AuthController extends _$AuthController {
       },
       fullSuccess: (accessToken, refreshToken, user, rbac) async {
         try {
-          logger.i(
-            '✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji dla: ${user.userId}',
-          );
+          logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
 
-          // 1. Zapis na dysku tylko refreshTokena i userId
-          await _sessionService.saveSession(
-            refreshToken: refreshToken,
-            userId: user.userId,
-          );
+          // 1. Zapis na dysku refreshTokena
+          await _sessionService.saveSession(refreshToken: refreshToken);
 
-          // 2. Wrzucenie tokenów do Fresh (trafią do RAM w SecureTokenStorage)
+          // 2. Wrzucenie tokena do Fresh (RAM)
           await ref
               .read(authFreshProvider)
-              .setToken(
-                OAuth2Token(
-                  accessToken: accessToken,
-                  refreshToken: refreshToken,
-                ),
-              );
+              .setToken(OAuth2Token(accessToken: accessToken));
+
+          // 3. Pobranie ID użytkownika z zachowanej sesji
+          final savedUserId = await _sessionService.getUserId() ?? '';
 
           state = AuthState.authenticated(
-            userId: user.userId,
+            userId: savedUserId,
             accessToken: accessToken,
             refreshToken: refreshToken,
             isDeviceTrusted: true,

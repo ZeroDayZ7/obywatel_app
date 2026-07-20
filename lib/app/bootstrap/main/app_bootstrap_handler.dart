@@ -27,16 +27,6 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
     });
   }
 
-  Widget _wrapWithInactivityDetector(Widget child) {
-    return Listener(
-      behavior: HitTestBehavior.translucent,
-      onPointerDown: (_) {
-        ref.read(sessionObserverProvider.notifier).onUserInteraction();
-      },
-      child: child,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.watch(sessionObserverProvider);
@@ -48,14 +38,12 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
       blocked: (reason) => ErrorApp(error: reason ?? 'unknown_error'),
       forceUpdate: () => const ForceUpdateScreen(),
 
-      maintenance: (message, endTime) => MaintenanceScreen(
-        message: message,
-        endTime: endTime,
-      ),
+      maintenance: (message, endTime) =>
+          MaintenanceScreen(message: message, endTime: endTime),
 
-      unauthenticated: () => _wrapWithInactivityDetector(widget.child),
-      lockedPin: () => _wrapWithInactivityDetector(widget.child),
-      ready: () => _wrapWithInactivityDetector(widget.child),
+      unauthenticated: () => widget.child,
+      lockedPin: () => widget.child,
+      ready: () => widget.child,
     );
   }
 }

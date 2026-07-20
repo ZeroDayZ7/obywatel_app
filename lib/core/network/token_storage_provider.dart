@@ -67,14 +67,8 @@ class SecureTokenStorage extends TokenStorage<OAuth2Token> {
 
     // Na dysk w SecureStorage trafia WYŁĄCZNIE refreshToken
     if (token.refreshToken != null && token.refreshToken!.isNotEmpty) {
-      final currentUserId = await _sessionService.getUserId();
-      debugPrint(
-        '🔑 [SecureTokenStorage.write] Zapisywanie RefreshToken na dysk dla UserID: $currentUserId',
-      );
-      await _sessionService.saveSession(
-        refreshToken: token.refreshToken!,
-        userId: currentUserId ?? '',
-      );
+      debugPrint('🔑 [SecureTokenStorage.write] Zapisywanie RefreshToken');
+      await _sessionService.saveSession(refreshToken: token.refreshToken!);
     }
   }
 }
