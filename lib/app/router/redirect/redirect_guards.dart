@@ -1,4 +1,3 @@
-// lib/app/router/redirect_guards.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
@@ -12,6 +11,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
   final securityState = ref.read(securityServiceProvider);
   final path = state.uri.path;
 
+  final isInitialScreen = path == AppRoutes.initial;
   final isPinScreen = path == AppRoutes.pin;
   final isLoginScreen = path == AppRoutes.login;
   final is2FaScreen = path == AppRoutes.twoFaVerify;
@@ -19,21 +19,28 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
-  // logger.i('[ RedirectGuard ] authState: $authState');
+  // 1. DOKĄD SECURITY NIE JEST GOTOWE LUB AUTH JEST W TRAKCIE STARTU -> TRZYMAMY NA /initial
+  if (!securityState.initialized ||
+      authState.isLoading ||
+      authState.isInitial) {
+    if (!isInitialScreen) {
+      return AppRoutes.initial;
+    }
+    return null;
+  }
 
-  // LOCK SCREEN (PIN)
-  if (securityState.shouldShowLock) {
-    if (path != AppRoutes.pin) {
-      // logger.i('[ RedirectGuard ]: App locked, forcing PIN screen');
+  // 2. WERYFIKACJA BLOKADY (Kolejność: Security Service -> Auth State)
+  final isAppLocked = securityState.shouldShowLock || authState.isLocked;
+
+  if (isAppLocked) {
+    if (!isPinScreen) {
+      // logger.i('[ RedirectGuard ]: Application is locked, forcing PIN screen');
       return AppRoutes.pin;
     }
     return null;
   }
 
-  // LOADING / INITIAL
-  if (authState.isLoading || authState.isInitial) return null;
-
-  // UNATHENTICATED
+  // 3. UNAUTHENTICATED (Czysty storage / brak sesji)
   if (authState.isUnauthenticated) {
     if (!publicRoutes.contains(path)) {
       // logger.w(
@@ -44,9 +51,9 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  // KROKI POŚREDNIE (2FA / Setup)
+  // 4. KROKI POŚREDNIE (2FA / Setup)
   if (authState.isTwoFaRequired) {
-    if (path != AppRoutes.twoFaVerify) {
+    if (!is2FaScreen) {
       // logger.i('[ RedirectGuard ]: 2FA required');
       return AppRoutes.twoFaVerify;
     }
@@ -55,7 +62,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   if (authState.isPartiallyAuthenticated) {
     if (!securityState.isSetupCompleted) {
-      if (path != AppRoutes.securitySetup) {
+      if (!isSetupScreen) {
         return AppRoutes.securitySetup;
       }
       return null;
@@ -63,10 +70,16 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
     return AppRoutes.home;
   }
-  //  ZALOGOWANY
+
+  // 5. ZALOGOWANY
   if (authState.isAuthenticated) {
     final isAtAuthFlow =
-        isLoginScreen || is2FaScreen || isPinScreen || isSetupScreen;
+        isInitialScreen ||
+        isLoginScreen ||
+        is2FaScreen ||
+        isPinScreen ||
+        isSetupScreen;
+
     if (isAtAuthFlow) {
       // logger.i(
       //   '[ RedirectGuard ]: User authenticated, redirecting from auth flow to Home',

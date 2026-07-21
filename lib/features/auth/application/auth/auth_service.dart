@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_response.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_user.dart';
 
 class AuthService {
   final ApiClient _apiClient;
@@ -48,10 +49,10 @@ class AuthService {
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
-  /// Pobranie aktualnej sesji / dane z /auth/me
-  Future<AuthResponse> fetchAuthMe() async {
+  /// Pobranie aktualnej sesji / dane z /auth/me -> ZWRACA AuthUser
+  Future<AuthUser> fetchAuthMe() async {
     final response = await _apiClient.get(ApiEndpoints.authMe);
-    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
+    return AuthUser.fromJson(response.data as Map<String, dynamic>);
   }
 
   /// Register Device
@@ -105,7 +106,6 @@ class AuthService {
       options: Options(headers: {'Authorization': 'Bearer $setupToken'}),
     );
 
-    // Zwróci AuthResponse.fullSuccess z AccessToken i RefreshToken
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 }

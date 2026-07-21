@@ -15,18 +15,26 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
 
-// --- NOWY PROVIDER DLA FRESH ---
+// --- POPRAWIONY PROVIDER DLA FRESH ---
 @Riverpod(keepAlive: true)
 Fresh<OAuth2Token> authFresh(Ref ref) {
   return Fresh.oAuth2(
     tokenStorage: ref.watch(tokenStorageProvider),
-    refreshToken: (token, client) async {
-      final deviceService = ref.read(deviceInfoServiceProvider);
+    refreshToken: (token, _) async {
+      final refreshToken = token?.refreshToken;
 
+     if (refreshToken == null || refreshToken.isEmpty) {
+        throw Exception('Brak refresh_tokena — anulowanie odświeżania sesji.');
+      }
+
+      // 2. Używamy dedykowanego refreshDio z gotowym SSL Pinningiem i instancją DioFactory
+      final refreshClient = ref.read(refreshDioProvider);
+      final deviceService = ref.read(deviceInfoServiceProvider);
       final fingerprint = await deviceService.getFingerprint();
-      final response = await client.post(
+
+      final response = await refreshClient.post(
         '${ServicesConfig.authBaseUrl}${ApiEndpoints.refresh}',
-        data: {StorageKeys.refreshToken: token?.refreshToken},
+        data: {StorageKeys.refreshToken: refreshToken},
         options: Options(headers: {'X-Device-Fingerprint': fingerprint}),
       );
 
@@ -48,15 +56,15 @@ Dio authDio(Ref ref) {
     deviceInfoRef: ref,
   );
 
-  dio.interceptors.add(SecuritySyncInterceptor(ref));
-
-  // Wstrzykujemy Fresh z osobnego providera
+  // 💡 ZAMIANA KOLEJNOŚCI:
+  // 1. Najpierw Fresh przechwytuje 401 i próbuje odświeżyć token
   dio.interceptors.add(ref.watch(authFreshProvider));
+
+  // 2. Dopiero jeśli Fresh polegnie (lub błąd nie dotyczy auth), błąd idzie do SecuritySyncInterceptor
+  dio.interceptors.add(SecuritySyncInterceptor(ref));
 
   return dio;
 }
-
-// --- RESZTA POZOSTAJE BEZ ZMIAN ---
 
 @Riverpod(keepAlive: true)
 Dio refreshDio(Ref ref) {

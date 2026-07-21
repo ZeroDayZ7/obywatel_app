@@ -29,38 +29,96 @@ class AuthController extends _$AuthController {
   SessionService get _sessionService => ref.read(sessionServiceProvider);
   AppLogger get _log => ref.read(appLoggerProvider);
 
+  static const String _logModule = 'AUTH';
+
   @override
   AuthState build() {
-    // Zaczynamy od czystego stanu początkowego bez kombinowania z restore
+    _log.i('Inicjalizacja AuthController...', module: _logModule);
+    Future.microtask(() => _checkInitialSession());
     return const AuthState.initial();
+  }
+
+  /// Sprawdza przy starcie aplikacji, czy w SecureStorage znajduje się zapisany refreshToken
+  Future<void> _checkInitialSession() async {
+    _log.d(
+      'Sprawdzanie początkowego stanu sesji na urządzeniu...',
+      module: _logModule,
+    );
+
+    try {
+      final refreshToken = await _sessionService.getRefreshToken();
+      final hasSession = refreshToken != null && refreshToken.isNotEmpty;
+
+      if (!hasSession) {
+        _log.i(
+          'Brak zapisanej sesji na urządzeniu -> AuthState.unauthenticated',
+          module: _logModule,
+        );
+        state = const AuthState.unauthenticated();
+        return;
+      }
+
+      _log.i(
+        'Zapisana sesja odnaleziona na dysku -> AuthState.locked()',
+        module: _logModule,
+      );
+      state = const AuthState.locked();
+    } catch (e, stack) {
+      _log.e(
+        'Błąd podczas odczytu sesji z dysku -> zmiana stanu na unauthenticated',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
+      state = const AuthState.unauthenticated();
+    }
   }
 
   /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
   Future<bool> unlockWithPinAndValidateSession() async {
+    _log.i(
+      'Rozpoczęcie procedury odblokowywania PIN-em...',
+      module: _logModule,
+    );
+
+    state = const AuthState.authenticating();
+
     try {
       // 1. Odblokowujemy lokalny skarbiec PIN-em
+      _log.d(
+        '1/3 Odblokowywanie lokalnego skarbca (securityService)...',
+        module: _logModule,
+      );
       await ref.read(securityServiceProvider.notifier).unlockApp();
 
-      // 2. Jeśli jesteśmy w stanie partiallyAuthenticated, weryfikujemy urządzenie
-      final isPartiallyAuth = state.maybeMap(
-        partiallyAuthenticated: (_) => true,
-        orElse: () => false,
-      );
-
-      if (isPartiallyAuth) {
-        await verifyDeviceSignature();
-        return true;
+      // 2. Weryfikujemy dostępność refreshTokena na dysku
+      final refreshToken = await _sessionService.getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) {
+        _log.w('Brak refresh_token na dysku. Sesja wygasła.');
+        await logout();
+        return false;
       }
 
-      // 3. W pozostałych przypadkach odświeżamy/sprawdzamy sesję przez /auth/me
-      final result = await _authService.fetchAuthMe();
-      await _handleAuthResponse(result, '');
+      // 3. Pobieranie danych sesji z API (/auth/me)
+      _log.d(
+        '2/3 Pobieranie danych sesji z API (/auth/me)...',
+        module: _logModule,
+      );
+      final user = await _authService.fetchAuthMe();
 
+      state = AuthState.authenticated(user: user, isDeviceTrusted: true);
+
+      _log.i(
+        '✅ Sesja pomyślnie odblokowana i zweryfikowana.',
+        module: _logModule,
+      );
       return true;
-    } catch (e) {
+    } catch (e, stack) {
       _log.e(
-        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u: $e',
-        module: 'AUTH',
+        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u. Wylogowywanie...',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
       );
 
       await logout();
@@ -97,19 +155,15 @@ class AuthController extends _$AuthController {
           );
         }
       },
-      fullSuccess: (accessToken, refreshToken, user, rbac) async {
+      // FIX 1: Dostosowano parametry (tylko accessToken i refreshToken)
+      fullSuccess: (accessToken, refreshToken) async {
         try {
-          logger.i(
-            '✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji dla: ${user.userId}',
-          );
+          logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
 
-          // 1. Zapis na dysku tylko refreshTokena i userId
-          await _sessionService.saveSession(
-            refreshToken: refreshToken,
-            userId: user.userId,
-          );
+          // 1. Zapis na dysku refreshTokena
+          await _sessionService.saveSession(refreshToken: refreshToken);
 
-          // 2. Wrzucenie tokenów do Fresh (trafią do RAM w SecureTokenStorage)
+          // 2. Wrzucenie tokena do Fresh (RAM)
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -119,12 +173,13 @@ class AuthController extends _$AuthController {
                 ),
               );
 
-          state = AuthState.authenticated(
-            userId: user.userId,
-            accessToken: accessToken,
-            refreshToken: refreshToken,
-            isDeviceTrusted: true,
-          );
+          ref.read(pendingSessionProvider.notifier).clear();
+
+          // FIX 2: Hydratacja profilu użytkownika osobnym strzałem na /auth/me
+          logger.i('🔄 Pobieranie profilu użytkownika z /auth/me...');
+          final user = await _authService.fetchAuthMe();
+
+          state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
           logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
         } catch (e) {
@@ -134,6 +189,24 @@ class AuthController extends _$AuthController {
         }
       },
     );
+  }
+
+  Future<void> dumpRamState(Ref ref, AppLogger log) async {
+    final authState = ref.read(authControllerProvider);
+    final securityState = ref.read(securityServiceProvider);
+    final pendingSession = ref.read(pendingSessionProvider);
+    final freshToken = await ref.read(authFreshProvider).token;
+
+    log.i('''
+🧠 ===== AKTUALNY STAN PAMIĘCI RAM =====
+1. AuthState: $authState
+2. SecurityState: $securityState
+3. Fresh OAuth2Token (RAM):
+   • AccessToken: ${freshToken?.accessToken ?? 'BRAK'}
+   • RefreshToken: ${freshToken?.refreshToken ?? 'BRAK'}
+4. PendingSession: $pendingSession
+========================================
+''', module: 'DIAGNOSTICS');
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {
@@ -175,7 +248,6 @@ class AuthController extends _$AuthController {
         codeBytes,
         currentToken,
       );
-      codeBytes.fillRange(0, codeBytes.length, 0);
 
       await _handleAuthResponse(result, currentEmail);
     } catch (e) {
@@ -185,6 +257,8 @@ class AuthController extends _$AuthController {
         tempToken: currentToken,
       );
       _handleError(e);
+    } finally {
+      codeBytes.fillRange(0, codeBytes.length, 0);
     }
   }
 
@@ -226,6 +300,7 @@ class AuthController extends _$AuthController {
       }
     } finally {
       await _sessionService.clearSession();
+      await ref.read(authFreshProvider).clearToken();
       ref.invalidate(securityServiceProvider);
       ref.invalidate(appDatabaseProvider);
       ref.invalidate(notificationsControllerProvider);

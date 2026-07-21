@@ -152,12 +152,12 @@ return fullSuccess(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult Function( String accessToken,  String refreshToken,  UserProfile user,  RbacData rbac)?  fullSuccess,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult Function( String accessToken,  String refreshToken)?  fullSuccess,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
 return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);case _:
+return fullSuccess(_that.accessToken,_that.refreshToken);case _:
   return orElse();
 
 }
@@ -175,12 +175,12 @@ return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);c
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)  preTrust,required TResult Function( String accessToken,  String refreshToken,  UserProfile user,  RbacData rbac)  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)  preTrust,required TResult Function( String accessToken,  String refreshToken)  fullSuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired():
 return twoFaRequired(_that.twoFaToken);case _PreTrust():
 return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess():
-return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);}
+return fullSuccess(_that.accessToken,_that.refreshToken);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,12 +194,12 @@ return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult? Function( String accessToken,  String refreshToken,  UserProfile user,  RbacData rbac)?  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult? Function( String accessToken,  String refreshToken)?  fullSuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
 return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that.accessToken,_that.refreshToken,_that.user,_that.rbac);case _:
+return fullSuccess(_that.accessToken,_that.refreshToken);case _:
   return null;
 
 }
@@ -363,13 +363,11 @@ as String,
 @JsonSerializable()
 
 class _FullSuccess implements AuthResponse {
-  const _FullSuccess({required this.accessToken, required this.refreshToken, required this.user, required this.rbac, final  String? $type}): $type = $type ?? 'fullSuccess';
+  const _FullSuccess({required this.accessToken, required this.refreshToken, final  String? $type}): $type = $type ?? 'fullSuccess';
   factory _FullSuccess.fromJson(Map<String, dynamic> json) => _$FullSuccessFromJson(json);
 
  final  String accessToken;
  final  String refreshToken;
- final  UserProfile user;
- final  RbacData rbac;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -388,16 +386,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FullSuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.user, user) || other.user == user)&&(identical(other.rbac, rbac) || other.rbac == rbac));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FullSuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,refreshToken,user,rbac);
+int get hashCode => Object.hash(runtimeType,accessToken,refreshToken);
 
 @override
 String toString() {
-  return 'AuthResponse.fullSuccess(accessToken: $accessToken, refreshToken: $refreshToken, user: $user, rbac: $rbac)';
+  return 'AuthResponse.fullSuccess(accessToken: $accessToken, refreshToken: $refreshToken)';
 }
 
 
@@ -408,11 +406,11 @@ abstract mixin class _$FullSuccessCopyWith<$Res> implements $AuthResponseCopyWit
   factory _$FullSuccessCopyWith(_FullSuccess value, $Res Function(_FullSuccess) _then) = __$FullSuccessCopyWithImpl;
 @useResult
 $Res call({
- String accessToken, String refreshToken, UserProfile user, RbacData rbac
+ String accessToken, String refreshToken
 });
 
 
-$UserProfileCopyWith<$Res> get user;$RbacDataCopyWith<$Res> get rbac;
+
 
 }
 /// @nodoc
@@ -425,35 +423,15 @@ class __$FullSuccessCopyWithImpl<$Res>
 
 /// Create a copy of AuthResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,Object? user = null,Object? rbac = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? accessToken = null,Object? refreshToken = null,}) {
   return _then(_FullSuccess(
 accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
 as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
-as String,user: null == user ? _self.user : user // ignore: cast_nullable_to_non_nullable
-as UserProfile,rbac: null == rbac ? _self.rbac : rbac // ignore: cast_nullable_to_non_nullable
-as RbacData,
+as String,
   ));
 }
 
-/// Create a copy of AuthResponse
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$UserProfileCopyWith<$Res> get user {
-  
-  return $UserProfileCopyWith<$Res>(_self.user, (value) {
-    return _then(_self.copyWith(user: value));
-  });
-}/// Create a copy of AuthResponse
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RbacDataCopyWith<$Res> get rbac {
-  
-  return $RbacDataCopyWith<$Res>(_self.rbac, (value) {
-    return _then(_self.copyWith(rbac: value));
-  });
-}
+
 }
 
 // dart format on

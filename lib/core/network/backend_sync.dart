@@ -6,7 +6,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_status_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'backend_sync.freezed.dart';
@@ -235,29 +234,23 @@ class SecuritySyncInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    final requestId = err.response?.headers.value('x-request-id');
     final statusCode = err.response?.statusCode;
     final path = err.requestOptions.path;
     final log = ref.read(appLoggerProvider);
 
-    log.e(
-      'API Error: $path',
-      module: 'NETWORK',
-      error: 'ID: $requestId | ${err.message}',
-    );
-
-    final isAuthPath =
+    final isAuthOrRefreshPath =
         path.contains('login') ||
         path.contains('register') ||
-        path.contains('password-reset');
+        path.contains('password-reset') ||
+        path.contains('refresh') ||
+        path.contains('auth/me');
 
-    if (statusCode == 401 && !isAuthPath) {
+    if (statusCode == 401 && !isAuthOrRefreshPath) {
       log.w(
         '🔑 Session invalid on protected path ($path). Triggering force logout...',
         module: 'SECURITY',
       );
-
-      ref.read(sessionStatusProvider.notifier).reportInvalidSession();
+      // ref.read(sessionStatusProvider.notifier).reportInvalidSession();
     }
 
     super.onError(err, handler);

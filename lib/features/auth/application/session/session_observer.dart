@@ -50,6 +50,15 @@ class SessionObserver extends _$SessionObserver {
       );
     });
 
+    // 🚀 INICJALIZACJA STOPERAR PRZY STARCIENIE:
+    // Jeśli observer montuje się, gdy user jest już uwierzytelniony,
+    // od razu uruchamiamy timer bez czekania na zmianę stanu w ref.listen.
+    final initialAuthState = ref.read(authControllerProvider);
+    initialAuthState.maybeMap(
+      authenticated: (_) => onUserInteraction(),
+      orElse: () {},
+    );
+
     ref.onDispose(() => _inactivityTimer?.cancel());
   }
 
