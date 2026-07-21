@@ -1,27 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
-import 'package:obywatel_plus/core/design/widgets/user_badge.dart';
+import 'package:obywatel_plus/core/utils/date_formatter.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authControllerProvider);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final user = authState.maybeMap(
+      authenticated: (state) => state.user,
+      orElse: () => null,
+    );
+
+    if (user == null) {
+      return const AppScaffold(
+        size: ContainerSize.medium,
+        appBar: AppAppBar(title: 'Profil'),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final formattedStatus = _formatStatus(user.status);
+    final formattedLastLogin = user.lastLogin != null
+        ? DateFormatter.formatRelativeDateTime(user.lastLogin!)
+        : null;
+
+    final statusColor = user.status.toLowerCase() == 'active'
+        ? AppColors.success
+        : AppColors.accent;
+
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: AppAppBar(
-        title: 'Profile',
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => context.push('/edit-profile'),
-          ),
-        ],
-      ),
+      appBar: const AppAppBar(title: 'Profil'),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
@@ -39,23 +61,43 @@ class ProfileScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'John Doe',
-                        style: TextStyle(
+                      Text(
+                        user.displayName,
+                        style: theme.textTheme.headlineMedium?.copyWith(
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'Citizen ID: 123456789',
-                        style: TextStyle(color: Colors.grey),
+                      Text(
+                        'ID: ${user.id}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: isDark
+                              ? AppColors.textSecondaryDark
+                              : AppColors.textSecondaryLight,
+                          fontSize: 12,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
-                      UserBadge(
-                        type: UserBadgeType.supporter,
-                        label: 'Gold Member',
-                        subtitle: 'Premium Supporter',
+                      Row(
+                        children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: statusColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            formattedStatus,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -65,20 +107,16 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             _ProfileCard(
-              icon: Icons.email,
-              title: 'Email',
-              value: 'john.doe@example.com',
+              icon: Icons.email_outlined,
+              title: 'Adres e-mail',
+              value: user.email,
             ),
-            _ProfileCard(
-              icon: Icons.phone,
-              title: 'Phone',
-              value: '+48 123 456 789',
-            ),
-            _ProfileCard(
-              icon: Icons.location_on,
-              title: 'Address',
-              value: '123 Main Street, Warsaw, Poland',
-            ),
+            if (formattedLastLogin != null)
+              _ProfileCard(
+                icon: Icons.access_time_rounded,
+                title: 'Ostatnie logowanie',
+                value: formattedLastLogin,
+              ),
 
             const SizedBox(height: 24),
 
@@ -86,18 +124,18 @@ class ProfileScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _ActionButton(
-                  icon: Icons.qr_code,
-                  label: 'Show QR',
+                  icon: Icons.qr_code_rounded,
+                  label: 'Pokaż QR',
                   onTap: () {},
                 ),
                 _ActionButton(
-                  icon: Icons.verified_user,
-                  label: 'Verify ID',
+                  icon: Icons.verified_user_outlined,
+                  label: 'Weryfikacja',
                   onTap: () {},
                 ),
                 _ActionButton(
-                  icon: Icons.settings,
-                  label: 'Settings',
+                  icon: Icons.settings_outlined,
+                  label: 'Ustawienia',
                   onTap: () => context.push(AppRoutes.settings),
                 ),
               ],
@@ -106,6 +144,19 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatStatus(String status) {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'Konto aktywne';
+      case 'pending':
+        return 'Oczekuje na weryfikację';
+      case 'suspended':
+        return 'Konto zawieszone';
+      default:
+        return status;
+    }
   }
 }
 
@@ -122,13 +173,41 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final borderColor = isDark
+        ? AppColors.surfaceDark
+        : AppColors.textSecondaryLight.withValues(alpha: 0.2);
+
+    final cardBg = isDark ? AppColors.surfaceDark : AppColors.backgroundLight;
+
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      elevation: 2,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      elevation: 0,
+      color: cardBg,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: borderColor),
+      ),
       child: ListTile(
-        leading: Icon(icon, color: Colors.blueAccent),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-        subtitle: Text(value),
+        leading: Icon(icon, color: AppColors.primary),
+        title: Text(
+          title,
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontSize: 12,
+            color: isDark
+                ? AppColors.textSecondaryDark
+                : AppColors.textSecondaryLight,
+          ),
+        ),
+        subtitle: Text(
+          value,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }
@@ -147,22 +226,33 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 28, color: AppColors.primary),
             ),
-            child: Icon(icon, size: 32, color: Colors.blueAccent),
-          ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ],
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
