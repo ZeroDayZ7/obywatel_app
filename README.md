@@ -1,4 +1,4 @@
-# obywatel_app - Obywatel Plus (Obywatel+)
+# Obywatel Plus (Obywatel+)
 
 A **secure, multi-platform citizen application** designed for digital ID management, messaging, and government services.
 
@@ -33,6 +33,12 @@ A **secure, multi-platform citizen application** designed for digital ID managem
 For a detailed breakdown of the application entry point, initialization sequence, lifecycle observers, and root widget tree, see the architecture guide:
 
 - **[Architecture & Bootstrapping Overview](docs/INDEX.md)** — Step-by-step startup flow, service initialization, and security wrappers.
+
+<p align="center">
+  <img src="docs/media/github-banner.png" alt="Obywatel Plus Banner" width="100%">
+</p>
+
+WIP
 
 ## License
 
