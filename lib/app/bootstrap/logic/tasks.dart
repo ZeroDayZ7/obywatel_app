@@ -26,11 +26,11 @@ class StorageInitTask implements StartupTask {
   @override
   Future<AppInitStatus?> initialize() async {
     if (kDebugMode) {
-      await Future.wait([
-        storage.clearAll(),
-        prefs.clearAll(),
-        database.clearDatabase(),
-      ]);
+      // await Future.wait([
+      //   storage.clearAll(),
+      //   prefs.clearAll(),
+      //   database.clearDatabase(),
+      // ]);
 
       // await storage.clearAll();
       // await Future.delayed(const Duration(seconds: 2));
