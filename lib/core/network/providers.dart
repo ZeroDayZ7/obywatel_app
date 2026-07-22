@@ -5,6 +5,7 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
+import 'package:obywatel_plus/core/network/clients/no_auth_client.dart';
 import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
 import 'package:obywatel_plus/core/network/token_storage_provider.dart';
@@ -15,7 +16,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
 
-// --- POPRAWIONY PROVIDER DLA FRESH ---
 @Riverpod(keepAlive: true)
 Fresh<OAuth2Token> authFresh(Ref ref) {
   return Fresh.oAuth2(
@@ -23,11 +23,10 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
     refreshToken: (token, _) async {
       final refreshToken = token?.refreshToken;
 
-     if (refreshToken == null || refreshToken.isEmpty) {
+      if (refreshToken == null || refreshToken.isEmpty) {
         throw Exception('Brak refresh_tokena — anulowanie odświeżania sesji.');
       }
 
-      // 2. Używamy dedykowanego refreshDio z gotowym SSL Pinningiem i instancją DioFactory
       final refreshClient = ref.read(refreshDioProvider);
       final deviceService = ref.read(deviceInfoServiceProvider);
       final fingerprint = await deviceService.getFingerprint();
@@ -47,7 +46,6 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
   );
 }
 
-// --- ZAKTUALIZOWANY AUTH DIO ---
 @Riverpod(keepAlive: true)
 Dio authDio(Ref ref) {
   final dio = DioFactory.create(
@@ -56,11 +54,7 @@ Dio authDio(Ref ref) {
     deviceInfoRef: ref,
   );
 
-  // 💡 ZAMIANA KOLEJNOŚCI:
-  // 1. Najpierw Fresh przechwytuje 401 i próbuje odświeżyć token
   dio.interceptors.add(ref.watch(authFreshProvider));
-
-  // 2. Dopiero jeśli Fresh polegnie (lub błąd nie dotyczy auth), błąd idzie do SecuritySyncInterceptor
   dio.interceptors.add(SecuritySyncInterceptor(ref));
 
   return dio;
@@ -76,9 +70,9 @@ Dio refreshDio(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-Dio publicDio(Ref ref) {
+Dio noAuthDio(Ref ref) {
   final dio = DioFactory.create(
-    profile: DioProfile.public,
+    profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
@@ -87,9 +81,9 @@ Dio publicDio(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-Dio resetDio(Ref ref) {
+Dio publicDio(Ref ref) {
   final dio = DioFactory.create(
-    profile: DioProfile.noAuthAuth,
+    profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
   );
@@ -107,17 +101,17 @@ ApiClient apiClient(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-PublicApiClient publicApiClient(Ref ref) {
-  return PublicApiClient(
-    dio: ref.watch(publicDioProvider),
+NoAuthApiClient noAuthApiClient(Ref ref) {
+  return NoAuthApiClient(
+    dio: ref.watch(noAuthDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
 }
 
 @Riverpod(keepAlive: true)
-PublicApiClient resetApiClient(Ref ref) {
+PublicApiClient publicApiClient(Ref ref) {
   return PublicApiClient(
-    dio: ref.watch(resetDioProvider),
+    dio: ref.watch(publicDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
 }

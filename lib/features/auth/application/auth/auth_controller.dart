@@ -144,15 +144,24 @@ class AuthController extends _$AuthController {
         logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
 
+        // KLUCZOWA POPRAWKA: Wrzucamy tymczasowy setupToken do Fresh Dio,
+        // aby zapytania takie jak /register-device wysyłały go w Authorization: Bearer
+        await ref
+            .read(authFreshProvider)
+            .setToken(
+              OAuth2Token(
+                accessToken: setupToken,
+                refreshToken: '',
+              ),
+            );
+
         if (isTrusted) {
           logger.i(
-            '🛡️ Urządzenie jest zaufane (isTrusted: true). Uruchamiam automatyczną weryfikację podpisu...',
+            '🛡️ Urządzenie jest zaufane... Uruchamiam automatyczną weryfikację podpisu...',
           );
           await verifyDeviceSignature();
         } else {
-          logger.w(
-            '📱 Nowe urządzenie lub brak zaufania. Wymagany ręczny setup bezpieczeństwa.',
-          );
+          logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
         }
       },
       // FIX 1: Dostosowano parametry (tylko accessToken i refreshToken)
