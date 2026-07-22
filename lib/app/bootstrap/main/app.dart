@@ -59,7 +59,6 @@ class ObywatelPlusApp extends ConsumerWidget {
                     opacity: 0.8,
                     lockedBuilder: (context, controller) =>
                         PrivacyOverlay(controller: controller!),
-                    // 1. Owiń bezpośrednio wewnętrzny 'child' routera w Listener:
                     child: Listener(
                       behavior: HitTestBehavior.translucent,
                       onPointerDown: (_) {

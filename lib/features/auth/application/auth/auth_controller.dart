@@ -148,12 +148,7 @@ class AuthController extends _$AuthController {
         // aby zapytania takie jak /register-device wysyłały go w Authorization: Bearer
         await ref
             .read(authFreshProvider)
-            .setToken(
-              OAuth2Token(
-                accessToken: setupToken,
-                refreshToken: '',
-              ),
-            );
+            .setToken(OAuth2Token(accessToken: setupToken, refreshToken: ''));
 
         if (isTrusted) {
           logger.i(
@@ -317,6 +312,7 @@ class AuthController extends _$AuthController {
     }
   }
 
+  // #region: Moja Sekcja
   Future<void> verifyDeviceSignature() async {
     await state.maybeMap(
       partiallyAuthenticated: (s) async {
