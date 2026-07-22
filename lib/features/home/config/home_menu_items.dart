@@ -55,13 +55,6 @@ final List<HomeMenuItem> homeMenuItems = [
     color: const Color(0xFFFF0055),
   ),
   HomeMenuItem(
-    id: 'store',
-    icon: Icons.store,
-    labelKey: LocaleKeys.homeMenu_store,
-    route: AppRoutes.store,
-    color: const Color(0xFF00FFFF),
-  ),
-  HomeMenuItem(
     id: 'health',
     icon: Icons.local_hospital,
     labelKey: LocaleKeys.homeMenu_health,
@@ -75,27 +68,6 @@ final List<HomeMenuItem> homeMenuItems = [
     route: AppRoutes.education,
     color: const Color(0xFF00D4FF),
   ),
-  // HomeMenuItem(
-  //   id: 'games',
-  //   icon: Icons.games,
-  //   labelKey: LocaleKeys.homeMenu_games,
-  //   route: AppRoutes.games,
-  //   color: const Color(0xFFFF6600),
-  // ),
-  // HomeMenuItem(
-  //   id: 'videos',
-  //   icon: Icons.video_call,
-  //   labelKey: LocaleKeys.homeMenu_videos,
-  //   route: AppRoutes.videos,
-  //   color: const Color(0xFFFF3366),
-  // ),
-  // HomeMenuItem(
-  //   id: 'favorites',
-  //   icon: Icons.favorite,
-  //   labelKey: LocaleKeys.homeMenu_favorites,
-  //   route: AppRoutes.favorites,
-  //   color: const Color(0xFFAA00FF),
-  // ),
   HomeMenuItem(
     id: 'settings',
     icon: Icons.settings,
@@ -103,13 +75,6 @@ final List<HomeMenuItem> homeMenuItems = [
     route: AppRoutes.settings,
     color: const Color(0xFF888899),
   ),
-  // HomeMenuItem(
-  //   id: 'help',
-  //   icon: Icons.help,
-  //   labelKey: LocaleKeys.homeMenu_help,
-  //   route: AppRoutes.help,
-  //   color: const Color(0xFF88FF00),
-  // ),
   HomeMenuItem(
     id: 'test',
     icon: Icons.text_snippet,
