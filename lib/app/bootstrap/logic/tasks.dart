@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
+import 'package:obywatel_plus/app/bootstrap/migration_service.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
@@ -94,6 +95,21 @@ class VersionCheckTask implements StartupTask {
     if (version.forceUpdate) {
       return const AppInitStatus.forceUpdate();
     }
+    return null;
+  }
+}
+
+class MigrationTask implements StartupTask {
+  final MigrationService migrationService;
+
+  MigrationTask(this.migrationService);
+
+  @override
+  String get name => 'Data Migration';
+
+  @override
+  Future<AppInitStatus?> initialize() async {
+    await migrationService.performMigrations();
     return null;
   }
 }

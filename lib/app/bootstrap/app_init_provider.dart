@@ -1,13 +1,9 @@
-// lib\app\bootstrap\app_init_provider.dart
+// lib/app/bootstrap/app_init_provider.dart
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
+import 'package:obywatel_plus/app/bootstrap/bootstrap_config.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_runner.dart';
-import 'package:obywatel_plus/app/bootstrap/logic/tasks.dart';
 import 'package:obywatel_plus/app/config/env.dart';
-import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
-import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_init_provider.g.dart';
@@ -19,22 +15,21 @@ class AppInitNotifier extends _$AppInitNotifier {
 
   Future<void> initialize() async => await _runBootstrap();
 
+  Future<void> recheck() async {
+    state = const AppInitStatus.loading();
+    await _runBootstrap();
+  }
+
   Future<void> _runBootstrap() async {
     final logger = ref.read(appLoggerProvider);
+    final config = ref.read(bootstrapConfigProvider);
     final stopwatch = Stopwatch()..start();
 
     try {
       final runner = StartupRunner(
         logger: logger,
-        sequentialTasks: [
-          StorageInitTask(
-            storage: ref.read(secureStorageProvider),
-            prefs: ref.read(activePrefsProvider),
-            database: ref.read(appDatabaseProvider),
-          ),
-          SecurityInitTask(ref.read(securityServiceProvider.notifier)),
-        ],
-        parallelTasks: [],
+        sequentialTasks: config.sequentialTasks,
+        parallelTasks: config.parallelTasks,
       );
 
       final result = await runner.run();
@@ -55,10 +50,5 @@ class AppInitNotifier extends _$AppInitNotifier {
       );
       state = const AppInitStatus.blocked(reason: 'critical_init_error');
     }
-  }
-
-  Future<void> recheck() async {
-    state = const AppInitStatus.loading();
-    await _runBootstrap();
   }
 }
