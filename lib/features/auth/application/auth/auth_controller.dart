@@ -128,13 +128,8 @@ class AuthController extends _$AuthController {
     );
 
     try {
-      final refreshToken = await _sessionService.getRefreshToken();
-
+      // Serwer sam unieważnia sesję w Redis i DB w ramach rozparowania
       await _authService.unpairDevice();
-
-      if (refreshToken != null && refreshToken.isNotEmpty) {
-        await _authService.logout(refreshToken);
-      }
     } catch (e) {
       _log.w(
         'Błąd API podczas unpair (kontynuuję lokalny wipe): $e',
@@ -337,28 +332,24 @@ class AuthController extends _$AuthController {
     // 1. Czyszczenie tokenów z pamięci RAM (Fresh Dio)
     await ref.read(authFreshProvider).clearToken();
 
-    // 2. Przygotowanie zadań do równoległego czyszczenia
-    final clearTasks = <Future<void>>[
-      // Zwykłe czyszczenie sesji (SecureStorage -> refreshToken)
-      _sessionService.clearSession(),
-      // Czyścimy SharedPreferences
-      ref.read(activePrefsProvider).clearAll(),
-    ];
+    // 2. Przygotowanie zadań do czyszczenia
+    final clearTasks = <Future<void>>[ref.read(activePrefsProvider).clearAll()];
 
-    // 3. Hard Reset -> wyczyść bazę I zaawansowane czyszczenie SecureStorage
     if (wipeDatabase) {
-      final db = ref.read(appDatabaseProvider);
-
-      // Czyszczenie CAŁEGO SecureStorage do zera
+      // Przy Hard Reset czyścimy CAŁE SecureStorage (zamiast czyścić pojedyncze klucze)
       clearTasks.add(ref.read(secureStorageProvider).clearAll());
 
+      final db = ref.read(appDatabaseProvider);
       clearTasks.add(() async {
         await db.clearDatabase();
         await db.close();
       }());
+    } else {
+      // Przy zwykłym logout czyścimy tylko klucz sesji
+      clearTasks.add(_sessionService.clearSession());
     }
 
-    // 4. Wykonaj wszystko równolegle
+    // 3. Wykonaj bezpiecznie bez konfliktów IO
     try {
       await Future.wait(clearTasks);
     } catch (e, stack) {
@@ -370,13 +361,13 @@ class AuthController extends _$AuthController {
       );
     }
 
-    // 5. Inwalidacja providerów
+    // 4. Inwalidacja providerów
     ref.read(pendingSessionProvider.notifier).clear();
     ref.invalidate(securityServiceProvider);
     ref.invalidate(appDatabaseProvider);
     ref.invalidate(notificationsControllerProvider);
 
-    // 6. Powrót do stanu niezalogowanego
+    // 5. Powrót do stanu niezalogowanego
     setUnauthenticated();
 
     _log.i('✅ Czyszczenie zakończone sukcesem.', module: _logModule);

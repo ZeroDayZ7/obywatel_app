@@ -39,13 +39,13 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
             contentPadding: EdgeInsets.zero,
             value: _removeDeviceAndPin,
             activeColor: Colors.redAccent,
-            title: const Text(
-              'Usuń urządzenie z zaufanych i zresetuj PIN',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            title: Text(
+              LocaleKeys.drawer_remove_device_title.tr(),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
-            subtitle: const Text(
-              'Wymusi pełną konfigurację bezpieczeństwa przy następnym logowaniu.',
-              style: TextStyle(fontSize: 12),
+            subtitle: Text(
+              LocaleKeys.drawer_remove_device_subtitle.tr(),
+              style: const TextStyle(fontSize: 12),
             ),
             onChanged: (value) {
               setState(() {

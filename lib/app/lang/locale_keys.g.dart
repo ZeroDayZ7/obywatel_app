@@ -117,6 +117,8 @@ abstract class  LocaleKeys {
   static const drawer_logout = 'drawer.logout';
   static const drawer_logout_title = 'drawer.logout_title';
   static const drawer_logout_content = 'drawer.logout_content';
+  static const drawer_remove_device_title = 'drawer.remove_device_title';
+  static const drawer_remove_device_subtitle = 'drawer.remove_device_subtitle';
   static const drawer = 'drawer';
   static const login_title = 'login.title';
   static const login_welcome_back = 'login.welcome_back';
