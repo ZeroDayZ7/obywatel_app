@@ -11,6 +11,8 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
@@ -84,14 +86,7 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
 
     try {
-      // 1. Odblokowujemy lokalny skarbiec PIN-em
-      _log.d(
-        '1/3 Odblokowywanie lokalnego skarbca (securityService)...',
-        module: _logModule,
-      );
-      await ref.read(securityServiceProvider.notifier).unlockApp();
-
-      // 2. Weryfikujemy dostępność refreshTokena na dysku
+      // 1. Sprawdzenie tokena
       final refreshToken = await _sessionService.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         _log.w('Brak refresh_token na dysku. Sesja wygasła.');
@@ -99,13 +94,14 @@ class AuthController extends _$AuthController {
         return false;
       }
 
-      // 3. Pobieranie danych sesji z API (/auth/me)
-      _log.d(
-        '2/3 Pobieranie danych sesji z API (/auth/me)...',
-        module: _logModule,
-      );
+      // 2. Strzał do API po profil
+      _log.d('Pobieranie danych sesji z API (/auth/me)...', module: _logModule);
       final user = await _authService.fetchAuthMe();
 
+      // 3. NAJPIERW zdejmij blokadę lokalną
+      await ref.read(securityServiceProvider.notifier).unlockApp();
+
+      // 4. BEZPOŚREDNIO po tym ustaw stan na authenticated
       state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
       _log.i(
@@ -115,14 +111,37 @@ class AuthController extends _$AuthController {
       return true;
     } catch (e, stack) {
       _log.e(
-        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u. Wylogowywanie...',
+        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u.',
         error: e,
         stackTrace: stack,
         module: _logModule,
       );
-
       await logout();
       return false;
+    }
+  }
+
+  Future<void> unpairAndReset() async {
+    _log.w(
+      '⚠️ Rozpoczynam rozparowanie urządzenia i Hard Reset...',
+      module: _logModule,
+    );
+
+    try {
+      final refreshToken = await _sessionService.getRefreshToken();
+
+      await _authService.unpairDevice();
+
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        await _authService.logout(refreshToken);
+      }
+    } catch (e) {
+      _log.w(
+        'Błąd API podczas unpair (kontynuuję lokalny wipe): $e',
+        module: _logModule,
+      );
+    } finally {
+      await _clearLocalSession(wipeDatabase: true);
     }
   }
 
@@ -297,19 +316,70 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> logout() async {
+    _log.i('Rozpoczynam zwykłe wylogowanie...', module: _logModule);
+
     try {
       final refreshToken = await _sessionService.getRefreshToken();
       if (refreshToken != null && refreshToken.isNotEmpty) {
         await _authService.logout(refreshToken);
       }
+    } catch (e) {
+      _log.w(
+        'Błąd API podczas logout (kontynuuję czyszczenie lokalne): $e',
+        module: _logModule,
+      );
     } finally {
-      await _sessionService.clearSession();
-      await ref.read(authFreshProvider).clearToken();
-      ref.invalidate(securityServiceProvider);
-      ref.invalidate(appDatabaseProvider);
-      ref.invalidate(notificationsControllerProvider);
-      setUnauthenticated();
+      await _clearLocalSession(wipeDatabase: false);
     }
+  }
+
+  Future<void> _clearLocalSession({required bool wipeDatabase}) async {
+    // 1. Czyszczenie tokenów z pamięci RAM (Fresh Dio)
+    await ref.read(authFreshProvider).clearToken();
+
+    // 2. Przygotowanie zadań do równoległego czyszczenia
+    final clearTasks = <Future<void>>[
+      // Zwykłe czyszczenie sesji (SecureStorage -> refreshToken)
+      _sessionService.clearSession(),
+      // Czyścimy SharedPreferences
+      ref.read(activePrefsProvider).clearAll(),
+    ];
+
+    // 3. Hard Reset -> wyczyść bazę I zaawansowane czyszczenie SecureStorage
+    if (wipeDatabase) {
+      final db = ref.read(appDatabaseProvider);
+
+      // Czyszczenie CAŁEGO SecureStorage do zera
+      clearTasks.add(ref.read(secureStorageProvider).clearAll());
+
+      clearTasks.add(() async {
+        await db.clearDatabase();
+        await db.close();
+      }());
+    }
+
+    // 4. Wykonaj wszystko równolegle
+    try {
+      await Future.wait(clearTasks);
+    } catch (e, stack) {
+      _log.e(
+        'Błąd podczas czyszczenia lokalnej sesji',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
+    }
+
+    // 5. Inwalidacja providerów
+    ref.read(pendingSessionProvider.notifier).clear();
+    ref.invalidate(securityServiceProvider);
+    ref.invalidate(appDatabaseProvider);
+    ref.invalidate(notificationsControllerProvider);
+
+    // 6. Powrót do stanu niezalogowanego
+    setUnauthenticated();
+
+    _log.i('✅ Czyszczenie zakończone sukcesem.', module: _logModule);
   }
 
   // #region: Moja Sekcja

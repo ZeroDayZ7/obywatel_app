@@ -6,6 +6,7 @@ import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_h
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_tile.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_tile.dart';
+
 class MainDrawer extends ConsumerWidget {
   const MainDrawer({super.key});
 
@@ -23,7 +24,9 @@ class MainDrawer extends ConsumerWidget {
               children: [
                 ...items.map((item) => DrawerTile(item: item)),
                 const Divider(),
-                LogoutTile(onLogout: () => _showLogoutDialog(context, ref)),
+                LogoutTile(
+                  onLogoutSelected: (result) => _handleLogout(ref, result),
+                ),
               ],
             ),
           ),
@@ -32,14 +35,13 @@ class MainDrawer extends ConsumerWidget {
     );
   }
 
-  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
-    final shouldLogout = await showDialog<bool>(
-      context: context,
-      builder: (context) => const LogoutConfirmDialog(),
-    );
+  Future<void> _handleLogout(WidgetRef ref, LogoutDialogResult result) async {
+    final authController = ref.read(authControllerProvider.notifier);
 
-    if (shouldLogout == true) {
-      await ref.read(authControllerProvider.notifier).logout();
+    if (result.removeDevice) {
+      await authController.unpairAndReset();
+    } else {
+      await authController.logout();
     }
   }
 }

@@ -25,14 +25,41 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
-  // 1. DOKĄD SECURITY NIE JEST GOTOWE LUB AUTH JEST W TRAKCIE STARTU -> TRZYMAMY NA /initial
-  if (!securityState.initialized ||
-      authState.isLoading ||
-      authState.isInitial) {
+  // 0. Autentykacja w toku (np. weryfikacja PIN/tokena) -> nie zmieniaj trasy
+  if (authState.isLoading) {
     logger.d(
-      '[Router Guard] Step 1 (Initialization check): Hold on /initial | '
+      '[Router Guard] Authentication in progress -> Holding current screen',
+    );
+    return null;
+  }
+
+  // 1. UNAUTHENTICATED (Niezalogowany / czysty storage / po wylogowaniu/rozparowaniu)
+  // Priorytet najwyższy: Niezalogowany użytkownik ZAWSZE trafia do ekranu logowania.
+  if (authState.isUnauthenticated) {
+    final isPublic = publicRoutes.contains(path);
+    logger.d(
+      '[Router Guard] Step 1 (Unauthenticated check): isUnauthenticated=true | '
+      'path="$path" isPublic=$isPublic',
+    );
+
+    if (!isPublic) {
+      logger.d(
+        '[Router Guard] Unauthorized access to private route "$path" -> Redirecting to Login (${AppRoutes.login})',
+      );
+      return AppRoutes.login;
+    }
+
+    logger.d(
+      '[Router Guard] Accessing public route "$path" while unauthenticated -> Allowing navigation',
+    );
+    return null;
+  }
+
+  // 2. DOKĄD SECURITY NIE JEST GOTOWE LUB AUTH JEST W TRAKCIE STARTU -> TRZYMAMY NA /initial
+  if (!securityState.initialized || authState.isInitial) {
+    logger.d(
+      '[Router Guard] Step 2 (Initialization check): Hold on /initial | '
       'securityInit=${securityState.initialized}, '
-      'authIsLoading=${authState.isLoading}, '
       'authIsInitial=${authState.isInitial}',
     );
 
@@ -45,10 +72,11 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  // 2. WERYFIKACJA BLOKADY (Kolejność: Security Service -> Auth State)
+  // 3. WERYFIKACJA BLOKADY (PIN / Biometria)
+  // Wykonywana TYLKO dla posiadaczy aktywnej lub częściowej sesji.
   final isAppLocked = securityState.shouldShowLock || authState.isLocked;
   logger.d(
-    '[Router Guard] Step 2 (Lock check): isAppLocked=$isAppLocked '
+    '[Router Guard] Step 3 (Lock check): isAppLocked=$isAppLocked '
     '(shouldShowLock=${securityState.shouldShowLock}, isLocked=${authState.isLocked})',
   );
 
@@ -62,27 +90,6 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
     logger.d(
       '[Router Guard] Application is locked, already on PIN screen -> Allowing navigation',
-    );
-    return null;
-  }
-
-  // 3. UNAUTHENTICATED (Czysty storage / brak sesji)
-  if (authState.isUnauthenticated) {
-    final isPublic = publicRoutes.contains(path);
-    logger.d(
-      '[Router Guard] Step 3 (Unauthenticated check): isUnauthenticated=true | '
-      'path="$path" isPublic=$isPublic',
-    );
-
-    if (!isPublic) {
-      logger.d(
-        '[Router Guard] Unauthorized access to private route "$path" -> Redirecting to Login (${AppRoutes.login})',
-      );
-      return AppRoutes.login;
-    }
-
-    logger.d(
-      '[Router Guard] Accessing public route "$path" while unauthenticated -> Allowing navigation',
     );
     return null;
   }
@@ -127,7 +134,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return AppRoutes.home;
   }
 
-  // 5. ZALOGOWANY
+  // 5. ZALOGOWANY I ODBLOKOWANY
   if (authState.isAuthenticated) {
     final isAtAuthFlow =
         isInitialScreen ||

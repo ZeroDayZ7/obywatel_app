@@ -17,7 +17,7 @@ class ApiConstants extends ApiConstantsBase {
     : baseUrl = 'http://localhost:8081',
       enableSSLPinning = false,
       apiFingerprint = null,
-      defaultEmail = 'user@example.com',
+      defaultEmail = 'root@plus.pl',
       defaultPassword = 'Zaq1@wsx',
       appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',

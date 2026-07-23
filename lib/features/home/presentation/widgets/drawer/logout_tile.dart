@@ -1,10 +1,23 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';
 
 class LogoutTile extends StatelessWidget {
-  final VoidCallback onLogout;
-  const LogoutTile({super.key, required this.onLogout});
+  final ValueChanged<LogoutDialogResult>? onLogoutSelected;
+
+  const LogoutTile({super.key, this.onLogoutSelected});
+
+  Future<void> _handleTap(BuildContext context) async {
+    final result = await showDialog<LogoutDialogResult>(
+      context: context,
+      builder: (context) => const LogoutConfirmDialog(),
+    );
+
+    if (result != null && result.confirmed) {
+      onLogoutSelected?.call(result);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +30,7 @@ class LogoutTile extends StatelessWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
-      onTap: onLogout,
+      onTap: () => _handleTap(context),
     );
   }
 }

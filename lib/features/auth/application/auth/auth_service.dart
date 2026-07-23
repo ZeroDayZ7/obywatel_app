@@ -33,6 +33,23 @@ class AuthService {
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
+  /// Rozparowanie urządzenia na backendzie (Zabezpieczone -> ApiClient)
+  Future<void> unpairDevice({String? signature, int? timestamp}) async {
+    try {
+      final payload = <String, dynamic>{};
+      if (signature != null) payload['signature'] = signature;
+      if (timestamp != null) payload['timestamp'] = timestamp;
+
+      await _apiClient.post(
+        ApiEndpoints.unpairDevice,
+        data: payload.isNotEmpty ? payload : null,
+      );
+    } catch (e) {
+      _logger.w('Unpair device API call failed: $e');
+      // Wyjątek przechwycony — nie blokujemy lokalnego czyszczenia!
+    }
+  }
+
   /// Weryfikacja 2FA (Publiczne -> NoAuthApiClient)
   Future<AuthResponse> verifyTwoFa(
     String email,
