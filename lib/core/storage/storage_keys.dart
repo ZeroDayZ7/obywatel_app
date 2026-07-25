@@ -18,7 +18,6 @@ class StorageKeys {
 
   static const userPin = 'user_pin';
   static const pinHash = 'pin_hash';
-  static const biometric = 'biometric';
   static const setupCompleted = 'setup_completed';
   static const localLockEnabled = 'local_lock_enabled';
   static const isPinConfigured = 'isPinConfigured';

@@ -28,8 +28,9 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
 
     final pinSet = await pinService.hasPin();
     final biometricAvailable = await localAuth.canCheckBiometrics;
-    final biometricSet =
-        await storage.read(key: StorageKeys.biometric) == 'true';
+    final biometricSet = await storage.readBool(
+      key: StorageKeys.isBiometricConfigured,
+    );
 
     return SecuritySetupState(
       pinSet: pinSet,
@@ -64,7 +65,10 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
 
     if (!success) return;
 
-    await storage.write(key: StorageKeys.biometric, value: 'true');
+    await storage.writeBool(
+      key: StorageKeys.isBiometricConfigured,
+      value: true,
+    );
     state = AsyncValue.data(current.copyWith(biometricSet: true));
   }
 

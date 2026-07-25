@@ -117,6 +117,8 @@ abstract class  LocaleKeys {
   static const drawer_logout = 'drawer.logout';
   static const drawer_logout_title = 'drawer.logout_title';
   static const drawer_logout_content = 'drawer.logout_content';
+  static const drawer_remove_device_title = 'drawer.remove_device_title';
+  static const drawer_remove_device_subtitle = 'drawer.remove_device_subtitle';
   static const drawer = 'drawer';
   static const login_title = 'login.title';
   static const login_welcome_back = 'login.welcome_back';
@@ -134,6 +136,9 @@ abstract class  LocaleKeys {
   static const login_2fa_invalid_code = 'login.2fa.invalid_code';
   static const login_2fa_session_expired_title = 'login.2fa.session_expired_title';
   static const login_2fa_session_expired_subtitle = 'login.2fa.session_expired_subtitle';
+  static const login_2fa_code_resent = 'login.2fa.code_resent';
+  static const login_2fa_resend_code = 'login.2fa.resend_code';
+  static const login_2fa_resend_code_with_timer = 'login.2fa.resend_code_with_timer';
   static const login_2fa = 'login.2fa';
   static const login_reset_link_sent = 'login.reset.link_sent';
   static const login_reset_title = 'login.reset.title';

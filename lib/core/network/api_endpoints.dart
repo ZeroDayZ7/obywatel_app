@@ -4,6 +4,7 @@ class ApiEndpoints {
   // AUTH
   static String get login => '/auth/login';
   static String get authMe => '/auth/me';
+  static String get unpairDevice => '/auth/unpair-device';
   static String get register => '/auth/register';
   static String get registerDevice => '/auth/register-device';
   static String get verifyDevice => '/auth/verify-device';

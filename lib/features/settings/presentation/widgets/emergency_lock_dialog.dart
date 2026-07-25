@@ -76,7 +76,7 @@ abstract class EmergencyLockDialog {
           ),
           actions: [
             AppButton(
-              labelKey: LocaleKeys.common_cancel,
+              label: LocaleKeys.common_cancel,
               variant: AppButtonVariant.text,
               onPressed: () => Navigator.pop(context),
             ),

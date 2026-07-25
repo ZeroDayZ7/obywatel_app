@@ -42,7 +42,7 @@ class ResetPasswordService extends _$ResetPasswordService {
     required bool isEmail,
     required String value,
   }) async {
-    final api = ref.read(resetApiClientProvider);
+    final api = ref.read(noAuthApiClientProvider);
     final response = await api.post(
       ApiEndpoints.reset,
       data: {'method': isEmail ? 'email' : 'phone', 'value': value},
@@ -51,7 +51,7 @@ class ResetPasswordService extends _$ResetPasswordService {
   }
 
   Future<Map<String, dynamic>> verifyCode(String code, String? token) async {
-    final api = ref.read(resetApiClientProvider);
+    final api = ref.read(noAuthApiClientProvider);
     final response = await api.post(
       ApiEndpoints.verifyResetCode,
       data: {'code': code, if (token != null) 'token': token},
@@ -69,7 +69,7 @@ class ResetPasswordService extends _$ResetPasswordService {
     required String platform,
     String? publicKey,
   }) async {
-    final api = ref.read(resetApiClientProvider);
+    final api = ref.read(noAuthApiClientProvider);
     final Map<String, dynamic> requestData = {
       'code': code,
       'reset_token': token,

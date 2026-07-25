@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,11 +49,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final passwordStr = _passwordController.text;
     final passwordBytes = utf8.encode(passwordStr);
 
-    await ref.read(authControllerProvider.notifier).login(email, passwordBytes);
-
-    if (apiConstants.isProduction) {
-      _passwordController.clear();
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(email, passwordBytes);
+    } finally {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
+
+      if (apiConstants.isProduction) {
+        _passwordController.clear();
+      }
     }
   }
 
@@ -97,7 +103,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           ),
           const SizedBox(height: 24),
           AppButton(
-            labelKey: LocaleKeys.login_submit,
+            label: LocaleKeys.login_submit.tr(),
             onPressed: isLoading ? null : _handleLogin,
             variant: AppButtonVariant.primary,
             fullWidth: true,
@@ -107,7 +113,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           Align(
             alignment: Alignment.centerRight,
             child: AppButton(
-              labelKey: LocaleKeys.login_forgot_password,
+              label: LocaleKeys.login_forgot_password.tr(),
               onPressed: isLoading
                   ? null
                   : () => context.push(AppRoutes.resetPassword),

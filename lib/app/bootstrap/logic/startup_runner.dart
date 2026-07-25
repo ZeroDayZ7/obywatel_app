@@ -47,7 +47,7 @@ class StartupRunner {
       logger.i('⏳ Task [${task.name}] starting...');
 
       final result = await task.initialize().timeout(
-        const Duration(seconds: 35),
+        const Duration(seconds: 10),
         onTimeout: () => throw TimeoutException('Task ${task.name} timed out'),
       );
       return result;

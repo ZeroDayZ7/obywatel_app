@@ -6,11 +6,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/app_loader.dart';
+import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/lockout_overlay.dart';
 import 'package:obywatel_plus/core/security/pin/presentation/widget/pin_input_view.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
 class PinVerificationScreen extends ConsumerStatefulWidget {
@@ -23,6 +25,7 @@ class PinVerificationScreen extends ConsumerStatefulWidget {
 class _PinScreenState extends ConsumerState<PinVerificationScreen> {
   late StreamController<ErrorAnimationType> _errorController;
   int _resetToken = 0;
+  bool _hasAttemptedAutoBiometrics = false;
 
   @override
   void initState() {
@@ -47,6 +50,10 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         setState(() => _resetToken++);
       }
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerBiometricAuthIfAvailable(isAutoPrompt: true);
+    });
   }
 
   @override
@@ -55,9 +62,41 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     super.dispose();
   }
 
+  Future<void> _triggerBiometricAuthIfAvailable({
+    bool isAutoPrompt = false,
+  }) async {
+    if (isAutoPrompt && _hasAttemptedAutoBiometrics) return;
+
+    final securityState = ref.read(securityServiceProvider);
+
+    if (!securityState.isBiometricEnabled || !securityState.canUseBiometrics) {
+      return;
+    }
+
+    if (isAutoPrompt) {
+      _hasAttemptedAutoBiometrics = true;
+    }
+
+    try {
+      final localAuth = ref.read(localAuthProvider);
+      final authenticated = await localAuth.authenticate(
+        localizedReason: 'Zautoryzuj się, aby odblokować aplikację',
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
+      );
+
+      if (authenticated && mounted) {
+        await ref.read(securityServiceProvider.notifier).unlockApp();
+      }
+    } catch (_) {
+      // W przypadku anulowania lub błędu użytkownik odblokowuje aplikację kodem PIN
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final limiterAsync = ref.watch(pinAttemptLimiterProvider);
+    final securityState = ref.watch(securityServiceProvider);
 
     final isLockedUI = ref.watch(
       pinVerificationProvider.select(
@@ -65,13 +104,19 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
       ),
     );
 
+    final canShowBiometricButton =
+        securityState.isBiometricEnabled && securityState.canUseBiometrics;
+
     return Scaffold(
       body: limiterAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(
-          child: Text('Error: $err'),
-        ),
+        error: (err, _) => Center(child: Text('Error: $err')),
         data: (limiter) {
+          final attempts = limiter.attempts;
+          final remainingAttempts = ref
+              .read(pinAttemptLimiterProvider.notifier)
+              .remainingAttempts;
+
           final isLocked = isLockedUI || limiter.isLocked;
           final verificationState = ref.watch(pinVerificationProvider);
 
@@ -94,17 +139,18 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         PinInputView(
                           isEnabled: !isLoading && !isLocked,
                           isError: isError,
                           resetToken: _resetToken,
                           errorController: _errorController,
+                          remainingAttempts: attempts > 0
+                              ? remainingAttempts
+                              : null,
                           onCompleted: (pin) {
-                            final codes = pin
-                                .split('')
-                                .map(int.parse)
-                                .toList();
+                            final codes = pin.split('').map(int.parse).toList();
 
                             ref
                                 .read(pinVerificationProvider.notifier)
@@ -112,7 +158,27 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           },
                         ),
 
-                        if (isLoading) AppLoader(),
+                        if (isLoading) const AppLoader(),
+
+                        if (canShowBiometricButton && !isLocked) ...[
+                          const SizedBox(height: 32),
+                          IconButton(
+                            onPressed: isLoading
+                                ? null
+                                : () => _triggerBiometricAuthIfAvailable(
+                                    isAutoPrompt: false,
+                                  ),
+                            iconSize: 48,
+                            style: IconButton.styleFrom(
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              padding: const EdgeInsets.all(12),
+                            ),
+                            icon: const Icon(Icons.fingerprint_rounded),
+                            tooltip: 'Odblokuj biometrią',
+                          ),
+                        ],
                       ],
                     ),
                   ),

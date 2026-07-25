@@ -34,7 +34,7 @@ class LoginScreen extends StatelessWidget {
                     const SizedBox(height: 12),
 
                     AppButton(
-                      labelKey: LocaleKeys.login_no_account,
+                      label: LocaleKeys.login_no_account.tr(),
                       variant: AppButtonVariant.text,
                       onPressed: () {},
                       fullWidth: false,

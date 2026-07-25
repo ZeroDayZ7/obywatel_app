@@ -33,7 +33,7 @@ final class PinAttemptLimiterProvider
   PinAttemptLimiter create() => PinAttemptLimiter();
 }
 
-String _$pinAttemptLimiterHash() => r'b59e9b9f782fa6f19adbe39aaeaf28ce4449248f';
+String _$pinAttemptLimiterHash() => r'6aa9be22a959021ac3bcad1bab5f0e4392db1b21';
 
 abstract class _$PinAttemptLimiter extends $AsyncNotifier<PinAttemptState> {
   FutureOr<PinAttemptState> build();

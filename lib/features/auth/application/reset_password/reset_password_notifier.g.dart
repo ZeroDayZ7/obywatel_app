@@ -42,7 +42,7 @@ final class ResetPasswordServiceProvider
 }
 
 String _$resetPasswordServiceHash() =>
-    r'6e236e12d319b4bf7c086a8ea1d73d000cfe5211';
+    r'a886185f885e00ac40a72eecf738babf1d8b28af';
 
 abstract class _$ResetPasswordService extends $Notifier<void> {
   void build();

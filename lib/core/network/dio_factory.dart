@@ -20,10 +20,12 @@ class DioFactory {
     required AppLogger logger,
     Ref? deviceInfoRef,
   }) {
-    // 1. Wybór BaseUrl (zostaje bez zmian)
     final String baseUrl = switch (profile) {
       DioProfile.public => ServicesConfig.versionBaseUrl,
-      _ => ServicesConfig.authBaseUrl,
+      DioProfile.authenticated ||
+      DioProfile.refreshToken ||
+      DioProfile.noAuthAuth =>
+        ServicesConfig.authBaseUrl,
     };
 
     final dio = Dio(
@@ -35,14 +37,14 @@ class DioFactory {
       ),
     );
 
-    // 2. SSL PINNING (zostaje bez zmian - to Twoja polisa ubezpieczeniowa)
     if (!kIsWeb && apiConstants.enableSSLPinning) {
       dio.httpClientAdapter = IOHttpClientAdapter(
         createHttpClient: () => HttpClient(),
         validateCertificate: (cert, host, port) {
           if (cert == null) return false;
           final serverFingerprint = _getFingerprint(cert.der);
-          final bool isValid = serverFingerprint == apiConstants.apiFingerprint;
+          final bool isValid =
+              serverFingerprint == apiConstants.apiFingerprint;
 
           if (!isValid) {
             logger.e('🚨 SSL Pinning Violation! Host: $host');
@@ -52,7 +54,6 @@ class DioFactory {
       );
     }
 
-    // 3. INTERCEPTORY GLOBALNE
     dio.interceptors.addAll([
       LoggingInterceptor(logger: logger),
       GlobalErrorInterceptor(logger: logger),

@@ -77,8 +77,12 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     } else {
       // 5. Jeśli to tylko zwykły błąd (jeszcze są próby)
       state = const PinVerificationState.error();
+
+      final remaining = ref
+          .read(pinAttemptLimiterProvider.notifier)
+          .remainingAttempts;
       _log.w(
-        'Błędny PIN. Pozostałe próby: ${updatedLimiter != null ? 5 - updatedLimiter.attempts : "nieznane"}',
+        'Błędny PIN. Pozostałe próby: $remaining / ${PinAttemptLimiter.maxAttemptsBeforeLock}',
       );
     }
   }
@@ -95,10 +99,6 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     state = const PinVerificationState.success();
 
-    // KLUCZOWA ZMIANA:
-    // Wywołujemy odblokowanie ORAZ walidację sesji w AuthController.
-    // Metoda ta sama odblokuje SecurityService (lokalny skarbiec)
-    // ORAZ strzeli do backendu po sesję (/auth/me), przestawiając AuthState na .authenticated.
     final sessionValid = await ref
         .read(authControllerProvider.notifier)
         .unlockWithPinAndValidateSession();

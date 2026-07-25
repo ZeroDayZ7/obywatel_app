@@ -37,7 +37,7 @@ class CodeInputWidget extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         AppButton(
-          labelKey: canResend
+          label: canResend
               ? LocaleKeys.reset_password_resend.tr()
               : LocaleKeys.reset_password_resend_in.tr(
                   namedArgs: {'seconds': resendTime.toString()},
@@ -47,7 +47,7 @@ class CodeInputWidget extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         AppButton(
-          labelKey: LocaleKeys.common_confirm.tr(),
+          label: LocaleKeys.common_confirm.tr(),
           isLoading: isLoading,
           onPressed: isLoading
               ? null

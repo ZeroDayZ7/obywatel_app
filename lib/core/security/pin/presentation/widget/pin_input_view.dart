@@ -9,6 +9,7 @@ class PinInputView extends StatelessWidget {
   final bool isEnabled;
   final bool isError;
   final int resetToken;
+  final int? remainingAttempts;
   final StreamController<ErrorAnimationType> errorController;
   final ValueChanged<String> onCompleted;
 
@@ -17,6 +18,7 @@ class PinInputView extends StatelessWidget {
     required this.isEnabled,
     required this.isError,
     required this.resetToken,
+    this.remainingAttempts,
     required this.errorController,
     required this.onCompleted,
   });
@@ -62,6 +64,8 @@ class PinInputView extends StatelessWidget {
               blinkWhenObscuring: true,
               autoFocus: true,
               enabled: isEnabled,
+              backgroundColor: Colors.transparent,
+              enableActiveFill: true,
               keyboardType: TextInputType.number,
               animationType: AnimationType.fade,
               errorAnimationController: errorController,
@@ -79,15 +83,25 @@ class PinInputView extends StatelessWidget {
                 inactiveColor: isError
                     ? colorScheme.error
                     : colorScheme.outlineVariant,
-                activeFillColor: colorScheme.surfaceContainerHighest,
-                selectedFillColor: colorScheme.primaryContainer,
-                inactiveFillColor: colorScheme.surface,
+                activeFillColor: Colors.transparent,
+                selectedFillColor: Colors.transparent,
+                inactiveFillColor: Colors.transparent,
               ),
               onCompleted: onCompleted,
               onChanged: (_) {},
             ),
           ),
         ),
+        if (isError && remainingAttempts != null) ...[
+          const SizedBox(height: 16),
+          Text(
+            'Błędny PIN. Pozostałe próby: $remainingAttempts',
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.error,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ],
     );
   }

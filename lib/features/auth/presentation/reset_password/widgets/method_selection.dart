@@ -102,7 +102,7 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
           ),
           const SizedBox(height: 16),
           AppButton(
-            labelKey: LocaleKeys.common_send_code.tr(),
+            label: LocaleKeys.common_send_code.tr(),
             isLoading: widget.isLoading,
             onPressed: widget.isLoading
                 ? null

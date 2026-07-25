@@ -130,7 +130,7 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                 children: [
                   Expanded(
                     child: AppButton(
-                      labelKey: LocaleKeys.common_cancel,
+                      label: LocaleKeys.common_cancel.tr(),
                       variant: AppButtonVariant.text,
                       onPressed: () {
                         if (_currentPage == 1) {
@@ -145,9 +145,9 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                   const SizedBox(width: Spacing.lg),
                   Expanded(
                     child: AppButton(
-                      labelKey: _currentPage == 1
-                          ? LocaleKeys.common_save
-                          : LocaleKeys.common_next,
+                      label: _currentPage == 1
+                          ? LocaleKeys.common_save.tr()
+                          : LocaleKeys.common_next.tr(),
                       variant: AppButtonVariant.primary,
                       onPressed: _onNext,
                     ),

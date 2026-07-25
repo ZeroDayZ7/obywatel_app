@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/router/redirect/redirect_logic.dart';
 import 'package:obywatel_plus/core/errors/presentation/error_screen.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_refresh_provider.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -20,7 +21,9 @@ GoRouter createRouter({required Ref ref, required List<RouteBase> routes}) {
     routes: routes,
     redirect: (context, state) => appRedirectLogic(ref, state),
     errorBuilder: (context, state) {
-      debugPrint('⚠️ GoRouter error: ${state.error}');
+      ref
+          .read(appLoggerProvider)
+          .e('GoRouter navigation error', error: state.error, module: 'Router');
       return ErrorScreen(state: state);
     },
   );

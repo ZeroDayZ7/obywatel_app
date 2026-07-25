@@ -22,15 +22,15 @@
     "obywatel_app.code-workspace": true,
     "LICENSE": true,
     "devtools_options.yaml": true,
-    "flutter_launcher_icons.yaml": true,
+    "flutter_launcher_icons.yaml": true
     // "**/errors/": true,
     // "**/logger/": true,
     // "**/": true
     // "**/": true
     // "**/": true
 
-    "**/*.freezed.dart": true,
-    "**/*.g.dart": true
+    // "**/*.freezed.dart": true,
+    // "**/*.g.dart": true
   },
 
   // (Search)

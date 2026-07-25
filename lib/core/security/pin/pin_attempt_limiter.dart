@@ -11,6 +11,9 @@ part 'pin_attempt_limiter.g.dart';
 
 @Riverpod(keepAlive: true)
 class PinAttemptLimiter extends _$PinAttemptLimiter {
+  /// Maksymalna liczba nieudanych prób przed nałożeniem pierwszej blokady czasowej.
+  static const int maxAttemptsBeforeLock = 3;
+
   @override
   Future<PinAttemptState> build() async {
     return _loadFromStorage();
@@ -33,8 +36,14 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     return PinAttemptState(attempts: attempts, lockUntil: lockUntil);
   }
 
+  /// Zwraca liczbę pozostałych prób przed blokadą czasową
+  int get remainingAttempts {
+    final currentAttempts = state.value?.attempts ?? 0;
+    final remaining = maxAttemptsBeforeLock - currentAttempts;
+    return remaining > 0 ? remaining : 0;
+  }
+
   Future<void> registerFailedAttempt() async {
-    // Generator obsługuje stan asynchroniczny, pobieramy aktualną wartość
     final currentState = state.value ?? const PinAttemptState();
 
     final nextAttempts = currentState.attempts + 1;
@@ -49,7 +58,7 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     ref
         .read(appLoggerProvider)
         .w(
-          'PIN trial failed ($nextAttempts). Device locked until: $lockUntil',
+          'PIN trial failed ($nextAttempts/$maxAttemptsBeforeLock). Device locked until: $lockUntil',
           module: 'SECURITY',
         );
 
@@ -58,7 +67,6 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
       lockUntil: lockUntil,
     );
 
-    // W generatorze używamy state = AsyncData(newState)
     state = AsyncData(newState);
     await _saveToStorage(newState);
   }
@@ -87,9 +95,9 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
   }
 
   Duration _getLockDuration(int attempts) {
-    if (attempts < 3) return Duration.zero;
-    final lockCount = attempts - 2;
-    // Wykładniczy wzrost blokady: 60s, 120s, 240s...
+    if (attempts < maxAttemptsBeforeLock) return Duration.zero;
+
+    final lockCount = attempts - (maxAttemptsBeforeLock - 1);
     final seconds = 60 * (1 << (lockCount - 1));
     return Duration(seconds: seconds);
   }

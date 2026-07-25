@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +23,60 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
   final _formKey = GlobalKey<FormState>();
   final _codeController = TextEditingController();
 
+  static const int _cooldownSeconds = 60;
+  Timer? _timer;
+  int _resendTime = _cooldownSeconds;
+  bool _canResend = false;
+  bool _isResending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startCooldown();
+  }
+
+  void _startCooldown() {
+    setState(() {
+      _resendTime = _cooldownSeconds;
+      _canResend = false;
+    });
+
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendTime > 1) {
+        setState(() {
+          _resendTime--;
+        });
+      } else {
+        timer.cancel();
+        setState(() {
+          _canResend = true;
+        });
+      }
+    });
+  }
+
+  Future<void> _handleResendCode() async {
+    if (!_canResend || _isResending) return;
+
+    setState(() {
+      _isResending = true;
+    });
+
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .resendTwoFaCode();
+
+    if (mounted) {
+      setState(() {
+        _isResending = false;
+      });
+      if (success) {
+        _startCooldown();
+      }
+    }
+  }
+
   Future<void> _submitCode() async {
     if (!_formKey.currentState!.validate()) return;
     final code = _codeController.text.trim();
@@ -36,6 +92,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
     _codeController.dispose();
     super.dispose();
   }
@@ -45,6 +102,8 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
     final iconColor = Colors.green.shade700;
+
+    final isBusy = isLoading || _isResending;
 
     return AppScaffold(
       size: ContainerSize.narrow,
@@ -63,7 +122,7 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
               controller: _codeController,
               labelKey: LocaleKeys.login_2fa_code,
               autofocus: true,
-              enabled: !isLoading,
+              enabled: !isBusy,
               onChanged: _onCodeChanged,
               textAlign: TextAlign.center,
               prefixIcon: Icon(Icons.security, color: iconColor),
@@ -79,16 +138,26 @@ class _TwoFaScreenState extends ConsumerState<TwoFaScreen> {
             ),
             const SizedBox(height: 24),
             AppButton(
-              labelKey: LocaleKeys.login_2fa_submit,
-              onPressed: isLoading ? null : _submitCode,
+              label: LocaleKeys.login_2fa_submit.tr(),
+              onPressed: isBusy ? null : _submitCode,
               variant: AppButtonVariant.primary,
               fullWidth: true,
               isLoading: isLoading,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
             AppButton(
-              labelKey: LocaleKeys.common_cancel,
-              onPressed: isLoading
+              label: _canResend
+                  ? LocaleKeys.login_2fa_resend_code.tr()
+                  : '${LocaleKeys.login_2fa_resend_code.tr()} (${_resendTime}s)',
+              onPressed: (_canResend && !isBusy) ? _handleResendCode : null,
+              variant: AppButtonVariant.secondary,
+              fullWidth: true,
+              isLoading: _isResending,
+            ),
+            const SizedBox(height: 12),
+            AppButton(
+              label: LocaleKeys.common_cancel.tr(),
+              onPressed: isBusy
                   ? null
                   : () =>
                         ref.read(authControllerProvider.notifier).cancelTwoFa(),

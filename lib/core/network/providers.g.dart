@@ -136,6 +136,46 @@ final class RefreshDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
 
 String _$refreshDioHash() => r'a721ce324776cc0de0ff32aa4b6921257511a665';
 
+@ProviderFor(noAuthDio)
+final noAuthDioProvider = NoAuthDioProvider._();
+
+final class NoAuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
+    with $Provider<Dio> {
+  NoAuthDioProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'noAuthDioProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$noAuthDioHash();
+
+  @$internal
+  @override
+  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Dio create(Ref ref) {
+    return noAuthDio(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Dio value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Dio>(value),
+    );
+  }
+}
+
+String _$noAuthDioHash() => r'c282cbc7be31bb6249a8bf7b16ec2b97f87448b9';
+
 @ProviderFor(publicDio)
 final publicDioProvider = PublicDioProvider._();
 
@@ -175,46 +215,6 @@ final class PublicDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
 }
 
 String _$publicDioHash() => r'3dbfc92ca38d77d439e736c88dd7ae0075eda085';
-
-@ProviderFor(resetDio)
-final resetDioProvider = ResetDioProvider._();
-
-final class ResetDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
-    with $Provider<Dio> {
-  ResetDioProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'resetDioProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$resetDioHash();
-
-  @$internal
-  @override
-  $ProviderElement<Dio> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  Dio create(Ref ref) {
-    return resetDio(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(Dio value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<Dio>(value),
-    );
-  }
-}
-
-String _$resetDioHash() => r'79f30774e6b81d2a4110b49d893aa644875adee6';
 
 @ProviderFor(apiClient)
 final apiClientProvider = ApiClientProvider._();
@@ -257,6 +257,48 @@ final class ApiClientProvider
 
 String _$apiClientHash() => r'a5b461a3c5bcb7cd7880a74b4806ee7b682c1c89';
 
+@ProviderFor(noAuthApiClient)
+final noAuthApiClientProvider = NoAuthApiClientProvider._();
+
+final class NoAuthApiClientProvider
+    extends
+        $FunctionalProvider<NoAuthApiClient, NoAuthApiClient, NoAuthApiClient>
+    with $Provider<NoAuthApiClient> {
+  NoAuthApiClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'noAuthApiClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$noAuthApiClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<NoAuthApiClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  NoAuthApiClient create(Ref ref) {
+    return noAuthApiClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(NoAuthApiClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<NoAuthApiClient>(value),
+    );
+  }
+}
+
+String _$noAuthApiClientHash() => r'80b2a76cd3a13207f44ca093ec8ae92fee47ed03';
+
 @ProviderFor(publicApiClient)
 final publicApiClientProvider = PublicApiClientProvider._();
 
@@ -298,45 +340,3 @@ final class PublicApiClientProvider
 }
 
 String _$publicApiClientHash() => r'20b91b552704a886f8ae3ff7b5aca36f8d9154e9';
-
-@ProviderFor(resetApiClient)
-final resetApiClientProvider = ResetApiClientProvider._();
-
-final class ResetApiClientProvider
-    extends
-        $FunctionalProvider<PublicApiClient, PublicApiClient, PublicApiClient>
-    with $Provider<PublicApiClient> {
-  ResetApiClientProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'resetApiClientProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$resetApiClientHash();
-
-  @$internal
-  @override
-  $ProviderElement<PublicApiClient> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
-
-  @override
-  PublicApiClient create(Ref ref) {
-    return resetApiClient(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(PublicApiClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<PublicApiClient>(value),
-    );
-  }
-}
-
-String _$resetApiClientHash() => r'e973aefb30384ee7f9f2df7174800b6111d7b3e1';
