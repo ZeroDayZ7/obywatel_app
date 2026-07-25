@@ -102,7 +102,7 @@ class AppPinCodeView extends StatelessWidget {
 
         const SizedBox(height: 48),
         AppButton(
-          labelKey: buttonKey,
+          label: buttonKey.tr(),
           onPressed: isLoading ? null : onButtonPressed,
           isLoading: isLoading,
           fullWidth: true,

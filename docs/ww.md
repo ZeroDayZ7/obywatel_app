@@ -1,7 +1,3 @@
-This is a Flutter/Dart app (Riverpod-based) with a file-per-section format separated by `───────────── path ─────────────` headers. Let me map out the structure and pull out all files under the auth-related folders (as the user asked me to focus on the "silnik" — engine — and specifically `auth`, not documents/health features).Found a big bug already: `confirmReset()` has the actual API call commented out but still sets state to `completed()` — meaning password reset succeeds locally without ever calling the backend. Let me continue reading the rest of the auth section and key core pieces (network, security, storage, crypto) to build a complete picture.Found another important dead-code bug: the 401 force-logout call is commented out in `SecuritySyncInterceptor.onError`. Let me continue through the rest of network/security/storage/crypto.Confirmed both `biometric` and `isBiometricConfigured` keys exist separately. Now let's check the router redirect guards which gates auth-protected routes.Dobra, przeszedłem dokładnie przez cały „silnik” (core: network, security, crypto, storage) oraz cały moduł `features/auth` (login, 2FA, reset hasła, sesje, pending session, PIN). Nie ruszałem `documents`/`health`, bo faktycznie widać, że są niedokończone. Poniżej masz 30 konkretnych punktów, od najpoważniejszych po kosmetyczne.
-
-## 🔴 Krytyczne luki bezpieczeństwa
-
 **1. Argon2id do hashowania PIN-u jest drastycznie osłabiony.** W `HashService`:
 
 ```dart
@@ -33,11 +29,7 @@ static final _argon = Argon2id(
 
 **9. Dwa różne klucze storage dla tego samego flagi „biometria włączona”:** `StorageKeys.biometric` (zapisywany w `SecuritySetupNotifier`) vs `StorageKeys.isBiometricConfigured` (odczytywany przez `SecurityService.init()`). Dwa źródła prawdy dla jednej rzeczy.
 
-**10. Dwa pliki `local_auth_provider.dart`** — jeden w `core/security/` (prosty provider zwracający `LocalAuthentication()`), drugi w `core/security/infrastructure/` z klasą `LocalAuthProviderImpl`, która nigdzie nie jest instancjonowana. Martwy plik do usunięcia albo do faktycznego wpięcia.
-
 **11. Dwie różne definicje `ResetPasswordState`** — jedna jako `part` w `reset_password_notifier.dart` (z `token`/`challenge`), druga w osobnym `domain/reset_password_state.dart` (inne pola, inne warianty: `sendingCode`, `verifyingCode`, `resettingPassword`, `error`). Ta druga wygląda na pozostałość po wcześniejszym refaktorze i nigdzie nie jest realnie używana w UI — myląca nazwa-duplikat w tym samym projekcie.
-
-**13. Wariant `AuthState.error({code})` nigdy nie jest ustawiany.** Cała obsługa błędów w `AuthController` idzie przez `_handleError()` → `globalNotificationProvider` (toast), a nie przez zmianę stanu. Sam wariant `.error` istnieje w domenie i ma nawet getter `errorCode`, ale jest martwy — dwa równoległe, niespójne modele błędów.
 
 **14. `PendingSession` ma pola `accessToken`, `refreshToken`, `userName`, `rbac`, `devicePublicKey`, ale `AuthController` wypełnia realnie tylko `setupToken` i `userId`.** Reszta modelu to póki co dekoracja — albo dokończ, albo przytnij model.
 
@@ -46,10 +38,6 @@ static final _argon = Argon2id(
 **15. Komunikat „pozostałe próby” zakłada limit 5, a realny próg blokady w `PinAttemptLimiter` to 3 próby** (`if (attempts < 3) return Duration.zero`). Użytkownik dostanie błędną liczbę pozostałych prób.
 
 **16. Przełącznik „Zaufaj temu urządzeniu” w setupie jest de facto kosmetyczny.** `canFinish = pinSet && trustDevice` blokuje przycisk „Zakończ”, ale `completeSetup()` i tak zawsze wywołuje `registerTrustedDevice()`, niezależnie od wartości przełącznika — czyli wymuszona, pozorna zgoda.
-
-**17. `toggleBiometrics()` w `SecurityService` tylko zmienia stan w RAM.** Nie zapisuje wyboru do `SecureStorage` i nie wywołuje faktycznej weryfikacji biometrycznej — po restarcie appki wartość wróci do tego, co zapisał `init()`.
-
-**18. Ekran PIN-u (`PinVerificationScreen`) w ogóle nie oferuje odblokowania biometrią**, mimo że cała infrastruktura (`canUseBiometrics`, `isBiometricEnabled`) istnieje w stanie. Biometria jest skonfigurowana podczas setupu, ale nigdzie potem realnie nieużyta do odblokowania appki.
 
 **19. Brak przycisku „Wyślij ponownie kod” na ekranie 2FA**, mimo że endpoint `ApiEndpoints.twoFaResend` istnieje w kodzie i nigdzie nie jest wywoływany. Analogiczny mechanizm w resecie hasła (`resendTime`/`canResend`) działa poprawnie — 2FA nie ma tego wcale.
 

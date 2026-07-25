@@ -77,7 +77,7 @@ class SecuritySetupBody extends ConsumerWidget {
 
           /// 3. Przycisk kończący
           AppButton(
-            labelKey: LocaleKeys.security_setup_finish_setup,
+            label: LocaleKeys.security_setup_finish_setup.tr(),
             onPressed: state.canFinish && asyncState is! AsyncLoading
                 ? () async {
                     await ref

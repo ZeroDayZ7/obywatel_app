@@ -121,6 +121,39 @@ class AuthController extends _$AuthController {
     }
   }
 
+  Future<bool> resendTwoFaCode() async {
+    final currentEmail = state.maybeMap(
+      twoFaRequired: (s) => s.email,
+      orElse: () => null,
+    );
+    final currentToken = state.maybeMap(
+      twoFaRequired: (s) => s.tempToken,
+      orElse: () => null,
+    );
+
+    if (currentEmail == null || currentToken == null) {
+      _showError(LocaleKeys.errors_SESSION_EXPIRED);
+      return false;
+    }
+
+    try {
+      await _authService.resendTwoFaCode(currentEmail, currentToken);
+
+      ref
+          .read(globalNotificationProvider.notifier)
+          .show(
+            AppNotification(
+              messageKey: LocaleKeys.login_2fa_code_resent,
+              type: NotificationType.info,
+            ),
+          );
+      return true;
+    } catch (e) {
+      _handleError(e);
+      return false;
+    }
+  }
+
   Future<void> unpairAndReset() async {
     _log.w(
       '⚠️ Rozpoczynam rozparowanie urządzenia i Hard Reset...',

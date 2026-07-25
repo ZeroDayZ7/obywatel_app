@@ -34,7 +34,7 @@ class RetryView extends StatelessWidget {
 
           // Przycisk retry
           AppButton(
-            labelKey: LocaleKeys.security_setup_retry,
+            label: LocaleKeys.security_setup_retry.tr(),
             onPressed: onRetry,
             variant: AppButtonVariant.primary,
             fullWidth: false,

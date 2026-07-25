@@ -1,10 +1,9 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 enum AppButtonVariant { primary, secondary, text, danger, textDanger }
 
 class AppButton extends StatelessWidget {
-  final String labelKey;
+  final String label;
   final VoidCallback? onPressed;
   final AppButtonVariant variant;
   final bool isLoading;
@@ -12,7 +11,7 @@ class AppButton extends StatelessWidget {
 
   const AppButton({
     super.key,
-    required this.labelKey,
+    required this.label,
     required this.onPressed,
     this.variant = AppButtonVariant.primary,
     this.isLoading = false,
@@ -24,8 +23,6 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = labelKey.tr();
-
     final Widget content = isLoading
         ? SizedBox(
             width: _loaderSize,
@@ -83,15 +80,12 @@ class AppButton extends StatelessWidget {
         );
 
       case AppButtonVariant.text:
-        // WAŻNE: TextButton IGNORUJE fullWidth – zawsze jest wąski
         return TextButton(
           onPressed: isLoading ? null : onPressed,
           style: TextButton.styleFrom(
-            // Nie używamy minimumSize z double.infinity
-            minimumSize: const Size(48, 48), // minimalny touch target
+            minimumSize: const Size(48, 48),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            tapTargetSize:
-                MaterialTapTargetSize.shrinkWrap, // mniejszy obszar dotyku
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             foregroundColor: Theme.of(context).colorScheme.primary,
           ),
           child: isLoading
@@ -115,9 +109,7 @@ class AppButton extends StatelessWidget {
             minimumSize: const Size(48, 48),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            foregroundColor: Theme.of(
-              context,
-            ).colorScheme.error, // czerwony tekst
+            foregroundColor: Theme.of(context).colorScheme.error,
           ),
           child: isLoading
               ? SizedBox(
@@ -156,7 +148,6 @@ class AppButton extends StatelessWidget {
     }
   }
 
-  // Pomocnicza metoda – tylko dla przycisków, które wspierają fullWidth
   Widget _buildFullWidthAwareButton(BuildContext context, Widget button) {
     if (!fullWidth) return button;
     return SizedBox(width: double.infinity, child: button);

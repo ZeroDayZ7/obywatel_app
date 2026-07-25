@@ -63,7 +63,7 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
             children: [
               Expanded(
                 child: AppButton(
-                  labelKey: LocaleKeys.common_cancel,
+                  label: LocaleKeys.common_cancel,
                   variant: AppButtonVariant.text,
                   onPressed: () => Navigator.pop(
                     context,
@@ -74,7 +74,7 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  labelKey: LocaleKeys.drawer_logout,
+                  label: LocaleKeys.drawer_logout,
                   variant: AppButtonVariant.danger,
                   onPressed: () => Navigator.pop(
                     context,

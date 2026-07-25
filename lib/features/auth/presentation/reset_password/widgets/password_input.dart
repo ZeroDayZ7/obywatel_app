@@ -138,7 +138,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
           _PasswordRequirementsList(password: _passController.text),
           const SizedBox(height: 32),
           AppButton(
-            labelKey: LocaleKeys.common_confirm,
+            label: LocaleKeys.common_confirm,
             isLoading: widget.isLoading,
             onPressed: widget.isLoading
                 ? null

@@ -19,7 +19,7 @@ class SuccessWidget extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           AppButton(
-            labelKey: LocaleKeys.common_confirm.tr(),
+            label: LocaleKeys.common_confirm.tr(),
             onPressed: () => Navigator.pop(context),
             variant: AppButtonVariant.primary,
           ),

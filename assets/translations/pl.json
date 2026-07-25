@@ -12,7 +12,7 @@
     "skip": "Pomiń",
     "confirm": "Potwierdź",
     "save_password": "Zapisz hasło",
-    "email": "Email",
+    "email": "Identyfikator",
     "password": "Hasło",
     "repeat_password": "Powtórz hasło",
     "phone": "Telefon",
@@ -145,7 +145,10 @@
       "submit": "Zweryfikuj",
       "invalid_code": "Nieprawidłowy kod 2FA",
       "session_expired_title": "Sesja wygasła",
-      "session_expired_subtitle": "Kod 2FA jest ważny tylko 5 minut. Spróbuj ponownie."
+      "session_expired_subtitle": "Kod 2FA jest ważny tylko 5 minut. Spróbuj ponownie.",
+      "code_resent": "Kod 2FA został wysłany ponownie.",
+      "resend_code": "Wyślij kod ponownie",
+      "resend_code_with_timer": "Wyślij kod ponownie ({seconds}s)"
     },
     "reset": {
       "link_sent": "Link resetujący hasło został wysłany na email",

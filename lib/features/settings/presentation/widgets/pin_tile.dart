@@ -19,7 +19,7 @@ class PinTile extends StatelessWidget {
             : LocaleKeys.security_setup_set_pin.tr(),
       ),
       trailing: AppButton(
-        labelKey: LocaleKeys.security_setup_set,
+        label: LocaleKeys.security_setup_set.tr(),
         onPressed: pinSet ? null : onSetup,
         variant: AppButtonVariant.text,
         fullWidth: false,

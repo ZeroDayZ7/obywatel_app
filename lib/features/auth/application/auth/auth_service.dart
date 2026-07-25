@@ -33,6 +33,13 @@ class AuthService {
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
+  Future<void> resendTwoFaCode(String email, String tempToken) async {
+    await _noAuthApiClient.post(
+      ApiEndpoints.twoFaResend,
+      data: {'email': email, 'token': tempToken},
+    );
+  }
+
   /// Rozparowanie urządzenia na backendzie (Zabezpieczone -> ApiClient)
   Future<void> unpairDevice({String? signature, int? timestamp}) async {
     try {
