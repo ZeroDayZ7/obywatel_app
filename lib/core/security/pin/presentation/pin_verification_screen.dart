@@ -112,6 +112,11 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
         data: (limiter) {
+          final attempts = limiter.attempts;
+          final remainingAttempts = ref
+              .read(pinAttemptLimiterProvider.notifier)
+              .remainingAttempts;
+
           final isLocked = isLockedUI || limiter.isLocked;
           final verificationState = ref.watch(pinVerificationProvider);
 
@@ -141,6 +146,9 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           isError: isError,
                           resetToken: _resetToken,
                           errorController: _errorController,
+                          remainingAttempts: attempts > 0
+                              ? remainingAttempts
+                              : null,
                           onCompleted: (pin) {
                             final codes = pin.split('').map(int.parse).toList();
 
