@@ -28,8 +28,6 @@ sealed class AuthState with _$AuthState {
     @Default(false) bool isDeviceTrusted,
   }) = _Authenticated;
 
-  const factory AuthState.error({required String code}) = _Error;
-
   bool get isInitial => this is _Initial;
   bool get isLocked => this is _Locked;
   bool get isUnauthenticated => this is _Unauthenticated;
@@ -37,7 +35,6 @@ sealed class AuthState with _$AuthState {
   bool get isTwoFaRequired => this is _TwoFaRequired;
   bool get isPartiallyAuthenticated => this is _PartiallyAuthenticated;
   bool get isAuthenticated => this is _Authenticated;
-  bool get isError => this is _Error;
 
   String? get email => maybeMap(
     twoFaRequired: (state) => state.email,
@@ -47,9 +44,6 @@ sealed class AuthState with _$AuthState {
 
   String? get tempToken =>
       maybeMap(twoFaRequired: (state) => state.tempToken, orElse: () => null);
-
-  String? get errorCode =>
-      maybeMap(error: (state) => state.code, orElse: () => null);
 
   String? get userId => maybeMap(
     partiallyAuthenticated: (state) => state.userId,

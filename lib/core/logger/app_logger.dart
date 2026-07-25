@@ -118,12 +118,19 @@ class AppLogger {
       );
 
       if (kDebugMode) {
-        debugPrint('📡 API LOG PAYLOAD: ${payload.toJson()}');
+        _logger.d('[API] Telemetry payload ready: ${payload.toJson()}');
       }
 
       // TODO: _apiClient.post('/logs', data: payload.toJson());
-    } catch (e) {
-      debugPrint('❌ Critical Logger Error: $e');
+    } catch (e, st) {
+      // Używamy _logger bezpośrednio z pominięciem _log(),
+      // aby zapobiec zapętleniu (tzw. stack overflow) w przypadku awarii sieci/parsera
+      _logger.log(
+        Level.error,
+        '[Logger] Critical failure inside _sendToPrivateApi',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

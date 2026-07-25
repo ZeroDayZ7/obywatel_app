@@ -47,15 +47,21 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   }
 
   Future<void> _checkIntegrityOnResume() async {
-    final isAllowed = await ref.read(deviceIntegrityFacadeProvider).isDeviceAllowed();
+    final isAllowed = await ref
+        .read(deviceIntegrityFacadeProvider)
+        .isDeviceAllowed();
 
     if (!isAllowed) {
-      _logger.e('🛑 Security violation detected on resume!', module: 'Security');
+      _logger.e(
+        '🛑 Security violation detected on resume!',
+        module: 'Security',
+      );
 
       // Natychmiastowa reakcja: blokujemy stan aplikacji
       state = state.copyWith(
         hasLocalLock: true,
-        initialized: false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
+        initialized:
+            false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
       );
 
       // ref.read(authControllerProvider.notifier).logout();
@@ -85,7 +91,12 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     // Podwójne sprawdzenie, czy stan nie jest już gotowy
     if (state.initialized) return;
 
-    final [bool isPinConfigured, bool setupCompleted, bool isLocalLockEnabled, bool isBiometricEnabled] = await Future.wait([
+    final [
+      bool isPinConfigured,
+      bool setupCompleted,
+      bool isLocalLockEnabled,
+      bool isBiometricEnabled,
+    ] = await Future.wait([
       _pinService.hasPin(),
       _secureStorage.readBool(key: StorageKeys.setupCompleted),
       _secureStorage.readBool(key: StorageKeys.localLockEnabled),
@@ -123,12 +134,29 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
-    await _secureStorage.writeBool(key: StorageKeys.setupCompleted, value: true);
-    await _secureStorage.writeBool(key: StorageKeys.localLockEnabled, value: true);
-    await _secureStorage.writeBool(key: StorageKeys.isPinConfigured, value: true);
-    await _secureStorage.writeBool(key: StorageKeys.isBiometricConfigured, value: enableBiometric);
+    await _secureStorage.writeBool(
+      key: StorageKeys.setupCompleted,
+      value: true,
+    );
+    await _secureStorage.writeBool(
+      key: StorageKeys.localLockEnabled,
+      value: true,
+    );
+    await _secureStorage.writeBool(
+      key: StorageKeys.isPinConfigured,
+      value: true,
+    );
+    await _secureStorage.writeBool(
+      key: StorageKeys.isBiometricConfigured,
+      value: enableBiometric,
+    );
 
-    state = state.copyWith(hasLocalLock: false, isPinConfigured: true, isBiometricEnabled: enableBiometric, isSetupCompleted: true);
+    state = state.copyWith(
+      hasLocalLock: false,
+      isPinConfigured: true,
+      isBiometricEnabled: enableBiometric,
+      isSetupCompleted: true,
+    );
 
     _logger.i('✅ Security Setup Completed');
     debugSecurityState();
@@ -143,12 +171,75 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     }
   }
 
-  Future<void> toggleBiometrics(bool enabled) async {
+  Future<bool> toggleBiometrics(bool enabled) async {
     try {
-      state = state.copyWith(isBiometricEnabled: enabled);
-      _logger.i('Biometrics toggled: $enabled');
+      if (enabled) {
+        // 1. Sprawdzenie dostępności sprzętowej
+        final canCheck = await _localAuth.canCheckBiometrics;
+        final isSupported = await _localAuth.isDeviceSupported();
+        final availableBiometrics = await _localAuth.getAvailableBiometrics();
+
+        if (!canCheck || !isSupported || availableBiometrics.isEmpty) {
+          _logger.w(
+            'Biometrics requested but hardware not available',
+            module: 'Security',
+          );
+          return false;
+        }
+
+        // 2. Weryfikacja biometryczna bezpośrednio z parametrami API local_auth
+        final authenticated = await _localAuth.authenticate(
+          localizedReason:
+              'Weryfikacja biometryczna wymagana do włączenia funkcji',
+          biometricOnly: true,
+          persistAcrossBackgrounding: true,
+        );
+
+        if (!authenticated) {
+          _logger.w(
+            'Biometric authentication failed during setup',
+            module: 'Security',
+          );
+          return false;
+        }
+
+        // 3. Zapis stanu po pomyślnej weryfikacji
+        await _secureStorage.writeBool(
+          key: StorageKeys.isBiometricConfigured,
+          value: true,
+        );
+
+        state = state.copyWith(
+          isBiometricEnabled: true,
+          canUseBiometrics: true,
+        );
+        _logger.i(
+          '✅ Biometrics enabled and saved to SecureStorage',
+          module: 'Security',
+        );
+        return true;
+      } else {
+        // 4. Wyłączenie biometrii i wyczyszczenie z SecureStorage
+        await _secureStorage.delete(key: StorageKeys.isBiometricConfigured);
+
+        state = state.copyWith(
+          isBiometricEnabled: false,
+          canUseBiometrics: false,
+        );
+        _logger.i(
+          '🚫 Biometrics disabled and cleared from SecureStorage',
+          module: 'Security',
+        );
+        return true;
+      }
     } catch (e, s) {
-      _logger.e('Failed to toggle biometrics', error: e, stackTrace: s);
+      _logger.e(
+        'Failed to toggle biometrics',
+        error: e,
+        stackTrace: s,
+        module: 'Security',
+      );
+      return false;
     }
   }
 
@@ -175,7 +266,12 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       _logger.e('Failed to check PIN status', error: e);
     }
 
-    state = state.copyWith(hasLocalLock: false, initialized: true, isPinConfigured: isPinConfigured, isSetupCompleted: isPinConfigured);
+    state = state.copyWith(
+      hasLocalLock: false,
+      initialized: true,
+      isPinConfigured: isPinConfigured,
+      isSetupCompleted: isPinConfigured,
+    );
     _logger.i('🔐 Security: Manual unlock. PIN configured: $isPinConfigured');
   }
 

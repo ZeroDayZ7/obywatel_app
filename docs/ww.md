@@ -37,8 +37,6 @@ static final _argon = Argon2id(
 
 **11. Dwie różne definicje `ResetPasswordState`** — jedna jako `part` w `reset_password_notifier.dart` (z `token`/`challenge`), druga w osobnym `domain/reset_password_state.dart` (inne pola, inne warianty: `sendingCode`, `verifyingCode`, `resettingPassword`, `error`). Ta druga wygląda na pozostałość po wcześniejszym refaktorze i nigdzie nie jest realnie używana w UI — myląca nazwa-duplikat w tym samym projekcie.
 
-**12. `core/security/domain/security_config.dart` (`SecurityConfig` + `AuthMethod`) i `security_config_storage.dart`** wyglądają na całkowicie zastąpione przez `SecurityState`/`SecurityService`. Warto sprawdzić referencje i usunąć, jeśli faktycznie nieużywane.
-
 **13. Wariant `AuthState.error({code})` nigdy nie jest ustawiany.** Cała obsługa błędów w `AuthController` idzie przez `_handleError()` → `globalNotificationProvider` (toast), a nie przez zmianę stanu. Sam wariant `.error` istnieje w domenie i ma nawet getter `errorCode`, ale jest martwy — dwa równoległe, niespójne modele błędów.
 
 **14. `PendingSession` ma pola `accessToken`, `refreshToken`, `userName`, `rbac`, `devicePublicKey`, ale `AuthController` wypełnia realnie tylko `setupToken` i `userId`.** Reszta modelu to póki co dekoracja — albo dokończ, albo przytnij model.
