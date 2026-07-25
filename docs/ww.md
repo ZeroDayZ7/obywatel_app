@@ -27,19 +27,13 @@ static final _argon = Argon2id(
 
 ## 🟠 Duplikacja i martwy kod
 
-**9. Dwa różne klucze storage dla tego samego flagi „biometria włączona”:** `StorageKeys.biometric` (zapisywany w `SecuritySetupNotifier`) vs `StorageKeys.isBiometricConfigured` (odczytywany przez `SecurityService.init()`). Dwa źródła prawdy dla jednej rzeczy.
-
 **11. Dwie różne definicje `ResetPasswordState`** — jedna jako `part` w `reset_password_notifier.dart` (z `token`/`challenge`), druga w osobnym `domain/reset_password_state.dart` (inne pola, inne warianty: `sendingCode`, `verifyingCode`, `resettingPassword`, `error`). Ta druga wygląda na pozostałość po wcześniejszym refaktorze i nigdzie nie jest realnie używana w UI — myląca nazwa-duplikat w tym samym projekcie.
-
-**14. `PendingSession` ma pola `accessToken`, `refreshToken`, `userName`, `rbac`, `devicePublicKey`, ale `AuthController` wypełnia realnie tylko `setupToken` i `userId`.** Reszta modelu to póki co dekoracja — albo dokończ, albo przytnij model.
 
 ## 🟡 Niespójności logiczne / UX
 
 **15. Komunikat „pozostałe próby” zakłada limit 5, a realny próg blokady w `PinAttemptLimiter` to 3 próby** (`if (attempts < 3) return Duration.zero`). Użytkownik dostanie błędną liczbę pozostałych prób.
 
 **16. Przełącznik „Zaufaj temu urządzeniu” w setupie jest de facto kosmetyczny.** `canFinish = pinSet && trustDevice` blokuje przycisk „Zakończ”, ale `completeSetup()` i tak zawsze wywołuje `registerTrustedDevice()`, niezależnie od wartości przełącznika — czyli wymuszona, pozorna zgoda.
-
-**19. Brak przycisku „Wyślij ponownie kod” na ekranie 2FA**, mimo że endpoint `ApiEndpoints.twoFaResend` istnieje w kodzie i nigdzie nie jest wywoływany. Analogiczny mechanizm w resecie hasła (`resendTime`/`canResend`) działa poprawnie — 2FA nie ma tego wcale.
 
 **20. `unlockWithPinAndValidateSession()` nie rozróżnia „brak internetu” od „sesja faktycznie wygasła”.** Każdy błąd w tej ścieżce (timeout, brak sieci, invalid refresh token) kończy się pełnym `logout()`, czyli skasowaniem lokalnej sesji — użytkownik offline z ważnym PIN-em zostaje niepotrzebnie wylogowany zamiast dostać komunikat „sprawdź połączenie” i możliwość ponowienia.
 

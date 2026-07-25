@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$PendingSession {
 
- String? get accessToken; String? get setupToken; String? get refreshToken; String? get userId; String? get userName; RbacData? get rbac; String? get devicePublicKey;
+ String get setupToken; String get userId;
 /// Create a copy of PendingSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $PendingSessionCopyWith<PendingSession> get copyWith => _$PendingSessionCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.rbac, rbac) || other.rbac == rbac)&&(identical(other.devicePublicKey, devicePublicKey) || other.devicePublicKey == devicePublicKey));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingSession&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.userId, userId) || other.userId == userId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,setupToken,refreshToken,userId,userName,rbac,devicePublicKey);
+int get hashCode => Object.hash(runtimeType,setupToken,userId);
 
 @override
 String toString() {
-  return 'PendingSession(accessToken: $accessToken, setupToken: $setupToken, refreshToken: $refreshToken, userId: $userId, userName: $userName, rbac: $rbac, devicePublicKey: $devicePublicKey)';
+  return 'PendingSession(setupToken: $setupToken, userId: $userId)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $PendingSessionCopyWith<$Res>  {
   factory $PendingSessionCopyWith(PendingSession value, $Res Function(PendingSession) _then) = _$PendingSessionCopyWithImpl;
 @useResult
 $Res call({
- String? accessToken, String? setupToken, String? refreshToken, String? userId, String? userName, RbacData? rbac, String? devicePublicKey
+ String setupToken, String userId
 });
 
 
-$RbacDataCopyWith<$Res>? get rbac;
+
 
 }
 /// @nodoc
@@ -65,31 +65,14 @@ class _$PendingSessionCopyWithImpl<$Res>
 
 /// Create a copy of PendingSession
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? accessToken = freezed,Object? setupToken = freezed,Object? refreshToken = freezed,Object? userId = freezed,Object? userName = freezed,Object? rbac = freezed,Object? devicePublicKey = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? setupToken = null,Object? userId = null,}) {
   return _then(_self.copyWith(
-accessToken: freezed == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
-as String?,setupToken: freezed == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
-as String?,refreshToken: freezed == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
-as String?,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String?,userName: freezed == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
-as String?,rbac: freezed == rbac ? _self.rbac : rbac // ignore: cast_nullable_to_non_nullable
-as RbacData?,devicePublicKey: freezed == devicePublicKey ? _self.devicePublicKey : devicePublicKey // ignore: cast_nullable_to_non_nullable
-as String?,
+setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
-/// Create a copy of PendingSession
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RbacDataCopyWith<$Res>? get rbac {
-    if (_self.rbac == null) {
-    return null;
-  }
 
-  return $RbacDataCopyWith<$Res>(_self.rbac!, (value) {
-    return _then(_self.copyWith(rbac: value));
-  });
-}
 }
 
 
@@ -168,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? accessToken,  String? setupToken,  String? refreshToken,  String? userId,  String? userName,  RbacData? rbac,  String? devicePublicKey)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String setupToken,  String userId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _PendingSession() when $default != null:
-return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.userId,_that.userName,_that.rbac,_that.devicePublicKey);case _:
+return $default(_that.setupToken,_that.userId);case _:
   return orElse();
 
 }
@@ -189,10 +172,10 @@ return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.user
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? accessToken,  String? setupToken,  String? refreshToken,  String? userId,  String? userName,  RbacData? rbac,  String? devicePublicKey)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String setupToken,  String userId)  $default,) {final _that = this;
 switch (_that) {
 case _PendingSession():
-return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.userId,_that.userName,_that.rbac,_that.devicePublicKey);}
+return $default(_that.setupToken,_that.userId);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -206,10 +189,10 @@ return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.user
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? accessToken,  String? setupToken,  String? refreshToken,  String? userId,  String? userName,  RbacData? rbac,  String? devicePublicKey)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String setupToken,  String userId)?  $default,) {final _that = this;
 switch (_that) {
 case _PendingSession() when $default != null:
-return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.userId,_that.userName,_that.rbac,_that.devicePublicKey);case _:
+return $default(_that.setupToken,_that.userId);case _:
   return null;
 
 }
@@ -221,16 +204,11 @@ return $default(_that.accessToken,_that.setupToken,_that.refreshToken,_that.user
 @JsonSerializable()
 
 class _PendingSession implements PendingSession {
-  const _PendingSession({this.accessToken, this.setupToken, this.refreshToken, this.userId, this.userName, this.rbac, this.devicePublicKey});
+  const _PendingSession({required this.setupToken, required this.userId});
   factory _PendingSession.fromJson(Map<String, dynamic> json) => _$PendingSessionFromJson(json);
 
-@override final  String? accessToken;
-@override final  String? setupToken;
-@override final  String? refreshToken;
-@override final  String? userId;
-@override final  String? userName;
-@override final  RbacData? rbac;
-@override final  String? devicePublicKey;
+@override final  String setupToken;
+@override final  String userId;
 
 /// Create a copy of PendingSession
 /// with the given fields replaced by the non-null parameter values.
@@ -245,16 +223,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingSession&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.userName, userName) || other.userName == userName)&&(identical(other.rbac, rbac) || other.rbac == rbac)&&(identical(other.devicePublicKey, devicePublicKey) || other.devicePublicKey == devicePublicKey));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingSession&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.userId, userId) || other.userId == userId));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,setupToken,refreshToken,userId,userName,rbac,devicePublicKey);
+int get hashCode => Object.hash(runtimeType,setupToken,userId);
 
 @override
 String toString() {
-  return 'PendingSession(accessToken: $accessToken, setupToken: $setupToken, refreshToken: $refreshToken, userId: $userId, userName: $userName, rbac: $rbac, devicePublicKey: $devicePublicKey)';
+  return 'PendingSession(setupToken: $setupToken, userId: $userId)';
 }
 
 
@@ -265,11 +243,11 @@ abstract mixin class _$PendingSessionCopyWith<$Res> implements $PendingSessionCo
   factory _$PendingSessionCopyWith(_PendingSession value, $Res Function(_PendingSession) _then) = __$PendingSessionCopyWithImpl;
 @override @useResult
 $Res call({
- String? accessToken, String? setupToken, String? refreshToken, String? userId, String? userName, RbacData? rbac, String? devicePublicKey
+ String setupToken, String userId
 });
 
 
-@override $RbacDataCopyWith<$Res>? get rbac;
+
 
 }
 /// @nodoc
@@ -282,32 +260,15 @@ class __$PendingSessionCopyWithImpl<$Res>
 
 /// Create a copy of PendingSession
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? accessToken = freezed,Object? setupToken = freezed,Object? refreshToken = freezed,Object? userId = freezed,Object? userName = freezed,Object? rbac = freezed,Object? devicePublicKey = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? userId = null,}) {
   return _then(_PendingSession(
-accessToken: freezed == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
-as String?,setupToken: freezed == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
-as String?,refreshToken: freezed == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
-as String?,userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String?,userName: freezed == userName ? _self.userName : userName // ignore: cast_nullable_to_non_nullable
-as String?,rbac: freezed == rbac ? _self.rbac : rbac // ignore: cast_nullable_to_non_nullable
-as RbacData?,devicePublicKey: freezed == devicePublicKey ? _self.devicePublicKey : devicePublicKey // ignore: cast_nullable_to_non_nullable
-as String?,
+setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
+as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
-/// Create a copy of PendingSession
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$RbacDataCopyWith<$Res>? get rbac {
-    if (_self.rbac == null) {
-    return null;
-  }
 
-  return $RbacDataCopyWith<$Res>(_self.rbac!, (value) {
-    return _then(_self.copyWith(rbac: value));
-  });
-}
 }
 
 // dart format on

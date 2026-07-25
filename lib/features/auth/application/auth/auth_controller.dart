@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -86,22 +88,25 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
 
     try {
-      // 1. Sprawdzenie tokena
+      // 1. Sprawdzenie obecności tokena na dysku
       final refreshToken = await _sessionService.getRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
-        _log.w('Brak refresh_token na dysku. Sesja wygasła.');
+        _log.w(
+          'Brak refresh_token na dysku. Sesja wygasła.',
+          module: _logModule,
+        );
         await logout();
         return false;
       }
 
-      // 2. Strzał do API po profil
+      // 2. Strzał do API po świeże dane profilu
       _log.d('Pobieranie danych sesji z API (/auth/me)...', module: _logModule);
       final user = await _authService.fetchAuthMe();
 
-      // 3. NAJPIERW zdejmij blokadę lokalną
+      // 3. Zdejmij blokadę lokalną
       await ref.read(securityServiceProvider.notifier).unlockApp();
 
-      // 4. BEZPOŚREDNIO po tym ustaw stan na authenticated
+      // 4. Ustaw stan na authenticated
       state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
       _log.i(
@@ -109,14 +114,56 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
       return true;
-    } catch (e, stack) {
-      _log.e(
-        '❌ Błąd podczas odświeżania sesji po podaniu PIN-u.',
+    } on AppFailure catch (failure, stack) {
+      _log.w(
+        '⚠️ AppFailure podczas weryfikacji PIN: $failure',
+        error: failure,
+        stackTrace: stack,
+        module: _logModule,
+      );
+
+      // Jeśli błąd to 401 / 403 z serwera -> wylogowujemy
+      final shouldLogout = failure.maybeWhen(
+        server: (statusCode) => statusCode == 401 || statusCode == 403,
+        orElse: () => false,
+      );
+
+      if (shouldLogout) {
+        _log.w('🔒 Token unieważniony przez serwer. Następuje wylogowanie.');
+        await logout();
+      } else {
+        // W przypadku braku sieci (AppFailure.network) lub 500
+        // NIE wylogowujemy – przywracamy stan unauthenticated, zachowując tokeny na dysku
+        state = const AuthState.unauthenticated();
+      }
+
+      return false;
+    } on DioException catch (e, stack) {
+      // Awaryjne przechwycenie DioException, gdyby serwis nie zmapował na AppFailure
+      final statusCode = e.response?.statusCode;
+      _log.w(
+        '🌐 DioException podczas odblokowywania (status: $statusCode)',
         error: e,
         stackTrace: stack,
         module: _logModule,
       );
-      await logout();
+
+      if (statusCode == 401 || statusCode == 403) {
+        await logout();
+      } else {
+        state = const AuthState.unauthenticated();
+      }
+
+      return false;
+    } catch (e, stack) {
+      _log.e(
+        '❌ Nieoczekiwany błąd podczas weryfikacji sesji po podaniu PIN-u.',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
+
+      state = const AuthState.unauthenticated();
       return false;
     }
   }

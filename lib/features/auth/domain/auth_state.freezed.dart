@@ -55,7 +55,7 @@ extension AuthStatePatterns on AuthState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Locked value)?  locked,TResult Function( _Unauthenticated value)?  unauthenticated,TResult Function( _Authenticating value)?  authenticating,TResult Function( _TwoFaRequired value)?  twoFaRequired,TResult Function( _PartiallyAuthenticated value)?  partiallyAuthenticated,TResult Function( _Authenticated value)?  authenticated,TResult Function( _Error value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Initial value)?  initial,TResult Function( _Locked value)?  locked,TResult Function( _Unauthenticated value)?  unauthenticated,TResult Function( _Authenticating value)?  authenticating,TResult Function( _TwoFaRequired value)?  twoFaRequired,TResult Function( _PartiallyAuthenticated value)?  partiallyAuthenticated,TResult Function( _Authenticated value)?  authenticated,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
@@ -65,8 +65,7 @@ return unauthenticated(_that);case _Authenticating() when authenticating != null
 return authenticating(_that);case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
 return partiallyAuthenticated(_that);case _Authenticated() when authenticated != null:
-return authenticated(_that);case _Error() when error != null:
-return error(_that);case _:
+return authenticated(_that);case _:
   return orElse();
 
 }
@@ -84,7 +83,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Locked value)  locked,required TResult Function( _Unauthenticated value)  unauthenticated,required TResult Function( _Authenticating value)  authenticating,required TResult Function( _TwoFaRequired value)  twoFaRequired,required TResult Function( _PartiallyAuthenticated value)  partiallyAuthenticated,required TResult Function( _Authenticated value)  authenticated,required TResult Function( _Error value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Initial value)  initial,required TResult Function( _Locked value)  locked,required TResult Function( _Unauthenticated value)  unauthenticated,required TResult Function( _Authenticating value)  authenticating,required TResult Function( _TwoFaRequired value)  twoFaRequired,required TResult Function( _PartiallyAuthenticated value)  partiallyAuthenticated,required TResult Function( _Authenticated value)  authenticated,}){
 final _that = this;
 switch (_that) {
 case _Initial():
@@ -94,8 +93,7 @@ return unauthenticated(_that);case _Authenticating():
 return authenticating(_that);case _TwoFaRequired():
 return twoFaRequired(_that);case _PartiallyAuthenticated():
 return partiallyAuthenticated(_that);case _Authenticated():
-return authenticated(_that);case _Error():
-return error(_that);}
+return authenticated(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -109,7 +107,7 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Locked value)?  locked,TResult? Function( _Unauthenticated value)?  unauthenticated,TResult? Function( _Authenticating value)?  authenticating,TResult? Function( _TwoFaRequired value)?  twoFaRequired,TResult? Function( _PartiallyAuthenticated value)?  partiallyAuthenticated,TResult? Function( _Authenticated value)?  authenticated,TResult? Function( _Error value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Initial value)?  initial,TResult? Function( _Locked value)?  locked,TResult? Function( _Unauthenticated value)?  unauthenticated,TResult? Function( _Authenticating value)?  authenticating,TResult? Function( _TwoFaRequired value)?  twoFaRequired,TResult? Function( _PartiallyAuthenticated value)?  partiallyAuthenticated,TResult? Function( _Authenticated value)?  authenticated,}){
 final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
@@ -119,8 +117,7 @@ return unauthenticated(_that);case _Authenticating() when authenticating != null
 return authenticating(_that);case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
 return partiallyAuthenticated(_that);case _Authenticated() when authenticated != null:
-return authenticated(_that);case _Error() when error != null:
-return error(_that);case _:
+return authenticated(_that);case _:
   return null;
 
 }
@@ -137,7 +134,7 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  locked,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,TResult Function( String code)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  locked,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Locked() when locked != null:
@@ -146,8 +143,7 @@ return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
 return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
-return authenticated(_that.user,_that.isDeviceTrusted);case _Error() when error != null:
-return error(_that.code);case _:
+return authenticated(_that.user,_that.isDeviceTrusted);case _:
   return orElse();
 
 }
@@ -165,7 +161,7 @@ return error(_that.code);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  locked,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  String userId)  partiallyAuthenticated,required TResult Function( AuthUser user,  bool isDeviceTrusted)  authenticated,required TResult Function( String code)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  locked,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  String userId)  partiallyAuthenticated,required TResult Function( AuthUser user,  bool isDeviceTrusted)  authenticated,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Locked():
@@ -174,8 +170,7 @@ return unauthenticated();case _Authenticating():
 return authenticating();case _TwoFaRequired():
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated():
 return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated():
-return authenticated(_that.user,_that.isDeviceTrusted);case _Error():
-return error(_that.code);}
+return authenticated(_that.user,_that.isDeviceTrusted);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -189,7 +184,7 @@ return error(_that.code);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  locked,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult? Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,TResult? Function( String code)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  locked,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult? Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Locked() when locked != null:
@@ -198,8 +193,7 @@ return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
 return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
-return authenticated(_that.user,_that.isDeviceTrusted);case _Error() when error != null:
-return error(_that.code);case _:
+return authenticated(_that.user,_that.isDeviceTrusted);case _:
   return null;
 
 }
@@ -548,72 +542,6 @@ $AuthUserCopyWith<$Res> get user {
     return _then(_self.copyWith(user: value));
   });
 }
-}
-
-/// @nodoc
-
-
-class _Error extends AuthState {
-  const _Error({required this.code}): super._();
-  
-
- final  String code;
-
-/// Create a copy of AuthState
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$ErrorCopyWith<_Error> get copyWith => __$ErrorCopyWithImpl<_Error>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error&&(identical(other.code, code) || other.code == code));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,code);
-
-@override
-String toString() {
-  return 'AuthState.error(code: $code)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$ErrorCopyWith<$Res> implements $AuthStateCopyWith<$Res> {
-  factory _$ErrorCopyWith(_Error value, $Res Function(_Error) _then) = __$ErrorCopyWithImpl;
-@useResult
-$Res call({
- String code
-});
-
-
-
-
-}
-/// @nodoc
-class __$ErrorCopyWithImpl<$Res>
-    implements _$ErrorCopyWith<$Res> {
-  __$ErrorCopyWithImpl(this._self, this._then);
-
-  final _Error _self;
-  final $Res Function(_Error) _then;
-
-/// Create a copy of AuthState
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? code = null,}) {
-  return _then(_Error(
-code: null == code ? _self.code : code // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
 }
 
 // dart format on
