@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:secure_application/secure_application_controller.dart';
 
@@ -53,18 +54,25 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
     if (!isAllowed) {
       _logger.e(
-        '🛑 Security violation detected on resume!',
+        '🛑 Security violation detected on resume! Executing force security wipe.',
         module: 'Security',
       );
 
-      // Natychmiastowa reakcja: blokujemy stan aplikacji
-      state = state.copyWith(
-        hasLocalLock: true,
-        initialized:
-            false, // Oznaczenie jako nieukonczone wymusi re-inicjalizację lub blokadę UI
-      );
+      // 1. Natychmiastowe zablokowanie UI (ekran zostaje zakryty/zablokowany)
+      state = state.copyWith(hasLocalLock: true, initialized: false);
 
-      // ref.read(authControllerProvider.notifier).logout();
+      // 2. Czyszczenie pod spodem
+      try {
+        await ref.read(authControllerProvider.notifier).forceSecurityWipe();
+      } catch (e, stack) {
+        _logger.e(
+          'Błąd krytyczny podczas forceSecurityWipe na resume',
+          error: e,
+          stackTrace: stack,
+          module: 'Security',
+        );
+        ref.read(authControllerProvider.notifier).setUnauthenticated();
+      }
     }
   }
 

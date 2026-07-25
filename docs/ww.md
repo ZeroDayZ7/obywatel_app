@@ -19,8 +19,6 @@ static final _argon = Argon2id(
 
 `reportInvalidSession()` nie jest wywoływane z żadnego innego miejsca w całym projekcie — cały mechanizm jest niepodłączony.
 
-**6. Wykrycie roota/jailbreaka po wznowieniu appki nie wylogowuje użytkownika.** W `_checkIntegrityOnResume()` też jest zakomentowany `logout()` — skompromitowane urządzenie dostaje tylko lokalną blokadę PIN-em, sesja zdalna zostaje aktywna.
-
 **7. Generator „silnego hasła” automatycznie kopiuje je do schowka.** `PasswordInputWidget._generateStrongPassword()` robi `Clipboard.setData(...)` bez pytania i bez późniejszego czyszczenia schowka — inne aplikacje mogą je odczytać.
 
 **8. Domyślne dane logowania są zawsze wstrzykiwane w pola formularza.** `LoginForm` wypełnia email/hasło z `apiConstants.defaultEmail/defaultPassword` niezależnie od środowiska; czyszczone dopiero _po_ próbie logowania i tylko gdy `isProduction == true`. To ryzykowne w buildach niepublicznych/staging pokazywanych klientowi.
@@ -40,8 +38,6 @@ static final _argon = Argon2id(
 **21. `AuthService.login` wysyła hasło jako `List<int>` bezpośrednio w JSON body** (`'password': passwordBytes`), czyli tablicę liczb, nie string. Warto zweryfikować kontrakt z backendem — to nietypowe i podatne na błędy serializacji (czy backend na pewno oczekuje tablicy kodów, a nie base64/UTF-8 stringa?).
 
 **22. Trzy niemal identyczne kliencich HTTP** (`ApiClient`, `NoAuthApiClient`, `PublicApiClient`) — cienkie wrappery `get/post/put/delete` powielone trzykrotnie. Dobry kandydat na wspólny generyczny interfejs/mixin zamiast kopiowania.
-
-**24. Niespójny system logowania:** `AppLogger` jest używany prawie wszędzie, ale `SecureTokenStorage` używa gołego `debugPrint`. Utrudnia to centralne wyłączanie logów w release i sprawia, że wrażliwe dane omijają warstwę maskowania.
 
 **25. Bardzo „gadatliwy” `rootGuard` w routerze** — wieloliniowe interpolacje stringów budowane przy _każdej_ zmianie trasy, nawet gdy poziom logowania jest wyższy niż debug (interpolacja i tak się wykonuje). Drobny, ale niepotrzebny narzut przy każdej nawigacji.
 

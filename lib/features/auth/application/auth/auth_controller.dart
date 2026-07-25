@@ -453,6 +453,40 @@ class AuthController extends _$AuthController {
     _log.i('✅ Czyszczenie zakończone sukcesem.', module: _logModule);
   }
 
+  Future<void> forceSecurityWipe() async {
+    _log.w(
+      '🚨 Wymuszone czyszczenie bezpieczeństwa (Security Wipe)...',
+      module: _logModule,
+    );
+
+    try {
+      final refreshToken = await _sessionService.getRefreshToken();
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        // Best-effort: próba unieważnienia sesji na backendzie
+        await _authService
+            .logout(refreshToken)
+            .timeout(
+              const Duration(seconds: 3),
+              onTimeout: () {
+                _log.w(
+                  'Timeout podczas zgłaszania logout do API - kontynuuję wipe lokalny.',
+                  module: _logModule,
+                );
+                return;
+              },
+            );
+      }
+    } catch (e) {
+      _log.w(
+        'Błąd API podczas forceSecurityWipe (kontynuuję czyszczenie lokalne): $e',
+        module: _logModule,
+      );
+    } finally {
+      // KLuczowy element: wipeDatabase MUST BE TRUE
+      await _clearLocalSession(wipeDatabase: true);
+    }
+  }
+
   // #region: Moja Sekcja
   Future<void> verifyDeviceSignature() async {
     await state.maybeMap(

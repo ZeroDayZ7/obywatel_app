@@ -62,6 +62,8 @@ class PinInputView extends StatelessWidget {
               blinkWhenObscuring: true,
               autoFocus: true,
               enabled: isEnabled,
+              backgroundColor: Colors.transparent,
+              enableActiveFill: true,
               keyboardType: TextInputType.number,
               animationType: AnimationType.fade,
               errorAnimationController: errorController,
@@ -79,9 +81,9 @@ class PinInputView extends StatelessWidget {
                 inactiveColor: isError
                     ? colorScheme.error
                     : colorScheme.outlineVariant,
-                activeFillColor: colorScheme.surfaceContainerHighest,
-                selectedFillColor: colorScheme.primaryContainer,
-                inactiveFillColor: colorScheme.surface,
+                activeFillColor: Colors.transparent,
+                selectedFillColor: Colors.transparent,
+                inactiveFillColor: Colors.transparent,
               ),
               onCompleted: onCompleted,
               onChanged: (_) {},
