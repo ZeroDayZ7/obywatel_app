@@ -7,8 +7,8 @@ part of 'user_session.dart';
 // **************************************************************************
 
 _UserSession _$UserSessionFromJson(Map<String, dynamic> json) => _UserSession(
-  id: (json['id'] as num).toInt(),
-  deviceName: json['device_name_encrypted'] as String,
+  id: json['id'] as String,
+  deviceName: json['device_name'] as String,
   platform: json['platform'] as String,
   createdAt: DateTime.parse(json['created_at'] as String),
   fingerprint: json['fingerprint'] as String,
@@ -19,7 +19,7 @@ _UserSession _$UserSessionFromJson(Map<String, dynamic> json) => _UserSession(
 Map<String, dynamic> _$UserSessionToJson(_UserSession instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'device_name_encrypted': instance.deviceName,
+      'device_name': instance.deviceName,
       'platform': instance.platform,
       'created_at': instance.createdAt.toIso8601String(),
       'fingerprint': instance.fingerprint,

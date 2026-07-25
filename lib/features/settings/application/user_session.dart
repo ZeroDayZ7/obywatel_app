@@ -6,8 +6,9 @@ part 'user_session.g.dart';
 @freezed
 sealed class UserSession with _$UserSession {
   const factory UserSession({
-    @JsonKey(name: 'id') required int id,
-    @JsonKey(name: 'device_name_encrypted') required String deviceName,
+    @JsonKey(name: 'id')
+    required String id,
+    @JsonKey(name: 'device_name') required String deviceName,
     required String platform,
     @JsonKey(name: 'created_at') required DateTime createdAt,
     required String fingerprint,

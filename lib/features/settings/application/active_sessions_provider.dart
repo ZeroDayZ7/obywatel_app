@@ -17,7 +17,7 @@ class ActiveSessions extends _$ActiveSessions {
     return sessions;
   }
 
-  Future<void> terminateSession(int sessionId) async {
+  Future<void> terminateSession(String sessionId) async {
     final service = ref.read(activeSessionsServiceProvider);
 
     state = const AsyncValue.loading();
