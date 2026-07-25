@@ -1,4 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/home/action_items_feed.dart';
@@ -39,16 +41,16 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentIndex = index;
           });
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.grid_view_rounded),
             activeIcon: Icon(Icons.grid_view_rounded, color: Color(0xFF26C6DA)),
-            label: 'Aplikacje',
+            label: LocaleKeys.navigation_apps.tr(),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.gavel_rounded),
             activeIcon: Icon(Icons.gavel_rounded, color: Color(0xFF26C6DA)),
-            label: 'Sprawy Obywatelskie',
+            label: LocaleKeys.navigation_civic_cases.tr(),
           ),
         ],
       ),

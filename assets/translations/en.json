@@ -21,6 +21,10 @@
     "send_code": "Send code",
     "processing": "Processing..."
   },
+  "navigation": {
+    "apps": "Apps",
+    "civic_cases": "Civic Cases"
+  },
   "maintenance": {
     "title": "SYSTEM MAINTENANCE",
     "default_msg": "We are currently optimizing the system and database to ensure the highest security standard for your data.",
