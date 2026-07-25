@@ -8,45 +8,45 @@ import 'package:obywatel_plus/app/theme/extensions/toast_theme.dart';
 class AppTheme {
   static ThemeData buildTheme(Brightness mode) {
     final bool isDark = mode == Brightness.dark;
-    // final colorScheme = _colorScheme(isDark);
+    final colorScheme = _colorScheme(isDark);
 
     return ThemeData(
       useMaterial3: true,
       brightness: mode,
-      // colorScheme: colorScheme,
+      colorScheme: colorScheme,
       appBarTheme: buildAppBarTheme(isDark),
       textTheme: _textTheme(isDark),
 
-      // inputDecorationTheme: InputDecorationTheme(
-      //   filled: true,
-      //   fillColor: isDark
-      //       ? Colors.white.withValues(alpha: 0.05)
-      //       : Colors.black.withValues(alpha: 0.05),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: isDark
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.black.withValues(alpha: 0.05),
 
-      //   errorStyle: TextStyle(color: colorScheme.error),
+        errorStyle: TextStyle(color: colorScheme.error),
 
-      //   enabledBorder: OutlineInputBorder(
-      //     borderSide: BorderSide(
-      //       color: isDark ? Colors.white24 : const Color.fromARGB(249, 255, 0, 0),
-      //     ),
-      //     borderRadius: BorderRadius.circular(12),
-      //   ),
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: isDark ? Colors.white24 : const Color.fromARGB(249, 255, 0, 0),
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
 
-      //   focusedBorder: OutlineInputBorder(
-      //     borderSide: BorderSide(color: colorScheme.primary, width: 2),
-      //     borderRadius: BorderRadius.circular(12),
-      //   ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorScheme.primary, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
 
-      //   errorBorder: OutlineInputBorder(
-      //     borderSide: BorderSide(color: colorScheme.error),
-      //     borderRadius: BorderRadius.circular(12),
-      //   ),
+        errorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorScheme.error),
+          borderRadius: BorderRadius.circular(12),
+        ),
 
-      //   focusedErrorBorder: OutlineInputBorder(
-      //     borderSide: BorderSide(color: colorScheme.error, width: 2),
-      //     borderRadius: BorderRadius.circular(12),
-      //   ),
-      // ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderSide: BorderSide(color: colorScheme.error, width: 2),
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
@@ -59,25 +59,25 @@ class AppTheme {
     );
   }
 
-  // static ColorScheme _colorScheme(bool isDark) {
-  //   return isDark
-  //       ? const ColorScheme.dark(
-  //           primary: Colors.cyan,
-  //           secondary: Colors.cyanAccent,
-  //           surface: AppColors.backgroundDark,
-  //           onSurface: Colors.white,
-  //           onSecondary: Color.fromARGB(255, 0, 0, 0),
-  //           error: AppColors.error,
-  //         )
-  //       : const ColorScheme.light(
-  //           primary: Colors.cyan,
-  //           secondary: Colors.cyan,
-  //           surface: AppColors.backgroundLight,
-  //           onSurface: AppColors.textPrimaryLight,
-  //           onSecondary: Colors.white,
-  //           error: AppColors.error,
-  //         );
-  // }
+  static ColorScheme _colorScheme(bool isDark) {
+    return isDark
+        ? const ColorScheme.dark(
+            primary: Colors.cyan,
+            secondary: Colors.cyanAccent,
+            surface: AppColors.backgroundDark,
+            onSurface: Colors.white,
+            onSecondary: Color.fromARGB(255, 0, 0, 0),
+            error: AppColors.error,
+          )
+        : const ColorScheme.light(
+            primary: Colors.cyan,
+            secondary: Colors.cyan,
+            surface: AppColors.backgroundLight,
+            onSurface: AppColors.textPrimaryLight,
+            onSecondary: Colors.white,
+            error: AppColors.error,
+          );
+  }
 
   static TextTheme _textTheme(bool isDark) {
     final color = isDark

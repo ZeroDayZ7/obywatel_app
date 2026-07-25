@@ -48,11 +48,16 @@ class _LoginFormState extends ConsumerState<LoginForm> {
     final passwordStr = _passwordController.text;
     final passwordBytes = utf8.encode(passwordStr);
 
-    await ref.read(authControllerProvider.notifier).login(email, passwordBytes);
-
-    if (apiConstants.isProduction) {
-      _passwordController.clear();
+    try {
+      await ref
+          .read(authControllerProvider.notifier)
+          .login(email, passwordBytes);
+    } finally {
       passwordBytes.fillRange(0, passwordBytes.length, 0);
+
+      if (apiConstants.isProduction) {
+        _passwordController.clear();
+      }
     }
   }
 

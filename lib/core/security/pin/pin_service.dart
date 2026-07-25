@@ -95,7 +95,6 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<bool> verifyPin(List<int> pinCodes) async {
-    _logger.i('verifyPin called with: $pinCodes');
     _validatePinList(pinCodes);
 
     final buffer = SecureBuffer(pinCodes.length);

@@ -24,14 +24,15 @@ class HashService {
 
   static const int saltLength = 16;
 
+  /// Produkcyjna konfiguracja Argon2id zapobiegająca atakom brute-force offline
   static final _argon = Argon2id(
-    memory: 1 * 1024, // 64 MB
-    iterations: 1, //  3
+    memory: 64 * 1024, // 64 MB (65536 KiB)
+    iterations: 3,
     parallelism: 1,
     hashLength: 32,
   );
 
-  /// Tworzy hash z bajtów (np. z SecureBuffer)
+  /// Tworzy hash z bajtów
   Future<String> hash(List<int> bytes) async {
     if (bytes.isEmpty) throw ArgumentError('Input bytes cannot be empty');
 
@@ -48,7 +49,7 @@ class HashService {
       final combined = [...salt, ...hashBytes];
       final result = base64Url.encode(combined);
 
-      // Czyścimy naszą lokalną kopię 'combined', bo to zwykła lista
+      // Czyszczenie lokalnego bufora pomocniczego
       combined.fillRange(0, combined.length, 0);
 
       return result;
@@ -84,7 +85,7 @@ class HashService {
         _HashJob(List<int>.from(bytes), salt, _argon),
       );
 
-      // Constant-time comparison
+      // Porównanie w czasie stałym (constant-time comparison)
       final isValid = const ListEquality().equals(calculatedHash, expectedHash);
 
       _logger.d('HashService: Verification result: $isValid');
@@ -111,13 +112,9 @@ Future<List<int>> _computeHashInIsolate(_HashJob job) async {
       nonce: job.salt,
     );
 
-    final result = await secretKey.extractBytes();
-
-    // Wipe PIN bytes
+    return await secretKey.extractBytes();
+  } finally {
+    // Gwarancja wyczyszczenia pamięci nawet w przypadku zgłoszenia błędu
     job.bytes.fillRange(0, job.bytes.length, 0);
-
-    return result;
-  } catch (e) {
-    rethrow;
   }
 }

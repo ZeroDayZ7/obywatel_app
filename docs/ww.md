@@ -1,0 +1,86 @@
+This is a Flutter/Dart app (Riverpod-based) with a file-per-section format separated by `───────────── path ─────────────` headers. Let me map out the structure and pull out all files under the auth-related folders (as the user asked me to focus on the "silnik" — engine — and specifically `auth`, not documents/health features).Found a big bug already: `confirmReset()` has the actual API call commented out but still sets state to `completed()` — meaning password reset succeeds locally without ever calling the backend. Let me continue reading the rest of the auth section and key core pieces (network, security, storage, crypto) to build a complete picture.Found another important dead-code bug: the 401 force-logout call is commented out in `SecuritySyncInterceptor.onError`. Let me continue through the rest of network/security/storage/crypto.Confirmed both `biometric` and `isBiometricConfigured` keys exist separately. Now let's check the router redirect guards which gates auth-protected routes.Dobra, przeszedłem dokładnie przez cały „silnik” (core: network, security, crypto, storage) oraz cały moduł `features/auth` (login, 2FA, reset hasła, sesje, pending session, PIN). Nie ruszałem `documents`/`health`, bo faktycznie widać, że są niedokończone. Poniżej masz 30 konkretnych punktów, od najpoważniejszych po kosmetyczne.
+
+## 🔴 Krytyczne luki bezpieczeństwa
+
+**1. Argon2id do hashowania PIN-u jest drastycznie osłabiony.** W `HashService`:
+
+```dart
+static final _argon = Argon2id(
+  memory: 1 * 1024, // 64 MB  <- komentarz kłamie, to 1 MB
+  iterations: 1, //  3         <- komentarz mówi 3, kod ma 1
+  parallelism: 1,
+  hashLength: 32,
+);
+```
+
+**4. Reset hasła nie działa wcale, mimo że UI pokazuje sukces.** W `ResetPasswordNotifier.confirmReset` cała logika wywołania `resetPasswordFinal(...)` jest zakomentowana, a mimo to stan i tak przechodzi na `ResetPasswordState.completed()`. Użytkownik dostaje ekran sukcesu, a hasło na serwerze się nie zmienia.
+
+**5. Auto-wylogowanie po unieważnionej sesji (401) jest martwym kodem.** `SessionStatus.expired` → `logout()` jest podłączone w `SessionObserver`, ale jedyne miejsce, które miało to zgłaszać (`SecuritySyncInterceptor.onError`), ma tę linię zakomentowaną:
+
+```dart
+// ref.read(sessionStatusProvider.notifier).reportInvalidSession();
+```
+
+`reportInvalidSession()` nie jest wywoływane z żadnego innego miejsca w całym projekcie — cały mechanizm jest niepodłączony.
+
+**6. Wykrycie roota/jailbreaka po wznowieniu appki nie wylogowuje użytkownika.** W `_checkIntegrityOnResume()` też jest zakomentowany `logout()` — skompromitowane urządzenie dostaje tylko lokalną blokadę PIN-em, sesja zdalna zostaje aktywna.
+
+**7. Generator „silnego hasła” automatycznie kopiuje je do schowka.** `PasswordInputWidget._generateStrongPassword()` robi `Clipboard.setData(...)` bez pytania i bez późniejszego czyszczenia schowka — inne aplikacje mogą je odczytać.
+
+**8. Domyślne dane logowania są zawsze wstrzykiwane w pola formularza.** `LoginForm` wypełnia email/hasło z `apiConstants.defaultEmail/defaultPassword` niezależnie od środowiska; czyszczone dopiero _po_ próbie logowania i tylko gdy `isProduction == true`. To ryzykowne w buildach niepublicznych/staging pokazywanych klientowi.
+
+## 🟠 Duplikacja i martwy kod
+
+**9. Dwa różne klucze storage dla tego samego flagi „biometria włączona”:** `StorageKeys.biometric` (zapisywany w `SecuritySetupNotifier`) vs `StorageKeys.isBiometricConfigured` (odczytywany przez `SecurityService.init()`). Dwa źródła prawdy dla jednej rzeczy.
+
+**10. Dwa pliki `local_auth_provider.dart`** — jeden w `core/security/` (prosty provider zwracający `LocalAuthentication()`), drugi w `core/security/infrastructure/` z klasą `LocalAuthProviderImpl`, która nigdzie nie jest instancjonowana. Martwy plik do usunięcia albo do faktycznego wpięcia.
+
+**11. Dwie różne definicje `ResetPasswordState`** — jedna jako `part` w `reset_password_notifier.dart` (z `token`/`challenge`), druga w osobnym `domain/reset_password_state.dart` (inne pola, inne warianty: `sendingCode`, `verifyingCode`, `resettingPassword`, `error`). Ta druga wygląda na pozostałość po wcześniejszym refaktorze i nigdzie nie jest realnie używana w UI — myląca nazwa-duplikat w tym samym projekcie.
+
+**12. `core/security/domain/security_config.dart` (`SecurityConfig` + `AuthMethod`) i `security_config_storage.dart`** wyglądają na całkowicie zastąpione przez `SecurityState`/`SecurityService`. Warto sprawdzić referencje i usunąć, jeśli faktycznie nieużywane.
+
+**13. Wariant `AuthState.error({code})` nigdy nie jest ustawiany.** Cała obsługa błędów w `AuthController` idzie przez `_handleError()` → `globalNotificationProvider` (toast), a nie przez zmianę stanu. Sam wariant `.error` istnieje w domenie i ma nawet getter `errorCode`, ale jest martwy — dwa równoległe, niespójne modele błędów.
+
+**14. `PendingSession` ma pola `accessToken`, `refreshToken`, `userName`, `rbac`, `devicePublicKey`, ale `AuthController` wypełnia realnie tylko `setupToken` i `userId`.** Reszta modelu to póki co dekoracja — albo dokończ, albo przytnij model.
+
+## 🟡 Niespójności logiczne / UX
+
+**15. Komunikat „pozostałe próby” zakłada limit 5, a realny próg blokady w `PinAttemptLimiter` to 3 próby** (`if (attempts < 3) return Duration.zero`). Użytkownik dostanie błędną liczbę pozostałych prób.
+
+**16. Przełącznik „Zaufaj temu urządzeniu” w setupie jest de facto kosmetyczny.** `canFinish = pinSet && trustDevice` blokuje przycisk „Zakończ”, ale `completeSetup()` i tak zawsze wywołuje `registerTrustedDevice()`, niezależnie od wartości przełącznika — czyli wymuszona, pozorna zgoda.
+
+**17. `toggleBiometrics()` w `SecurityService` tylko zmienia stan w RAM.** Nie zapisuje wyboru do `SecureStorage` i nie wywołuje faktycznej weryfikacji biometrycznej — po restarcie appki wartość wróci do tego, co zapisał `init()`.
+
+**18. Ekran PIN-u (`PinVerificationScreen`) w ogóle nie oferuje odblokowania biometrią**, mimo że cała infrastruktura (`canUseBiometrics`, `isBiometricEnabled`) istnieje w stanie. Biometria jest skonfigurowana podczas setupu, ale nigdzie potem realnie nieużyta do odblokowania appki.
+
+**19. Brak przycisku „Wyślij ponownie kod” na ekranie 2FA**, mimo że endpoint `ApiEndpoints.twoFaResend` istnieje w kodzie i nigdzie nie jest wywoływany. Analogiczny mechanizm w resecie hasła (`resendTime`/`canResend`) działa poprawnie — 2FA nie ma tego wcale.
+
+**20. `unlockWithPinAndValidateSession()` nie rozróżnia „brak internetu” od „sesja faktycznie wygasła”.** Każdy błąd w tej ścieżce (timeout, brak sieci, invalid refresh token) kończy się pełnym `logout()`, czyli skasowaniem lokalnej sesji — użytkownik offline z ważnym PIN-em zostaje niepotrzebnie wylogowany zamiast dostać komunikat „sprawdź połączenie” i możliwość ponowienia.
+
+## ⚙️ Architektura silnika
+
+**21. `AuthService.login` wysyła hasło jako `List<int>` bezpośrednio w JSON body** (`'password': passwordBytes`), czyli tablicę liczb, nie string. Warto zweryfikować kontrakt z backendem — to nietypowe i podatne na błędy serializacji (czy backend na pewno oczekuje tablicy kodów, a nie base64/UTF-8 stringa?).
+
+**22. Trzy niemal identyczne kliencich HTTP** (`ApiClient`, `NoAuthApiClient`, `PublicApiClient`) — cienkie wrappery `get/post/put/delete` powielone trzykrotnie. Dobry kandydat na wspólny generyczny interfejs/mixin zamiast kopiowania.
+
+**23. `SecuritySyncInterceptor` (sprawdzanie root/jailbreak z throttlingiem co minutę) jest tworzony osobno dla `authDio`, `noAuthDio` i `publicDio`** — czyli 3 niezależne cache’e i 3 niezależne timery zamiast jednego globalnego stanu (który już masz w `backendStateProvider`). Efekt: potencjalnie 3x częstsze wywołania natywnego pluginu integrity-check.
+
+**24. Niespójny system logowania:** `AppLogger` jest używany prawie wszędzie, ale `SecureTokenStorage` używa gołego `debugPrint`. Utrudnia to centralne wyłączanie logów w release i sprawia, że wrażliwe dane omijają warstwę maskowania.
+
+**25. Bardzo „gadatliwy” `rootGuard` w routerze** — wieloliniowe interpolacje stringów budowane przy _każdej_ zmianie trasy, nawet gdy poziom logowania jest wyższy niż debug (interpolacja i tak się wykonuje). Drobny, ale niepotrzebny narzut przy każdej nawigacji.
+
+**26. `AuthController._handleAuthResponse` robi zbyt wiele naraz:** zarządzanie stanem, zapis sesji, aktualizacja tokenów w Fresh, tworzenie `PendingSession`, logi diagnostyczne. Część tej orkiestracji dobrze by pasowała do `SessionService`/`AuthService`, żeby kontroler był cieńszy i łatwiejszy w testach.
+
+**27. Polityka walidacji hasła jest rozproszona** — `Validators.validatePassword(val, minLength: 8)` w resecie hasła vs prawdopodobnie inny domyślny limit w loginie/rejestracji. Upewnij się, że reguły hasła (długość, wymagane znaki) są zdefiniowane raz i identyczne we wszystkich miejscach.
+
+## ❓ Rzeczy, które wyglądają na jawnie nierozwiązane
+
+**28. Brak obsługi błędu w połowie rejestracji zaufanego urządzenia.** Jeśli `registerTrustedDevice()` padnie po wygenerowaniu pary kluczy (`generateAndHoldKeyPair()`), ale przed wysłaniem podpisu do API, stan lokalny (klucz w pamięci `cryptoServiceProvider`) i stan serwera się rozjeżdżają — nie ma ścieżki „spróbuj ponownie” bez cofania się do ekranu logowania.
+
+**29. Brak jasnego rozróżnienia w UI między „PIN niepoprawny” a „sesja wygasła po stronie serwera”** po udanej weryfikacji PIN-u — `unlockWithPinAndValidateSession()` w obu przypadkach kończy tym samym `logout()` i tym samym komunikatem błędu.
+
+**30. `SecureTokenStorage.read()` przy zimnym starcie tworzy „pusty” `OAuth2Token(accessToken: '', refreshToken: ...)`, żeby wymusić refresh przez Fresh.** Nie widać żadnego zabezpieczenia/testu na wyścig, gdy dwa requesty równolegle uderzą w ten sam „pusty” token na starcie appki (typowy problem z `fresh_dio` przy wielu jednoczesnych żądaniach 401) — `fresh_dio` teoretycznie to ogarnia, ale warto to potwierdzić testem integracyjnym, bo konsekwencją błędu byłoby podwójne odświeżanie tokena.
+
+---
+
+**Jeśli miałbyś naprawić tylko 3 rzeczy w tym tygodniu**, to w tej kolejności: **#1** (Argon2id dla PIN-u — realna dziura bezpieczeństwa), **#4** (reset hasła udający sukces bez wysyłki do API) i **#5+#6** (martwy auto-logout na 401/root-detection — to jest rdzeń modelu bezpieczeństwa i obecnie nie działa tak, jak sugeruje reszta kodu).
