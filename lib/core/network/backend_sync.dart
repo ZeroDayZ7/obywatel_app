@@ -19,7 +19,8 @@ sealed class BackendState with _$BackendState {
     @Default(100) int rateLimitRemaining,
     String? lastRequestId,
     @Default(false) bool isMaintenanceMode,
-    @Default(false) bool isDeviceSecure,
+    @Default(true) bool isDeviceSecure,
+    DateTime? lastSecurityCheck,
     String? deviceFingerprint,
   }) = _BackendState;
 
@@ -31,6 +32,7 @@ sealed class BackendState with _$BackendState {
 class BackendStateNotifier extends _$BackendStateNotifier {
   static const _timeKey = 'last_sync_server_time';
   static const _offsetKey = 'last_sync_time_offset';
+  final _checker = FlutterRootJailbreakChecker();
 
   @override
   FutureOr<BackendState> build() async {
@@ -61,6 +63,60 @@ class BackendStateNotifier extends _$BackendStateNotifier {
     final current = state.value;
     if (current == null) return DateTime.now();
     return current.currentCorrectedTime;
+  }
+
+  /// Centralna, zothrottlowana metoda weryfikacji integralności urządzenia.
+  /// Gwarantuje wykonanie sprawdzania natywnego maks. raz na minutę dla całej aplikacji.
+  Future<bool> ensureDeviceSecurityChecked() async {
+    final current = state.value;
+    if (current == null) return true;
+
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      return true;
+    }
+
+    final now = DateTime.now();
+    final lastCheck = current.lastSecurityCheck;
+
+    if (lastCheck != null && now.difference(lastCheck).inMinutes < 1) {
+      return current.isDeviceSecure;
+    }
+
+    final log = ref.read(appLoggerProvider);
+    try {
+      log.d(
+        '🔒 Executing global device integrity check...',
+        module: 'SECURITY',
+      );
+      final result = await _checker.checkOfflineIntegrity();
+      final isSecure = !result.isRooted && !result.isJailbroken;
+
+      update(
+        (s) => s.copyWith(isDeviceSecure: isSecure, lastSecurityCheck: now),
+      );
+
+      if (isSecure) {
+        log.i('Device security check: PASSED', module: 'SECURITY');
+      } else {
+        log.e(
+          'Device security check: FAILED (Potential threat)',
+          module: 'SECURITY',
+        );
+      }
+
+      return isSecure;
+    } catch (e, s) {
+      log.e(
+        'Integrity check failed',
+        module: 'SECURITY',
+        error: e,
+        stackTrace: s,
+      );
+
+      update((s) => s.copyWith(isDeviceSecure: false, lastSecurityCheck: now));
+
+      return false;
+    }
   }
 
   void updateFromHeaders({
@@ -96,24 +152,6 @@ class BackendStateNotifier extends _$BackendStateNotifier {
     }
   }
 
-  void setDeviceSecurity(bool isSecure) {
-    update((s) {
-      if (s.isDeviceSecure == isSecure) return s;
-
-      final log = ref.read(appLoggerProvider);
-      if (isSecure) {
-        log.i('Device security check: PASSED', module: 'SECURITY');
-      } else {
-        log.e(
-          'Device security check: FAILED (Potential threat)',
-          module: 'SECURITY',
-        );
-      }
-
-      return s.copyWith(isDeviceSecure: isSecure);
-    });
-  }
-
   Future<void> persistServerTime() async {
     final currentState = state.value;
     if (currentState == null || currentState.serverTime == null) return;
@@ -147,9 +185,6 @@ class BackendStateNotifier extends _$BackendStateNotifier {
 
 class SecuritySyncInterceptor extends Interceptor {
   final Ref ref;
-  final _checker = FlutterRootJailbreakChecker();
-  DateTime? _lastSecurityCheck;
-  bool _cachedSecurityResult = true;
 
   SecuritySyncInterceptor(this.ref);
 
@@ -158,42 +193,16 @@ class SecuritySyncInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final now = DateTime.now();
-    final log = ref.read(appLoggerProvider);
+    final backendNotifier = ref.read(backendStateProvider.notifier);
     final backendState = ref.read(backendStateProvider).value;
 
     if (backendState?.deviceFingerprint != null) {
       options.headers['X-Device-Fingerprint'] = backendState!.deviceFingerprint;
     }
 
-    if (!Platform.isAndroid && !Platform.isIOS) {
-      options.headers['X-Device-Secure'] = 'true';
-      return super.onRequest(options, handler);
-    }
+    final isSecure = await backendNotifier.ensureDeviceSecurityChecked();
+    options.headers['X-Device-Secure'] = isSecure.toString();
 
-    if (_lastSecurityCheck == null ||
-        now.difference(_lastSecurityCheck!).inMinutes >= 1) {
-      try {
-        log.d('Checking device integrity...', module: 'SECURITY');
-        final result = await _checker.checkOfflineIntegrity();
-        _cachedSecurityResult = !result.isRooted && !result.isJailbroken;
-        _lastSecurityCheck = now;
-
-        ref
-            .read(backendStateProvider.notifier)
-            .setDeviceSecurity(_cachedSecurityResult);
-      } catch (e, s) {
-        log.e(
-          'Integrity check failed',
-          module: 'SECURITY',
-          error: e,
-          stackTrace: s,
-        );
-        _cachedSecurityResult = false;
-      }
-    }
-
-    options.headers['X-Device-Secure'] = _cachedSecurityResult.toString();
     super.onRequest(options, handler);
   }
 

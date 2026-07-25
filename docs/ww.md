@@ -35,15 +35,11 @@ static final _argon = Argon2id(
 
 **16. Przełącznik „Zaufaj temu urządzeniu” w setupie jest de facto kosmetyczny.** `canFinish = pinSet && trustDevice` blokuje przycisk „Zakończ”, ale `completeSetup()` i tak zawsze wywołuje `registerTrustedDevice()`, niezależnie od wartości przełącznika — czyli wymuszona, pozorna zgoda.
 
-**20. `unlockWithPinAndValidateSession()` nie rozróżnia „brak internetu” od „sesja faktycznie wygasła”.** Każdy błąd w tej ścieżce (timeout, brak sieci, invalid refresh token) kończy się pełnym `logout()`, czyli skasowaniem lokalnej sesji — użytkownik offline z ważnym PIN-em zostaje niepotrzebnie wylogowany zamiast dostać komunikat „sprawdź połączenie” i możliwość ponowienia.
-
 ## ⚙️ Architektura silnika
 
 **21. `AuthService.login` wysyła hasło jako `List<int>` bezpośrednio w JSON body** (`'password': passwordBytes`), czyli tablicę liczb, nie string. Warto zweryfikować kontrakt z backendem — to nietypowe i podatne na błędy serializacji (czy backend na pewno oczekuje tablicy kodów, a nie base64/UTF-8 stringa?).
 
 **22. Trzy niemal identyczne kliencich HTTP** (`ApiClient`, `NoAuthApiClient`, `PublicApiClient`) — cienkie wrappery `get/post/put/delete` powielone trzykrotnie. Dobry kandydat na wspólny generyczny interfejs/mixin zamiast kopiowania.
-
-**23. `SecuritySyncInterceptor` (sprawdzanie root/jailbreak z throttlingiem co minutę) jest tworzony osobno dla `authDio`, `noAuthDio` i `publicDio`** — czyli 3 niezależne cache’e i 3 niezależne timery zamiast jednego globalnego stanu (który już masz w `backendStateProvider`). Efekt: potencjalnie 3x częstsze wywołania natywnego pluginu integrity-check.
 
 **24. Niespójny system logowania:** `AppLogger` jest używany prawie wszędzie, ale `SecureTokenStorage` używa gołego `debugPrint`. Utrudnia to centralne wyłączanie logów w release i sprawia, że wrażliwe dane omijają warstwę maskowania.
 
