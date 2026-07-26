@@ -22,6 +22,21 @@ class Validators {
     return null;
   }
 
+  static String? validateIdentifier(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return LocaleKeys.validators_required_identifier.tr();
+    }
+
+    final trimmed = value.trim();
+    final isDigitsOnly = RegExp(r'^\d+$').hasMatch(trimmed);
+
+    if (!isDigitsOnly || trimmed.length != 12) {
+      return LocaleKeys.validators_invalid_identifier.tr();
+    }
+
+    return null;
+  }
+
   /// Walidacja hasła
   static String? validatePassword(String? value, {int minLength = 6}) {
     if (value == null || value.isEmpty) {
@@ -134,5 +149,9 @@ class Validators {
   /// Sprawdza czy tekst wygląda jak numer telefonu (prosta walidacja)
   static bool isPhone(String value) {
     return validatePhone(value) == null;
+  }
+
+  static bool isIdentifier(String value) {
+    return validateIdentifier(value) == null;
   }
 }

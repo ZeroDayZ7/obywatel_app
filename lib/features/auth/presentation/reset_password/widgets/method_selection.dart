@@ -21,16 +21,14 @@ class MethodSelectionWidget extends StatefulWidget {
 
 class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
   final _formKey = GlobalKey<FormState>();
-  final _accountIdentifierCtrl = TextEditingController();
+  final _contractNumberCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _phoneCtrl = TextEditingController();
   bool _isEmail = true;
 
   @override
   void dispose() {
-    _accountIdentifierCtrl.dispose();
+    _contractNumberCtrl.dispose();
     _emailCtrl.dispose();
-    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -46,22 +44,45 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Pole Identyfikatora Konta (Wymagane niezależnie od metody)
+          // 1. Input: Nr umowy
           TextFormField(
-            controller: _accountIdentifierCtrl,
+            controller: _contractNumberCtrl,
             decoration: InputDecoration(
-              prefixIcon: Icon(Icons.badge_outlined, color: activeColor),
-              labelText: 'Identyfikator konta / Umowa',
-              hintText: 'Wpisz e-mail lub numer umowy',
+              prefixIcon: Icon(Icons.description_outlined, color: activeColor),
+              labelText: LocaleKeys.reset_password_account_identifier_label
+                  .tr(),
+              hintText: LocaleKeys.reset_password_account_identifier_hint.tr(),
               border: const UnderlineInputBorder(),
             ),
             validator: (val) => (val == null || val.trim().isEmpty)
-                ? 'Identyfikator jest wymagany'
+                ? LocaleKeys.validators_required_account_identifier.tr()
                 : null,
+          ),
+          const SizedBox(height: 16),
+
+          // 2. Input: Identyfikator (E-mail)
+          TextFormField(
+            controller: _emailCtrl,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.email_outlined, color: activeColor),
+              labelText: LocaleKeys.common_identifier.tr(),
+              hintText: 'Wpisz e-mail przypisany do konta',
+              border: const UnderlineInputBorder(),
+            ),
+            validator: Validators.validateIdentifier,
+            keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 24),
 
-          // 2. Przełącznik wyboru dostarczenia kodu
+          // Wybór kanału 2FA (email / SMS)
+          Text(
+            LocaleKeys.reset_password_where_to_send_code.tr(),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 12),
+
           SegmentedButton<bool>(
             style: SegmentedButton.styleFrom(
               backgroundColor: theme.colorScheme.surface,
@@ -87,40 +108,6 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
             selected: {_isEmail},
             onSelectionChanged: (v) => setState(() => _isEmail = v.first),
           ),
-          const SizedBox(height: 16),
-
-          // 3. Dynamiczne pole kontaktowe
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            child: SizedBox(
-              key: ValueKey(_isEmail),
-              height: 80,
-              child: _isEmail
-                  ? TextFormField(
-                      controller: _emailCtrl,
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(Icons.email, color: activeColor),
-                        labelText: LocaleKeys.common_email.tr(),
-                        border: const UnderlineInputBorder(),
-                      ),
-                      validator: Validators.validateEmail,
-                      keyboardType: TextInputType.emailAddress,
-                    )
-                  : TextFormField(
-                      controller: _phoneCtrl,
-                      decoration: InputDecoration(
-                        prefixIcon: Icon(
-                          Icons.phone_android,
-                          color: activeColor,
-                        ),
-                        labelText: LocaleKeys.common_phone.tr(),
-                        border: const UnderlineInputBorder(),
-                      ),
-                      validator: Validators.validatePhone,
-                      keyboardType: TextInputType.phone,
-                    ),
-            ),
-          ),
           const SizedBox(height: 24),
 
           AppButton(
@@ -131,14 +118,12 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
                 : () async {
                     if (!_formKey.currentState!.validate()) return;
 
-                    final accountId = _accountIdentifierCtrl.text.trim();
-                    final contactVal = _isEmail
-                        ? _emailCtrl.text.trim()
-                        : _phoneCtrl.text.trim();
+                    final contractNo = _contractNumberCtrl.text.trim();
+                    final emailVal = _emailCtrl.text.trim();
 
                     widget.notifier.setMethod(
-                      accountIdentifier: accountId,
-                      contactValue: contactVal,
+                      accountIdentifier: contractNo,
+                      contactValue: emailVal,
                       isEmail: _isEmail,
                     );
                     await widget.notifier.sendResetCode();

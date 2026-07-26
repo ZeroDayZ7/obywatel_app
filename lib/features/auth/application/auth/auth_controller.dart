@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -446,6 +447,8 @@ class AuthController extends _$AuthController {
     ref.invalidate(securityServiceProvider);
     ref.invalidate(appDatabaseProvider);
     ref.invalidate(notificationsControllerProvider);
+
+    unawaited(ref.read(securityServiceProvider.notifier).init());
 
     // 5. Powrót do stanu niezalogowanego
     setUnauthenticated();

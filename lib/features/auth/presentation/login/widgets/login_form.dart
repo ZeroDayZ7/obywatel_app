@@ -80,7 +80,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           const SizedBox(height: 16),
           AppTextField(
             controller: _emailController,
-            labelKey: LocaleKeys.common_email,
+            labelKey: LocaleKeys.common_identifier,
             enabled: !isLoading,
             prefixIcon: Icon(Icons.alternate_email, color: iconColor),
             validator: Validators.validateEmail,

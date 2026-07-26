@@ -23,7 +23,13 @@ class ResetPasswordScreen extends ConsumerWidget {
       size: ContainerSize.narrow,
       alignment: Alignment.center,
       appBar: AppBar(title: Text(LocaleKeys.common_reset_password.tr())),
-      child: _ResetPasswordBody(state: state, notifier: notifier),
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: _ResetPasswordBody(state: state, notifier: notifier),
+          ),
+        ),
+      ),
     );
   }
 }

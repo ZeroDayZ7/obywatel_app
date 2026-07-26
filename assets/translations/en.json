@@ -12,14 +12,17 @@
     "skip": "Skip",
     "confirm": "Confirm",
     "save_password": "Save password",
-    "email": "Identifier",
+    "email": "Email",
+    "identifier": "Identifier",
     "password": "Password",
     "repeat_password": "Repeat password",
     "phone": "Phone",
     "reset_password": "Reset password",
     "enter_code": "Enter code",
     "send_code": "Send code",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "copy": "Kopiuj",
+    "copied_to_clipboard": "Skopiowano do schowka"
   },
   "navigation": {
     "apps": "Apps",
@@ -60,6 +63,7 @@
   },
   "validators": {
     "required_email": "Enter email",
+    "required_identifier": "Enter Identifier",
     "invalid_email": "Invalid email format",
     "required_password": "Enter password",
     "password_min_length": "Password must be at least {min} characters",
@@ -70,10 +74,17 @@
     "invalid_pin": "PIN must be a 4-digit number",
     "pin_length": "PIN must be 4 digits",
     "pin_too_simple": "PIN is too simple",
-    "required_field": "Required field",
+    "required_field": "Field required",
     "invalid_email_or_phone": "Invalid email or phone number",
+    "invalid_identifier": "Identifier must be a 12-digit number",
     "required_phone": "Enter phone number",
-    "invalid_phone": "Invalid phone number format"
+    "invalid_phone": "Invalid phone number format",
+    "passwords_not_match": "Passwords do not match",
+    "req_min_chars": "Minimum 8 characters",
+    "req_at_least_letter": "At least one letter",
+    "req_at_least_digit": "At least one digit",
+    "req_special_char": "Special character (!@#$&*~)",
+    "required_account_identifier": "Agreement number or login is required"
   },
   "errors": {
     "cache": "Local data read/write error",
@@ -103,13 +114,20 @@
     "link_sent": "Password reset link sent to email"
   },
   "reset_password": {
-    "title": "Reset password",
+    "title": "Password Reset",
+    "set_new_password": "Set new password",
     "new_password": "New password",
     "email_label": "Email",
     "sms_label": "SMS",
-    "success_message": "Password reset successfully",
+    "success_message": "Password has been successfully reset",
     "resend": "Resend",
-    "resend_in": "Resend in {seconds}s"
+    "resend_in": "Resend in {seconds}s",
+    "generate_strong_password": "Generate strong password",
+    "password_generated_and_copied": "Password generated and copied",
+    "account_identifier_label": "Agreement number",
+    "account_identifier_hint": "Enter agreement number",
+    "where_to_send_code": "Where should we send the verification code?",
+    "password_generated": "Strong password generated"
   },
   "reset_provider": {
     "invalid_code": "Invalid code",

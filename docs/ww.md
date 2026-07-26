@@ -1,14 +1,3 @@
-**1. Argon2id do hashowania PIN-u jest drastycznie osłabiony.** W `HashService`:
-
-```dart
-static final _argon = Argon2id(
-  memory: 1 * 1024, // 64 MB  <- komentarz kłamie, to 1 MB
-  iterations: 1, //  3         <- komentarz mówi 3, kod ma 1
-  parallelism: 1,
-  hashLength: 32,
-);
-```
-
 **4. Reset hasła nie działa wcale, mimo że UI pokazuje sukces.** W `ResetPasswordNotifier.confirmReset` cała logika wywołania `resetPasswordFinal(...)` jest zakomentowana, a mimo to stan i tak przechodzi na `ResetPasswordState.completed()`. Użytkownik dostaje ekran sukcesu, a hasło na serwerze się nie zmienia.
 
 **5. Auto-wylogowanie po unieważnionej sesji (401) jest martwym kodem.** `SessionStatus.expired` → `logout()` jest podłączone w `SessionObserver`, ale jedyne miejsce, które miało to zgłaszać (`SecuritySyncInterceptor.onError`), ma tę linię zakomentowaną:
