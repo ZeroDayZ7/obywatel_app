@@ -1,3 +1,4 @@
+// lib\features\auth\application\reset_password\reset_password_notifier.dart
 import 'dart:async';
 
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
@@ -137,31 +138,44 @@ class ResetPasswordNotifier extends _$ResetPasswordNotifier {
   Future<void> confirmReset({
     required String code,
     required String newPassword,
+    String signature = '',
+    String fingerprint = '',
+    String deviceName = '',
+    String platform = '',
+    String? publicKey,
   }) async {
     final currentState = state;
 
     String? resetToken;
-    String? serverChallenge;
 
     currentState.maybeMap(
       codeVerified: (s) {
         resetToken = s.token;
-        serverChallenge = s.challenge;
       },
       orElse: () {},
     );
 
-    if (resetToken == null || serverChallenge == null) {
+    if (resetToken == null) {
       return;
     }
 
     state = const ResetPasswordState.loading();
 
     try {
-      // Wywołanie API zmiany hasła
+      await resetPasswordFinalApi(
+        ref: ref,
+        code: code,
+        token: resetToken!,
+        newPassword: newPassword,
+        signature: signature,
+        fingerprint: fingerprint,
+        deviceName: deviceName,
+        platform: platform,
+        publicKey: publicKey,
+      );
+
       state = const ResetPasswordState.completed();
 
-      // Po pełnym sukcesie zwalniamy blokadę — jeśli użytkownik wyjdzie z ekranu, provider się zczyści
       _closeKeepAlive?.call();
       _closeKeepAlive = null;
     } catch (e) {

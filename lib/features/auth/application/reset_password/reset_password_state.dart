@@ -1,3 +1,4 @@
+// lib\features\auth\application\reset_password\reset_password_state.dart
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'reset_password_state.freezed.dart';

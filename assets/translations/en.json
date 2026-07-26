@@ -105,6 +105,9 @@
     "SESSION_EXPIRED": "Session expired. Please log in again.",
     "EMAIL_IS_SEND_IF_EXISTS": "If the account exists, a reset code was sent to the provided email.",
     "TOO_MANY_REQUESTS": "Too many attempts. Try again later.",
+    "INVALID_RESET_CODE": "Invalid code",
+    "RESET_SESSION_NOT_FOUND": "Reset session expired or not found.",
+
     "general": "An unexpected error occurred"
   },
   "forgot_password_dialog": {

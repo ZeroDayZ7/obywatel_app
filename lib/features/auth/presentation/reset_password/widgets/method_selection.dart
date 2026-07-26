@@ -69,7 +69,7 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
               hintText: 'Wpisz e-mail przypisany do konta',
               border: const UnderlineInputBorder(),
             ),
-            validator: Validators.validateIdentifier,
+            validator: Validators.validateEmail,
             keyboardType: TextInputType.emailAddress,
           ),
           const SizedBox(height: 24),
