@@ -21,12 +21,14 @@ class MethodSelectionWidget extends StatefulWidget {
 
 class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
   final _formKey = GlobalKey<FormState>();
+  final _accountIdentifierCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   bool _isEmail = true;
 
   @override
   void dispose() {
+    _accountIdentifierCtrl.dispose();
     _emailCtrl.dispose();
     _phoneCtrl.dispose();
     super.dispose();
@@ -42,7 +44,24 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
       key: _formKey,
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 1. Pole Identyfikatora Konta (Wymagane niezależnie od metody)
+          TextFormField(
+            controller: _accountIdentifierCtrl,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.badge_outlined, color: activeColor),
+              labelText: 'Identyfikator konta / Umowa',
+              hintText: 'Wpisz e-mail lub numer umowy',
+              border: const UnderlineInputBorder(),
+            ),
+            validator: (val) => (val == null || val.trim().isEmpty)
+                ? 'Identyfikator jest wymagany'
+                : null,
+          ),
+          const SizedBox(height: 24),
+
+          // 2. Przełącznik wyboru dostarczenia kodu
           SegmentedButton<bool>(
             style: SegmentedButton.styleFrom(
               backgroundColor: theme.colorScheme.surface,
@@ -68,7 +87,9 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
             selected: {_isEmail},
             onSelectionChanged: (v) => setState(() => _isEmail = v.first),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+
+          // 3. Dynamiczne pole kontaktowe
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: SizedBox(
@@ -100,7 +121,8 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
           AppButton(
             label: LocaleKeys.common_send_code.tr(),
             isLoading: widget.isLoading,
@@ -108,10 +130,17 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
                 ? null
                 : () async {
                     if (!_formKey.currentState!.validate()) return;
-                    final input = _isEmail
+
+                    final accountId = _accountIdentifierCtrl.text.trim();
+                    final contactVal = _isEmail
                         ? _emailCtrl.text.trim()
                         : _phoneCtrl.text.trim();
-                    widget.notifier.setMethod(input, _isEmail);
+
+                    widget.notifier.setMethod(
+                      accountIdentifier: accountId,
+                      contactValue: contactVal,
+                      isEmail: _isEmail,
+                    );
                     await widget.notifier.sendResetCode();
                   },
             variant: AppButtonVariant.primary,

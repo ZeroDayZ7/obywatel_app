@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'reset_password_notifier.dart';
+part of 'reset_password_state.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -134,13 +134,13 @@ return completed(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function( String input,  ResetMethod method)?  methodChosen,TResult Function()?  loading,TResult Function( String input,  ResetMethod method,  int resendTime,  bool canResend,  String? token)?  codeSent,TResult Function( String? token,  String? challenge)?  codeVerified,TResult Function()?  completed,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function( String accountIdentifier,  String contactValue,  ResetMethod method)?  methodChosen,TResult Function()?  loading,TResult Function( String accountIdentifier,  String contactValue,  ResetMethod method,  int resendTime,  bool canResend,  String? token)?  codeSent,TResult Function( String? token,  String? challenge)?  codeVerified,TResult Function()?  completed,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _MethodChosen() when methodChosen != null:
-return methodChosen(_that.input,_that.method);case _Loading() when loading != null:
+return methodChosen(_that.accountIdentifier,_that.contactValue,_that.method);case _Loading() when loading != null:
 return loading();case _CodeSent() when codeSent != null:
-return codeSent(_that.input,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified() when codeVerified != null:
+return codeSent(_that.accountIdentifier,_that.contactValue,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified() when codeVerified != null:
 return codeVerified(_that.token,_that.challenge);case _Completed() when completed != null:
 return completed();case _:
   return orElse();
@@ -160,13 +160,13 @@ return completed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function( String input,  ResetMethod method)  methodChosen,required TResult Function()  loading,required TResult Function( String input,  ResetMethod method,  int resendTime,  bool canResend,  String? token)  codeSent,required TResult Function( String? token,  String? challenge)  codeVerified,required TResult Function()  completed,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function( String accountIdentifier,  String contactValue,  ResetMethod method)  methodChosen,required TResult Function()  loading,required TResult Function( String accountIdentifier,  String contactValue,  ResetMethod method,  int resendTime,  bool canResend,  String? token)  codeSent,required TResult Function( String? token,  String? challenge)  codeVerified,required TResult Function()  completed,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _MethodChosen():
-return methodChosen(_that.input,_that.method);case _Loading():
+return methodChosen(_that.accountIdentifier,_that.contactValue,_that.method);case _Loading():
 return loading();case _CodeSent():
-return codeSent(_that.input,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified():
+return codeSent(_that.accountIdentifier,_that.contactValue,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified():
 return codeVerified(_that.token,_that.challenge);case _Completed():
 return completed();case _:
   throw StateError('Unexpected subclass');
@@ -185,13 +185,13 @@ return completed();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function( String input,  ResetMethod method)?  methodChosen,TResult? Function()?  loading,TResult? Function( String input,  ResetMethod method,  int resendTime,  bool canResend,  String? token)?  codeSent,TResult? Function( String? token,  String? challenge)?  codeVerified,TResult? Function()?  completed,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function( String accountIdentifier,  String contactValue,  ResetMethod method)?  methodChosen,TResult? Function()?  loading,TResult? Function( String accountIdentifier,  String contactValue,  ResetMethod method,  int resendTime,  bool canResend,  String? token)?  codeSent,TResult? Function( String? token,  String? challenge)?  codeVerified,TResult? Function()?  completed,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _MethodChosen() when methodChosen != null:
-return methodChosen(_that.input,_that.method);case _Loading() when loading != null:
+return methodChosen(_that.accountIdentifier,_that.contactValue,_that.method);case _Loading() when loading != null:
 return loading();case _CodeSent() when codeSent != null:
-return codeSent(_that.input,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified() when codeVerified != null:
+return codeSent(_that.accountIdentifier,_that.contactValue,_that.method,_that.resendTime,_that.canResend,_that.token);case _CodeVerified() when codeVerified != null:
 return codeVerified(_that.token,_that.challenge);case _Completed() when completed != null:
 return completed();case _:
   return null;
@@ -237,10 +237,11 @@ String toString() {
 
 
 class _MethodChosen implements ResetPasswordState {
-  const _MethodChosen({required this.input, required this.method});
+  const _MethodChosen({required this.accountIdentifier, required this.contactValue, required this.method});
   
 
- final  String input;
+ final  String accountIdentifier;
+ final  String contactValue;
  final  ResetMethod method;
 
 /// Create a copy of ResetPasswordState
@@ -253,16 +254,16 @@ _$MethodChosenCopyWith<_MethodChosen> get copyWith => __$MethodChosenCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MethodChosen&&(identical(other.input, input) || other.input == input)&&(identical(other.method, method) || other.method == method));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MethodChosen&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,input,method);
+int get hashCode => Object.hash(runtimeType,accountIdentifier,contactValue,method);
 
 @override
 String toString() {
-  return 'ResetPasswordState.methodChosen(input: $input, method: $method)';
+  return 'ResetPasswordState.methodChosen(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method)';
 }
 
 
@@ -273,7 +274,7 @@ abstract mixin class _$MethodChosenCopyWith<$Res> implements $ResetPasswordState
   factory _$MethodChosenCopyWith(_MethodChosen value, $Res Function(_MethodChosen) _then) = __$MethodChosenCopyWithImpl;
 @useResult
 $Res call({
- String input, ResetMethod method
+ String accountIdentifier, String contactValue, ResetMethod method
 });
 
 
@@ -290,9 +291,10 @@ class __$MethodChosenCopyWithImpl<$Res>
 
 /// Create a copy of ResetPasswordState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? input = null,Object? method = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? accountIdentifier = null,Object? contactValue = null,Object? method = null,}) {
   return _then(_MethodChosen(
-input: null == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
+accountIdentifier: null == accountIdentifier ? _self.accountIdentifier : accountIdentifier // ignore: cast_nullable_to_non_nullable
+as String,contactValue: null == contactValue ? _self.contactValue : contactValue // ignore: cast_nullable_to_non_nullable
 as String,method: null == method ? _self.method : method // ignore: cast_nullable_to_non_nullable
 as ResetMethod,
   ));
@@ -337,10 +339,11 @@ String toString() {
 
 
 class _CodeSent implements ResetPasswordState {
-  const _CodeSent({required this.input, required this.method, required this.resendTime, required this.canResend, this.token});
+  const _CodeSent({required this.accountIdentifier, required this.contactValue, required this.method, required this.resendTime, required this.canResend, this.token});
   
 
- final  String input;
+ final  String accountIdentifier;
+ final  String contactValue;
  final  ResetMethod method;
  final  int resendTime;
  final  bool canResend;
@@ -356,16 +359,16 @@ _$CodeSentCopyWith<_CodeSent> get copyWith => __$CodeSentCopyWithImpl<_CodeSent>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeSent&&(identical(other.input, input) || other.input == input)&&(identical(other.method, method) || other.method == method)&&(identical(other.resendTime, resendTime) || other.resendTime == resendTime)&&(identical(other.canResend, canResend) || other.canResend == canResend)&&(identical(other.token, token) || other.token == token));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeSent&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method)&&(identical(other.resendTime, resendTime) || other.resendTime == resendTime)&&(identical(other.canResend, canResend) || other.canResend == canResend)&&(identical(other.token, token) || other.token == token));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,input,method,resendTime,canResend,token);
+int get hashCode => Object.hash(runtimeType,accountIdentifier,contactValue,method,resendTime,canResend,token);
 
 @override
 String toString() {
-  return 'ResetPasswordState.codeSent(input: $input, method: $method, resendTime: $resendTime, canResend: $canResend, token: $token)';
+  return 'ResetPasswordState.codeSent(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method, resendTime: $resendTime, canResend: $canResend, token: $token)';
 }
 
 
@@ -376,7 +379,7 @@ abstract mixin class _$CodeSentCopyWith<$Res> implements $ResetPasswordStateCopy
   factory _$CodeSentCopyWith(_CodeSent value, $Res Function(_CodeSent) _then) = __$CodeSentCopyWithImpl;
 @useResult
 $Res call({
- String input, ResetMethod method, int resendTime, bool canResend, String? token
+ String accountIdentifier, String contactValue, ResetMethod method, int resendTime, bool canResend, String? token
 });
 
 
@@ -393,9 +396,10 @@ class __$CodeSentCopyWithImpl<$Res>
 
 /// Create a copy of ResetPasswordState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? input = null,Object? method = null,Object? resendTime = null,Object? canResend = null,Object? token = freezed,}) {
+@pragma('vm:prefer-inline') $Res call({Object? accountIdentifier = null,Object? contactValue = null,Object? method = null,Object? resendTime = null,Object? canResend = null,Object? token = freezed,}) {
   return _then(_CodeSent(
-input: null == input ? _self.input : input // ignore: cast_nullable_to_non_nullable
+accountIdentifier: null == accountIdentifier ? _self.accountIdentifier : accountIdentifier // ignore: cast_nullable_to_non_nullable
+as String,contactValue: null == contactValue ? _self.contactValue : contactValue // ignore: cast_nullable_to_non_nullable
 as String,method: null == method ? _self.method : method // ignore: cast_nullable_to_non_nullable
 as ResetMethod,resendTime: null == resendTime ? _self.resendTime : resendTime // ignore: cast_nullable_to_non_nullable
 as int,canResend: null == canResend ? _self.canResend : canResend // ignore: cast_nullable_to_non_nullable

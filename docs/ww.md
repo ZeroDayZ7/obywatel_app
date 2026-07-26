@@ -52,7 +52,3 @@ static final _argon = Argon2id(
 **29. Brak jasnego rozróżnienia w UI między „PIN niepoprawny” a „sesja wygasła po stronie serwera”** po udanej weryfikacji PIN-u — `unlockWithPinAndValidateSession()` w obu przypadkach kończy tym samym `logout()` i tym samym komunikatem błędu.
 
 **30. `SecureTokenStorage.read()` przy zimnym starcie tworzy „pusty” `OAuth2Token(accessToken: '', refreshToken: ...)`, żeby wymusić refresh przez Fresh.** Nie widać żadnego zabezpieczenia/testu na wyścig, gdy dwa requesty równolegle uderzą w ten sam „pusty” token na starcie appki (typowy problem z `fresh_dio` przy wielu jednoczesnych żądaniach 401) — `fresh_dio` teoretycznie to ogarnia, ale warto to potwierdzić testem integracyjnym, bo konsekwencją błędu byłoby podwójne odświeżanie tokena.
-
----
-
-**Jeśli miałbyś naprawić tylko 3 rzeczy w tym tygodniu**, to w tej kolejności: **#1** (Argon2id dla PIN-u — realna dziura bezpieczeństwa), **#4** (reset hasła udający sukces bez wysyłki do API) i **#5+#6** (martwy auto-logout na 401/root-detection — to jest rdzeń modelu bezpieczeństwa i obecnie nie działa tak, jak sugeruje reszta kodu).

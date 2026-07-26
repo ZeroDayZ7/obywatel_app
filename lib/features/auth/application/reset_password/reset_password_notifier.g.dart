@@ -9,59 +9,6 @@ part of 'reset_password_notifier.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(ResetPasswordService)
-final resetPasswordServiceProvider = ResetPasswordServiceProvider._();
-
-final class ResetPasswordServiceProvider
-    extends $NotifierProvider<ResetPasswordService, void> {
-  ResetPasswordServiceProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'resetPasswordServiceProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$resetPasswordServiceHash();
-
-  @$internal
-  @override
-  ResetPasswordService create() => ResetPasswordService();
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(void value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<void>(value),
-    );
-  }
-}
-
-String _$resetPasswordServiceHash() =>
-    r'a886185f885e00ac40a72eecf738babf1d8b28af';
-
-abstract class _$ResetPasswordService extends $Notifier<void> {
-  void build();
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final ref = this.ref as $Ref<void, void>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<void, void>,
-              void,
-              Object?,
-              Object?
-            >;
-    element.handleCreate(ref, build);
-  }
-}
-
 @ProviderFor(ResetPasswordNotifier)
 final resetPasswordProvider = ResetPasswordNotifierProvider._();
 
@@ -95,7 +42,7 @@ final class ResetPasswordNotifierProvider
 }
 
 String _$resetPasswordNotifierHash() =>
-    r'd393470c578f0f5da69dfc53d2948a57e3081451';
+    r'349b89d042155bbb146a8e34f69d08e3bf8a867d';
 
 abstract class _$ResetPasswordNotifier extends $Notifier<ResetPasswordState> {
   ResetPasswordState build();

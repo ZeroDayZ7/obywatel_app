@@ -5,6 +5,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
+import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_state.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/code_input.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/method_selection.dart';
 import 'package:obywatel_plus/features/auth/presentation/reset_password/widgets/password_input.dart';
@@ -29,7 +30,6 @@ class ResetPasswordScreen extends ConsumerWidget {
 
 class _ResetPasswordBody extends StatefulWidget {
   final ResetPasswordState state;
-
   final ResetPasswordNotifier notifier;
 
   const _ResetPasswordBody({required this.state, required this.notifier});
@@ -61,22 +61,27 @@ class _ResetPasswordBodyState extends State<_ResetPasswordBody> {
         notifier: widget.notifier,
         isLoading: isLoading,
       ),
-      methodChosen: (input, method) => MethodSelectionWidget(
-        notifier: widget.notifier,
-        isLoading: isLoading,
-      ),
-      loading: () {
-        return const Center(child: CircularProgressIndicator());
-      },
-      codeSent: (input, method, resendTime, canResend, token) =>
-          CodeInputWidget(
+      methodChosen: (accountIdentifier, contactValue, method) =>
+          MethodSelectionWidget(
+            notifier: widget.notifier,
+            isLoading: isLoading,
+          ),
+      loading: () => const Center(child: CircularProgressIndicator()),
+      codeSent:
+          (
+            accountIdentifier,
+            contactValue,
+            method,
+            resendTime,
+            canResend,
+            token,
+          ) => CodeInputWidget(
             notifier: widget.notifier,
             codeController: codeController,
             resendTime: resendTime,
             canResend: canResend,
             isLoading: isLoading,
           ),
-
       codeVerified: (token, challenge) => PasswordInputWidget(
         notifier: widget.notifier,
         code: codeController.text,
