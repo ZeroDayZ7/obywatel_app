@@ -27,7 +27,7 @@ class ProfileScreen extends ConsumerWidget {
     if (user == null) {
       return const AppScaffold(
         size: ContainerSize.medium,
-        appBar: AppAppBar(title: 'Profil'),
+        appBar: AppAppBar(title: 'Profil', showBackButton: false),
         child: Center(child: CircularProgressIndicator()),
       );
     }
@@ -43,7 +43,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: const AppAppBar(title: 'Profil'),
+      appBar: const AppAppBar(title: 'Profil', showBackButton: false),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(

@@ -1,17 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/navigation_items.dart';
 
 class AppDesktopSidebar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
   final int notificationCount;
 
-  const AppDesktopSidebar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-    this.notificationCount = 4,
-  });
+  const AppDesktopSidebar({super.key, this.notificationCount = 4});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +14,20 @@ class AppDesktopSidebar extends StatelessWidget {
     );
     final theme = Theme.of(context);
 
+    final currentPath = GoRouterState.of(context).uri.path;
+    final currentIndex = items.indexWhere(
+      (item) => currentPath.startsWith(item.route),
+    );
+
+    final selectedIndex = currentIndex < 0 ? 0 : currentIndex;
+
     return NavigationRail(
-      selectedIndex: currentIndex,
-      onDestinationSelected: onTap,
+      selectedIndex: selectedIndex,
+      onDestinationSelected: (index) {
+        if (index >= 0 && index < items.length) {
+          context.go(items[index].route);
+        }
+      },
       extended: true,
       minExtendedWidth: 200,
       backgroundColor: theme.colorScheme.surface,

@@ -3,15 +3,11 @@ import 'package:obywatel_plus/features/home/presentation/navigation/app_bottom_b
 import 'package:obywatel_plus/features/home/presentation/navigation/app_desktop_sidebar.dart';
 
 class AppAdaptiveNavigation extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onTap;
   final Widget child;
   final double desktopBreakpoint;
 
   const AppAdaptiveNavigation({
     super.key,
-    required this.currentIndex,
-    required this.onTap,
     required this.child,
     this.desktopBreakpoint = 800.0,
   });
@@ -23,12 +19,14 @@ class AppAdaptiveNavigation extends StatelessWidget {
         final isDesktop = constraints.maxWidth >= desktopBreakpoint;
 
         if (isDesktop) {
-          return Row(
-            children: [
-              AppDesktopSidebar(currentIndex: currentIndex, onTap: onTap),
-              const VerticalDivider(thickness: 1, width: 1),
-              Expanded(child: child),
-            ],
+          return Scaffold(
+            body: Row(
+              children: [
+                const AppDesktopSidebar(),
+                const VerticalDivider(thickness: 1, width: 1),
+                Expanded(child: child),
+              ],
+            ),
           );
         }
 

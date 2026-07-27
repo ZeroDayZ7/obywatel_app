@@ -12,13 +12,9 @@ import 'package:obywatel_plus/features/notifications/presentation/trash_screen.d
 final homeRoutes = [
   ShellRoute(
     builder: (context, state, child) {
-      return AppAdaptiveNavigation(
-        currentIndex: 0,
-        onTap: (_) {},
-        child: child,
-      );
+      return AppAdaptiveNavigation(child: child);
     },
-  routes: [
+    routes: [
       AppRoutes.home.go(const QuickAccessScreen()),
       AppRoutes.services.go(const ServicesScreen()),
       AppRoutes.documents.go(const DocumentsScreen()),
@@ -27,7 +23,8 @@ final homeRoutes = [
     ],
   ),
 
-  // Trasy pełnoekranowe (poza ShellRoute - bez dolnego paska, ze strzałką powrotu):
+  // Trasy pełnoekranowe:
+  AppRoutes.documents.go(const DocumentsScreen()),
   GoRoute(
     path: '${AppRoutes.notifications}/${AppRoutes.notificationsTrash}',
     builder: (context, state) => const TrashScreen(),
