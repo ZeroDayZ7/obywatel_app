@@ -8,31 +8,23 @@ part 'document_repository.g.dart';
 
 abstract class DocumentRepository {
   Future<List<DocumentModel>> fetchDocuments();
-
   Future<DocumentModel> fetchDocumentById(String id);
 }
 
 class HttpDocumentRepository implements DocumentRepository {
   final Ref _ref;
-
   HttpDocumentRepository(this._ref);
-
   @override
   Future<List<DocumentModel>> fetchDocuments() async {
     final apiClient = _ref.read(apiClientProvider);
     final logger = _ref.read(appLoggerProvider);
-
     try {
       final response = await apiClient.get(ApiEndpoints.documentsMe);
-
       logger.d('Fetch documents raw response: ${response.data}');
-
       if (response.data == null) {
         return [];
       }
-
       final data = response.data as List<dynamic>;
-
       return data
           .map(
             (item) =>
@@ -45,7 +37,6 @@ class HttpDocumentRepository implements DocumentRepository {
         error: e,
         stackTrace: stackTrace,
       );
-
       rethrow;
     }
   }
@@ -54,12 +45,9 @@ class HttpDocumentRepository implements DocumentRepository {
   Future<DocumentModel> fetchDocumentById(String id) async {
     final apiClient = _ref.read(apiClientProvider);
     final logger = _ref.read(appLoggerProvider);
-
     try {
       final response = await apiClient.get(ApiEndpoints.documentById(id));
-
       logger.d('Fetch document $id raw response: ${response.data}');
-
       return DocumentModel.fromJson(
         Map<String, dynamic>.from(response.data as Map),
       );
@@ -69,7 +57,6 @@ class HttpDocumentRepository implements DocumentRepository {
         error: e,
         stackTrace: stackTrace,
       );
-
       rethrow;
     }
   }
