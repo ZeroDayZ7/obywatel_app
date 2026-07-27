@@ -1,141 +1,150 @@
-import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 part 'document_model.freezed.dart';
 part 'document_model.g.dart';
 
-enum DocumentCategory {
-  identity,
-  work,
-  education,
-  transport,
-  permissions, // Dodane, aby obsłużyć prawo jazdy, broń itp.
-}
+enum DocumentCategory { identity, transport, permissions, education, other }
 
-@freezed
-sealed class DocumentField with _$DocumentField {
-  const factory DocumentField({
-    required String label,
-    required String value,
-    required String iconName,
-    @Default(false) bool isSensitive,
-  }) = _DocumentField;
+class DocumentField {
+  final String label;
+  final String value;
+  final String iconName;
 
-  const DocumentField._();
-
-  factory DocumentField.fromJson(Map<String, dynamic> json) =>
-      _$DocumentFieldFromJson(json);
-
-  IconData get icon => _getIconData(iconName);
+  const DocumentField({
+    required this.label,
+    required this.value,
+    required this.iconName,
+  });
 }
 
 @freezed
 sealed class DocumentModel with _$DocumentModel {
-  const factory DocumentModel({
-    required String id,
-    required String title,
-    required String iconName,
-    required String colorHex,
-    required DocumentCategory category,
-    required List<DocumentField> fields,
-    String? qrData,
-    String? status,
-    @Default(false) bool isVerified,
-    String? subtitle,
-    String? expiryDate,
-  }) = _DocumentModel;
-
   const DocumentModel._();
+
+  const factory DocumentModel({
+    @JsonKey(name: 'ID') required String id,
+
+    @JsonKey(name: 'ProfileID') required String profileId,
+
+    @JsonKey(name: 'Type') required String type,
+
+    @JsonKey(name: 'Status') required String status,
+
+    @JsonKey(name: 'EncryptedMeta') required String encryptedMeta,
+
+    @JsonKey(name: 'IssuedAt') String? issuedAt,
+
+    @JsonKey(name: 'ExpiresAt') String? expiresAt,
+
+    @JsonKey(name: 'CreatedAt') String? createdAt,
+
+    @JsonKey(name: 'UpdatedAt') String? updatedAt,
+  }) = _DocumentModel;
 
   factory DocumentModel.fromJson(Map<String, dynamic> json) =>
       _$DocumentModelFromJson(json);
 
-  Color get themeColor {
-    final hex = colorHex.replaceFirst('#', '');
-    if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
-    return Color(int.parse(hex, radix: 16));
+  bool get isVerified => status == 'active';
+
+  String get expiryDate => expiresAt ?? '';
+
+  Map<String, dynamic> get _parsedMeta {
+    if (encryptedMeta.isEmpty) {
+      return {};
+    }
+
+    try {
+      final decoded = utf8.decode(base64.decode(encryptedMeta));
+
+      return jsonDecode(decoded) as Map<String, dynamic>;
+    } catch (_) {
+      return {};
+    }
   }
 
-  IconData get icon => _getIconData(iconName);
-}
+  String get title {
+    switch (type) {
+      case 'id_card':
+        return 'Dowód osobisty';
 
-IconData _getIconData(String name) {
-  switch (name) {
-    // Identity & General
-    case 'badge':
-      return Icons.badge;
-    case 'person':
-      return Icons.person;
-    case 'fingerprint':
-      return Icons.fingerprint;
-    case 'public':
-      return Icons.public;
-    case 'male':
-      return Icons.male;
-    case 'female':
-      return Icons.female;
+      case 'driver_license':
+        return 'Prawo jazdy';
 
-    // Transport
-    case 'directions_car':
-      return Icons.directions_car;
-    case 'directions_bus':
-      return Icons.directions_bus;
-    case 'train':
-      return Icons.train;
-    case 'flight_takeoff':
-      return Icons.flight_takeoff;
-    case 'flight':
-      return Icons.flight;
-    case 'map':
-      return Icons.map;
+      case 'student_card':
+        return 'Legitymacja studencka';
 
-    // Education & Work
-    case 'school':
-      return Icons.school;
-    case 'apartment':
-      return Icons.apartment;
-    case 'work':
-      return Icons.work;
-
-    // Permissions & Security
-    case 'security':
-      return Icons.security;
-    case 'gavel':
-      return Icons.gavel;
-    case 'target': // Często używane jako cel pozwolenia
-      return Icons.gps_fixed;
-    case 'family_restroom':
-      return Icons.family_restroom;
-    case 'elderly':
-      return Icons.elderly;
-
-    // UI Elements
-    case 'description':
-      return Icons.description;
-    case 'numbers':
-      return Icons.numbers;
-    case 'card_membership':
-      return Icons.card_membership;
-    case 'credit_card':
-      return Icons.credit_card;
-    case 'event':
-      return Icons.event;
-    case 'calendar_today':
-      return Icons.calendar_today;
-    case 'star':
-      return Icons.star;
-    case 'loyalty':
-      return Icons.loyalty;
-    case 'corporate_fare':
-      return Icons.corporate_fare;
-    case 'event_seat':
-      return Icons.event_seat;
-    case 'location_city':
-      return Icons.location_city;
-    case 'category':
-      return Icons.category;
-
-    default:
-      return Icons.info_outline;
+      default:
+        return 'Dokument';
+    }
   }
+
+  String get subtitle {
+    final number = _parsedMeta['document_number'];
+
+    if (number != null) {
+      return number.toString();
+    }
+
+    return isVerified ? 'Ważny' : 'Nieważny';
+  }
+
+  String get iconName {
+    switch (type) {
+      case 'id_card':
+        return 'badge';
+
+      case 'driver_license':
+        return 'directions_car';
+
+      case 'student_card':
+        return 'school';
+
+      default:
+        return 'article';
+    }
+  }
+
+  String get colorHex {
+    switch (type) {
+      case 'id_card':
+        return '#2196F3';
+
+      case 'driver_license':
+        return '#4CAF50';
+
+      default:
+        return '#607D8B';
+    }
+  }
+
+  DocumentCategory get category {
+    switch (type) {
+      case 'id_card':
+        return DocumentCategory.identity;
+
+      case 'driver_license':
+        return DocumentCategory.transport;
+
+      default:
+        return DocumentCategory.other;
+    }
+  }
+
+  List<DocumentField> get fields {
+    final meta = _parsedMeta;
+
+    final number = meta['document_number']?.toString() ?? '-';
+
+    final issuer = meta['issuer']?.toString() ?? '-';
+
+    return [
+      DocumentField(label: 'Numer dokumentu', value: number, iconName: 'badge'),
+
+      DocumentField(label: 'Organ wydający', value: issuer, iconName: 'public'),
+    ];
+  }
+
+  String? get qrData => _parsedMeta['qr_code']?.toString();
 }

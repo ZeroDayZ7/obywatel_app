@@ -35,4 +35,9 @@ class ApiEndpoints {
   static String get clearTrash => '/notifications/trash';
   static String restoreFromTrash(String id) => '/notifications/$id/restore';
   static String deleteNotification(String id) => '/notifications/$id';
+
+  // DOCUMENTS
+  static String get documentsMe => '/documents/me';
+  static String get documents => '/documents';
+  static String documentById(String id) => '/documents/$id';
 }

@@ -5,24 +5,19 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'documents_provider.g.dart';
 
 @riverpod
-class DocumentsNotifier extends _$DocumentsNotifier {
+class Documents extends _$Documents {
   @override
   FutureOr<List<DocumentModel>> build() {
     return ref.watch(documentRepositoryProvider).fetchDocuments();
   }
 
   Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-      () => ref.read(documentRepositoryProvider).fetchDocuments(),
-    );
+    ref.invalidateSelf();
+    await future;
   }
 }
 
 @riverpod
-class DocumentDetailNotifier extends _$DocumentDetailNotifier {
-  @override
-  FutureOr<DocumentModel> build(String id) {
-    return ref.watch(documentRepositoryProvider).fetchDocumentById(id);
-  }
+Future<DocumentModel> documentDetail(Ref ref, String id) {
+  return ref.watch(documentRepositoryProvider).fetchDocumentById(id);
 }

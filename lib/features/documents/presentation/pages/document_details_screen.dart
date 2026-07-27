@@ -1,17 +1,20 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/design/tokens/container_size.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/documents/application/documents_provider.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
+import 'package:obywatel_plus/features/documents/presentation/mappers/document_icon_mapper.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_avatar_stack.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_card_container.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_expiry_badge.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_header_badge.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_info_row.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_qr_section.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/document_sensitive_field.dart';
-import 'package:obywatel_plus/features/documents/presentation/widget/document_details_screen/pin_verification_dialog.dart';
 
-class DocumentDetailsScreen extends ConsumerStatefulWidget {
+class DocumentDetailsScreen extends ConsumerWidget {
   final String documentId;
   final DocumentModel? initialDocument;
 
@@ -22,76 +25,65 @@ class DocumentDetailsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<DocumentDetailsScreen> createState() =>
-      _DocumentDetailsScreenState();
-}
-
-class _DocumentDetailsScreenState extends ConsumerState<DocumentDetailsScreen> {
-  bool _sensitiveVisible = false;
-
-  void _handleSensitiveToggle() async {
-    final verified = await PinVerificationDialog.show(context);
-    if (verified) {
-      setState(() => _sensitiveVisible = true);
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 1. Jeśli przekazaliśmy instancję bezpośrednio w nawigacji
+    if (initialDocument != null) {
+      return _buildContent(context, initialDocument!);
     }
-  }
 
-  @override
-  Widget build(BuildContext context) {
-    final docAsync = ref.watch(documentDetailProvider(widget.documentId));
+    // 2. Próba wyciągnięcia dokumentu z listy pobranej wcześniej w pamięci
+    final documentsState = ref.watch(documentsProvider);
+    final cachedDoc = documentsState.value?.firstWhereOrNull(
+      (doc) => doc.id == documentId,
+    );
+
+    if (cachedDoc != null) {
+      return _buildContent(context, cachedDoc);
+    }
+
+    // 3. Fallback: pobranie dedykowanego dokumentu po ID z API
+    final docAsync = ref.watch(documentDetailProvider(documentId));
 
     return docAsync.when(
-      loading: () => const Scaffold(
-        backgroundColor: Color(0xFF121212),
-        body: Center(child: CircularProgressIndicator()),
+      loading: () => const AppScaffold(
+        size: ContainerSize.medium,
+        child: Center(child: CircularProgressIndicator()),
       ),
-      error: (err, stack) => Scaffold(
-        backgroundColor: const Color(0xFF121212),
-        body: Center(
-          child: Text(
-            'Błąd: $err',
-            style: const TextStyle(color: Colors.white),
-          ),
-        ),
+      error: (err, stack) => AppScaffold(
+        size: ContainerSize.medium,
+        child: Center(child: Text('Błąd pobierania dokumentu: $err')),
       ),
-      data: (doc) => Scaffold(
-        backgroundColor: const Color(0xFF121212),
-        appBar: AppBar(
-          title: Text(doc.title),
-          backgroundColor: const Color(0xFF1E1E2E),
-          foregroundColor: Colors.white,
-          centerTitle: true,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
-          child: DocumentCardContainer(
-            doc: doc,
-            child: Column(
-              children: [
-                DocumentHeaderBadge(doc: doc),
-                const SizedBox(height: 24),
-                DocumentAvatarStack(doc: doc),
-                const SizedBox(height: 24),
-                ...doc.fields.map(
-                  (field) => field.isSensitive
-                      ? DocumentSensitiveField(
-                          field: field,
-                          isVisible: _sensitiveVisible,
-                          onToggle: _handleSensitiveToggle,
-                        )
-                      : DocumentInfoRow(
-                          icon: field.icon,
-                          label: field.label,
-                          value: field.value,
-                        ),
+      data: (doc) => _buildContent(context, doc),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, DocumentModel doc) {
+    return AppScaffold(
+      size: ContainerSize.medium,
+      appBar: AppAppBar(title: doc.title),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: DocumentCardContainer(
+          doc: doc,
+          child: Column(
+            children: [
+              DocumentHeaderBadge(doc: doc),
+              const SizedBox(height: 24),
+              DocumentAvatarStack(doc: doc),
+              const SizedBox(height: 24),
+              ...doc.fields.map(
+                (field) => DocumentInfoRow(
+                  icon: DocumentIconMapper.getIcon(field.iconName),
+                  label: field.label,
+                  value: field.value,
                 ),
-                if (doc.expiryDate != null) ...[
-                  const SizedBox(height: 16),
-                  DocumentExpiryBadge(date: doc.expiryDate!),
-                ],
-                if (doc.qrData != null) DocumentQrSection(data: doc.qrData!),
+              ),
+              if (doc.expiryDate.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                DocumentExpiryBadge(date: doc.expiryDate),
               ],
-            ),
+              if (doc.qrData != null) DocumentQrSection(data: doc.qrData!),
+            ],
           ),
         ),
       ),

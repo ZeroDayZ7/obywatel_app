@@ -5,21 +5,28 @@ class DocumentHeaderBadge extends StatelessWidget {
   final DocumentModel doc;
   const DocumentHeaderBadge({super.key, required this.doc});
 
+  Color _parseColor(String hexColor) {
+    final hex = hexColor.replaceAll('#', '');
+    return Color(int.parse('FF$hex', radix: 16));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeColor = _parseColor(doc.colorHex);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: doc.themeColor.withAlpha(51),
+            color: themeColor.withAlpha(51),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: doc.themeColor.withAlpha(128)),
+            border: Border.all(color: themeColor.withAlpha(128)),
           ),
           child: Row(
             children: [
-              Icon(Icons.verified_user, size: 16, color: doc.themeColor),
+              Icon(Icons.verified_user, size: 16, color: themeColor),
               const SizedBox(width: 6),
               const Text(
                 'DOKUMENT WAŻNY',

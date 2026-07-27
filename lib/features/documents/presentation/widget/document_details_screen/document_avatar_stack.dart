@@ -6,8 +6,15 @@ class DocumentAvatarStack extends StatelessWidget {
 
   const DocumentAvatarStack({super.key, required this.doc});
 
+  Color _parseColor(String hexColor) {
+    final hex = hexColor.replaceAll('#', '');
+    return Color(int.parse('FF$hex', radix: 16));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeColor = _parseColor(doc.colorHex);
+
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -15,7 +22,7 @@ class DocumentAvatarStack extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: doc.themeColor.withAlpha(128), width: 2),
+            border: Border.all(color: themeColor.withAlpha(128), width: 2),
           ),
           child: const CircleAvatar(
             radius: 50,
@@ -29,7 +36,7 @@ class DocumentAvatarStack extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: doc.themeColor,
+              color: themeColor,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(color: Colors.black.withAlpha(77), blurRadius: 8),

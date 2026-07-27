@@ -1,4 +1,3 @@
-// widgets/document_card_container.dart
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 
@@ -12,8 +11,15 @@ class DocumentCardContainer extends StatelessWidget {
     required this.child,
   });
 
+  Color _parseColor(String hexColor) {
+    final hex = hexColor.replaceAll('#', '');
+    return Color(int.parse('FF$hex', radix: 16));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final themeColor = _parseColor(doc.colorHex);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -25,7 +31,7 @@ class DocumentCardContainer extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: doc.themeColor.withAlpha(50),
+            color: themeColor.withAlpha(50),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
