@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/glow_icon.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -37,16 +36,18 @@ class AppPinCodeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        AppGlowIcon(icon: icon, color: const Color(0xFF00f0ff)),
+        AppGlowIcon(icon: icon, color: colorScheme.primary),
         const SizedBox(height: 32),
         Text(
           titleKey.tr(),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
+            color: colorScheme.onSurface,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -55,7 +56,7 @@ class AppPinCodeView extends StatelessWidget {
           subtitleKey.tr(),
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.white.withValues(alpha: 0.6),
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 40),
@@ -69,30 +70,31 @@ class AppPinCodeView extends StatelessWidget {
             obscureText: length == 4,
             autoFocus: true,
             enabled: !isLoading,
-            
             keyboardType: TextInputType.number,
             animationType: AnimationType.scale,
             errorAnimationController: errorController,
-            cursorColor: const Color(0xFF00f0ff),
+            cursorColor: colorScheme.primary,
+            textStyle: TextStyle(
+              color: colorScheme.onSurface,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
             pinTheme: PinTheme(
               shape: PinCodeFieldShape.box,
               borderRadius: BorderRadius.circular(12),
               fieldHeight: 60,
               fieldWidth: length == 4 ? 60 : 45,
               borderWidth: 2,
-              activeColor: const Color(0xFF00f0ff),
-              selectedColor: const Color(0xFF00f0ff),
+              activeColor: colorScheme.primary,
+              selectedColor: colorScheme.primary,
               inactiveColor: isError
-                  ? AppColors.error
-                  : Colors.white.withValues(alpha: 0.1),
+                  ? colorScheme.error
+                  : colorScheme.onSurface.withValues(alpha: 0.2),
               activeFillColor: Colors.transparent,
-              selectedFillColor: const Color(
-                0xFF00f0ff,
-              ).withValues(alpha: 0.05),
+              selectedFillColor: colorScheme.primary.withValues(alpha: 0.05),
+              errorBorderColor: colorScheme.error,
             ),
             beforeTextPaste: (text) {
-              // Pozwalamy na wklejanie.
-              // Możesz tu dodać logikę sprawdzającą np. czy text to same cyfry.
               return true;
             },
             onCompleted: onCompleted,
