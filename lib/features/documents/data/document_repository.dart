@@ -8,6 +8,7 @@ part 'document_repository.g.dart';
 
 abstract class DocumentRepository {
   Future<List<DocumentModel>> fetchDocuments();
+
   Future<DocumentModel> fetchDocumentById(String id);
 }
 
@@ -30,17 +31,13 @@ class HttpDocumentRepository implements DocumentRepository {
         return [];
       }
 
-      final json = response.data as Map<String, dynamic>;
+      final data = response.data as List<dynamic>;
 
-      final docs = json['docs'] as List<dynamic>?;
-
-      if (docs == null) {
-        logger.w('No docs field in response');
-        return [];
-      }
-
-      return docs
-          .map((item) => DocumentModel.fromJson(item as Map<String, dynamic>))
+      return data
+          .map(
+            (item) =>
+                DocumentModel.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
           .toList();
     } catch (e, stackTrace) {
       logger.e(
@@ -63,7 +60,9 @@ class HttpDocumentRepository implements DocumentRepository {
 
       logger.d('Fetch document $id raw response: ${response.data}');
 
-      return DocumentModel.fromJson(response.data as Map<String, dynamic>);
+      return DocumentModel.fromJson(
+        Map<String, dynamic>.from(response.data as Map),
+      );
     } catch (e, stackTrace) {
       logger.e(
         'Failed to fetch document $id',

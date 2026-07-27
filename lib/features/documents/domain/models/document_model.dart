@@ -24,23 +24,19 @@ sealed class DocumentModel with _$DocumentModel {
   const DocumentModel._();
 
   const factory DocumentModel({
-    @JsonKey(name: 'ID') required String id,
+    @JsonKey(name: 'id') @Default('') String id,
 
-    @JsonKey(name: 'ProfileID') required String profileId,
+    @JsonKey(name: 'profile_id') String? profileId,
 
-    @JsonKey(name: 'Type') required String type,
+    @JsonKey(name: 'type') @Default('') String type,
 
-    @JsonKey(name: 'Status') required String status,
+    @JsonKey(name: 'status') @Default('') String status,
 
-    @JsonKey(name: 'EncryptedMeta') required String encryptedMeta,
+    @JsonKey(name: 'encrypted_meta') @Default('') String encryptedMeta,
 
-    @JsonKey(name: 'IssuedAt') String? issuedAt,
+    @JsonKey(name: 'issued_at') String? issuedAt,
 
-    @JsonKey(name: 'ExpiresAt') String? expiresAt,
-
-    @JsonKey(name: 'CreatedAt') String? createdAt,
-
-    @JsonKey(name: 'UpdatedAt') String? updatedAt,
+    @JsonKey(name: 'expires_at') String? expiresAt,
   }) = _DocumentModel;
 
   factory DocumentModel.fromJson(Map<String, dynamic> json) =>
@@ -90,6 +86,38 @@ sealed class DocumentModel with _$DocumentModel {
     return isVerified ? 'Ważny' : 'Nieważny';
   }
 
+  String get colorHex {
+    switch (type) {
+      case 'id_card':
+        return '#2196F3';
+
+      case 'driver_license':
+        return '#4CAF50';
+
+      case 'student_card':
+        return '#9C27B0';
+
+      default:
+        return '#607D8B';
+    }
+  }
+
+  DocumentCategory get category {
+    switch (type) {
+      case 'id_card':
+        return DocumentCategory.identity;
+
+      case 'driver_license':
+        return DocumentCategory.transport;
+
+      case 'student_card':
+        return DocumentCategory.education;
+
+      default:
+        return DocumentCategory.other;
+    }
+  }
+
   String get iconName {
     switch (type) {
       case 'id_card':
@@ -106,43 +134,19 @@ sealed class DocumentModel with _$DocumentModel {
     }
   }
 
-  String get colorHex {
-    switch (type) {
-      case 'id_card':
-        return '#2196F3';
-
-      case 'driver_license':
-        return '#4CAF50';
-
-      default:
-        return '#607D8B';
-    }
-  }
-
-  DocumentCategory get category {
-    switch (type) {
-      case 'id_card':
-        return DocumentCategory.identity;
-
-      case 'driver_license':
-        return DocumentCategory.transport;
-
-      default:
-        return DocumentCategory.other;
-    }
-  }
-
   List<DocumentField> get fields {
-    final meta = _parsedMeta;
-
-    final number = meta['document_number']?.toString() ?? '-';
-
-    final issuer = meta['issuer']?.toString() ?? '-';
-
     return [
-      DocumentField(label: 'Numer dokumentu', value: number, iconName: 'badge'),
+      DocumentField(
+        label: 'Numer dokumentu',
+        value: _parsedMeta['document_number']?.toString() ?? '-',
+        iconName: 'badge',
+      ),
 
-      DocumentField(label: 'Organ wydający', value: issuer, iconName: 'public'),
+      DocumentField(
+        label: 'Organ wydający',
+        value: _parsedMeta['issuer']?.toString() ?? '-',
+        iconName: 'public',
+      ),
     ];
   }
 

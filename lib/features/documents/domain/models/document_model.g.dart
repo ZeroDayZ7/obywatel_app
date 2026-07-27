@@ -8,26 +8,22 @@ part of 'document_model.dart';
 
 _DocumentModel _$DocumentModelFromJson(Map<String, dynamic> json) =>
     _DocumentModel(
-      id: json['ID'] as String,
-      profileId: json['ProfileID'] as String,
-      type: json['Type'] as String,
-      status: json['Status'] as String,
-      encryptedMeta: json['EncryptedMeta'] as String,
-      issuedAt: json['IssuedAt'] as String?,
-      expiresAt: json['ExpiresAt'] as String?,
-      createdAt: json['CreatedAt'] as String?,
-      updatedAt: json['UpdatedAt'] as String?,
+      id: json['id'] as String? ?? '',
+      profileId: json['profile_id'] as String?,
+      type: json['type'] as String? ?? '',
+      status: json['status'] as String? ?? '',
+      encryptedMeta: json['encrypted_meta'] as String? ?? '',
+      issuedAt: json['issued_at'] as String?,
+      expiresAt: json['expires_at'] as String?,
     );
 
 Map<String, dynamic> _$DocumentModelToJson(_DocumentModel instance) =>
     <String, dynamic>{
-      'ID': instance.id,
-      'ProfileID': instance.profileId,
-      'Type': instance.type,
-      'Status': instance.status,
-      'EncryptedMeta': instance.encryptedMeta,
-      'IssuedAt': instance.issuedAt,
-      'ExpiresAt': instance.expiresAt,
-      'CreatedAt': instance.createdAt,
-      'UpdatedAt': instance.updatedAt,
+      'id': instance.id,
+      'profile_id': instance.profileId,
+      'type': instance.type,
+      'status': instance.status,
+      'encrypted_meta': instance.encryptedMeta,
+      'issued_at': instance.issuedAt,
+      'expires_at': instance.expiresAt,
     };

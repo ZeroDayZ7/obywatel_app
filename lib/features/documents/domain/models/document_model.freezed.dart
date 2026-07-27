@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$DocumentModel {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'ProfileID') String get profileId;@JsonKey(name: 'Type') String get type;@JsonKey(name: 'Status') String get status;@JsonKey(name: 'EncryptedMeta') String get encryptedMeta;@JsonKey(name: 'IssuedAt') String? get issuedAt;@JsonKey(name: 'ExpiresAt') String? get expiresAt;@JsonKey(name: 'CreatedAt') String? get createdAt;@JsonKey(name: 'UpdatedAt') String? get updatedAt;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'profile_id') String? get profileId;@JsonKey(name: 'type') String get type;@JsonKey(name: 'status') String get status;@JsonKey(name: 'encrypted_meta') String get encryptedMeta;@JsonKey(name: 'issued_at') String? get issuedAt;@JsonKey(name: 'expires_at') String? get expiresAt;
 /// Create a copy of DocumentModel
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $DocumentModelCopyWith<DocumentModel> get copyWith => _$DocumentModelCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.profileId, profileId) || other.profileId == profileId)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.encryptedMeta, encryptedMeta) || other.encryptedMeta == encryptedMeta)&&(identical(other.issuedAt, issuedAt) || other.issuedAt == issuedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DocumentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.profileId, profileId) || other.profileId == profileId)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.encryptedMeta, encryptedMeta) || other.encryptedMeta == encryptedMeta)&&(identical(other.issuedAt, issuedAt) || other.issuedAt == issuedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,profileId,type,status,encryptedMeta,issuedAt,expiresAt,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,profileId,type,status,encryptedMeta,issuedAt,expiresAt);
 
 @override
 String toString() {
-  return 'DocumentModel(id: $id, profileId: $profileId, type: $type, status: $status, encryptedMeta: $encryptedMeta, issuedAt: $issuedAt, expiresAt: $expiresAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'DocumentModel(id: $id, profileId: $profileId, type: $type, status: $status, encryptedMeta: $encryptedMeta, issuedAt: $issuedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $DocumentModelCopyWith<$Res>  {
   factory $DocumentModelCopyWith(DocumentModel value, $Res Function(DocumentModel) _then) = _$DocumentModelCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ProfileID') String profileId,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Status') String status,@JsonKey(name: 'EncryptedMeta') String encryptedMeta,@JsonKey(name: 'IssuedAt') String? issuedAt,@JsonKey(name: 'ExpiresAt') String? expiresAt,@JsonKey(name: 'CreatedAt') String? createdAt,@JsonKey(name: 'UpdatedAt') String? updatedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'profile_id') String? profileId,@JsonKey(name: 'type') String type,@JsonKey(name: 'status') String status,@JsonKey(name: 'encrypted_meta') String encryptedMeta,@JsonKey(name: 'issued_at') String? issuedAt,@JsonKey(name: 'expires_at') String? expiresAt
 });
 
 
@@ -65,17 +65,15 @@ class _$DocumentModelCopyWithImpl<$Res>
 
 /// Create a copy of DocumentModel
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? profileId = null,Object? type = null,Object? status = null,Object? encryptedMeta = null,Object? issuedAt = freezed,Object? expiresAt = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? profileId = freezed,Object? type = null,Object? status = null,Object? encryptedMeta = null,Object? issuedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,profileId: null == profileId ? _self.profileId : profileId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,profileId: freezed == profileId ? _self.profileId : profileId // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,encryptedMeta: null == encryptedMeta ? _self.encryptedMeta : encryptedMeta // ignore: cast_nullable_to_non_nullable
 as String,issuedAt: freezed == issuedAt ? _self.issuedAt : issuedAt // ignore: cast_nullable_to_non_nullable
 as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as String?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
@@ -158,10 +156,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ProfileID')  String profileId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'EncryptedMeta')  String encryptedMeta, @JsonKey(name: 'IssuedAt')  String? issuedAt, @JsonKey(name: 'ExpiresAt')  String? expiresAt, @JsonKey(name: 'CreatedAt')  String? createdAt, @JsonKey(name: 'UpdatedAt')  String? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'profile_id')  String? profileId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'status')  String status, @JsonKey(name: 'encrypted_meta')  String encryptedMeta, @JsonKey(name: 'issued_at')  String? issuedAt, @JsonKey(name: 'expires_at')  String? expiresAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _DocumentModel() when $default != null:
-return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt);case _:
   return orElse();
 
 }
@@ -179,10 +177,10 @@ return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encrypted
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ProfileID')  String profileId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'EncryptedMeta')  String encryptedMeta, @JsonKey(name: 'IssuedAt')  String? issuedAt, @JsonKey(name: 'ExpiresAt')  String? expiresAt, @JsonKey(name: 'CreatedAt')  String? createdAt, @JsonKey(name: 'UpdatedAt')  String? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'profile_id')  String? profileId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'status')  String status, @JsonKey(name: 'encrypted_meta')  String encryptedMeta, @JsonKey(name: 'issued_at')  String? issuedAt, @JsonKey(name: 'expires_at')  String? expiresAt)  $default,) {final _that = this;
 switch (_that) {
 case _DocumentModel():
-return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt,_that.createdAt,_that.updatedAt);}
+return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -196,10 +194,10 @@ return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encrypted
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ProfileID')  String profileId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'EncryptedMeta')  String encryptedMeta, @JsonKey(name: 'IssuedAt')  String? issuedAt, @JsonKey(name: 'ExpiresAt')  String? expiresAt, @JsonKey(name: 'CreatedAt')  String? createdAt, @JsonKey(name: 'UpdatedAt')  String? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'profile_id')  String? profileId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'status')  String status, @JsonKey(name: 'encrypted_meta')  String encryptedMeta, @JsonKey(name: 'issued_at')  String? issuedAt, @JsonKey(name: 'expires_at')  String? expiresAt)?  $default,) {final _that = this;
 switch (_that) {
 case _DocumentModel() when $default != null:
-return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encryptedMeta,_that.issuedAt,_that.expiresAt);case _:
   return null;
 
 }
@@ -211,18 +209,16 @@ return $default(_that.id,_that.profileId,_that.type,_that.status,_that.encrypted
 @JsonSerializable()
 
 class _DocumentModel extends DocumentModel {
-  const _DocumentModel({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'ProfileID') required this.profileId, @JsonKey(name: 'Type') required this.type, @JsonKey(name: 'Status') required this.status, @JsonKey(name: 'EncryptedMeta') required this.encryptedMeta, @JsonKey(name: 'IssuedAt') this.issuedAt, @JsonKey(name: 'ExpiresAt') this.expiresAt, @JsonKey(name: 'CreatedAt') this.createdAt, @JsonKey(name: 'UpdatedAt') this.updatedAt}): super._();
+  const _DocumentModel({@JsonKey(name: 'id') this.id = '', @JsonKey(name: 'profile_id') this.profileId, @JsonKey(name: 'type') this.type = '', @JsonKey(name: 'status') this.status = '', @JsonKey(name: 'encrypted_meta') this.encryptedMeta = '', @JsonKey(name: 'issued_at') this.issuedAt, @JsonKey(name: 'expires_at') this.expiresAt}): super._();
   factory _DocumentModel.fromJson(Map<String, dynamic> json) => _$DocumentModelFromJson(json);
 
-@override@JsonKey(name: 'ID') final  String id;
-@override@JsonKey(name: 'ProfileID') final  String profileId;
-@override@JsonKey(name: 'Type') final  String type;
-@override@JsonKey(name: 'Status') final  String status;
-@override@JsonKey(name: 'EncryptedMeta') final  String encryptedMeta;
-@override@JsonKey(name: 'IssuedAt') final  String? issuedAt;
-@override@JsonKey(name: 'ExpiresAt') final  String? expiresAt;
-@override@JsonKey(name: 'CreatedAt') final  String? createdAt;
-@override@JsonKey(name: 'UpdatedAt') final  String? updatedAt;
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'profile_id') final  String? profileId;
+@override@JsonKey(name: 'type') final  String type;
+@override@JsonKey(name: 'status') final  String status;
+@override@JsonKey(name: 'encrypted_meta') final  String encryptedMeta;
+@override@JsonKey(name: 'issued_at') final  String? issuedAt;
+@override@JsonKey(name: 'expires_at') final  String? expiresAt;
 
 /// Create a copy of DocumentModel
 /// with the given fields replaced by the non-null parameter values.
@@ -237,16 +233,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.profileId, profileId) || other.profileId == profileId)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.encryptedMeta, encryptedMeta) || other.encryptedMeta == encryptedMeta)&&(identical(other.issuedAt, issuedAt) || other.issuedAt == issuedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DocumentModel&&(identical(other.id, id) || other.id == id)&&(identical(other.profileId, profileId) || other.profileId == profileId)&&(identical(other.type, type) || other.type == type)&&(identical(other.status, status) || other.status == status)&&(identical(other.encryptedMeta, encryptedMeta) || other.encryptedMeta == encryptedMeta)&&(identical(other.issuedAt, issuedAt) || other.issuedAt == issuedAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,profileId,type,status,encryptedMeta,issuedAt,expiresAt,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,profileId,type,status,encryptedMeta,issuedAt,expiresAt);
 
 @override
 String toString() {
-  return 'DocumentModel(id: $id, profileId: $profileId, type: $type, status: $status, encryptedMeta: $encryptedMeta, issuedAt: $issuedAt, expiresAt: $expiresAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'DocumentModel(id: $id, profileId: $profileId, type: $type, status: $status, encryptedMeta: $encryptedMeta, issuedAt: $issuedAt, expiresAt: $expiresAt)';
 }
 
 
@@ -257,7 +253,7 @@ abstract mixin class _$DocumentModelCopyWith<$Res> implements $DocumentModelCopy
   factory _$DocumentModelCopyWith(_DocumentModel value, $Res Function(_DocumentModel) _then) = __$DocumentModelCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ProfileID') String profileId,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Status') String status,@JsonKey(name: 'EncryptedMeta') String encryptedMeta,@JsonKey(name: 'IssuedAt') String? issuedAt,@JsonKey(name: 'ExpiresAt') String? expiresAt,@JsonKey(name: 'CreatedAt') String? createdAt,@JsonKey(name: 'UpdatedAt') String? updatedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'profile_id') String? profileId,@JsonKey(name: 'type') String type,@JsonKey(name: 'status') String status,@JsonKey(name: 'encrypted_meta') String encryptedMeta,@JsonKey(name: 'issued_at') String? issuedAt,@JsonKey(name: 'expires_at') String? expiresAt
 });
 
 
@@ -274,17 +270,15 @@ class __$DocumentModelCopyWithImpl<$Res>
 
 /// Create a copy of DocumentModel
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? profileId = null,Object? type = null,Object? status = null,Object? encryptedMeta = null,Object? issuedAt = freezed,Object? expiresAt = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? profileId = freezed,Object? type = null,Object? status = null,Object? encryptedMeta = null,Object? issuedAt = freezed,Object? expiresAt = freezed,}) {
   return _then(_DocumentModel(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as String,profileId: null == profileId ? _self.profileId : profileId // ignore: cast_nullable_to_non_nullable
-as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
+as String,profileId: freezed == profileId ? _self.profileId : profileId // ignore: cast_nullable_to_non_nullable
+as String?,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,encryptedMeta: null == encryptedMeta ? _self.encryptedMeta : encryptedMeta // ignore: cast_nullable_to_non_nullable
 as String,issuedAt: freezed == issuedAt ? _self.issuedAt : issuedAt // ignore: cast_nullable_to_non_nullable
 as String?,expiresAt: freezed == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
-as String?,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
-as String?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
 }
