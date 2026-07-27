@@ -9,7 +9,7 @@ class AppBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = AppNavigationItems.getItems(
+    final items = AppNavigationItems.getMobileItems(
       notificationCount: notificationCount,
     );
     final theme = Theme.of(context);

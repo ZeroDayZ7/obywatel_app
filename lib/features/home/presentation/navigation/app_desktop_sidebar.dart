@@ -9,17 +9,18 @@ class AppDesktopSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = AppNavigationItems.getItems(
+    final items = AppNavigationItems.getDesktopItems(
       notificationCount: notificationCount,
     );
     final theme = Theme.of(context);
 
     final currentPath = GoRouterState.of(context).uri.path;
     final currentIndex = items.indexWhere(
-      (item) => currentPath.startsWith(item.route),
+      (item) =>
+          currentPath == item.route || currentPath.startsWith('${item.route}/'),
     );
 
-    final selectedIndex = currentIndex < 0 ? 0 : currentIndex;
+    final selectedIndex = currentIndex < 0 ? null : currentIndex;
 
     return NavigationRail(
       selectedIndex: selectedIndex,
