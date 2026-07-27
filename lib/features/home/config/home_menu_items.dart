@@ -33,26 +33,12 @@ final List<HomeMenuItem> homeMenuItems = [
     color: const Color(0xFF5500FF),
   ),
   HomeMenuItem(
-    id: 'profile',
-    icon: Icons.person,
-    labelKey: LocaleKeys.homeMenu_profile,
-    route: AppRoutes.profile,
-    color: const Color(0xFFFF00F5),
-  ),
-  HomeMenuItem(
     id: 'payments',
     icon: Icons.payment,
     labelKey: LocaleKeys.homeMenu_payments,
     route: AppRoutes.payments,
     color: const Color(0xFFFFD700),
     // isEnabled: false,
-  ),
-  HomeMenuItem(
-    id: 'notifications',
-    icon: Icons.notifications,
-    labelKey: LocaleKeys.homeMenu_notifications,
-    route: AppRoutes.notifications,
-    color: const Color(0xFFFF0055),
   ),
   HomeMenuItem(
     id: 'health',
@@ -67,13 +53,6 @@ final List<HomeMenuItem> homeMenuItems = [
     labelKey: LocaleKeys.homeMenu_education,
     route: AppRoutes.education,
     color: const Color(0xFF00D4FF),
-  ),
-  HomeMenuItem(
-    id: 'settings',
-    icon: Icons.settings,
-    labelKey: LocaleKeys.homeMenu_settings,
-    route: AppRoutes.settings,
-    color: const Color(0xFF888899),
   ),
   HomeMenuItem(
     id: 'test',

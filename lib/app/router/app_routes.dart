@@ -7,6 +7,8 @@ class AppRoutes {
   static const resetPassword = '/reset-password';
   static const twoFaVerify = '/2fa';
   static const home = '/home';
+  static const quickAccess = home;
+  static const services = '/services';
   static const error = '/error';
   static const test = '/test';
   static const update = '/update';
