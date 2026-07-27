@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/app_loader.dart';
-import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
@@ -23,36 +22,18 @@ class PinVerificationScreen extends ConsumerStatefulWidget {
 }
 
 class _PinScreenState extends ConsumerState<PinVerificationScreen> {
-  late StreamController<ErrorAnimationType> _errorController;
+  late final StreamController<ErrorAnimationType> _errorController;
   int _resetToken = 0;
-  bool _hasAttemptedAutoBiometrics = false;
 
   @override
   void initState() {
     super.initState();
     _errorController = StreamController<ErrorAnimationType>.broadcast();
 
-    ref.listenManual(pinVerificationProvider, (prev, next) {
-      next.maybeWhen(
-        error: () {
-          HapticFeedback.vibrate();
-          _errorController.add(ErrorAnimationType.shake);
-          setState(() => _resetToken++);
-        },
-        orElse: () {},
-      );
-
-      final wasLocked =
-          prev?.maybeWhen(locked: (_) => true, orElse: () => false) ?? false;
-      final isIdle = next.maybeWhen(idle: () => true, orElse: () => false);
-
-      if (wasLocked && isIdle) {
-        setState(() => _resetToken++);
-      }
-    });
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _triggerBiometricAuthIfAvailable(isAutoPrompt: true);
+      ref
+          .read(pinVerificationProvider.notifier)
+          .triggerBiometricAuth(isAutoPrompt: true);
     });
   }
 
@@ -62,46 +43,48 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     super.dispose();
   }
 
-  Future<void> _triggerBiometricAuthIfAvailable({
-    bool isAutoPrompt = false,
-  }) async {
-    if (isAutoPrompt && _hasAttemptedAutoBiometrics) return;
+  void _listenToStateChanges(BuildContext context) {
+    ref.listen<PinVerificationState>(pinVerificationProvider, (prev, next) {
+      final isError = next.maybeMap(error: (_) => true, orElse: () => false);
 
-    final securityState = ref.read(securityServiceProvider);
-
-    if (!securityState.isBiometricEnabled || !securityState.canUseBiometrics) {
-      return;
-    }
-
-    if (isAutoPrompt) {
-      _hasAttemptedAutoBiometrics = true;
-    }
-
-    try {
-      final localAuth = ref.read(localAuthProvider);
-      final authenticated = await localAuth.authenticate(
-        localizedReason: 'Zautoryzuj się, aby odblokować aplikację',
-        biometricOnly: true,
-        persistAcrossBackgrounding: true,
-      );
-
-      if (authenticated && mounted) {
-        await ref.read(securityServiceProvider.notifier).unlockApp();
+      if (isError) {
+        HapticFeedback.vibrate();
+        _errorController.add(ErrorAnimationType.shake);
+        setState(() => _resetToken++);
       }
-    } catch (_) {
-      // W przypadku anulowania lub błędu użytkownik odblokowuje aplikację kodem PIN
-    }
+
+      final wasLocked =
+          prev?.maybeMap(locked: (_) => true, orElse: () => false) ?? false;
+
+      final isIdle = next.maybeMap(idle: (_) => true, orElse: () => false);
+
+      if (wasLocked && isIdle) {
+        setState(() => _resetToken++);
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    _listenToStateChanges(context);
+
     final limiterAsync = ref.watch(pinAttemptLimiterProvider);
     final securityState = ref.watch(securityServiceProvider);
+    final verificationState = ref.watch(pinVerificationProvider);
 
-    final isLockedUI = ref.watch(
-      pinVerificationProvider.select(
-        (s) => s.maybeWhen(locked: (_) => true, orElse: () => false),
-      ),
+    final isLockedUI = verificationState.maybeMap(
+      locked: (_) => true,
+      orElse: () => false,
+    );
+
+    final isLoading = verificationState.maybeMap(
+      loading: (_) => true,
+      orElse: () => false,
+    );
+
+    final isError = verificationState.maybeMap(
+      error: (_) => true,
+      orElse: () => false,
     );
 
     final canShowBiometricButton =
@@ -112,23 +95,10 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
         data: (limiter) {
-          final attempts = limiter.attempts;
+          final isLocked = isLockedUI || limiter.isLocked;
           final remainingAttempts = ref
               .read(pinAttemptLimiterProvider.notifier)
               .remainingAttempts;
-
-          final isLocked = isLockedUI || limiter.isLocked;
-          final verificationState = ref.watch(pinVerificationProvider);
-
-          final isLoading = verificationState.maybeWhen(
-            loading: () => true,
-            orElse: () => false,
-          );
-
-          final isError = verificationState.maybeWhen(
-            error: () => true,
-            orElse: () => false,
-          );
 
           return Stack(
             children: [
@@ -146,28 +116,27 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           isError: isError,
                           resetToken: _resetToken,
                           errorController: _errorController,
-                          remainingAttempts: attempts > 0
+                          remainingAttempts: limiter.attempts > 0
                               ? remainingAttempts
                               : null,
                           onCompleted: (pin) {
                             final codes = pin.split('').map(int.parse).toList();
-
                             ref
                                 .read(pinVerificationProvider.notifier)
                                 .verifyPin(codes);
                           },
                         ),
-
                         if (isLoading) const AppLoader(),
-
                         if (canShowBiometricButton && !isLocked) ...[
                           const SizedBox(height: 32),
                           IconButton(
                             onPressed: isLoading
                                 ? null
-                                : () => _triggerBiometricAuthIfAvailable(
-                                    isAutoPrompt: false,
-                                  ),
+                                : () => ref
+                                      .read(pinVerificationProvider.notifier)
+                                      .triggerBiometricAuth(
+                                        isAutoPrompt: false,
+                                      ),
                             iconSize: 48,
                             style: IconButton.styleFrom(
                               foregroundColor: Theme.of(
@@ -184,7 +153,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                   ),
                 ),
               ),
-
               if (isLocked) const LockoutOverlay(),
             ],
           );

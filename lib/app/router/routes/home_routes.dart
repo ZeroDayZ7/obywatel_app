@@ -3,9 +3,9 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/router/extensions/go_router_extensions.dart';
 import 'package:obywatel_plus/features/documents/presentation/pages/documents_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/app_adaptive_navigation.dart';
+import 'package:obywatel_plus/features/home/presentation/pages/profile_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/pages/quick_access_screen.dart';
 import 'package:obywatel_plus/features/home/presentation/pages/services_screen.dart';
-import 'package:obywatel_plus/features/home/presentation/submenu/profile_screen.dart';
 import 'package:obywatel_plus/features/notifications/presentation/notifications_screen.dart';
 import 'package:obywatel_plus/features/notifications/presentation/trash_screen.dart';
 
