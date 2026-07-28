@@ -10,8 +10,8 @@ class GlobalErrorInterceptor extends Interceptor {
 
   GlobalErrorInterceptor({
     required this.logger,
-    this.maxRetries = 3,
-    this.initialRetryDelay = const Duration(milliseconds: 800),
+    this.maxRetries = 2,
+    this.initialRetryDelay = const Duration(milliseconds: 500),
   });
 
   @override
