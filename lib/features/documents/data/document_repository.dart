@@ -20,23 +20,21 @@ class HttpDocumentRepository implements DocumentRepository {
     final logger = _ref.read(appLoggerProvider);
     try {
       final response = await apiClient.get(ApiEndpoints.documentsMe);
-      logger.d('Fetch documents raw response: ${response.data}');
+      logger.d('Fetch documents response: ${response.data}');
       if (response.data == null) {
         return [];
       }
-      final data = response.data as List<dynamic>;
-      return data
+      if (response.data is! List) {
+        throw const FormatException('Expected documents list.');
+      }
+      return (response.data as List)
           .map(
             (item) =>
                 DocumentModel.fromJson(Map<String, dynamic>.from(item as Map)),
           )
           .toList();
     } catch (e, stackTrace) {
-      logger.e(
-        'Failed to fetch my documents',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      logger.e('Fetch documents failed', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }
@@ -47,16 +45,15 @@ class HttpDocumentRepository implements DocumentRepository {
     final logger = _ref.read(appLoggerProvider);
     try {
       final response = await apiClient.get(ApiEndpoints.documentById(id));
-      logger.d('Fetch document $id raw response: ${response.data}');
+      logger.d('Fetch document $id response: ${response.data}');
+      if (response.data == null || response.data is! Map) {
+        throw const FormatException('Expected document object.');
+      }
       return DocumentModel.fromJson(
         Map<String, dynamic>.from(response.data as Map),
       );
     } catch (e, stackTrace) {
-      logger.e(
-        'Failed to fetch document $id',
-        error: e,
-        stackTrace: stackTrace,
-      );
+      logger.e('Fetch document $id failed', error: e, stackTrace: stackTrace);
       rethrow;
     }
   }

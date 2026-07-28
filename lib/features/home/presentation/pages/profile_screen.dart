@@ -1,8 +1,9 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
@@ -17,7 +18,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final colorScheme = theme.colorScheme;
 
     final user = authState.maybeMap(
       authenticated: (state) => state.user,
@@ -27,7 +28,7 @@ class ProfileScreen extends ConsumerWidget {
     if (user == null) {
       return const AppScaffold(
         size: ContainerSize.medium,
-        appBar: AppAppBar(title: 'Profil'),
+        appBar: AppAppBar(title: 'Profil', showBackButton: false),
         child: Center(child: CircularProgressIndicator()),
       );
     }
@@ -38,12 +39,12 @@ class ProfileScreen extends ConsumerWidget {
         : null;
 
     final statusColor = user.status.toLowerCase() == 'active'
-        ? AppColors.success
-        : AppColors.accent;
+        ? colorScheme.primary
+        : colorScheme.secondary;
 
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: const AppAppBar(title: 'Profil'),
+      title: Text(LocaleKeys.navigation_my_account.tr()),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(
@@ -65,15 +66,14 @@ class ProfileScreen extends ConsumerWidget {
                         user.displayName,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontSize: 22,
+                          color: colorScheme.onSurface,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'ID: ${user.id}',
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: isDark
-                              ? AppColors.textSecondaryDark
-                              : AppColors.textSecondaryLight,
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -95,6 +95,7 @@ class ProfileScreen extends ConsumerWidget {
                             style: theme.textTheme.bodyMedium?.copyWith(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
+                              color: colorScheme.onSurface,
                             ),
                           ),
                         ],
@@ -121,7 +122,7 @@ class ProfileScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _ActionButton(
                   icon: Icons.qr_code_rounded,
@@ -174,31 +175,25 @@ class _ProfileCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    final borderColor = isDark
-        ? AppColors.surfaceDark
-        : AppColors.textSecondaryLight.withValues(alpha: 0.2);
-
-    final cardBg = isDark ? AppColors.surfaceDark : AppColors.backgroundLight;
+    final colorScheme = theme.colorScheme;
 
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6),
       elevation: 0,
-      color: cardBg,
+      color: colorScheme.surfaceContainerHigh,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: borderColor),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+        ),
       ),
       child: ListTile(
-        leading: Icon(icon, color: AppColors.primary),
+        leading: Icon(icon, color: colorScheme.primary),
         title: Text(
           title,
           style: theme.textTheme.titleLarge?.copyWith(
             fontSize: 12,
-            color: isDark
-                ? AppColors.textSecondaryDark
-                : AppColors.textSecondaryLight,
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         subtitle: Text(
@@ -206,6 +201,7 @@ class _ProfileCard extends StatelessWidget {
           style: theme.textTheme.bodyMedium?.copyWith(
             fontSize: 15,
             fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface,
           ),
         ),
       ),
@@ -227,6 +223,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return InkWell(
       borderRadius: BorderRadius.circular(12),
@@ -238,10 +235,10 @@ class _ActionButton extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.12),
+                color: colorScheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(icon, size: 28, color: AppColors.primary),
+              child: Icon(icon, size: 28, color: colorScheme.primary),
             ),
             const SizedBox(height: 8),
             Text(
@@ -249,6 +246,7 @@ class _ActionButton extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
+                color: colorScheme.onSurface,
               ),
             ),
           ],

@@ -19,6 +19,7 @@ abstract interface class ISecurityService {
   Future<void> lockApp();
   Future<void> unlockApp();
   Future<void> unlockManually();
+  Future<void> markSecurityAsInitialized();
 }
 
 @Riverpod(keepAlive: true)
@@ -131,6 +132,25 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
     debugSecurityState();
     _logger.i('🔐 Security Init: Done');
+  }
+
+  /// Oznacza stan bezpieczeństwa jako w pełni zainicjalizowany i gotowy po pomyślnej weryfikacji
+  @override
+  Future<void> markSecurityAsInitialized() async {
+    final isPinConfigured = await _pinService.hasPin();
+    final isBiometricEnabled =
+        await _secureStorage.readBool(key: StorageKeys.isBiometricConfigured);
+
+    state = state.copyWith(
+      initialized: true,
+      isSetupCompleted: true,
+      isPinConfigured: isPinConfigured,
+      isBiometricEnabled: isBiometricEnabled,
+      hasLocalLock: false,
+    );
+
+    _logger.i('✅ Security state marked as initialized and unlocked');
+    debugSecurityState();
   }
 
   Future<void> setPin(List<int> pinCodes) async {

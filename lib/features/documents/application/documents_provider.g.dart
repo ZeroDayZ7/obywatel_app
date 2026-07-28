@@ -33,7 +33,7 @@ final class DocumentsProvider
   Documents create() => Documents();
 }
 
-String _$documentsHash() => r'5796d3a837b0be0ed17ba629cdd2a131a0670d00';
+String _$documentsHash() => r'd63066ca1159278fdace57063fd572a077e0a077';
 
 abstract class _$Documents extends $AsyncNotifier<List<DocumentModel>> {
   FutureOr<List<DocumentModel>> build();
@@ -71,7 +71,7 @@ final class DocumentDetailProvider
   }) : super(
          retry: null,
          name: r'documentDetailProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -109,7 +109,7 @@ final class DocumentDetailProvider
   }
 }
 
-String _$documentDetailHash() => r'683c6767ce8a877667703472ff4aa96c33596fef';
+String _$documentDetailHash() => r'bb37b63c57205f6b6dede33f1f02498f4e23ade6';
 
 final class DocumentDetailFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<DocumentModel>, String> {
@@ -119,7 +119,7 @@ final class DocumentDetailFamily extends $Family
         name: r'documentDetailProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   DocumentDetailProvider call(String id) =>

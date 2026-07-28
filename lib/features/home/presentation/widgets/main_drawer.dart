@@ -25,7 +25,7 @@ class MainDrawer extends ConsumerWidget {
                 ...items.map((item) => DrawerTile(item: item)),
                 const Divider(),
                 LogoutTile(
-                  onLogoutSelected: (result) => _handleLogout(ref, result),
+                  onLogoutSelected: () => _showLogoutDialog(context, ref),
                 ),
               ],
             ),
@@ -35,13 +35,19 @@ class MainDrawer extends ConsumerWidget {
     );
   }
 
-  Future<void> _handleLogout(WidgetRef ref, LogoutDialogResult result) async {
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
+    final action = await LogoutConfirmDialog.show(context);
+    if (action == null || !context.mounted) return;
+
     final authController = ref.read(authControllerProvider.notifier);
 
-    if (result.removeDevice) {
-      await authController.unpairAndReset();
-    } else {
-      await authController.logout();
+    switch (action) {
+      case LogoutAction.unpairAndReset:
+        await authController.unpairAndReset();
+        break;
+      case LogoutAction.logout:
+        await authController.logout();
+        break;
     }
   }
 }

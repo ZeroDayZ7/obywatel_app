@@ -7,17 +7,22 @@ part 'documents_provider.g.dart';
 @riverpod
 class Documents extends _$Documents {
   @override
-  FutureOr<List<DocumentModel>> build() {
-    return ref.watch(documentRepositoryProvider).fetchDocuments();
+  FutureOr<List<DocumentModel>> build() async {
+    final repository = ref.watch(documentRepositoryProvider);
+    return repository.fetchDocuments();
   }
 
   Future<void> refresh() async {
-    ref.invalidateSelf();
-    await future;
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final repository = ref.read(documentRepositoryProvider);
+      return repository.fetchDocuments();
+    });
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 Future<DocumentModel> documentDetail(Ref ref, String id) {
-  return ref.watch(documentRepositoryProvider).fetchDocumentById(id);
+  final repository = ref.watch(documentRepositoryProvider);
+  return repository.fetchDocumentById(id);
 }

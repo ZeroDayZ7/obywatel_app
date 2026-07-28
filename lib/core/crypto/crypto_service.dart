@@ -76,6 +76,60 @@ class CryptoService extends _$CryptoService {
     ref.onDispose(() => _worker.stop());
   }
 
+  /// Sprawdza, czy klucz jest gotowy w pamięci RAM do złożenia podpisu
+  Future<bool> hasActiveKey() async {
+    return _activeDeviceKeyPair != null;
+  }
+
+  /// Wczytuje i odszyfrowuje klucz prywatny z SecureStorage do RAM przy użyciu PIN-u
+  Future<void> loadAndUnlockPrivateKey({
+    required List<int> pinBytes,
+    required List<int> salt,
+  }) async {
+    final storage = ref.read(secureStorageProvider);
+    final encryptedBase64 = await storage.read(
+      key: StorageKeys.devicePrivateKey,
+    );
+
+    if (encryptedBase64 == null || encryptedBase64.isEmpty) {
+      throw Exception('Brak zapisanego klucza prywatnego na urządzeniu.');
+    }
+
+    final encryptedData = base64Decode(encryptedBase64);
+
+    // Odszyfrowanie KEK i klucza prywatnego
+    final kek = await ref
+        .read(kdfServiceProvider)
+        .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
+
+    final secretBox = SecretBox.fromConcatenation(
+      encryptedData,
+      nonceLength: 12,
+      macLength: 16,
+    );
+
+    final clearPrivateKeyBytes = await AesGcm.with256bits().decrypt(
+      secretBox,
+      secretKey: kek,
+    );
+
+    // Reinterpretacja bajtów jako Ed25519 KeyPair
+    final algorithm = Ed25519();
+    _activeDeviceKeyPair = await algorithm.newKeyPairFromSeed(
+      clearPrivateKeyBytes.sublist(0, 32),
+    );
+
+    // Clean memory
+    ref.read(kdfServiceProvider).wipe(clearPrivateKeyBytes);
+    _log.i('🔓 Klucz prywatny urządzenia został odblokowany w RAM.');
+  }
+
+  /// Czyści klucz prywatny z pamięci RAM (wywoływane np. przy zablokowaniu aplikacji lub logout)
+  void lockKey() {
+    _activeDeviceKeyPair = null;
+    _log.i('🔒 Klucz prywatny został usunięty z RAM.');
+  }
+
   /// Sign a message using the user's encrypted key + PIN
   Future<List<int>> signMessage({
     required List<int> message,
@@ -103,49 +157,42 @@ class CryptoService extends _$CryptoService {
   // Podpisuje challenge używając klucza z RAM
   Future<String> signWithActiveKey(String challenge) async {
     if (_activeDeviceKeyPair == null) throw Exception('No active key');
+
+    // Dekodujemy Base64 na surowe bajty binarne zamiast robić utf8.encode
+    final challengeBytes = base64Decode(challenge);
+
     final algorithm = Ed25519();
     final signature = await algorithm.sign(
-      utf8.encode(challenge),
+      challengeBytes,
       keyPair: _activeDeviceKeyPair!,
     );
+
     return base64Encode(signature.bytes);
   }
 
-  // Na koniec setupu: szyfrujemy i zapisujemy klucz
-  // ⚡ ZMIANA: Przyjmujemy List<int> pinBytes, aby uniknąć problemów z kodowaniem Stringów
   Future<void> finalizeAndPersist(List<int> pinBytes, List<int> salt) async {
     if (_activeDeviceKeyPair == null) return;
     try {
       final privateKeyData = await _activeDeviceKeyPair!.extract();
       final privKeyBytes = privateKeyData.bytes;
 
-      // Wyprowadzenie KEK z PIN-u (bezpośrednio z bajtów)
       final kek = await ref
           .read(kdfServiceProvider)
           .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
 
-      // Szyfrowanie klucza prywatnego
       final secretBox = await AesGcm.with256bits().encrypt(
         privKeyBytes,
         secretKey: kek,
       );
 
-      // final secretBox = await AesGcm.with256bits().encrypt(
-      //   privKeyBytes,
-      //   secretKey: _securityKeys.masterKey,
-      // );
-
-      // Połączenie Nonce + CipherText + MAC
       final encryptedData = secretBox.concatenation();
-
-      // Zapis do Secure Storage
       final storage = ref.read(secureStorageProvider);
+
       await storage.write(
         key: StorageKeys.devicePrivateKey,
         value: base64Encode(encryptedData),
       );
 
-      // Zapis klucza publicznego
       final publicKey = await _activeDeviceKeyPair!.extractPublicKey();
       await storage.write(
         key: StorageKeys.devicePublicKey,
@@ -154,9 +201,10 @@ class CryptoService extends _$CryptoService {
 
       _log.i('✅ Klucze urządzenia zostały zaszyfrowane i zapisane.');
 
-      // Wipe KEK i prywatny klucz
       ref.read(kdfServiceProvider).wipe(privKeyBytes);
-      _activeDeviceKeyPair = null;
+
+      // ❌ USUNIĘTO: _activeDeviceKeyPair = null;
+      // Klucz zostaje w RAM, dopóki registerTrustedDevice nie złoży podpisu!
     } catch (e, st) {
       _log.e('❌ Błąd podczas zapisu kluczy', error: e, stackTrace: st);
       rethrow;

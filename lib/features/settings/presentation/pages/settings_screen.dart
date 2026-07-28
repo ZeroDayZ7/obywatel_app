@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/design/models/action_item.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/settings/presentation/config/settings_config.dart';
 import 'package:obywatel_plus/features/settings/presentation/sheets/language_selector_sheet.dart';
@@ -26,7 +27,10 @@ class SettingsScreen extends ConsumerWidget {
 
     return AppScaffold(
       size: ContainerSize.medium,
-      title: Text(LocaleKeys.settings_title.tr()),
+      appBar: AppAppBar(
+        title: LocaleKeys.settings_title.tr(),
+        showBackButton: true,
+      ),
       child: ListView.builder(
         itemCount: sections.length,
         itemBuilder: (context, index) {

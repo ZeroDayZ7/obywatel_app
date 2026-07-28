@@ -1,25 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 
-AppBarTheme buildAppBarTheme(bool isDark) {
-  final foreground = isDark
-      ? AppColors.textPrimaryDark
-      : AppColors.textPrimaryLight;
-  final background = isDark
-      ? AppColors.backgroundDark
-      : AppColors.backgroundLight;
-
+AppBarTheme buildAppBarTheme(ColorScheme colorScheme) {
   return AppBarTheme(
     elevation: 0,
     centerTitle: true,
-    backgroundColor: background,
-    foregroundColor: foreground,
+    backgroundColor: colorScheme.surface,
+    foregroundColor: colorScheme.onSurface,
     titleTextStyle: TextStyle(
-      color: foreground,
+      color: colorScheme.onSurface,
       fontSize: 18,
       fontWeight: FontWeight.bold,
       letterSpacing: 1.2,
     ),
-    iconTheme: IconThemeData(color: foreground),
+    iconTheme: IconThemeData(color: colorScheme.onSurface),
   );
 }

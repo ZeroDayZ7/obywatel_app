@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
 
-class AppColors {
-  static const primary = Color(0xFF26C6DA);
-  static const primaryDark = Color(0xFF0097A7);
+/// Surowa paleta wartości kolorystycznych (Palette Tokens).
+/// Zbudowana zgodnie z wymogami Material 3.
+///
+/// UWAGA: Nie używaj tych kolorów bezpośrednio w widgetach UI.
+/// Korzystaj z `Theme.of(context).colorScheme`.
+abstract final class AppColors {
+  // Brand / Cyan
+  static const cyanPrimary = Color(0xFF00BCD4);
+  static const cyanSecondary = Color(0xFF00E5FF);
 
-  static const backgroundLight = Color(0xFFF5F7FA);
-  static const backgroundDark = Color.fromARGB(255, 31, 31, 31);
-  static const surfaceDark = Color(0xFF121C31);
+  // Matrix / Cyberpunk
+  static const matrixGreen = Color(0xFF00FF66);
+  static const matrixDarkSurface = Color(0xFF0D0D0D);
+  static const matrixContainer = Color(0xFF003311);
 
-  static const textPrimaryLight = Color(0xFF1A1C1E);
-  static const textSecondaryLight = Color(0xFF74777F);
+  // Backgrounds & Surfaces
+  static const lightBackground = Color(0xFFF5F7FA);
+  static const lightSurfaceContainer = Color(0xFFFFFFFF);
 
-  static const textPrimaryDark = Color(0xFFF5F7FA);
-  static const textSecondaryDark = Color(0xFFC4C6CF);
+  static const darkBackground = Color(0xFF1F1F1F);
+  static const darkSurfaceContainer = Color(0xFF2A2A2A);
 
-  static const accent = Color.fromARGB(255, 160, 160, 160);
+  // Status Colors
   static const error = Color(0xFFD32F2F);
+  static const onError = Color(0xFFFFFFFF);
   static const success = Color(0xFF2E7D32);
 }

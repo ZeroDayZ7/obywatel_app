@@ -15,6 +15,7 @@ class AppScaffold extends StatelessWidget {
   final EdgeInsetsGeometry? padding;
   final Widget? bottomNavigationBar;
   final Widget? floatingActionButton;
+  final double desktopBreakpoint;
 
   const AppScaffold({
     super.key,
@@ -30,10 +31,13 @@ class AppScaffold extends StatelessWidget {
     this.padding,
     this.bottomNavigationBar,
     this.floatingActionButton,
+    this.desktopBreakpoint = 800.0,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isDesktop = MediaQuery.sizeOf(context).width >= desktopBreakpoint;
+
     final PreferredSizeWidget? effectiveAppBar =
         appBar ??
         (title != null
@@ -53,7 +57,7 @@ class AppScaffold extends StatelessWidget {
 
     return Scaffold(
       appBar: effectiveAppBar,
-      drawer: drawer,
+      drawer: isDesktop ? null : drawer,
       backgroundColor: backgroundColor,
       body: content,
       bottomNavigationBar: bottomNavigationBar,

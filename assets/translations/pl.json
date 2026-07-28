@@ -26,7 +26,9 @@
   },
   "navigation": {
     "apps": "Aplikacje",
-    "civic_cases": "Sprawy Obywatelskie"
+    "civic_cases": "Sprawy Obywatelskie",
+    "home_title": "Pulpit",
+    "my_account": "Moje Konto"
   },
   "maintenance": {
     "title": "PRZERWA TECHNICZNA",
@@ -103,6 +105,8 @@
     "UNKNOWN_BUSINESS": "Wystąpił błąd. Spróbuj ponownie.",
     "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd",
     "SESSION_EXPIRED": "Sesja wygasła. Zaloguj się ponownie.",
+    "UNAUTHORIZED": "Twoja sesja wygasła. Zaloguj się ponownie.",
+    "FORBIDDEN": "Brak wymaganych uprawnień do wykonania tej operacji.",
     "EMAIL_IS_SEND_IF_EXISTS": "Jeśli konto istnieje, kod resetu został wysłany na podany email.",
     "TOO_MANY_REQUESTS": "Zbyt wiele prób. Spróbuj ponownie później.",
     "INVALID_RESET_CODE": "Nieprawidłowy kod",

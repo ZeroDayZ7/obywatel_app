@@ -21,7 +21,7 @@ class ObywatelPlusApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    final themeType = ref.watch(themeProvider);
     final router = ref.watch(appRouterProvider);
     ref.watch(appLifecycleObserverProvider);
 
@@ -39,10 +39,11 @@ class ObywatelPlusApp extends ConsumerWidget {
             title: apiConstants.appName,
             debugShowCheckedModeBanner: false,
 
-            // Konfiguracja motywu
-            theme: AppTheme.buildTheme(Brightness.light),
-            darkTheme: AppTheme.buildTheme(Brightness.dark),
-            themeMode: themeMode,
+            theme: AppTheme.buildTheme(
+              themeType,
+              MediaQuery.maybeOf(context)?.platformBrightness,
+            ),
+
 
             // Konfiguracja języka
             locale: context.locale,

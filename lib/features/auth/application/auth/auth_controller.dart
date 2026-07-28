@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -16,6 +15,7 @@ import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
@@ -79,13 +79,28 @@ class AuthController extends _$AuthController {
     }
   }
 
-  /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
+  /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika.
+  /// Obsługuje dwa scenariusze:
+  /// 1. Dokończenie logowania na zaufanym urządzeniu (stan: partiallyAuthenticated).
+  /// 2. Odblokowanie istniejącej, zapisanej sesji (stan: locked / inny).
   Future<bool> unlockWithPinAndValidateSession() async {
     _log.i(
       'Rozpoczęcie procedury odblokowywania PIN-em...',
       module: _logModule,
     );
 
+    // ⚡ SCENARIUSZ A: Jesteśmy w trakcie logowania na zaufanym urządzeniu
+    // Klucz prywatny został przed chwilą załadowany do RAM w PinVerificationController.
+    if (state.isPartiallyAuthenticated) {
+      _log.i(
+        '🔑 Wykryto stan partiallyAuthenticated. Przechodzę do podpisu challenge\'a...',
+        module: _logModule,
+      );
+      await verifyDeviceSignature();
+      return state.isAuthenticated;
+    }
+
+    // ⚡ SCENARIUSZ B: Standardowe odblokowanie zapisanej sesji po uruchomieniu aplikacji
     state = const AuthState.authenticating();
 
     try {
@@ -123,7 +138,6 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
 
-      // Jeśli błąd to 401 / 403 z serwera -> wylogowujemy
       final shouldLogout = failure.maybeWhen(
         server: (statusCode) => statusCode == 401 || statusCode == 403,
         orElse: () => false,
@@ -133,14 +147,11 @@ class AuthController extends _$AuthController {
         _log.w('🔒 Token unieważniony przez serwer. Następuje wylogowanie.');
         await logout();
       } else {
-        // W przypadku braku sieci (AppFailure.network) lub 500
-        // NIE wylogowujemy – przywracamy stan unauthenticated, zachowując tokeny na dysku
         state = const AuthState.unauthenticated();
       }
 
       return false;
     } on DioException catch (e, stack) {
-      // Awaryjne przechwycenie DioException, gdyby serwis nie zmapował na AppFailure
       final statusCode = e.response?.statusCode;
       _log.w(
         '🌐 DioException podczas odblokowywania (status: $statusCode)',
@@ -239,8 +250,7 @@ class AuthController extends _$AuthController {
         logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
 
-        // KLUCZOWA POPRAWKA: Wrzucamy tymczasowy setupToken do Fresh Dio,
-        // aby zapytania takie jak /register-device wysyłały go w Authorization: Bearer
+        // Tymczasowy token do nagłówka Authorization dla zapytań setupowych
         await ref
             .read(authFreshProvider)
             .setToken(OAuth2Token(accessToken: setupToken, refreshToken: ''));
@@ -249,12 +259,13 @@ class AuthController extends _$AuthController {
           logger.i(
             '🛡️ Urządzenie jest zaufane... Uruchamiam automatyczną weryfikację podpisu...',
           );
+          // KLUCZOWY RETURN: Wyjście z funkcji po delegacji weryfikacji podpisu!
           await verifyDeviceSignature();
-        } else {
-          logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
+          return;
         }
+
+        logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
       },
-      // FIX 1: Dostosowano parametry (tylko accessToken i refreshToken)
       fullSuccess: (accessToken, refreshToken) async {
         try {
           logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
@@ -262,7 +273,7 @@ class AuthController extends _$AuthController {
           // 1. Zapis na dysku refreshTokena
           await _sessionService.saveSession(refreshToken: refreshToken);
 
-          // 2. Wrzucenie tokena do Fresh (RAM)
+          // 2. Wrzucenie pełnych tokenów do Fresh (RAM + Interceptory)
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -274,10 +285,17 @@ class AuthController extends _$AuthController {
 
           ref.read(pendingSessionProvider.notifier).clear();
 
-          // FIX 2: Hydratacja profilu użytkownika osobnym strzałem na /auth/me
+          // 3. Oznaczenie setupu bezpieczeństwa jako zainicjalizowanego
+          // Dzięki temu Router Guard weryfikujący setupCompleted = true wypuści użytkownika do aplikacji
+          await ref
+              .read(securityServiceProvider.notifier)
+              .markSecurityAsInitialized();
+
+          // 4. Hydratacja profilu użytkownika
           logger.i('🔄 Pobieranie profilu użytkownika z /auth/me...');
           final user = await _authService.fetchAuthMe();
 
+          // 5. Ustawienie docelowego stanu AuthState.authenticated
           state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
           logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
@@ -366,8 +384,15 @@ class AuthController extends _$AuthController {
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
     final crypto = ref.read(cryptoServiceProvider.notifier);
+    final storage = ref.read(secureStorageProvider);
 
-    final publicKeyBytes = await crypto.generateAndHoldKeyPair();
+    // 1️⃣ Odczytujemy wygenerowany w kroku 4/6 klucz publiczny (Base64)
+    final publicKeyBase64 = await storage.read(
+      key: StorageKeys.devicePublicKey,
+    );
+    if (publicKeyBase64 == null || publicKeyBase64.isEmpty) {
+      throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
+    }
 
     final fingerprint = await deviceService.getFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();
@@ -377,11 +402,13 @@ class AuthController extends _$AuthController {
       orElse: () => throw Exception('Brak challenge'),
     );
 
+    // 2️⃣ Podpisujemy challenge kluczem aktywnym w RAM (_activeDeviceKeyPair)
     final signature = await crypto.signWithActiveKey(challenge);
 
+    // 3️⃣ Wysyłamy do backendu Go
     final response = await authService.registerTrustedDevice(
       fingerprint: fingerprint,
-      publicKey: base64Encode(publicKeyBytes),
+      publicKey: publicKeyBase64,
       encryptedName: encryptedName,
       platform: Platform.operatingSystem,
       signature: signature,
@@ -496,6 +523,15 @@ class AuthController extends _$AuthController {
       partiallyAuthenticated: (s) async {
         try {
           final crypto = ref.read(cryptoServiceProvider.notifier);
+
+          // Sprawdzenie czy klucz jest gotowy do użycia
+          if (!await crypto.hasActiveKey()) {
+            _log.w(
+              'Brak aktywnego klucza w RAM. Wymagane odblokowanie storage/PIN-em.',
+            );
+            return;
+          }
+
           final signature = await crypto.signWithActiveKey(s.challenge);
 
           final result = await _authService.verifyDevice(
