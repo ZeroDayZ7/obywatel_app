@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
@@ -9,6 +11,8 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -70,6 +74,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   Future<void> verifyPin(List<int> pinCodes) async {
     state = const PinVerificationState.loading();
 
+    // 1. PinService weryfikuje hash PIN-u oraz testuje odszyfrowanie sessionKey
     final ok = await ref.read(pinServiceProvider).verifyPin(pinCodes);
 
     if (!ok) {
@@ -77,8 +82,34 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       return;
     }
 
+    // 2. Odczytaj salt z SecureStorage
+    final storage = ref.read(secureStorageProvider);
+    final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
+
+    if (saltBase64 != null && saltBase64.isNotEmpty) {
+      try {
+        final salt = base64Decode(saltBase64);
+
+        // ⚡ POPRAWKA: Przekazujemy surowe pinCodes [1, 2, 3, 4] do KDF,
+        // bo dokładnie takimi samymi bajtami szyfrowaliśmy w completeSetup!
+        await ref
+            .read(cryptoServiceProvider.notifier)
+            .loadAndUnlockPrivateKey(pinBytes: pinCodes, salt: salt);
+      } catch (e, st) {
+        _log.e(
+          'Błąd odszyfrowywania klucza prywatnego PIN-em',
+          error: e,
+          stackTrace: st,
+        );
+        state = const PinVerificationState.error();
+        return;
+      }
+    }
+
+    // 3. Emitujemy success po załadowaniu klucza do RAM
     state = const PinVerificationState.success();
 
+    // 4. Przechodzimy do weryfikacji sesji
     final sessionValid = await ref
         .read(authControllerProvider.notifier)
         .unlockWithPinAndValidateSession();
