@@ -11,6 +11,15 @@ sealed class AppException implements Exception {
   }
 }
 
+/// Token wygasł i nie da się go odświeżyć (np. wygasł refresh token lub został odwołany)
+final class RevokedTokenException extends AppException {
+  const RevokedTokenException({
+    super.message = 'Sesja wygasła. Zaloguj się ponownie.',
+    super.code = 'TOKEN_REVOKED',
+    super.statusCode = 401,
+  });
+}
+
 /// Brak internetu / problem z połączeniem klient -> gateway
 final class NetworkException extends AppException {
   const NetworkException({

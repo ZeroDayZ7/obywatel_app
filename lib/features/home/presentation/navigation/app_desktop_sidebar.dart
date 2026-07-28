@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/navigation_items.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';
@@ -16,6 +18,7 @@ class AppDesktopSidebar extends ConsumerWidget {
       notificationCount: notificationCount,
     );
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     final currentPath = GoRouterState.of(context).uri.path;
     final currentIndex = items.indexWhere(
@@ -37,17 +40,17 @@ class AppDesktopSidebar extends ConsumerWidget {
             },
             extended: true,
             minExtendedWidth: 200,
-            backgroundColor: theme.colorScheme.surface,
+            backgroundColor: colorScheme.surface,
             indicatorColor: Colors.transparent,
             unselectedIconTheme: IconThemeData(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
-            selectedIconTheme: const IconThemeData(color: Color(0xFF26C6DA)),
+            selectedIconTheme: IconThemeData(color: colorScheme.primary),
             unselectedLabelTextStyle: TextStyle(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
-            selectedLabelTextStyle: const TextStyle(
-              color: Color(0xFF26C6DA),
+            selectedLabelTextStyle: TextStyle(
+              color: colorScheme.primary,
               fontWeight: FontWeight.bold,
             ),
             destinations: items.map((item) {
@@ -71,25 +74,49 @@ class AppDesktopSidebar extends ConsumerWidget {
         ),
         Container(
           width: 200,
-          color: theme.colorScheme.surface,
+          color: colorScheme.surface,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(
-                  Icons.logout_rounded,
-                  color: Colors.redAccent,
-                ),
-                title: const Text(
-                  'Wyloguj się',
-                  style: TextStyle(
-                    color: Colors.redAccent,
-                    fontWeight: FontWeight.w600,
+              Divider(height: 1, color: colorScheme.outlineVariant),
+              const SizedBox(height: 12),
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
+                  hoverColor: colorScheme.error.withValues(alpha: 0.08),
+                  splashColor: colorScheme.error.withValues(alpha: 0.12),
+                  onTap: () => _showLogoutDialog(context, ref),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.logout_rounded,
+                          size: 20,
+                          color: colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            LocaleKeys.common_logout.tr(),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.error,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                onTap: () => _showLogoutDialog(context, ref),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 4),
             ],
           ),
         ),
