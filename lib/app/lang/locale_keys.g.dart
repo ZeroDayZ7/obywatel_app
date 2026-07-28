@@ -29,6 +29,7 @@ abstract class  LocaleKeys {
   static const common = 'common';
   static const navigation_apps = 'navigation.apps';
   static const navigation_civic_cases = 'navigation.civic_cases';
+  static const navigation_home_title = 'navigation.home_title';
   static const navigation = 'navigation';
   static const maintenance_title = 'maintenance.title';
   static const maintenance_default_msg = 'maintenance.default_msg';

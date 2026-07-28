@@ -25,8 +25,9 @@
     "copied_to_clipboard": "Skopiowano do schowka"
   },
   "navigation": {
-    "apps": "Apps",
-    "civic_cases": "Civic Cases"
+    "apps": "Applications",
+    "civic_cases": "Civic Cases",
+    "home_title": "Dashboard"
   },
   "maintenance": {
     "title": "SYSTEM MAINTENANCE",

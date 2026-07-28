@@ -60,8 +60,8 @@ abstract class AppNavigationItems {
     return [
       const NavItem(
         label: 'Pulpit',
-        icon: Icons.dashboard_outlined,
-        activeIcon: Icons.dashboard_rounded,
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home_rounded,
         route: AppRoutes.home,
       ),
       const NavItem(

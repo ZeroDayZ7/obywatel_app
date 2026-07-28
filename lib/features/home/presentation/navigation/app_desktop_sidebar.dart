@@ -32,10 +32,15 @@ class AppDesktopSidebar extends StatelessWidget {
       extended: true,
       minExtendedWidth: 200,
       backgroundColor: theme.colorScheme.surface,
+      // Wyłączenie tła dla zaznaczonej ikony
+      indicatorColor: Colors.transparent,
       unselectedIconTheme: IconThemeData(
         color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
       ),
       selectedIconTheme: const IconThemeData(color: Color(0xFF26C6DA)),
+      unselectedLabelTextStyle: TextStyle(
+        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+      ),
       selectedLabelTextStyle: const TextStyle(
         color: Color(0xFF26C6DA),
         fontWeight: FontWeight.bold,

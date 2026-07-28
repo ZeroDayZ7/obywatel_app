@@ -26,7 +26,8 @@
   },
   "navigation": {
     "apps": "Aplikacje",
-    "civic_cases": "Sprawy Obywatelskie"
+    "civic_cases": "Sprawy Obywatelskie",
+    "home_title": "Pulpit"
   },
   "maintenance": {
     "title": "PRZERWA TECHNICZNA",
