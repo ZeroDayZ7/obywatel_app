@@ -3,19 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 
-/// Wynik zwracany przez dialog wylogowania
-class LogoutDialogResult {
-  final bool confirmed;
-  final bool removeDevice;
-
-  const LogoutDialogResult({
-    required this.confirmed,
-    this.removeDevice = false,
-  });
-}
+/// Wyliczenie określające zamierzoną akcję użytkownika po wyjściu z dialogu
+enum LogoutAction { logout, unpairAndReset }
 
 class LogoutConfirmDialog extends StatefulWidget {
   const LogoutConfirmDialog({super.key});
+
+  /// Statyczna metoda pomocnicza – hermetyzuje wywołanie showDialog
+  /// Zwraca [LogoutAction] w przypadku zatwierdzenia lub [null] przy anulowaniu
+  static Future<LogoutAction?> show(BuildContext context) {
+    return showDialog<LogoutAction>(
+      context: context,
+      builder: (context) => const LogoutConfirmDialog(),
+    );
+  }
 
   @override
   State<LogoutConfirmDialog> createState() => _LogoutConfirmDialogState();
@@ -65,10 +66,7 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
                 child: AppButton(
                   label: LocaleKeys.common_cancel.tr(),
                   variant: AppButtonVariant.text,
-                  onPressed: () => Navigator.pop(
-                    context,
-                    const LogoutDialogResult(confirmed: false),
-                  ),
+                  onPressed: () => Navigator.of(context).pop(null),
                 ),
               ),
               const SizedBox(width: 12),
@@ -76,13 +74,12 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
                 child: AppButton(
                   label: LocaleKeys.drawer_logout.tr(),
                   variant: AppButtonVariant.danger,
-                  onPressed: () => Navigator.pop(
-                    context,
-                    LogoutDialogResult(
-                      confirmed: true,
-                      removeDevice: _removeDeviceAndPin,
-                    ),
-                  ),
+                  onPressed: () {
+                    final action = _removeDeviceAndPin
+                        ? LogoutAction.unpairAndReset
+                        : LogoutAction.logout;
+                    Navigator.of(context).pop(action);
+                  },
                 ),
               ),
             ],
