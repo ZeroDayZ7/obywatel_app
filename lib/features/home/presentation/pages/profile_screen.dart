@@ -1,6 +1,8 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
@@ -42,7 +44,7 @@ class ProfileScreen extends ConsumerWidget {
 
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: const AppAppBar(title: 'Profil', showBackButton: false),
+      title: Text(LocaleKeys.navigation_my_account.tr()),
       child: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8.0),
         child: Column(

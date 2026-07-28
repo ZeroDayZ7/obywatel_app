@@ -1,10 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
+import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
+import 'package:obywatel_plus/core/errors/presentation/error_message.dart';
 import 'package:obywatel_plus/features/documents/application/documents_provider.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 import 'package:obywatel_plus/features/documents/presentation/mappers/document_icon_mapper.dart';
@@ -22,18 +25,28 @@ class DocumentsScreen extends ConsumerWidget {
 
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: AppAppBar(
-        title: 'Dokumenty',
+      appBar: AppBar(
+        title: const Text('Dokumenty'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: LocaleKeys.common_refresh.tr(),
             onPressed: () => ref.read(documentsProvider.notifier).refresh(),
           ),
         ],
       ),
       child: documentsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Błąd: $err')),
+        error: (error, stack) {
+          final failureMessage = error is AppFailure
+              ? error.messageKey.tr()
+              : LocaleKeys.errors_unexpected_error.tr();
+
+          return ErrorMessage(
+            message: failureMessage,
+            onRetry: () => ref.read(documentsProvider.notifier).refresh(),
+          );
+        },
         data: (documents) => _DocumentsList(documents: documents),
       ),
     );

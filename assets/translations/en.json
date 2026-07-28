@@ -27,7 +27,8 @@
   "navigation": {
     "apps": "Applications",
     "civic_cases": "Civic Cases",
-    "home_title": "Dashboard"
+    "home_title": "Dashboard",
+    "my_account": "My Account"
   },
   "maintenance": {
     "title": "SYSTEM MAINTENANCE",
@@ -104,6 +105,8 @@
     "UNKNOWN_BUSINESS": "An error occurred. Try again.",
     "UNKNOWN_ERROR": "An unexpected error occurred",
     "SESSION_EXPIRED": "Session expired. Please log in again.",
+    "UNAUTHORIZED": "Session expired. Please log in again.",
+    "FORBIDDEN": "You do not have permission to perform this action.",
     "EMAIL_IS_SEND_IF_EXISTS": "If the account exists, a reset code was sent to the provided email.",
     "TOO_MANY_REQUESTS": "Too many attempts. Try again later.",
     "INVALID_RESET_CODE": "Invalid code",

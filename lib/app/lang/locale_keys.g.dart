@@ -30,6 +30,7 @@ abstract class  LocaleKeys {
   static const navigation_apps = 'navigation.apps';
   static const navigation_civic_cases = 'navigation.civic_cases';
   static const navigation_home_title = 'navigation.home_title';
+  static const navigation_my_account = 'navigation.my_account';
   static const navigation = 'navigation';
   static const maintenance_title = 'maintenance.title';
   static const maintenance_default_msg = 'maintenance.default_msg';
@@ -101,6 +102,8 @@ abstract class  LocaleKeys {
   static const errors_UNKNOWN_BUSINESS = 'errors.UNKNOWN_BUSINESS';
   static const errors_UNKNOWN_ERROR = 'errors.UNKNOWN_ERROR';
   static const errors_SESSION_EXPIRED = 'errors.SESSION_EXPIRED';
+  static const errors_UNAUTHORIZED = 'errors.UNAUTHORIZED';
+  static const errors_FORBIDDEN = 'errors.FORBIDDEN';
   static const errors_EMAIL_IS_SEND_IF_EXISTS = 'errors.EMAIL_IS_SEND_IF_EXISTS';
   static const errors_TOO_MANY_REQUESTS = 'errors.TOO_MANY_REQUESTS';
   static const errors_INVALID_RESET_CODE = 'errors.INVALID_RESET_CODE';
