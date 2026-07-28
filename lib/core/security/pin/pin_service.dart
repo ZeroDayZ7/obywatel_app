@@ -65,28 +65,37 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<void> initializeSecurity(List<int> pinBytes) async {
+    _logger.i('[PIN-SERVICE][INIT] Inicjalizacja zabezpieczeń PIN...');
+    final localCopy = List<int>.from(pinBytes);
     try {
-      await setPin(pinBytes);
-      _logger.i('PIN ustawiony poprawnie');
+      await setPin(localCopy);
+      _logger.i('[PIN-SERVICE][INIT] PIN ustawiony poprawnie.');
     } finally {
-      _wipe(pinBytes);
+      _wipe(localCopy);
     }
   }
 
   Future<void> setPin(List<int> pinCodes) async {
+    _logger.i(
+      '[PIN-SERVICE][SET-PIN][1] Walidacja i zapisywanie nowego PIN...',
+    );
     _validatePinList(pinCodes);
 
-    final buffer = SecureBuffer(pinCodes.length);
+    final localCopy = List<int>.from(pinCodes);
+    final buffer = SecureBuffer(localCopy.length);
     try {
-      for (int i = 0; i < pinCodes.length; i++) {
-        buffer.view[i] = pinCodes[i]; // 0–9 bez ASCII
+      for (int i = 0; i < localCopy.length; i++) {
+        buffer.view[i] = localCopy[i]; // 0–9 bez ASCII
       }
 
       final hash = await _hashService.hash(buffer.view);
       await _storage.write(key: StorageKeys.pinHash, value: hash);
+      _logger.i(
+        '[PIN-SERVICE][SET-PIN][2] Hash PIN-u pomyślnie zapisany w SecureStorage.',
+      );
     } finally {
       buffer.dispose();
-      _wipe(pinCodes);
+      _wipe(localCopy);
     }
   }
 
@@ -95,29 +104,95 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<bool> verifyPin(List<int> pinCodes) async {
+    _logger.i(
+      '[VERIFY-PIN-SERVICE][1] Rozpoczynam weryfikację PIN-u w PinService...',
+    );
+    _logger.d(
+      '[VERIFY-PIN-SERVICE][1.1] Parametr wejściowy pinCodes: $pinCodes (len: ${pinCodes.length})',
+    );
+
     _validatePinList(pinCodes);
 
-    final buffer = SecureBuffer(pinCodes.length);
+    // Kopia robocza, zapobiegająca wyzerowaniu oryginalnej listy u callera
+    final workingCopy = List<int>.from(pinCodes);
+    final buffer = SecureBuffer(workingCopy.length);
+    _logger.d(
+      '[VERIFY-PIN-SERVICE][1.2] Utworzono SecureBuffer o rozmiarze: ${workingCopy.length}',
+    );
 
     try {
-      for (int i = 0; i < pinCodes.length; i++) {
-        buffer.view[i] = pinCodes[i]; // 0–9, bez +48
+      // 2. Kopiowanie bajtów do SecureBuffer
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][2] Kopiuję bajty PIN do SecureBuffer.view...',
+      );
+      for (int i = 0; i < workingCopy.length; i++) {
+        buffer.view[i] = workingCopy[i]; // 0–9, bez +48
+      }
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][2.1] Zawartość buffer.view: ${buffer.view}',
+      );
+
+      // 3. Odczyt zapisanego hashu z SecureStorage
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][3] Odczytuję pin_hash z SecureStorage...',
+      );
+      final storedHash = await _storage.read(key: StorageKeys.pinHash);
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][3.1] Odczytany storedHash: '
+        '${storedHash != null ? "PRESENT (len: ${storedHash.length})" : "NULL"}',
+      );
+
+      if (storedHash == null) {
+        _logger.e(
+          '[VERIFY-PIN-SERVICE][ERR] Brak zapisanego pin_hash w SecureStorage!',
+        );
+        return false;
       }
 
-      final storedHash = await _storage.read(key: StorageKeys.pinHash);
-      if (storedHash == null) return false;
-
+      // 4. Weryfikacja hashu
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][4] Weryfikuję PIN za pomocą _hashService.verify...',
+      );
       final valid = await _hashService.verify(buffer.view, storedHash);
-      if (!valid) return false;
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][4.1] Wynik weryfikacji hashu (valid): $valid',
+      );
 
+      if (!valid) {
+        _logger.w('[VERIFY-PIN-SERVICE][4.2] Hash PIN-u niepoprawny.');
+        return false;
+      }
+
+      // 5. Odczyt soli oraz zaszyfrowanego klucza prywatnego
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][5] Odczytuję kek_salt oraz device_private_key_enc z SecureStorage...',
+      );
       final saltBase64 = await _storage.read(key: StorageKeys.kekSalt);
       final encryptedMasterKey = await _storage.read(
         key: StorageKeys.devicePrivateKey,
       );
 
-      if (saltBase64 == null || encryptedMasterKey == null) return false;
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][5.1] Status kluczy w storage: '
+        'saltBase64=${saltBase64 != null ? "PRESENT" : "NULL"}, '
+        'encryptedMasterKey=${encryptedMasterKey != null ? "PRESENT" : "NULL"}',
+      );
 
+      if (saltBase64 == null || encryptedMasterKey == null) {
+        _logger.e(
+          '[VERIFY-PIN-SERVICE][ERR] Brak soli lub zaszyfrowanego klucza w SecureStorage!',
+        );
+        return false;
+      }
+
+      // 6. Dekodowanie soli i odblokowanie sesji
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][6] Dekoduję sól z Base64 i wywołuję _unlockSession...',
+      );
       final salt = base64Decode(saltBase64);
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][6.1] Zdekodowano salt. Długość: ${salt.length} bajtów',
+      );
 
       await _unlockSession(
         pin: buffer.view,
@@ -125,10 +200,28 @@ class PinService {
         encryptedMasterKey: encryptedMasterKey,
       );
 
+      _logger.i(
+        '✅ [VERIFY-PIN-SERVICE][7] Weryfikacja PIN-u oraz odblokowanie sesji zakończone sukcesem.',
+      );
       return true;
+    } catch (e, st) {
+      _logger.e(
+        '❌ [VERIFY-PIN-SERVICE][ERR] Wystąpił błąd podczas weryfikacji PIN-u!',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
     } finally {
+      _logger.i(
+        '[VERIFY-PIN-SERVICE][8] Blok finally: Czyszczenie pamięci roboczej...',
+      );
+      _logger.d('[VERIFY-PIN-SERVICE][8.1] Zwalniam SecureBuffer...');
       buffer.dispose();
-      _wipe(pinCodes); // wyczyść oryginalny PIN
+
+      _logger.d(
+        '[VERIFY-PIN-SERVICE][8.2] Wykonuję _wipe na lokalnej kopii workingCopy.',
+      );
+      _wipe(workingCopy);
     }
   }
 
