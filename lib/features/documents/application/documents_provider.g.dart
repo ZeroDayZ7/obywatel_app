@@ -13,7 +13,7 @@ part of 'documents_provider.dart';
 final documentsProvider = DocumentsProvider._();
 
 final class DocumentsProvider
-    extends $AsyncNotifierProvider<Documents, List<DocumentModel>> {
+    extends $StreamNotifierProvider<Documents, List<DocumentModel>> {
   DocumentsProvider._()
     : super(
         from: null,
@@ -33,10 +33,10 @@ final class DocumentsProvider
   Documents create() => Documents();
 }
 
-String _$documentsHash() => r'd63066ca1159278fdace57063fd572a077e0a077';
+String _$documentsHash() => r'a0459b58160414abe37e105f8346687b1499550f';
 
-abstract class _$Documents extends $AsyncNotifier<List<DocumentModel>> {
-  FutureOr<List<DocumentModel>> build();
+abstract class _$Documents extends $StreamNotifier<List<DocumentModel>> {
+  Stream<List<DocumentModel>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -60,11 +60,11 @@ final documentDetailProvider = DocumentDetailFamily._();
 final class DocumentDetailProvider
     extends
         $FunctionalProvider<
-          AsyncValue<DocumentModel>,
-          DocumentModel,
-          FutureOr<DocumentModel>
+          AsyncValue<DocumentModel?>,
+          DocumentModel?,
+          FutureOr<DocumentModel?>
         >
-    with $FutureModifier<DocumentModel>, $FutureProvider<DocumentModel> {
+    with $FutureModifier<DocumentModel?>, $FutureProvider<DocumentModel?> {
   DocumentDetailProvider._({
     required DocumentDetailFamily super.from,
     required String super.argument,
@@ -88,12 +88,12 @@ final class DocumentDetailProvider
 
   @$internal
   @override
-  $FutureProviderElement<DocumentModel> $createElement(
+  $FutureProviderElement<DocumentModel?> $createElement(
     $ProviderPointer pointer,
   ) => $FutureProviderElement(pointer);
 
   @override
-  FutureOr<DocumentModel> create(Ref ref) {
+  FutureOr<DocumentModel?> create(Ref ref) {
     final argument = this.argument as String;
     return documentDetail(ref, argument);
   }
@@ -109,10 +109,10 @@ final class DocumentDetailProvider
   }
 }
 
-String _$documentDetailHash() => r'bb37b63c57205f6b6dede33f1f02498f4e23ade6';
+String _$documentDetailHash() => r'39483435b62e681e9155553a698ee08ae6f1ef57';
 
 final class DocumentDetailFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<DocumentModel>, String> {
+    with $FunctionalFamilyOverride<FutureOr<DocumentModel?>, String> {
   DocumentDetailFamily._()
     : super(
         retry: null,

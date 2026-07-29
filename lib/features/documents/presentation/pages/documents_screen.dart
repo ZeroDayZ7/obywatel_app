@@ -19,6 +19,11 @@ import 'package:obywatel_plus/features/documents/presentation/widget/documents_s
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
+  Future<void> _handleRefresh(WidgetRef ref) async {
+    await ref.read(documentsProvider.notifier).sync();
+    ref.invalidate(documentsProvider);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final documentsAsync = ref.watch(documentsProvider);
@@ -31,7 +36,7 @@ class DocumentsScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: LocaleKeys.common_refresh.tr(),
-            onPressed: () => ref.read(documentsProvider.notifier).refresh(),
+            onPressed: () => _handleRefresh(ref),
           ),
         ],
       ),
@@ -44,18 +49,23 @@ class DocumentsScreen extends ConsumerWidget {
 
           return ErrorMessage(
             message: failureMessage,
-            onRetry: () => ref.read(documentsProvider.notifier).refresh(),
+            onRetry: () => _handleRefresh(ref),
           );
         },
-        data: (documents) => _DocumentsList(documents: documents),
+        data: (documents) => _DocumentsList(
+          documents: documents,
+          onRefresh: () => _handleRefresh(ref),
+        ),
       ),
     );
   }
 }
 
-class _DocumentsList extends ConsumerWidget {
+class _DocumentsList extends StatelessWidget {
   final List<DocumentModel> documents;
-  const _DocumentsList({required this.documents});
+  final Future<void> Function() onRefresh;
+
+  const _DocumentsList({required this.documents, required this.onRefresh});
 
   Color _parseColor(String hexColor) {
     final hex = hexColor.replaceAll('#', '');
@@ -63,7 +73,21 @@ class _DocumentsList extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    if (documents.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            alignment: Alignment.center,
+            child: const Text('Brak dostępnych dokumentów'),
+          ),
+        ),
+      );
+    }
+
     final identityDocs = documents
         .where((d) => d.category == DocumentCategory.identity)
         .toList();
@@ -76,9 +100,15 @@ class _DocumentsList extends ConsumerWidget {
     final transportDocs = documents
         .where((d) => d.category == DocumentCategory.transport)
         .toList();
+    final socialDocs = documents
+        .where((d) => d.category == DocumentCategory.social)
+        .toList();
+    final otherDocs = documents
+        .where((d) => d.category == DocumentCategory.other)
+        .toList();
 
     return RefreshIndicator(
-      onRefresh: () => ref.read(documentsProvider.notifier).refresh(),
+      onRefresh: onRefresh,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -90,16 +120,21 @@ class _DocumentsList extends ConsumerWidget {
             const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
             _DocumentGrid(docs: permissionsDocs),
           ],
+          if (socialDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Usługi Społeczne'),
+            _DocumentGrid(docs: socialDocs),
+          ],
           if (educationDocs.isNotEmpty) ...[
             const DocumentCategoryHeader(title: 'Edukacja'),
             SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
                 final doc = educationDocs[index];
+                final expiry = doc.expiryDate;
                 return WideDocumentCard(
                   title: doc.title,
                   subtitle: doc.subtitle,
-                  expiry: doc.expiryDate.isNotEmpty
-                      ? 'Ważna do ${doc.expiryDate}'
+                  expiry: (expiry != null && expiry.isNotEmpty)
+                      ? 'Ważna do $expiry'
                       : '',
                   icon: DocumentIconMapper.getIcon(doc.iconName),
                   color: _parseColor(doc.colorHex),
@@ -128,6 +163,10 @@ class _DocumentsList extends ConsumerWidget {
                 );
               }, childCount: transportDocs.length),
             ),
+          ],
+          if (otherDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Pozostałe'),
+            _DocumentGrid(docs: otherDocs),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],

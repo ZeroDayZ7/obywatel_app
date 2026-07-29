@@ -26,12 +26,10 @@ class DocumentDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 1. Jeśli przekazaliśmy instancję bezpośrednio w nawigacji
     if (initialDocument != null) {
       return _buildContent(context, initialDocument!);
     }
 
-    // 2. Próba wyciągnięcia dokumentu z listy pobranej wcześniej w pamięci
     final documentsState = ref.watch(documentsProvider);
     final cachedDoc = documentsState.value?.firstWhereOrNull(
       (doc) => doc.id == documentId,
@@ -41,7 +39,6 @@ class DocumentDetailsScreen extends ConsumerWidget {
       return _buildContent(context, cachedDoc);
     }
 
-    // 3. Fallback: pobranie dedykowanego dokumentu po ID z API
     final docAsync = ref.watch(documentDetailProvider(documentId));
 
     return docAsync.when(
@@ -53,11 +50,21 @@ class DocumentDetailsScreen extends ConsumerWidget {
         size: ContainerSize.medium,
         child: Center(child: Text('Błąd pobierania dokumentu: $err')),
       ),
-      data: (doc) => _buildContent(context, doc),
+      data: (doc) {
+        if (doc == null) {
+          return const AppScaffold(
+            size: ContainerSize.medium,
+            child: Center(child: Text('Dokument nie został znaleziony')),
+          );
+        }
+        return _buildContent(context, doc);
+      },
     );
   }
 
   Widget _buildContent(BuildContext context, DocumentModel doc) {
+    final expiryDate = doc.expiryDate;
+
     return AppScaffold(
       size: ContainerSize.medium,
       appBar: AppAppBar(title: doc.title),
@@ -66,6 +73,7 @@ class DocumentDetailsScreen extends ConsumerWidget {
         child: DocumentCardContainer(
           doc: doc,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               DocumentHeaderBadge(doc: doc),
               const SizedBox(height: 24),
@@ -78,9 +86,9 @@ class DocumentDetailsScreen extends ConsumerWidget {
                   value: field.value,
                 ),
               ),
-              if (doc.expiryDate.isNotEmpty) ...[
+              if (expiryDate != null && expiryDate.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                DocumentExpiryBadge(date: doc.expiryDate),
+                DocumentExpiryBadge(date: expiryDate),
               ],
               if (doc.qrData != null) DocumentQrSection(data: doc.qrData!),
             ],
