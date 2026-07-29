@@ -133,7 +133,7 @@ class _DocumentsList extends StatelessWidget {
                       : '',
                   icon: DocumentIconMapper.getIcon(doc.iconName),
                   onTap: () => context.push(
-                    '${AppRoutes.documents}/detail/${doc.id}',
+                    AppRoutes.documentDetailPath(doc.id),
                     extra: doc,
                   ),
                 );

@@ -1,5 +1,6 @@
 // lib/app/router/app_routes.dart
-class AppRoutes {
+
+abstract final class AppRoutes {
   static const splash = '/splash';
   static const initial = '/initial';
   static const pin = '/pin';
@@ -20,6 +21,12 @@ class AppRoutes {
 
   static const profile = '/profile';
   static const documents = '/documents';
+  static const documentDetail =
+      'detail/:id'; // Stała do konfiguracji w GoRouter
+
+  /// Helper do generowania pełnego URLa dla konkretnego dokumentu
+  static String documentDetailPath(String id) => '$documents/detail/$id';
+
   static const idCard = 'id_card';
   static const notifications = '/notifications';
   static const notificationsTrash = 'trash';
