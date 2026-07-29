@@ -30,10 +30,10 @@ class QuickAccessScreen extends StatelessWidget {
 
   static const List<QuickAccessItem> _items = [
     QuickAccessItem(
-      title: 'Dokumenty',
+      title: 'Kontakty',
       icon: Icons.badge_outlined,
       accent: QuickAccessAccent.primary,
-      route: AppRoutes.documents,
+      route: AppRoutes.contacts,
     ),
     QuickAccessItem(
       title: 'Wiadomości',
