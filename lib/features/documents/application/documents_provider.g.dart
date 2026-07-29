@@ -33,7 +33,7 @@ final class DocumentsProvider
   Documents create() => Documents();
 }
 
-String _$documentsHash() => r'a0459b58160414abe37e105f8346687b1499550f';
+String _$documentsHash() => r'ff75fc8ee94f7151ad02c584aa40108b7685cc79';
 
 abstract class _$Documents extends $StreamNotifier<List<DocumentModel>> {
   Stream<List<DocumentModel>> build();

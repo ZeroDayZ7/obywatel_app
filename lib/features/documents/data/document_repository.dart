@@ -121,20 +121,95 @@ class LocalFirstDocumentRepository implements DocumentRepository {
   }
 
   DocumentModel _mapDbToDomain(DbUserDocument dbRow) {
-    Map<String, dynamic> parsedMeta = {};
-    if (dbRow.customAttributesJson != null) {
+    final Map<String, dynamic> parsedMeta = {
+      'title': dbRow.title,
+      'issuer': dbRow.issuer,
+      'category': dbRow.category,
+      'document_number': dbRow.documentNumber,
+    };
+
+    Map<String, dynamic> customAttrs = {};
+    if (dbRow.customAttributesJson != null &&
+        dbRow.customAttributesJson!.isNotEmpty) {
       try {
-        parsedMeta =
+        customAttrs =
             jsonDecode(dbRow.customAttributesJson!) as Map<String, dynamic>;
+        parsedMeta.addAll(customAttrs);
       } catch (_) {}
     }
+
+    final fields = <DocumentField>[];
+
+    if (dbRow.documentNumber.isNotEmpty) {
+      fields.add(
+        DocumentField(
+          label: 'Numer dokumentu',
+          value: dbRow.documentNumber,
+          iconName: 'numbers',
+        ),
+      );
+    }
+
+    if (dbRow.issuer.isNotEmpty) {
+      fields.add(
+        DocumentField(
+          label: 'Organ wydający',
+          value: dbRow.issuer,
+          iconName: 'account_balance',
+        ),
+      );
+    }
+
+    // Dodatkowe atrybuty specyficzne dla typu dokumentu (z custom_attributes z API/bazy)
+    customAttrs.forEach((key, val) {
+      if (val == null) return;
+
+      String formattedValue = val.toString();
+      if (val is List) {
+        formattedValue = val.join(', ');
+      }
+
+      String label = key;
+      String icon = 'info';
+
+      switch (key) {
+        case 'can_number':
+          label = 'Numer CAN';
+          icon = 'lock';
+          break;
+        case 'organ_wydajacy_kod':
+          label = 'Kod organu wydającego';
+          icon = 'code';
+          break;
+        case 'categories':
+          label = 'Kategorie prawa jazdy';
+          icon = 'style';
+          break;
+        case 'restrictions':
+          label = 'Ograniczenia';
+          icon = 'warning';
+          break;
+        case 'children_count':
+          label = 'Liczba dzieci';
+          icon = 'child_care';
+          break;
+        case 'role':
+          label = 'Rola w rodzinie';
+          icon = 'person';
+          break;
+      }
+
+      fields.add(
+        DocumentField(label: label, value: formattedValue, iconName: icon),
+      );
+    });
 
     return DocumentModel(
       id: dbRow.id,
       type: dbRow.typeCode,
       status: dbRow.status,
       metadata: parsedMeta,
-      fields: const [],
+      fields: fields,
       issuedAt: dbRow.issuedAt?.toIso8601String(),
       expiresAt: dbRow.expiresAt?.toIso8601String(),
     );

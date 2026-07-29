@@ -5,14 +5,14 @@ class DocumentHeaderBadge extends StatelessWidget {
   final DocumentModel doc;
   const DocumentHeaderBadge({super.key, required this.doc});
 
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final themeColor = _parseColor(doc.colorHex);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isVerified = doc.isVerified;
+
+    final badgeColor = isVerified ? colorScheme.primary : colorScheme.error;
+    final badgeText = isVerified ? 'DOKUMENT WAŻNY' : 'NIEAKTYWNY';
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -20,19 +20,22 @@ class DocumentHeaderBadge extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: themeColor.withAlpha(51),
+            color: badgeColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: themeColor.withAlpha(128)),
+            border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [
-              Icon(Icons.verified_user, size: 16, color: themeColor),
+              Icon(
+                isVerified ? Icons.verified_user : Icons.gpp_maybe,
+                size: 16,
+                color: badgeColor,
+              ),
               const SizedBox(width: 6),
-              const Text(
-                'DOKUMENT WAŻNY',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+              Text(
+                badgeText,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: badgeColor,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
@@ -40,7 +43,7 @@ class DocumentHeaderBadge extends StatelessWidget {
             ],
           ),
         ),
-        const Icon(Icons.more_vert, color: Colors.grey),
+        Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant),
       ],
     );
   }

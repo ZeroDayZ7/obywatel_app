@@ -6,14 +6,10 @@ class DocumentAvatarStack extends StatelessWidget {
 
   const DocumentAvatarStack({super.key, required this.doc});
 
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final themeColor = _parseColor(doc.colorHex);
+    final theme = Theme.of(context);
+    final primaryColor = theme.colorScheme.primary;
 
     return Stack(
       alignment: Alignment.center,
@@ -22,12 +18,19 @@ class DocumentAvatarStack extends StatelessWidget {
           padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: themeColor.withAlpha(128), width: 2),
+            border: Border.all(
+              color: primaryColor.withValues(alpha: 0.5),
+              width: 2,
+            ),
           ),
-          child: const CircleAvatar(
+          child: CircleAvatar(
             radius: 50,
-            backgroundColor: Color(0xFF2A2A3E),
-            child: Icon(Icons.person, size: 50, color: Colors.white24),
+            backgroundColor: theme.colorScheme.surfaceContainerHigh,
+            child: Icon(
+              Icons.person,
+              size: 50,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+            ),
           ),
         ),
         Positioned(
@@ -36,13 +39,20 @@ class DocumentAvatarStack extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: themeColor,
+              color: primaryColor,
               shape: BoxShape.circle,
               boxShadow: [
-                BoxShadow(color: Colors.black.withAlpha(77), blurRadius: 8),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                ),
               ],
             ),
-            child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+            child: Icon(
+              Icons.camera_alt,
+              size: 16,
+              color: theme.colorScheme.onPrimary,
+            ),
           ),
         ),
       ],

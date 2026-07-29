@@ -1,46 +1,51 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'document_model.freezed.dart';
-part 'document_model.g.dart';
-
-enum DocumentCategory { identity, transport, permissions, education, social, other }
-
-@freezed
-abstract class DocumentField with _$DocumentField {
-  const factory DocumentField({
-    required String label,
-    required String value,
-    required String iconName,
-  }) = _DocumentField;
-
-  factory DocumentField.fromJson(Map<String, dynamic> json) =>
-      _$DocumentFieldFromJson(json);
+enum DocumentCategory {
+  identity,
+  transport,
+  permissions,
+  education,
+  social,
+  other,
 }
 
-@freezed
-abstract class DocumentModel with _$DocumentModel {
-  const DocumentModel._();
+class DocumentField {
+  final String label;
+  final String value;
+  final String iconName;
 
-  const factory DocumentModel({
-    required String id,
-    required String type,
-    required String status,
-    required Map<String, dynamic> metadata,
-    required List<DocumentField> fields,
-    String? profileId,
-    String? issuedAt,
-    String? expiresAt,
-    String? qrData,
-  }) = _DocumentModel;
+  const DocumentField({
+    required this.label,
+    required this.value,
+    this.iconName = 'info',
+  });
+}
 
-  factory DocumentModel.fromJson(Map<String, dynamic> json) =>
-      _$DocumentModelFromJson(json);
+class DocumentModel {
+  final String id;
+  final String type;
+  final String status;
+  final Map<String, dynamic> metadata;
+  final List<DocumentField> fields;
+  final String? profileId;
+  final String? issuedAt;
+  final String? expiresAt;
+  final String? qrData;
 
-  bool get isVerified => status == 'active';
+  const DocumentModel({
+    required this.id,
+    required this.type,
+    required this.status,
+    required this.metadata,
+    required this.fields,
+    this.profileId,
+    this.issuedAt,
+    this.expiresAt,
+    this.qrData,
+  });
 
-  String? get expiryDate => expiresAt;
+  String get title {
+    final metaTitle = metadata['title'] as String?;
+    if (metaTitle != null && metaTitle.isNotEmpty) return metaTitle;
 
-String get title {
     switch (type) {
       case 'ID_CARD':
       case 'id_card':
@@ -51,14 +56,15 @@ String get title {
       case 'LARGE_FAMILY_CARD':
       case 'large_family_card':
         return 'Karta Dużej Rodziny';
-      case 'student_card':
-        return 'Legitymacja studencka';
       default:
-        return metadata['title'] as String? ?? 'Dokument';
+        return 'Dokument';
     }
   }
 
-String get subtitle {
+  String get subtitle {
+    final issuer = metadata['issuer'] as String?;
+    if (issuer != null && issuer.isNotEmpty) return issuer;
+
     switch (type) {
       case 'ID_CARD':
       case 'id_card':
@@ -69,64 +75,62 @@ String get subtitle {
       case 'LARGE_FAMILY_CARD':
       case 'large_family_card':
         return 'Rodzina 3+';
-      case 'student_card':
-        return 'Legitymacja akademicka';
       default:
         return 'Dokument tożsamości';
     }
   }
 
-String get iconName {
+  String get documentNumber => metadata['document_number'] as String? ?? '';
+
+  String get iconName {
     switch (type) {
       case 'ID_CARD':
       case 'id_card':
-        return 'credit_card';
+        return 'badge';
       case 'DRIVER_LICENSE':
       case 'driver_license':
         return 'directions_car';
       case 'LARGE_FAMILY_CARD':
       case 'large_family_card':
         return 'family_restroom';
-      case 'student_card':
-        return 'school';
       default:
         return 'article';
     }
   }
 
-String get colorHex {
-    switch (type) {
-      case 'ID_CARD':
-      case 'id_card':
-        return '#1E3A8A';
-      case 'DRIVER_LICENSE':
-      case 'driver_license':
-        return '#047857';
-      case 'LARGE_FAMILY_CARD':
-      case 'large_family_card':
-        return '#7C3AED';
-      case 'student_card':
-        return '#B91C1C';
-      default:
-        return '#374151';
+  DocumentCategory get category {
+    final rawCat = (metadata['category'] as String?)?.toLowerCase();
+    if (rawCat != null) {
+      switch (rawCat) {
+        case 'identity':
+          return DocumentCategory.identity;
+        case 'qualification':
+        case 'permissions':
+          return DocumentCategory.permissions;
+        case 'social':
+          return DocumentCategory.social;
+        case 'transport':
+          return DocumentCategory.transport;
+        case 'education':
+          return DocumentCategory.education;
+      }
     }
-  }
 
-DocumentCategory get category {
     switch (type) {
       case 'ID_CARD':
       case 'id_card':
         return DocumentCategory.identity;
       case 'DRIVER_LICENSE':
       case 'driver_license':
-        return DocumentCategory.transport;
+        return DocumentCategory.permissions;
       case 'LARGE_FAMILY_CARD':
       case 'large_family_card':
         return DocumentCategory.social;
-      case 'student_card':
-        return DocumentCategory.education;
       default:
         return DocumentCategory.other;
     }
   }
+
+  bool get isVerified => status.toLowerCase() == 'active';
+  String? get expiryDate => expiresAt;
 }

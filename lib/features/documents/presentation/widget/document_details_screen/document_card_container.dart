@@ -11,27 +11,23 @@ class DocumentCardContainer extends StatelessWidget {
     required this.child,
   });
 
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final themeColor = _parseColor(doc.colorHex);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1E1E2E), Color(0xFF2A2A3E)],
+        color: colorScheme.surfaceContainer,
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+          width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: themeColor.withAlpha(50),
+            color: colorScheme.primary.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),

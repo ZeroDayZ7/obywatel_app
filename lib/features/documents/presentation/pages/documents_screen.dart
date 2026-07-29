@@ -67,11 +67,6 @@ class _DocumentsList extends StatelessWidget {
 
   const _DocumentsList({required this.documents, required this.onRefresh});
 
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
     if (documents.isEmpty) {
@@ -137,7 +132,6 @@ class _DocumentsList extends StatelessWidget {
                       ? 'Ważna do $expiry'
                       : '',
                   icon: DocumentIconMapper.getIcon(doc.iconName),
-                  color: _parseColor(doc.colorHex),
                   onTap: () => context.push(
                     '${AppRoutes.documents}/detail/${doc.id}',
                     extra: doc,
@@ -155,7 +149,6 @@ class _DocumentsList extends StatelessWidget {
                   title: doc.title,
                   subtitle: doc.subtitle,
                   icon: DocumentIconMapper.getIcon(doc.iconName),
-                  color: _parseColor(doc.colorHex),
                   onTap: () => context.push(
                     '${AppRoutes.documents}/detail/${doc.id}',
                     extra: doc,
@@ -179,11 +172,6 @@ class _DocumentGrid extends StatelessWidget {
   final List<DocumentModel> docs;
   const _DocumentGrid({required this.docs});
 
-  Color _parseColor(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
     return SliverGrid(
@@ -198,7 +186,6 @@ class _DocumentGrid extends StatelessWidget {
         return DocumentCard(
           title: doc.title,
           icon: DocumentIconMapper.getIcon(doc.iconName),
-          color: _parseColor(doc.colorHex),
           isVerified: doc.isVerified,
           status: doc.status,
           onTap: () => context.push(
