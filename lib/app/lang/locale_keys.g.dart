@@ -197,6 +197,8 @@ abstract class  LocaleKeys {
   static const settings_language_subtitle = 'settings.language_subtitle';
   static const settings_theme = 'settings.theme';
   static const settings_theme_subtitle = 'settings.theme_subtitle';
+  static const settings_biometrics = 'settings.biometrics';
+  static const settings_biometrics_subtitle = 'settings.biometrics_subtitle';
   static const settings_light_mode = 'settings.light_mode';
   static const settings_dark_mode = 'settings.dark_mode';
   static const settings_system_default = 'settings.system_default';

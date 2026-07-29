@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/home/config/drawer_items.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_header.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/drawer_tile.dart';
-import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_tile.dart';
 
 class MainDrawer extends ConsumerWidget {
@@ -24,30 +22,12 @@ class MainDrawer extends ConsumerWidget {
               children: [
                 ...items.map((item) => DrawerTile(item: item)),
                 const Divider(),
-                LogoutTile(
-                  onLogoutSelected: () => _showLogoutDialog(context, ref),
-                ),
+                const LogoutTile(),
               ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
-    final action = await LogoutConfirmDialog.show(context);
-    if (action == null || !context.mounted) return;
-
-    final authController = ref.read(authControllerProvider.notifier);
-
-    switch (action) {
-      case LogoutAction.unpairAndReset:
-        await authController.unpairAndReset();
-        break;
-      case LogoutAction.logout:
-        await authController.logout();
-        break;
-    }
   }
 }

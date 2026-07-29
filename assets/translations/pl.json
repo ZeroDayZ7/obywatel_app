@@ -214,6 +214,8 @@
     "language_subtitle": "Zmień język aplikacji",
     "theme": "Motyw",
     "theme_subtitle": "Dostosuj wygląd aplikacji",
+    "biometrics": "Biometria",
+    "biometrics_subtitle": "Logowanie odciskiem palca",
     "light_mode": "Jasny",
     "dark_mode": "Ciemny",
     "system_default": "Domyślny systemowy",
@@ -236,6 +238,7 @@
     "pin_mismatch": "PINy nie są zgodne",
     "pin_min_digits": "PIN musi mieć minimum 4 cyfry"
   },
+
   "homeMenu": {
     "chats": "Czaty",
     "contacts": "Kontakty",

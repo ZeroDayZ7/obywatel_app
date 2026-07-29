@@ -57,8 +57,8 @@ class SettingsConfig {
           ),
           ActionItem(
             icon: Icons.fingerprint,
-            title: 'Biometria',
-            subtitle: 'Logowanie odciskiem palca',
+            title: LocaleKeys.settings_biometrics.tr(),
+            subtitle: LocaleKeys.settings_biometrics_subtitle.tr(),
             type: ActionType.toggle,
             initialValue: biometryValue,
             onToggle: onBiometryToggle,

@@ -3,14 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 
-/// Wyliczenie określające zamierzoną akcję użytkownika po wyjściu z dialogu
 enum LogoutAction { logout, unpairAndReset }
 
 class LogoutConfirmDialog extends StatefulWidget {
   const LogoutConfirmDialog({super.key});
 
-  /// Statyczna metoda pomocnicza – hermetyzuje wywołanie showDialog
-  /// Zwraca [LogoutAction] w przypadku zatwierdzenia lub [null] przy anulowaniu
   static Future<LogoutAction?> show(BuildContext context) {
     return showDialog<LogoutAction>(
       context: context,
@@ -27,6 +24,9 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
       title: Text(LocaleKeys.drawer_logout_title.tr()),
       content: Column(
@@ -39,7 +39,7 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: _removeDeviceAndPin,
-            activeColor: Colors.redAccent,
+            activeColor: colorScheme.error,
             title: Text(
               LocaleKeys.drawer_remove_device_title.tr(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),

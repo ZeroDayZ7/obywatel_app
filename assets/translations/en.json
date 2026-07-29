@@ -212,6 +212,8 @@
     "language_subtitle": "Change app language",
     "theme": "Theme",
     "theme_subtitle": "Customize app appearance",
+    "biometrics": "Biometrics",
+    "biometrics_subtitle": "Fingerprint login",
     "light_mode": "Light",
     "dark_mode": "Dark",
     "system_default": "System default",

@@ -13,7 +13,6 @@ class AppBottomBar extends StatelessWidget {
       notificationCount: notificationCount,
     );
     final theme = Theme.of(context);
-    const activeColor = Color(0xFF26C6DA);
 
     final currentPath = GoRouterState.of(context).uri.path;
 
@@ -34,13 +33,7 @@ class AppBottomBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(items.length, (index) {
-          return _buildNavItem(
-            context,
-            items[index],
-            index,
-            currentIndex,
-            activeColor,
-          );
+          return _buildNavItem(context, items[index], index, currentIndex);
         }),
       ),
     );
@@ -51,13 +44,14 @@ class AppBottomBar extends StatelessWidget {
     NavItem item,
     int index,
     int activeIndex,
-    Color activeColor,
   ) {
     final isSelected = activeIndex == index;
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     final color = isSelected
-        ? activeColor
-        : theme.colorScheme.onSurface.withValues(alpha: 0.6);
+        ? colorScheme.primary
+        : colorScheme.onSurface.withValues(alpha: 0.6);
 
     return InkWell(
       onTap: () => context.go(item.route),
@@ -81,8 +75,8 @@ class AppBottomBar extends StatelessWidget {
                     top: -4,
                     child: Container(
                       padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.redAccent,
+                      decoration: BoxDecoration(
+                        color: colorScheme.error,
                         shape: BoxShape.circle,
                       ),
                       constraints: const BoxConstraints(
@@ -91,8 +85,8 @@ class AppBottomBar extends StatelessWidget {
                       ),
                       child: Text(
                         '${item.badgeCount}',
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: colorScheme.onError,
                           fontSize: 9,
                           fontWeight: FontWeight.bold,
                         ),
