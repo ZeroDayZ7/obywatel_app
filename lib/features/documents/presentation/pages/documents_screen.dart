@@ -150,7 +150,7 @@ class _DocumentsList extends StatelessWidget {
                   subtitle: doc.subtitle,
                   icon: DocumentIconMapper.getIcon(doc.iconName),
                   onTap: () => context.push(
-                    '${AppRoutes.documents}/detail/${doc.id}',
+                    AppRoutes.documentDetailPath(doc.id),
                     extra: doc,
                   ),
                 );
@@ -188,10 +188,8 @@ class _DocumentGrid extends StatelessWidget {
           icon: DocumentIconMapper.getIcon(doc.iconName),
           isVerified: doc.isVerified,
           status: doc.status,
-          onTap: () => context.push(
-            '${AppRoutes.documents}/detail/${doc.id}',
-            extra: doc,
-          ),
+          onTap: () =>
+              context.push(AppRoutes.documentDetailPath(doc.id), extra: doc),
         );
       }, childCount: docs.length),
     );
