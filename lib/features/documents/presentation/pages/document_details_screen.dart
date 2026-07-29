@@ -63,38 +63,118 @@ class DocumentDetailsScreen extends ConsumerWidget {
   }
 
   Widget _buildContent(BuildContext context, DocumentModel doc) {
-    final expiryDate = doc.expiryDate;
-
     return AppScaffold(
       size: ContainerSize.medium,
       appBar: AppAppBar(title: doc.title),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: DocumentCardContainer(
-          doc: doc,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              DocumentHeaderBadge(doc: doc),
-              const SizedBox(height: 24),
-              DocumentAvatarStack(doc: doc),
-              const SizedBox(height: 24),
-              ...doc.fields.map(
-                (field) => DocumentInfoRow(
-                  icon: DocumentIconMapper.getIcon(field.iconName),
-                  label: field.label,
-                  value: field.value,
-                ),
-              ),
-              if (expiryDate != null && expiryDate.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                DocumentExpiryBadge(date: expiryDate),
-              ],
-              if (doc.qrData != null) DocumentQrSection(data: doc.qrData!),
-            ],
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: DocumentCardContainer(
+            doc: doc,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isWideScreen = constraints.maxWidth >= 720;
+
+                if (isWideScreen) {
+                  return _DesktopLayout(doc: doc);
+                }
+
+                return _MobileLayout(doc: doc);
+              },
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class _MobileLayout extends StatelessWidget {
+  final DocumentModel doc;
+
+  const _MobileLayout({required this.doc});
+
+  @override
+  Widget build(BuildContext context) {
+    final expiryDate = doc.expiryDate;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DocumentHeaderBadge(doc: doc),
+        const SizedBox(height: 24),
+        DocumentAvatarStack(doc: doc),
+        const SizedBox(height: 24),
+        ...doc.fields.map(
+          (field) => DocumentInfoRow(
+            icon: DocumentIconMapper.getIcon(field.iconName),
+            label: field.label,
+            value: field.value,
+          ),
+        ),
+        if (expiryDate != null && expiryDate.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          DocumentExpiryBadge(date: expiryDate),
+        ],
+        if (doc.qrData != null) ...[
+          const SizedBox(height: 24),
+          DocumentQrSection(data: doc.qrData!),
+        ],
+      ],
+    );
+  }
+}
+
+class _DesktopLayout extends StatelessWidget {
+  final DocumentModel doc;
+
+  const _DesktopLayout({required this.doc});
+
+  @override
+  Widget build(BuildContext context) {
+    final expiryDate = doc.expiryDate;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        DocumentHeaderBadge(doc: doc),
+        const SizedBox(height: 24),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DocumentAvatarStack(doc: doc),
+                  const SizedBox(height: 24),
+                  ...doc.fields.map(
+                    (field) => DocumentInfoRow(
+                      icon: DocumentIconMapper.getIcon(field.iconName),
+                      label: field.label,
+                      value: field.value,
+                    ),
+                  ),
+                  if (expiryDate != null && expiryDate.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    DocumentExpiryBadge(date: expiryDate),
+                  ],
+                ],
+              ),
+            ),
+            if (doc.qrData != null) ...[
+              const SizedBox(width: 32),
+              Expanded(
+                flex: 2,
+                child: Center(child: DocumentQrSection(data: doc.qrData!)),
+              ),
+            ],
+          ],
+        ),
+      ],
     );
   }
 }
