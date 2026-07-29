@@ -4,8 +4,10 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
+import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
+import 'package:obywatel_plus/core/database/tables/user_documents.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -13,14 +15,14 @@ import 'package:path_provider/path_provider.dart';
 part 'database.g.dart';
 
 @DriftDatabase(
-  tables: [CryptoKeys, Notifications],
-  daos: [CryptoKeysDao, NotificationsDao],
+  tables: [CryptoKeys, Notifications, UserDocuments],
+  daos: [CryptoKeysDao, NotificationsDao, UserDocumentsDao],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -28,6 +30,9 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.addColumn(notifications, notifications.deletedAt);
+      }
+      if (from < 3) {
+        await m.createTable(userDocuments);
       }
     },
     beforeOpen: (details) async {
@@ -44,8 +49,6 @@ class AppDatabase extends _$AppDatabase {
   }
 }
 
-/// Funkcja tworząca połączenie. Klucz szyfrujący jest przekazywany jako prosty String,
-/// co pozwala na bezpieczne przesłanie go do tła (Isolate).
 QueryExecutor openConnection(String encryptionKey) {
   return LazyDatabase(() async {
     final dbFolder = await getApplicationDocumentsDirectory();
@@ -54,7 +57,6 @@ QueryExecutor openConnection(String encryptionKey) {
     return NativeDatabase.createInBackground(
       file,
       setup: (rawDb) {
-        // Używamy PRAGMA key dla SQLCipher
         rawDb.execute("PRAGMA key = '$encryptionKey';");
       },
     );

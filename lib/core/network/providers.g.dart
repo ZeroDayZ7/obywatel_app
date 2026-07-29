@@ -54,7 +54,7 @@ final class AuthFreshProvider
   }
 }
 
-String _$authFreshHash() => r'8cd3d6cfd82385973d7a91d8e0495ee1b87538f6';
+String _$authFreshHash() => r'af2b6e66b778c0135225a532cd9234f1d390d2ea';
 
 @ProviderFor(authDio)
 final authDioProvider = AuthDioProvider._();
@@ -94,7 +94,7 @@ final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$authDioHash() => r'a2688bc2c036319df9b9dd682ebc68ba605f6300';
+String _$authDioHash() => r'6202494bae6bed3e2b4a057a7d062a4d4b4d294e';
 
 @ProviderFor(refreshDio)
 final refreshDioProvider = RefreshDioProvider._();

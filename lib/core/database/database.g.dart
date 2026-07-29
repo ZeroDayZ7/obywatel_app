@@ -841,13 +841,1048 @@ class NotificationsCompanion extends UpdateCompanion<DbNotification> {
   }
 }
 
+class $UserDocumentsTable extends UserDocuments
+    with TableInfo<$UserDocumentsTable, DbUserDocument> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $UserDocumentsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeCodeMeta = const VerificationMeta(
+    'typeCode',
+  );
+  @override
+  late final GeneratedColumn<String> typeCode = GeneratedColumn<String>(
+    'type_code',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 64),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(maxTextLength: 20),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('active'),
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _issuerMeta = const VerificationMeta('issuer');
+  @override
+  late final GeneratedColumn<String> issuer = GeneratedColumn<String>(
+    'issuer',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _documentNumberMeta = const VerificationMeta(
+    'documentNumber',
+  );
+  @override
+  late final GeneratedColumn<String> documentNumber = GeneratedColumn<String>(
+    'document_number',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _customAttributesJsonMeta =
+      const VerificationMeta('customAttributesJson');
+  @override
+  late final GeneratedColumn<String> customAttributesJson =
+      GeneratedColumn<String>(
+        'custom_attributes_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _allowedScopesJsonMeta = const VerificationMeta(
+    'allowedScopesJson',
+  );
+  @override
+  late final GeneratedColumn<String> allowedScopesJson =
+      GeneratedColumn<String>(
+        'allowed_scopes_json',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _issuerSignatureMeta = const VerificationMeta(
+    'issuerSignature',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> issuerSignature =
+      GeneratedColumn<Uint8List>(
+        'issuer_signature',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _signingKeyIdMeta = const VerificationMeta(
+    'signingKeyId',
+  );
+  @override
+  late final GeneratedColumn<String> signingKeyId = GeneratedColumn<String>(
+    'signing_key_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _revocationSerialMeta = const VerificationMeta(
+    'revocationSerial',
+  );
+  @override
+  late final GeneratedColumn<String> revocationSerial = GeneratedColumn<String>(
+    'revocation_serial',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
+  @override
+  late final GeneratedColumn<int> version = GeneratedColumn<int>(
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _issuedAtMeta = const VerificationMeta(
+    'issuedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> issuedAt = GeneratedColumn<DateTime>(
+    'issued_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _expiresAtMeta = const VerificationMeta(
+    'expiresAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> expiresAt = GeneratedColumn<DateTime>(
+    'expires_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    typeCode,
+    status,
+    title,
+    issuer,
+    category,
+    documentNumber,
+    customAttributesJson,
+    allowedScopesJson,
+    issuerSignature,
+    signingKeyId,
+    revocationSerial,
+    version,
+    issuedAt,
+    expiresAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'user_documents';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<DbUserDocument> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type_code')) {
+      context.handle(
+        _typeCodeMeta,
+        typeCode.isAcceptableOrUnknown(data['type_code']!, _typeCodeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeCodeMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('issuer')) {
+      context.handle(
+        _issuerMeta,
+        issuer.isAcceptableOrUnknown(data['issuer']!, _issuerMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_issuerMeta);
+    }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryMeta);
+    }
+    if (data.containsKey('document_number')) {
+      context.handle(
+        _documentNumberMeta,
+        documentNumber.isAcceptableOrUnknown(
+          data['document_number']!,
+          _documentNumberMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_documentNumberMeta);
+    }
+    if (data.containsKey('custom_attributes_json')) {
+      context.handle(
+        _customAttributesJsonMeta,
+        customAttributesJson.isAcceptableOrUnknown(
+          data['custom_attributes_json']!,
+          _customAttributesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('allowed_scopes_json')) {
+      context.handle(
+        _allowedScopesJsonMeta,
+        allowedScopesJson.isAcceptableOrUnknown(
+          data['allowed_scopes_json']!,
+          _allowedScopesJsonMeta,
+        ),
+      );
+    }
+    if (data.containsKey('issuer_signature')) {
+      context.handle(
+        _issuerSignatureMeta,
+        issuerSignature.isAcceptableOrUnknown(
+          data['issuer_signature']!,
+          _issuerSignatureMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_issuerSignatureMeta);
+    }
+    if (data.containsKey('signing_key_id')) {
+      context.handle(
+        _signingKeyIdMeta,
+        signingKeyId.isAcceptableOrUnknown(
+          data['signing_key_id']!,
+          _signingKeyIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_signingKeyIdMeta);
+    }
+    if (data.containsKey('revocation_serial')) {
+      context.handle(
+        _revocationSerialMeta,
+        revocationSerial.isAcceptableOrUnknown(
+          data['revocation_serial']!,
+          _revocationSerialMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_revocationSerialMeta);
+    }
+    if (data.containsKey('version')) {
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('issued_at')) {
+      context.handle(
+        _issuedAtMeta,
+        issuedAt.isAcceptableOrUnknown(data['issued_at']!, _issuedAtMeta),
+      );
+    }
+    if (data.containsKey('expires_at')) {
+      context.handle(
+        _expiresAtMeta,
+        expiresAt.isAcceptableOrUnknown(data['expires_at']!, _expiresAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  DbUserDocument map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return DbUserDocument(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      typeCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type_code'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      issuer: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}issuer'],
+      )!,
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      documentNumber: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}document_number'],
+      )!,
+      customAttributesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_attributes_json'],
+      ),
+      allowedScopesJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}allowed_scopes_json'],
+      ),
+      issuerSignature: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}issuer_signature'],
+      )!,
+      signingKeyId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}signing_key_id'],
+      )!,
+      revocationSerial: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}revocation_serial'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
+      issuedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}issued_at'],
+      ),
+      expiresAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}expires_at'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $UserDocumentsTable createAlias(String alias) {
+    return $UserDocumentsTable(attachedDatabase, alias);
+  }
+}
+
+class DbUserDocument extends DataClass implements Insertable<DbUserDocument> {
+  final String id;
+  final String typeCode;
+  final String status;
+  final String title;
+  final String issuer;
+  final String category;
+  final String documentNumber;
+  final String? customAttributesJson;
+  final String? allowedScopesJson;
+  final Uint8List issuerSignature;
+  final String signingKeyId;
+  final String revocationSerial;
+  final int version;
+  final DateTime? issuedAt;
+  final DateTime? expiresAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const DbUserDocument({
+    required this.id,
+    required this.typeCode,
+    required this.status,
+    required this.title,
+    required this.issuer,
+    required this.category,
+    required this.documentNumber,
+    this.customAttributesJson,
+    this.allowedScopesJson,
+    required this.issuerSignature,
+    required this.signingKeyId,
+    required this.revocationSerial,
+    required this.version,
+    this.issuedAt,
+    this.expiresAt,
+    required this.createdAt,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type_code'] = Variable<String>(typeCode);
+    map['status'] = Variable<String>(status);
+    map['title'] = Variable<String>(title);
+    map['issuer'] = Variable<String>(issuer);
+    map['category'] = Variable<String>(category);
+    map['document_number'] = Variable<String>(documentNumber);
+    if (!nullToAbsent || customAttributesJson != null) {
+      map['custom_attributes_json'] = Variable<String>(customAttributesJson);
+    }
+    if (!nullToAbsent || allowedScopesJson != null) {
+      map['allowed_scopes_json'] = Variable<String>(allowedScopesJson);
+    }
+    map['issuer_signature'] = Variable<Uint8List>(issuerSignature);
+    map['signing_key_id'] = Variable<String>(signingKeyId);
+    map['revocation_serial'] = Variable<String>(revocationSerial);
+    map['version'] = Variable<int>(version);
+    if (!nullToAbsent || issuedAt != null) {
+      map['issued_at'] = Variable<DateTime>(issuedAt);
+    }
+    if (!nullToAbsent || expiresAt != null) {
+      map['expires_at'] = Variable<DateTime>(expiresAt);
+    }
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  UserDocumentsCompanion toCompanion(bool nullToAbsent) {
+    return UserDocumentsCompanion(
+      id: Value(id),
+      typeCode: Value(typeCode),
+      status: Value(status),
+      title: Value(title),
+      issuer: Value(issuer),
+      category: Value(category),
+      documentNumber: Value(documentNumber),
+      customAttributesJson: customAttributesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customAttributesJson),
+      allowedScopesJson: allowedScopesJson == null && nullToAbsent
+          ? const Value.absent()
+          : Value(allowedScopesJson),
+      issuerSignature: Value(issuerSignature),
+      signingKeyId: Value(signingKeyId),
+      revocationSerial: Value(revocationSerial),
+      version: Value(version),
+      issuedAt: issuedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(issuedAt),
+      expiresAt: expiresAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(expiresAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory DbUserDocument.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return DbUserDocument(
+      id: serializer.fromJson<String>(json['id']),
+      typeCode: serializer.fromJson<String>(json['typeCode']),
+      status: serializer.fromJson<String>(json['status']),
+      title: serializer.fromJson<String>(json['title']),
+      issuer: serializer.fromJson<String>(json['issuer']),
+      category: serializer.fromJson<String>(json['category']),
+      documentNumber: serializer.fromJson<String>(json['documentNumber']),
+      customAttributesJson: serializer.fromJson<String?>(
+        json['customAttributesJson'],
+      ),
+      allowedScopesJson: serializer.fromJson<String?>(
+        json['allowedScopesJson'],
+      ),
+      issuerSignature: serializer.fromJson<Uint8List>(json['issuerSignature']),
+      signingKeyId: serializer.fromJson<String>(json['signingKeyId']),
+      revocationSerial: serializer.fromJson<String>(json['revocationSerial']),
+      version: serializer.fromJson<int>(json['version']),
+      issuedAt: serializer.fromJson<DateTime?>(json['issuedAt']),
+      expiresAt: serializer.fromJson<DateTime?>(json['expiresAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'typeCode': serializer.toJson<String>(typeCode),
+      'status': serializer.toJson<String>(status),
+      'title': serializer.toJson<String>(title),
+      'issuer': serializer.toJson<String>(issuer),
+      'category': serializer.toJson<String>(category),
+      'documentNumber': serializer.toJson<String>(documentNumber),
+      'customAttributesJson': serializer.toJson<String?>(customAttributesJson),
+      'allowedScopesJson': serializer.toJson<String?>(allowedScopesJson),
+      'issuerSignature': serializer.toJson<Uint8List>(issuerSignature),
+      'signingKeyId': serializer.toJson<String>(signingKeyId),
+      'revocationSerial': serializer.toJson<String>(revocationSerial),
+      'version': serializer.toJson<int>(version),
+      'issuedAt': serializer.toJson<DateTime?>(issuedAt),
+      'expiresAt': serializer.toJson<DateTime?>(expiresAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  DbUserDocument copyWith({
+    String? id,
+    String? typeCode,
+    String? status,
+    String? title,
+    String? issuer,
+    String? category,
+    String? documentNumber,
+    Value<String?> customAttributesJson = const Value.absent(),
+    Value<String?> allowedScopesJson = const Value.absent(),
+    Uint8List? issuerSignature,
+    String? signingKeyId,
+    String? revocationSerial,
+    int? version,
+    Value<DateTime?> issuedAt = const Value.absent(),
+    Value<DateTime?> expiresAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => DbUserDocument(
+    id: id ?? this.id,
+    typeCode: typeCode ?? this.typeCode,
+    status: status ?? this.status,
+    title: title ?? this.title,
+    issuer: issuer ?? this.issuer,
+    category: category ?? this.category,
+    documentNumber: documentNumber ?? this.documentNumber,
+    customAttributesJson: customAttributesJson.present
+        ? customAttributesJson.value
+        : this.customAttributesJson,
+    allowedScopesJson: allowedScopesJson.present
+        ? allowedScopesJson.value
+        : this.allowedScopesJson,
+    issuerSignature: issuerSignature ?? this.issuerSignature,
+    signingKeyId: signingKeyId ?? this.signingKeyId,
+    revocationSerial: revocationSerial ?? this.revocationSerial,
+    version: version ?? this.version,
+    issuedAt: issuedAt.present ? issuedAt.value : this.issuedAt,
+    expiresAt: expiresAt.present ? expiresAt.value : this.expiresAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  DbUserDocument copyWithCompanion(UserDocumentsCompanion data) {
+    return DbUserDocument(
+      id: data.id.present ? data.id.value : this.id,
+      typeCode: data.typeCode.present ? data.typeCode.value : this.typeCode,
+      status: data.status.present ? data.status.value : this.status,
+      title: data.title.present ? data.title.value : this.title,
+      issuer: data.issuer.present ? data.issuer.value : this.issuer,
+      category: data.category.present ? data.category.value : this.category,
+      documentNumber: data.documentNumber.present
+          ? data.documentNumber.value
+          : this.documentNumber,
+      customAttributesJson: data.customAttributesJson.present
+          ? data.customAttributesJson.value
+          : this.customAttributesJson,
+      allowedScopesJson: data.allowedScopesJson.present
+          ? data.allowedScopesJson.value
+          : this.allowedScopesJson,
+      issuerSignature: data.issuerSignature.present
+          ? data.issuerSignature.value
+          : this.issuerSignature,
+      signingKeyId: data.signingKeyId.present
+          ? data.signingKeyId.value
+          : this.signingKeyId,
+      revocationSerial: data.revocationSerial.present
+          ? data.revocationSerial.value
+          : this.revocationSerial,
+      version: data.version.present ? data.version.value : this.version,
+      issuedAt: data.issuedAt.present ? data.issuedAt.value : this.issuedAt,
+      expiresAt: data.expiresAt.present ? data.expiresAt.value : this.expiresAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('DbUserDocument(')
+          ..write('id: $id, ')
+          ..write('typeCode: $typeCode, ')
+          ..write('status: $status, ')
+          ..write('title: $title, ')
+          ..write('issuer: $issuer, ')
+          ..write('category: $category, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('customAttributesJson: $customAttributesJson, ')
+          ..write('allowedScopesJson: $allowedScopesJson, ')
+          ..write('issuerSignature: $issuerSignature, ')
+          ..write('signingKeyId: $signingKeyId, ')
+          ..write('revocationSerial: $revocationSerial, ')
+          ..write('version: $version, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    typeCode,
+    status,
+    title,
+    issuer,
+    category,
+    documentNumber,
+    customAttributesJson,
+    allowedScopesJson,
+    $driftBlobEquality.hash(issuerSignature),
+    signingKeyId,
+    revocationSerial,
+    version,
+    issuedAt,
+    expiresAt,
+    createdAt,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is DbUserDocument &&
+          other.id == this.id &&
+          other.typeCode == this.typeCode &&
+          other.status == this.status &&
+          other.title == this.title &&
+          other.issuer == this.issuer &&
+          other.category == this.category &&
+          other.documentNumber == this.documentNumber &&
+          other.customAttributesJson == this.customAttributesJson &&
+          other.allowedScopesJson == this.allowedScopesJson &&
+          $driftBlobEquality.equals(
+            other.issuerSignature,
+            this.issuerSignature,
+          ) &&
+          other.signingKeyId == this.signingKeyId &&
+          other.revocationSerial == this.revocationSerial &&
+          other.version == this.version &&
+          other.issuedAt == this.issuedAt &&
+          other.expiresAt == this.expiresAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class UserDocumentsCompanion extends UpdateCompanion<DbUserDocument> {
+  final Value<String> id;
+  final Value<String> typeCode;
+  final Value<String> status;
+  final Value<String> title;
+  final Value<String> issuer;
+  final Value<String> category;
+  final Value<String> documentNumber;
+  final Value<String?> customAttributesJson;
+  final Value<String?> allowedScopesJson;
+  final Value<Uint8List> issuerSignature;
+  final Value<String> signingKeyId;
+  final Value<String> revocationSerial;
+  final Value<int> version;
+  final Value<DateTime?> issuedAt;
+  final Value<DateTime?> expiresAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const UserDocumentsCompanion({
+    this.id = const Value.absent(),
+    this.typeCode = const Value.absent(),
+    this.status = const Value.absent(),
+    this.title = const Value.absent(),
+    this.issuer = const Value.absent(),
+    this.category = const Value.absent(),
+    this.documentNumber = const Value.absent(),
+    this.customAttributesJson = const Value.absent(),
+    this.allowedScopesJson = const Value.absent(),
+    this.issuerSignature = const Value.absent(),
+    this.signingKeyId = const Value.absent(),
+    this.revocationSerial = const Value.absent(),
+    this.version = const Value.absent(),
+    this.issuedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  UserDocumentsCompanion.insert({
+    required String id,
+    required String typeCode,
+    this.status = const Value.absent(),
+    required String title,
+    required String issuer,
+    required String category,
+    required String documentNumber,
+    this.customAttributesJson = const Value.absent(),
+    this.allowedScopesJson = const Value.absent(),
+    required Uint8List issuerSignature,
+    required String signingKeyId,
+    required String revocationSerial,
+    this.version = const Value.absent(),
+    this.issuedAt = const Value.absent(),
+    this.expiresAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       typeCode = Value(typeCode),
+       title = Value(title),
+       issuer = Value(issuer),
+       category = Value(category),
+       documentNumber = Value(documentNumber),
+       issuerSignature = Value(issuerSignature),
+       signingKeyId = Value(signingKeyId),
+       revocationSerial = Value(revocationSerial);
+  static Insertable<DbUserDocument> custom({
+    Expression<String>? id,
+    Expression<String>? typeCode,
+    Expression<String>? status,
+    Expression<String>? title,
+    Expression<String>? issuer,
+    Expression<String>? category,
+    Expression<String>? documentNumber,
+    Expression<String>? customAttributesJson,
+    Expression<String>? allowedScopesJson,
+    Expression<Uint8List>? issuerSignature,
+    Expression<String>? signingKeyId,
+    Expression<String>? revocationSerial,
+    Expression<int>? version,
+    Expression<DateTime>? issuedAt,
+    Expression<DateTime>? expiresAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (typeCode != null) 'type_code': typeCode,
+      if (status != null) 'status': status,
+      if (title != null) 'title': title,
+      if (issuer != null) 'issuer': issuer,
+      if (category != null) 'category': category,
+      if (documentNumber != null) 'document_number': documentNumber,
+      if (customAttributesJson != null)
+        'custom_attributes_json': customAttributesJson,
+      if (allowedScopesJson != null) 'allowed_scopes_json': allowedScopesJson,
+      if (issuerSignature != null) 'issuer_signature': issuerSignature,
+      if (signingKeyId != null) 'signing_key_id': signingKeyId,
+      if (revocationSerial != null) 'revocation_serial': revocationSerial,
+      if (version != null) 'version': version,
+      if (issuedAt != null) 'issued_at': issuedAt,
+      if (expiresAt != null) 'expires_at': expiresAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  UserDocumentsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? typeCode,
+    Value<String>? status,
+    Value<String>? title,
+    Value<String>? issuer,
+    Value<String>? category,
+    Value<String>? documentNumber,
+    Value<String?>? customAttributesJson,
+    Value<String?>? allowedScopesJson,
+    Value<Uint8List>? issuerSignature,
+    Value<String>? signingKeyId,
+    Value<String>? revocationSerial,
+    Value<int>? version,
+    Value<DateTime?>? issuedAt,
+    Value<DateTime?>? expiresAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return UserDocumentsCompanion(
+      id: id ?? this.id,
+      typeCode: typeCode ?? this.typeCode,
+      status: status ?? this.status,
+      title: title ?? this.title,
+      issuer: issuer ?? this.issuer,
+      category: category ?? this.category,
+      documentNumber: documentNumber ?? this.documentNumber,
+      customAttributesJson: customAttributesJson ?? this.customAttributesJson,
+      allowedScopesJson: allowedScopesJson ?? this.allowedScopesJson,
+      issuerSignature: issuerSignature ?? this.issuerSignature,
+      signingKeyId: signingKeyId ?? this.signingKeyId,
+      revocationSerial: revocationSerial ?? this.revocationSerial,
+      version: version ?? this.version,
+      issuedAt: issuedAt ?? this.issuedAt,
+      expiresAt: expiresAt ?? this.expiresAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (typeCode.present) {
+      map['type_code'] = Variable<String>(typeCode.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (issuer.present) {
+      map['issuer'] = Variable<String>(issuer.value);
+    }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (documentNumber.present) {
+      map['document_number'] = Variable<String>(documentNumber.value);
+    }
+    if (customAttributesJson.present) {
+      map['custom_attributes_json'] = Variable<String>(
+        customAttributesJson.value,
+      );
+    }
+    if (allowedScopesJson.present) {
+      map['allowed_scopes_json'] = Variable<String>(allowedScopesJson.value);
+    }
+    if (issuerSignature.present) {
+      map['issuer_signature'] = Variable<Uint8List>(issuerSignature.value);
+    }
+    if (signingKeyId.present) {
+      map['signing_key_id'] = Variable<String>(signingKeyId.value);
+    }
+    if (revocationSerial.present) {
+      map['revocation_serial'] = Variable<String>(revocationSerial.value);
+    }
+    if (version.present) {
+      map['version'] = Variable<int>(version.value);
+    }
+    if (issuedAt.present) {
+      map['issued_at'] = Variable<DateTime>(issuedAt.value);
+    }
+    if (expiresAt.present) {
+      map['expires_at'] = Variable<DateTime>(expiresAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('UserDocumentsCompanion(')
+          ..write('id: $id, ')
+          ..write('typeCode: $typeCode, ')
+          ..write('status: $status, ')
+          ..write('title: $title, ')
+          ..write('issuer: $issuer, ')
+          ..write('category: $category, ')
+          ..write('documentNumber: $documentNumber, ')
+          ..write('customAttributesJson: $customAttributesJson, ')
+          ..write('allowedScopesJson: $allowedScopesJson, ')
+          ..write('issuerSignature: $issuerSignature, ')
+          ..write('signingKeyId: $signingKeyId, ')
+          ..write('revocationSerial: $revocationSerial, ')
+          ..write('version: $version, ')
+          ..write('issuedAt: $issuedAt, ')
+          ..write('expiresAt: $expiresAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $CryptoKeysTable cryptoKeys = $CryptoKeysTable(this);
   late final $NotificationsTable notifications = $NotificationsTable(this);
+  late final $UserDocumentsTable userDocuments = $UserDocumentsTable(this);
   late final CryptoKeysDao cryptoKeysDao = CryptoKeysDao(this as AppDatabase);
   late final NotificationsDao notificationsDao = NotificationsDao(
+    this as AppDatabase,
+  );
+  late final UserDocumentsDao userDocumentsDao = UserDocumentsDao(
     this as AppDatabase,
   );
   @override
@@ -857,6 +1892,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     cryptoKeys,
     notifications,
+    userDocuments,
   ];
 }
 
@@ -1307,6 +2343,465 @@ typedef $$NotificationsTableProcessedTableManager =
       DbNotification,
       PrefetchHooks Function()
     >;
+typedef $$UserDocumentsTableCreateCompanionBuilder =
+    UserDocumentsCompanion Function({
+      required String id,
+      required String typeCode,
+      Value<String> status,
+      required String title,
+      required String issuer,
+      required String category,
+      required String documentNumber,
+      Value<String?> customAttributesJson,
+      Value<String?> allowedScopesJson,
+      required Uint8List issuerSignature,
+      required String signingKeyId,
+      required String revocationSerial,
+      Value<int> version,
+      Value<DateTime?> issuedAt,
+      Value<DateTime?> expiresAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$UserDocumentsTableUpdateCompanionBuilder =
+    UserDocumentsCompanion Function({
+      Value<String> id,
+      Value<String> typeCode,
+      Value<String> status,
+      Value<String> title,
+      Value<String> issuer,
+      Value<String> category,
+      Value<String> documentNumber,
+      Value<String?> customAttributesJson,
+      Value<String?> allowedScopesJson,
+      Value<Uint8List> issuerSignature,
+      Value<String> signingKeyId,
+      Value<String> revocationSerial,
+      Value<int> version,
+      Value<DateTime?> issuedAt,
+      Value<DateTime?> expiresAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$UserDocumentsTableFilterComposer
+    extends Composer<_$AppDatabase, $UserDocumentsTable> {
+  $$UserDocumentsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get typeCode => $composableBuilder(
+    column: $table.typeCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get issuer => $composableBuilder(
+    column: $table.issuer,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customAttributesJson => $composableBuilder(
+    column: $table.customAttributesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get allowedScopesJson => $composableBuilder(
+    column: $table.allowedScopesJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get issuerSignature => $composableBuilder(
+    column: $table.issuerSignature,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get signingKeyId => $composableBuilder(
+    column: $table.signingKeyId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get revocationSerial => $composableBuilder(
+    column: $table.revocationSerial,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$UserDocumentsTableOrderingComposer
+    extends Composer<_$AppDatabase, $UserDocumentsTable> {
+  $$UserDocumentsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get typeCode => $composableBuilder(
+    column: $table.typeCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get issuer => $composableBuilder(
+    column: $table.issuer,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customAttributesJson => $composableBuilder(
+    column: $table.customAttributesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get allowedScopesJson => $composableBuilder(
+    column: $table.allowedScopesJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get issuerSignature => $composableBuilder(
+    column: $table.issuerSignature,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get signingKeyId => $composableBuilder(
+    column: $table.signingKeyId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get revocationSerial => $composableBuilder(
+    column: $table.revocationSerial,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get issuedAt => $composableBuilder(
+    column: $table.issuedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get expiresAt => $composableBuilder(
+    column: $table.expiresAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$UserDocumentsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $UserDocumentsTable> {
+  $$UserDocumentsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get typeCode =>
+      $composableBuilder(column: $table.typeCode, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get issuer =>
+      $composableBuilder(column: $table.issuer, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get documentNumber => $composableBuilder(
+    column: $table.documentNumber,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customAttributesJson => $composableBuilder(
+    column: $table.customAttributesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get allowedScopesJson => $composableBuilder(
+    column: $table.allowedScopesJson,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<Uint8List> get issuerSignature => $composableBuilder(
+    column: $table.issuerSignature,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get signingKeyId => $composableBuilder(
+    column: $table.signingKeyId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get revocationSerial => $composableBuilder(
+    column: $table.revocationSerial,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get issuedAt =>
+      $composableBuilder(column: $table.issuedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get expiresAt =>
+      $composableBuilder(column: $table.expiresAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$UserDocumentsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $UserDocumentsTable,
+          DbUserDocument,
+          $$UserDocumentsTableFilterComposer,
+          $$UserDocumentsTableOrderingComposer,
+          $$UserDocumentsTableAnnotationComposer,
+          $$UserDocumentsTableCreateCompanionBuilder,
+          $$UserDocumentsTableUpdateCompanionBuilder,
+          (
+            DbUserDocument,
+            BaseReferences<_$AppDatabase, $UserDocumentsTable, DbUserDocument>,
+          ),
+          DbUserDocument,
+          PrefetchHooks Function()
+        > {
+  $$UserDocumentsTableTableManager(_$AppDatabase db, $UserDocumentsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$UserDocumentsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$UserDocumentsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$UserDocumentsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> typeCode = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> issuer = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> documentNumber = const Value.absent(),
+                Value<String?> customAttributesJson = const Value.absent(),
+                Value<String?> allowedScopesJson = const Value.absent(),
+                Value<Uint8List> issuerSignature = const Value.absent(),
+                Value<String> signingKeyId = const Value.absent(),
+                Value<String> revocationSerial = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> issuedAt = const Value.absent(),
+                Value<DateTime?> expiresAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDocumentsCompanion(
+                id: id,
+                typeCode: typeCode,
+                status: status,
+                title: title,
+                issuer: issuer,
+                category: category,
+                documentNumber: documentNumber,
+                customAttributesJson: customAttributesJson,
+                allowedScopesJson: allowedScopesJson,
+                issuerSignature: issuerSignature,
+                signingKeyId: signingKeyId,
+                revocationSerial: revocationSerial,
+                version: version,
+                issuedAt: issuedAt,
+                expiresAt: expiresAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String typeCode,
+                Value<String> status = const Value.absent(),
+                required String title,
+                required String issuer,
+                required String category,
+                required String documentNumber,
+                Value<String?> customAttributesJson = const Value.absent(),
+                Value<String?> allowedScopesJson = const Value.absent(),
+                required Uint8List issuerSignature,
+                required String signingKeyId,
+                required String revocationSerial,
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> issuedAt = const Value.absent(),
+                Value<DateTime?> expiresAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => UserDocumentsCompanion.insert(
+                id: id,
+                typeCode: typeCode,
+                status: status,
+                title: title,
+                issuer: issuer,
+                category: category,
+                documentNumber: documentNumber,
+                customAttributesJson: customAttributesJson,
+                allowedScopesJson: allowedScopesJson,
+                issuerSignature: issuerSignature,
+                signingKeyId: signingKeyId,
+                revocationSerial: revocationSerial,
+                version: version,
+                issuedAt: issuedAt,
+                expiresAt: expiresAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$UserDocumentsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $UserDocumentsTable,
+      DbUserDocument,
+      $$UserDocumentsTableFilterComposer,
+      $$UserDocumentsTableOrderingComposer,
+      $$UserDocumentsTableAnnotationComposer,
+      $$UserDocumentsTableCreateCompanionBuilder,
+      $$UserDocumentsTableUpdateCompanionBuilder,
+      (
+        DbUserDocument,
+        BaseReferences<_$AppDatabase, $UserDocumentsTable, DbUserDocument>,
+      ),
+      DbUserDocument,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1315,4 +2810,6 @@ class $AppDatabaseManager {
       $$CryptoKeysTableTableManager(_db, _db.cryptoKeys);
   $$NotificationsTableTableManager get notifications =>
       $$NotificationsTableTableManager(_db, _db.notifications);
+  $$UserDocumentsTableTableManager get userDocuments =>
+      $$UserDocumentsTableTableManager(_db, _db.userDocuments);
 }
