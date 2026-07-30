@@ -1,36 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';
+import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_contact_card.dart';
 
-class ContactsSearchDelegate extends SearchDelegate<UIContact?> {
-  final List<UIContact> contacts;
-  final Color surfaceColor;
-  final Color primaryNeon;
-  final Color successNeon;
-  final Color accentNeon;
+class ContactsSearchDelegate extends SearchDelegate<Contact?> {
+  final List<Contact> contacts;
 
-  ContactsSearchDelegate({
-    required this.contacts,
-    required this.surfaceColor,
-    required this.primaryNeon,
-    required this.successNeon,
-    required this.accentNeon,
-  });
+  ContactsSearchDelegate({required this.contacts});
 
   @override
   ThemeData appBarTheme(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return theme.copyWith(
       appBarTheme: theme.appBarTheme.copyWith(
-        backgroundColor: const Color(0xFF0A0E27),
+        backgroundColor: colorScheme.surface,
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: Colors.white54),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(
+          color: colorScheme.onSurface.withValues(alpha: 0.5),
+        ),
         border: InputBorder.none,
       ),
       textTheme: theme.textTheme.copyWith(
-        titleLarge: const TextStyle(color: Colors.white),
+        titleLarge: TextStyle(color: colorScheme.onSurface, fontSize: 18),
       ),
+      scaffoldBackgroundColor: colorScheme.surface,
     );
   }
 
@@ -51,30 +47,35 @@ class ContactsSearchDelegate extends SearchDelegate<UIContact?> {
   }
 
   @override
-  Widget buildResults(BuildContext context) => _buildSearchResults();
+  Widget buildResults(BuildContext context) => _buildSearchResults(context);
 
   @override
-  Widget buildSuggestions(BuildContext context) => _buildSearchResults();
+  Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
-  Widget _buildSearchResults() {
+  Widget _buildSearchResults(BuildContext context) {
     final filtered = contacts
-        .where((c) => c.name.toLowerCase().contains(query.toLowerCase()))
+        .where((c) => c.displayName.toLowerCase().contains(query.toLowerCase()))
         .toList();
 
-    return Container(
-      color: const Color(0xFF0A0E27),
-      child: ListView.builder(
-        itemCount: filtered.length,
-        itemBuilder: (context, index) {
-          return ContactsContactCard(
-            contact: filtered[index],
-            surfaceColor: surfaceColor,
-            primaryNeon: primaryNeon,
-            successNeon: successNeon,
-            accentNeon: accentNeon,
-          );
-        },
-      ),
+    if (filtered.isEmpty) {
+      return Center(
+        child: Text(
+          'Brak wyników dla "$query"',
+          style: TextStyle(
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      itemCount: filtered.length,
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      itemBuilder: (context, index) {
+        return ContactsContactCard(contact: filtered[index]);
+      },
     );
   }
 }

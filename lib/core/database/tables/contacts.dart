@@ -1,3 +1,4 @@
+// lib/core/database/tables/contacts.dart
 import 'package:drift/drift.dart';
 
 @DataClassName('ContactEntity')

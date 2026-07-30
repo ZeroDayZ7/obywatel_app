@@ -1,3 +1,4 @@
+// lib/core/database/daos/contacts_dao.dart
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/tables/contacts.dart';

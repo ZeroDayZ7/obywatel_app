@@ -1,52 +1,30 @@
+// lib/features/contacts/presentation/widgets/contacts_screen/contacts_online_section.dart
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/ui_contact.dart';
+import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_online_avatar.dart';
 
 class ContactsOnlineSection extends StatelessWidget {
-  final List<UIContact> contacts;
-  final Color accentColor;
-  final Color successColor;
+  final List<Contact> contacts;
 
-  const ContactsOnlineSection({
-    super.key,
-    required this.contacts,
-    required this.accentColor,
-    required this.successColor,
-  });
+  const ContactsOnlineSection({super.key, required this.contacts});
 
   @override
   Widget build(BuildContext context) {
-    final onlineOnes = contacts.where((c) => c.isOnline).toList();
+    if (contacts.isEmpty) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
 
     return SliverToBoxAdapter(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8.0),
-            child: Text(
-              'DOSTĘPNI W SIECI',
-              style: TextStyle(
-                color: accentColor,
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 90,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              itemCount: onlineOnes.length,
-              itemBuilder: (context, index) => ContactsOnlineAvatar(
-                contact: onlineOnes[index],
-                successColor: successColor,
-              ),
-            ),
-          ),
-        ],
+      child: SizedBox(
+        height: 88,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          itemCount: contacts.length,
+          itemBuilder: (context, index) {
+            return ContactsOnlineAvatar(contact: contacts[index]);
+          },
+        ),
       ),
     );
   }
