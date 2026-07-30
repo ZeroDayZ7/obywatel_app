@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 import 'package:obywatel_plus/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/add_contact_modal.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_contact_card.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_empty_state.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_error_view.dart';
@@ -12,11 +13,18 @@ import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_sc
 class ContactsScreen extends ConsumerWidget {
   const ContactsScreen({super.key});
 
+  void _openAddContactModal(BuildContext context) {
+    showDialog(context: context, builder: (_) => const AddContactModal());
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final contactsAsync = ref.watch(acceptedContactsProvider);
+
+    // Bezpieczne sprawdzanie rozmiaru okna bez LayoutBuilder
+    final isDesktop = MediaQuery.sizeOf(context).width > 800;
 
     // Nasłuchiwanie błędów synchronizacji w tle
     ref.listen<AsyncValue<void>>(contactsSyncProvider, (previous, next) {
@@ -33,27 +41,26 @@ class ContactsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _openAddContactModal(context),
+        icon: const Icon(Icons.person_add),
+        label: const Text('Dodaj kontakt'),
+        backgroundColor: colorScheme.primary,
+        foregroundColor: colorScheme.onPrimary,
+      ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final isDesktop = constraints.maxWidth > 800;
-
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1000),
-                child: contactsAsync.when(
-                  data: (contacts) =>
-                      _buildContactsContent(context, ref, contacts, isDesktop),
-                  loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  error: (error, stack) => ContactsErrorView(error: error),
-                ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1000),
+            child: contactsAsync.when(
+              data: (contacts) =>
+                  _buildContactsContent(context, ref, contacts, isDesktop),
+              loading: () => Center(
+                child: CircularProgressIndicator(color: colorScheme.primary),
               ),
-            );
-          },
+              error: (error, stack) => ContactsErrorView(error: error),
+            ),
+          ),
         ),
       ),
     );
@@ -81,7 +88,6 @@ class ContactsScreen extends ConsumerWidget {
           SliverAppBar(
             floating: true,
             snap: true,
-            // Strzałka powrotu przekierowująca do /home
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
               tooltip: 'Powrót do ekranu głównego',
