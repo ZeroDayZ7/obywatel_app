@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/chat/presentation/widgets/chat_screen/chat_colors.dart';
 
 class AppAvatar extends StatelessWidget {
   final String? username;
@@ -44,7 +43,6 @@ class AppAvatar extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFF00FF88),
                 shape: BoxShape.circle,
-                border: Border.all(color: CyberpunkColors.background, width: 2),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFF00FF88).withValues(alpha: 0.4),
