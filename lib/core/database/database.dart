@@ -5,8 +5,13 @@ import 'package:drift/native.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
+import 'package:obywatel_plus/core/database/tables/contacts.dart';
+import 'package:obywatel_plus/core/database/tables/conversation_members.dart';
+import 'package:obywatel_plus/core/database/tables/conversations.dart';
 import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
+import 'package:obywatel_plus/core/database/tables/messages.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
+import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
 import 'package:obywatel_plus/core/database/tables/user_documents.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;
@@ -15,7 +20,16 @@ import 'package:path_provider/path_provider.dart';
 part 'database.g.dart';
 
 @DriftDatabase(
-  tables: [CryptoKeys, Notifications, UserDocuments],
+  tables: [
+    CryptoKeys,
+    Notifications,
+    UserDocuments,
+    Contacts,
+    Conversations,
+    ConversationMembers,
+    Messages,
+    OutboxEvents,
+  ],
   daos: [CryptoKeysDao, NotificationsDao, UserDocumentsDao],
 )
 class AppDatabase extends _$AppDatabase {

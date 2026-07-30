@@ -1,7 +1,7 @@
 // lib/core/network/api_endpoints.dart
 
-class ApiEndpoints {
-  // AUTH
+abstract class ApiEndpoints {
+  // --- AUTH ---
   static String get login => '/auth/login';
   static String get authMe => '/auth/me';
   static String get unpairDevice => '/auth/unpair-device';
@@ -16,18 +16,18 @@ class ApiEndpoints {
   static String get verifyResetCode => '/auth/reset/verify';
   static String get resetFinal => '/auth/reset/final';
 
-  // 2FA
+  // --- 2FA ---
   static String get twoFaVerify => '/auth/2fa-verify';
   static String get twoFaResend => '/auth/2fa-resend';
 
-  // PUBLIC
+  // --- PUBLIC ---
   static String get checkVersion => '/version';
 
-  // SESSION
+  // --- SESSION ---
   static String get userSessions => '/user/sessions';
   static String get terminateSession => '/user/sessions/terminate';
 
-  // NOTIFICATIONS
+  // --- NOTIFICATIONS ---
   static String get notifications => '/notifications';
   static String markAsRead(String id) => '/notifications/$id/read';
   static String get markAllNotificationsAsRead => '/notifications/read-all';
@@ -36,8 +36,43 @@ class ApiEndpoints {
   static String restoreFromTrash(String id) => '/notifications/$id/restore';
   static String deleteNotification(String id) => '/notifications/$id';
 
-  // DOCUMENTS
+  // --- DOCUMENTS ---
   static String get documentsMe => '/documents/me';
   static String get documents => '/documents';
   static String documentById(String id) => '/documents/$id';
+
+  // ===========================================================================
+  // --- CONTACTS ---
+  // ===========================================================================
+  static String get contacts => '/contacts';
+  static String get contactsSearch => '/contacts/search';
+  static String contactById(String id) => '/contacts/$id';
+  static String acceptContact(String id) => '/contacts/$id/accept';
+  static String blockContact(String id) => '/contacts/$id/block';
+
+  // ===========================================================================
+  // --- CHATS & MESSAGES ---
+  // ===========================================================================
+  static String get conversations => '/conversations';
+  static String conversationById(String id) => '/conversations/$id';
+  static String conversationMessages(String id) =>
+      '/conversations/$id/messages';
+  static String markConversationAsRead(String id) => '/conversations/$id/read';
+
+  // ===========================================================================
+  // --- DELTA SYNC & OUTBOX (Offline-First) ---
+  // ===========================================================================
+  static String get syncDelta => '/sync/delta';
+  static String get syncOutbox => '/sync/outbox';
+
+  // ===========================================================================
+  // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---
+  // ===========================================================================
+  static String get cryptoDeviceKeys => '/crypto/keys/device';
+  static String userPreKeys(String userId) => '/crypto/keys/prekeys/$userId';
+
+  // ===========================================================================
+  // --- REAL-TIME WEBSOCKET ---
+  // ===========================================================================
+  static String wsMessaging(String token) => '/ws/messaging?token=$token';
 }
