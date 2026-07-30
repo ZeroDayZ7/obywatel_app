@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/features/chats/presentation/providers/conversations_provider.dart';
 import 'package:obywatel_plus/features/chats/presentation/screens/chat_room_screen.dart';
 
@@ -15,10 +16,10 @@ class ConversationsScreen extends ConsumerWidget {
     final conversationsState = ref.watch(conversationsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Wiadomości'),
-        automaticallyImplyLeading:
-            true, 
+      appBar: const AppAppBar(
+        title: 'Wiadomości',
+        showBackButton:
+            true,
       ),
       body: conversationsState.when(
         data: (conversations) {
