@@ -9,12 +9,12 @@ part of 'documents_provider.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
-@ProviderFor(DocumentsNotifier)
-final documentsProvider = DocumentsNotifierProvider._();
+@ProviderFor(Documents)
+final documentsProvider = DocumentsProvider._();
 
-final class DocumentsNotifierProvider
-    extends $AsyncNotifierProvider<DocumentsNotifier, List<DocumentModel>> {
-  DocumentsNotifierProvider._()
+final class DocumentsProvider
+    extends $StreamNotifierProvider<Documents, List<DocumentModel>> {
+  DocumentsProvider._()
     : super(
         from: null,
         argument: null,
@@ -26,17 +26,17 @@ final class DocumentsNotifierProvider
       );
 
   @override
-  String debugGetCreateSourceHash() => _$documentsNotifierHash();
+  String debugGetCreateSourceHash() => _$documentsHash();
 
   @$internal
   @override
-  DocumentsNotifier create() => DocumentsNotifier();
+  Documents create() => Documents();
 }
 
-String _$documentsNotifierHash() => r'5d24d0f73edba9ffc5dc72fe840b3c4f755c9a88';
+String _$documentsHash() => r'ff75fc8ee94f7151ad02c584aa40108b7685cc79';
 
-abstract class _$DocumentsNotifier extends $AsyncNotifier<List<DocumentModel>> {
-  FutureOr<List<DocumentModel>> build();
+abstract class _$Documents extends $StreamNotifier<List<DocumentModel>> {
+  Stream<List<DocumentModel>> build();
   @$mustCallSuper
   @override
   void runBuild() {
@@ -54,24 +54,30 @@ abstract class _$DocumentsNotifier extends $AsyncNotifier<List<DocumentModel>> {
   }
 }
 
-@ProviderFor(DocumentDetailNotifier)
-final documentDetailProvider = DocumentDetailNotifierFamily._();
+@ProviderFor(documentDetail)
+final documentDetailProvider = DocumentDetailFamily._();
 
-final class DocumentDetailNotifierProvider
-    extends $AsyncNotifierProvider<DocumentDetailNotifier, DocumentModel> {
-  DocumentDetailNotifierProvider._({
-    required DocumentDetailNotifierFamily super.from,
+final class DocumentDetailProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<DocumentModel?>,
+          DocumentModel?,
+          FutureOr<DocumentModel?>
+        >
+    with $FutureModifier<DocumentModel?>, $FutureProvider<DocumentModel?> {
+  DocumentDetailProvider._({
+    required DocumentDetailFamily super.from,
     required String super.argument,
   }) : super(
          retry: null,
          name: r'documentDetailProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
 
   @override
-  String debugGetCreateSourceHash() => _$documentDetailNotifierHash();
+  String debugGetCreateSourceHash() => _$documentDetailHash();
 
   @override
   String toString() {
@@ -82,12 +88,19 @@ final class DocumentDetailNotifierProvider
 
   @$internal
   @override
-  DocumentDetailNotifier create() => DocumentDetailNotifier();
+  $FutureProviderElement<DocumentModel?> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<DocumentModel?> create(Ref ref) {
+    final argument = this.argument as String;
+    return documentDetail(ref, argument);
+  }
 
   @override
   bool operator ==(Object other) {
-    return other is DocumentDetailNotifierProvider &&
-        other.argument == argument;
+    return other is DocumentDetailProvider && other.argument == argument;
   }
 
   @override
@@ -96,51 +109,22 @@ final class DocumentDetailNotifierProvider
   }
 }
 
-String _$documentDetailNotifierHash() =>
-    r'fdc0e48d7a3028a1af3f72beecdae42762bba31e';
+String _$documentDetailHash() => r'39483435b62e681e9155553a698ee08ae6f1ef57';
 
-final class DocumentDetailNotifierFamily extends $Family
-    with
-        $ClassFamilyOverride<
-          DocumentDetailNotifier,
-          AsyncValue<DocumentModel>,
-          DocumentModel,
-          FutureOr<DocumentModel>,
-          String
-        > {
-  DocumentDetailNotifierFamily._()
+final class DocumentDetailFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<DocumentModel?>, String> {
+  DocumentDetailFamily._()
     : super(
         retry: null,
         name: r'documentDetailProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
-  DocumentDetailNotifierProvider call(String id) =>
-      DocumentDetailNotifierProvider._(argument: id, from: this);
+  DocumentDetailProvider call(String id) =>
+      DocumentDetailProvider._(argument: id, from: this);
 
   @override
   String toString() => r'documentDetailProvider';
-}
-
-abstract class _$DocumentDetailNotifier extends $AsyncNotifier<DocumentModel> {
-  late final _$args = ref.$arg as String;
-  String get id => _$args;
-
-  FutureOr<DocumentModel> build(String id);
-  @$mustCallSuper
-  @override
-  void runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<DocumentModel>, DocumentModel>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AsyncValue<DocumentModel>, DocumentModel>,
-              AsyncValue<DocumentModel>,
-              Object?,
-              Object?
-            >;
-    element.handleCreate(ref, () => build(_$args));
-  }
 }

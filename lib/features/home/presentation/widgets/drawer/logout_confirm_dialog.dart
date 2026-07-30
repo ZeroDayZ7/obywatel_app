@@ -3,19 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 
-/// Wynik zwracany przez dialog wylogowania
-class LogoutDialogResult {
-  final bool confirmed;
-  final bool removeDevice;
-
-  const LogoutDialogResult({
-    required this.confirmed,
-    this.removeDevice = false,
-  });
-}
+enum LogoutAction { logout, unpairAndReset }
 
 class LogoutConfirmDialog extends StatefulWidget {
   const LogoutConfirmDialog({super.key});
+
+  static Future<LogoutAction?> show(BuildContext context) {
+    return showDialog<LogoutAction>(
+      context: context,
+      builder: (context) => const LogoutConfirmDialog(),
+    );
+  }
 
   @override
   State<LogoutConfirmDialog> createState() => _LogoutConfirmDialogState();
@@ -26,6 +24,9 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AlertDialog(
       title: Text(LocaleKeys.drawer_logout_title.tr()),
       content: Column(
@@ -38,7 +39,7 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
           CheckboxListTile(
             contentPadding: EdgeInsets.zero,
             value: _removeDeviceAndPin,
-            activeColor: Colors.redAccent,
+            activeColor: colorScheme.error,
             title: Text(
               LocaleKeys.drawer_remove_device_title.tr(),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
@@ -63,26 +64,22 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
             children: [
               Expanded(
                 child: AppButton(
-                  label: LocaleKeys.common_cancel,
+                  label: LocaleKeys.common_cancel.tr(),
                   variant: AppButtonVariant.text,
-                  onPressed: () => Navigator.pop(
-                    context,
-                    const LogoutDialogResult(confirmed: false),
-                  ),
+                  onPressed: () => Navigator.of(context).pop(null),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  label: LocaleKeys.drawer_logout,
+                  label: LocaleKeys.drawer_logout.tr(),
                   variant: AppButtonVariant.danger,
-                  onPressed: () => Navigator.pop(
-                    context,
-                    LogoutDialogResult(
-                      confirmed: true,
-                      removeDevice: _removeDeviceAndPin,
-                    ),
-                  ),
+                  onPressed: () {
+                    final action = _removeDeviceAndPin
+                        ? LogoutAction.unpairAndReset
+                        : LogoutAction.logout;
+                    Navigator.of(context).pop(action);
+                  },
                 ),
               ),
             ],

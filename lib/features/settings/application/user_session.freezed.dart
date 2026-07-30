@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserSession {
 
-@JsonKey(name: 'id') int get id;@JsonKey(name: 'device_name_encrypted') String get deviceName; String get platform;@JsonKey(name: 'created_at') DateTime get createdAt; String get fingerprint; String? get location; bool get isCurrent;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'device_name') String get deviceName; String get platform;@JsonKey(name: 'created_at') DateTime get createdAt; String get fingerprint; String? get location; bool get isCurrent;
 /// Create a copy of UserSession
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $UserSessionCopyWith<$Res>  {
   factory $UserSessionCopyWith(UserSession value, $Res Function(UserSession) _then) = _$UserSessionCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'id') int id,@JsonKey(name: 'device_name_encrypted') String deviceName, String platform,@JsonKey(name: 'created_at') DateTime createdAt, String fingerprint, String? location, bool isCurrent
+@JsonKey(name: 'id') String id,@JsonKey(name: 'device_name') String deviceName, String platform,@JsonKey(name: 'created_at') DateTime createdAt, String fingerprint, String? location, bool isCurrent
 });
 
 
@@ -68,7 +68,7 @@ class _$UserSessionCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? deviceName = null,Object? platform = null,Object? createdAt = null,Object? fingerprint = null,Object? location = freezed,Object? isCurrent = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,deviceName: null == deviceName ? _self.deviceName : deviceName // ignore: cast_nullable_to_non_nullable
+as String,deviceName: null == deviceName ? _self.deviceName : deviceName // ignore: cast_nullable_to_non_nullable
 as String,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,fingerprint: null == fingerprint ? _self.fingerprint : fingerprint // ignore: cast_nullable_to_non_nullable
@@ -156,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  int id, @JsonKey(name: 'device_name_encrypted')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'device_name')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserSession() when $default != null:
 return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.fingerprint,_that.location,_that.isCurrent);case _:
@@ -177,7 +177,7 @@ return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.f
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  int id, @JsonKey(name: 'device_name_encrypted')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'device_name')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)  $default,) {final _that = this;
 switch (_that) {
 case _UserSession():
 return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.fingerprint,_that.location,_that.isCurrent);}
@@ -194,7 +194,7 @@ return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.f
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  int id, @JsonKey(name: 'device_name_encrypted')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'device_name')  String deviceName,  String platform, @JsonKey(name: 'created_at')  DateTime createdAt,  String fingerprint,  String? location,  bool isCurrent)?  $default,) {final _that = this;
 switch (_that) {
 case _UserSession() when $default != null:
 return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.fingerprint,_that.location,_that.isCurrent);case _:
@@ -209,11 +209,11 @@ return $default(_that.id,_that.deviceName,_that.platform,_that.createdAt,_that.f
 @JsonSerializable()
 
 class _UserSession implements UserSession {
-  const _UserSession({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'device_name_encrypted') required this.deviceName, required this.platform, @JsonKey(name: 'created_at') required this.createdAt, required this.fingerprint, this.location, this.isCurrent = false});
+  const _UserSession({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'device_name') required this.deviceName, required this.platform, @JsonKey(name: 'created_at') required this.createdAt, required this.fingerprint, this.location, this.isCurrent = false});
   factory _UserSession.fromJson(Map<String, dynamic> json) => _$UserSessionFromJson(json);
 
-@override@JsonKey(name: 'id') final  int id;
-@override@JsonKey(name: 'device_name_encrypted') final  String deviceName;
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'device_name') final  String deviceName;
 @override final  String platform;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
 @override final  String fingerprint;
@@ -253,7 +253,7 @@ abstract mixin class _$UserSessionCopyWith<$Res> implements $UserSessionCopyWith
   factory _$UserSessionCopyWith(_UserSession value, $Res Function(_UserSession) _then) = __$UserSessionCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'id') int id,@JsonKey(name: 'device_name_encrypted') String deviceName, String platform,@JsonKey(name: 'created_at') DateTime createdAt, String fingerprint, String? location, bool isCurrent
+@JsonKey(name: 'id') String id,@JsonKey(name: 'device_name') String deviceName, String platform,@JsonKey(name: 'created_at') DateTime createdAt, String fingerprint, String? location, bool isCurrent
 });
 
 
@@ -273,7 +273,7 @@ class __$UserSessionCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? deviceName = null,Object? platform = null,Object? createdAt = null,Object? fingerprint = null,Object? location = freezed,Object? isCurrent = null,}) {
   return _then(_UserSession(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
-as int,deviceName: null == deviceName ? _self.deviceName : deviceName // ignore: cast_nullable_to_non_nullable
+as String,deviceName: null == deviceName ? _self.deviceName : deviceName // ignore: cast_nullable_to_non_nullable
 as String,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
 as String,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,fingerprint: null == fingerprint ? _self.fingerprint : fingerprint // ignore: cast_nullable_to_non_nullable

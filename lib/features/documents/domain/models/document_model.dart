@@ -1,141 +1,136 @@
-import 'package:flutter/material.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
-
-part 'document_model.freezed.dart';
-part 'document_model.g.dart';
-
 enum DocumentCategory {
   identity,
-  work,
-  education,
   transport,
-  permissions, // Dodane, aby obsłużyć prawo jazdy, broń itp.
+  permissions,
+  education,
+  social,
+  other,
 }
 
-@freezed
-sealed class DocumentField with _$DocumentField {
-  const factory DocumentField({
-    required String label,
-    required String value,
-    required String iconName,
-    @Default(false) bool isSensitive,
-  }) = _DocumentField;
+class DocumentField {
+  final String label;
+  final String value;
+  final String iconName;
 
-  const DocumentField._();
-
-  factory DocumentField.fromJson(Map<String, dynamic> json) =>
-      _$DocumentFieldFromJson(json);
-
-  IconData get icon => _getIconData(iconName);
+  const DocumentField({
+    required this.label,
+    required this.value,
+    this.iconName = 'info',
+  });
 }
 
-@freezed
-sealed class DocumentModel with _$DocumentModel {
-  const factory DocumentModel({
-    required String id,
-    required String title,
-    required String iconName,
-    required String colorHex,
-    required DocumentCategory category,
-    required List<DocumentField> fields,
-    String? qrData,
-    String? status,
-    @Default(false) bool isVerified,
-    String? subtitle,
-    String? expiryDate,
-  }) = _DocumentModel;
+class DocumentModel {
+  final String id;
+  final String type;
+  final String status;
+  final Map<String, dynamic> metadata;
+  final List<DocumentField> fields;
+  final String? profileId;
+  final String? issuedAt;
+  final String? expiresAt;
+  final String? qrData;
 
-  const DocumentModel._();
+  const DocumentModel({
+    required this.id,
+    required this.type,
+    required this.status,
+    required this.metadata,
+    required this.fields,
+    this.profileId,
+    this.issuedAt,
+    this.expiresAt,
+    this.qrData,
+  });
 
-  factory DocumentModel.fromJson(Map<String, dynamic> json) =>
-      _$DocumentModelFromJson(json);
+  String get title {
+    final metaTitle = metadata['title'] as String?;
+    if (metaTitle != null && metaTitle.isNotEmpty) return metaTitle;
 
-  Color get themeColor {
-    final hex = colorHex.replaceFirst('#', '');
-    if (hex.length == 6) return Color(int.parse('FF$hex', radix: 16));
-    return Color(int.parse(hex, radix: 16));
+    switch (type) {
+      case 'ID_CARD':
+      case 'id_card':
+        return 'Dowód osobisty';
+      case 'DRIVER_LICENSE':
+      case 'driver_license':
+        return 'Prawo jazdy';
+      case 'LARGE_FAMILY_CARD':
+      case 'large_family_card':
+        return 'Karta Dużej Rodziny';
+      default:
+        return 'Dokument';
+    }
   }
 
-  IconData get icon => _getIconData(iconName);
-}
+  String get subtitle {
+    final issuer = metadata['issuer'] as String?;
+    if (issuer != null && issuer.isNotEmpty) return issuer;
 
-IconData _getIconData(String name) {
-  switch (name) {
-    // Identity & General
-    case 'badge':
-      return Icons.badge;
-    case 'person':
-      return Icons.person;
-    case 'fingerprint':
-      return Icons.fingerprint;
-    case 'public':
-      return Icons.public;
-    case 'male':
-      return Icons.male;
-    case 'female':
-      return Icons.female;
-
-    // Transport
-    case 'directions_car':
-      return Icons.directions_car;
-    case 'directions_bus':
-      return Icons.directions_bus;
-    case 'train':
-      return Icons.train;
-    case 'flight_takeoff':
-      return Icons.flight_takeoff;
-    case 'flight':
-      return Icons.flight;
-    case 'map':
-      return Icons.map;
-
-    // Education & Work
-    case 'school':
-      return Icons.school;
-    case 'apartment':
-      return Icons.apartment;
-    case 'work':
-      return Icons.work;
-
-    // Permissions & Security
-    case 'security':
-      return Icons.security;
-    case 'gavel':
-      return Icons.gavel;
-    case 'target': // Często używane jako cel pozwolenia
-      return Icons.gps_fixed;
-    case 'family_restroom':
-      return Icons.family_restroom;
-    case 'elderly':
-      return Icons.elderly;
-
-    // UI Elements
-    case 'description':
-      return Icons.description;
-    case 'numbers':
-      return Icons.numbers;
-    case 'card_membership':
-      return Icons.card_membership;
-    case 'credit_card':
-      return Icons.credit_card;
-    case 'event':
-      return Icons.event;
-    case 'calendar_today':
-      return Icons.calendar_today;
-    case 'star':
-      return Icons.star;
-    case 'loyalty':
-      return Icons.loyalty;
-    case 'corporate_fare':
-      return Icons.corporate_fare;
-    case 'event_seat':
-      return Icons.event_seat;
-    case 'location_city':
-      return Icons.location_city;
-    case 'category':
-      return Icons.category;
-
-    default:
-      return Icons.info_outline;
+    switch (type) {
+      case 'ID_CARD':
+      case 'id_card':
+        return 'Rzeczpospolita Polska';
+      case 'DRIVER_LICENSE':
+      case 'driver_license':
+        return 'Uprawnienia do kierowania';
+      case 'LARGE_FAMILY_CARD':
+      case 'large_family_card':
+        return 'Rodzina 3+';
+      default:
+        return 'Dokument tożsamości';
+    }
   }
+
+  String get documentNumber => metadata['document_number'] as String? ?? '';
+
+  String get iconName {
+    switch (type) {
+      case 'ID_CARD':
+      case 'id_card':
+        return 'badge';
+      case 'DRIVER_LICENSE':
+      case 'driver_license':
+        return 'directions_car';
+      case 'LARGE_FAMILY_CARD':
+      case 'large_family_card':
+        return 'family_restroom';
+      default:
+        return 'article';
+    }
+  }
+
+  DocumentCategory get category {
+    final rawCat = (metadata['category'] as String?)?.toLowerCase();
+    if (rawCat != null) {
+      switch (rawCat) {
+        case 'identity':
+          return DocumentCategory.identity;
+        case 'qualification':
+        case 'permissions':
+          return DocumentCategory.permissions;
+        case 'social':
+          return DocumentCategory.social;
+        case 'transport':
+          return DocumentCategory.transport;
+        case 'education':
+          return DocumentCategory.education;
+      }
+    }
+
+    switch (type) {
+      case 'ID_CARD':
+      case 'id_card':
+        return DocumentCategory.identity;
+      case 'DRIVER_LICENSE':
+      case 'driver_license':
+        return DocumentCategory.permissions;
+      case 'LARGE_FAMILY_CARD':
+      case 'large_family_card':
+        return DocumentCategory.social;
+      default:
+        return DocumentCategory.other;
+    }
+  }
+
+  bool get isVerified => status.toLowerCase() == 'active';
+  String? get expiryDate => expiresAt;
 }

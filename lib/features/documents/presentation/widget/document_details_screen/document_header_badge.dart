@@ -7,25 +7,35 @@ class DocumentHeaderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isVerified = doc.isVerified;
+
+    final badgeColor = isVerified ? colorScheme.primary : colorScheme.error;
+    final badgeText = isVerified ? 'DOKUMENT WAŻNY' : 'NIEAKTYWNY';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: doc.themeColor.withAlpha(51),
+            color: badgeColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: doc.themeColor.withAlpha(128)),
+            border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [
-              Icon(Icons.verified_user, size: 16, color: doc.themeColor),
+              Icon(
+                isVerified ? Icons.verified_user : Icons.gpp_maybe,
+                size: 16,
+                color: badgeColor,
+              ),
               const SizedBox(width: 6),
-              const Text(
-                'DOKUMENT WAŻNY',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
+              Text(
+                badgeText,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: badgeColor,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
@@ -33,7 +43,7 @@ class DocumentHeaderBadge extends StatelessWidget {
             ],
           ),
         ),
-        const Icon(Icons.more_vert, color: Colors.grey),
+        Icon(Icons.more_vert, color: colorScheme.onSurfaceVariant),
       ],
     );
   }

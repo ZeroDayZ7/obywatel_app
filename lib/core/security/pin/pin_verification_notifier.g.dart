@@ -42,7 +42,7 @@ final class PinVerificationNotifierProvider
 }
 
 String _$pinVerificationNotifierHash() =>
-    r'0543d9829a42e99a3c3665e759abd911b6fa8e01';
+    r'6659dcae5277c7ac1664b51b144b1366d4e9fd97';
 
 abstract class _$PinVerificationNotifier
     extends $Notifier<PinVerificationState> {

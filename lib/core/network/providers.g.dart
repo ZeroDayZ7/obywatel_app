@@ -54,7 +54,7 @@ final class AuthFreshProvider
   }
 }
 
-String _$authFreshHash() => r'8cd3d6cfd82385973d7a91d8e0495ee1b87538f6';
+String _$authFreshHash() => r'af2b6e66b778c0135225a532cd9234f1d390d2ea';
 
 @ProviderFor(authDio)
 final authDioProvider = AuthDioProvider._();
@@ -94,7 +94,7 @@ final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$authDioHash() => r'a2688bc2c036319df9b9dd682ebc68ba605f6300';
+String _$authDioHash() => r'6202494bae6bed3e2b4a057a7d062a4d4b4d294e';
 
 @ProviderFor(refreshDio)
 final refreshDioProvider = RefreshDioProvider._();
@@ -340,3 +340,51 @@ final class PublicApiClientProvider
 }
 
 String _$publicApiClientHash() => r'20b91b552704a886f8ae3ff7b5aca36f8d9154e9';
+
+@ProviderFor(appWebSocketClient)
+final appWebSocketClientProvider = AppWebSocketClientProvider._();
+
+final class AppWebSocketClientProvider
+    extends
+        $FunctionalProvider<
+          AppWebSocketClient,
+          AppWebSocketClient,
+          AppWebSocketClient
+        >
+    with $Provider<AppWebSocketClient> {
+  AppWebSocketClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appWebSocketClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appWebSocketClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppWebSocketClient> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AppWebSocketClient create(Ref ref) {
+    return appWebSocketClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppWebSocketClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppWebSocketClient>(value),
+    );
+  }
+}
+
+String _$appWebSocketClientHash() =>
+    r'df7e7d7895b863519e64a5e69b4ca7e720d00018';

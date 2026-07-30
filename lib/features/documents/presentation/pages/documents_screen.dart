@@ -1,12 +1,16 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
-import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
+import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
+import 'package:obywatel_plus/core/errors/presentation/error_message.dart';
 import 'package:obywatel_plus/features/documents/application/documents_provider.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
+import 'package:obywatel_plus/features/documents/presentation/mappers/document_icon_mapper.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_card.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/document_category_header.dart';
 import 'package:obywatel_plus/features/documents/presentation/widget/documents_screen/ticket_tile.dart';
@@ -15,25 +19,43 @@ import 'package:obywatel_plus/features/documents/presentation/widget/documents_s
 class DocumentsScreen extends ConsumerWidget {
   const DocumentsScreen({super.key});
 
+  Future<void> _handleRefresh(WidgetRef ref) async {
+    await ref.read(documentsProvider.notifier).sync();
+    ref.invalidate(documentsProvider);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final documentsAsync = ref.watch(documentsProvider);
 
     return AppScaffold(
       size: ContainerSize.medium,
-      appBar: AppAppBar(
-        title: 'Dokumenty',
+      appBar: AppBar(
+        title: const Text('Dokumenty'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(documentsProvider.notifier).refresh(),
+            tooltip: LocaleKeys.common_refresh.tr(),
+            onPressed: () => _handleRefresh(ref),
           ),
         ],
       ),
       child: documentsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Błąd: $err')),
-        data: (documents) => _DocumentsList(documents: documents),
+        error: (error, stack) {
+          final failureMessage = error is AppFailure
+              ? error.messageKey.tr()
+              : LocaleKeys.errors_unexpected_error.tr();
+
+          return ErrorMessage(
+            message: failureMessage,
+            onRetry: () => _handleRefresh(ref),
+          );
+        },
+        data: (documents) => _DocumentsList(
+          documents: documents,
+          onRefresh: () => _handleRefresh(ref),
+        ),
       ),
     );
   }
@@ -41,10 +63,26 @@ class DocumentsScreen extends ConsumerWidget {
 
 class _DocumentsList extends StatelessWidget {
   final List<DocumentModel> documents;
-  const _DocumentsList({required this.documents});
+  final Future<void> Function() onRefresh;
+
+  const _DocumentsList({required this.documents, required this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
+    if (documents.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            alignment: Alignment.center,
+            child: const Text('Brak dostępnych dokumentów'),
+          ),
+        ),
+      );
+    }
+
     final identityDocs = documents
         .where((d) => d.category == DocumentCategory.identity)
         .toList();
@@ -57,11 +95,15 @@ class _DocumentsList extends StatelessWidget {
     final transportDocs = documents
         .where((d) => d.category == DocumentCategory.transport)
         .toList();
+    final socialDocs = documents
+        .where((d) => d.category == DocumentCategory.social)
+        .toList();
+    final otherDocs = documents
+        .where((d) => d.category == DocumentCategory.other)
+        .toList();
 
     return RefreshIndicator(
-      onRefresh: () => ProviderScope.containerOf(
-        context,
-      ).read(documentsProvider.notifier).refresh(),
+      onRefresh: onRefresh,
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
@@ -73,44 +115,51 @@ class _DocumentsList extends StatelessWidget {
             const DocumentCategoryHeader(title: 'Uprawnienia i Praca'),
             _DocumentGrid(docs: permissionsDocs),
           ],
+          if (socialDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Usługi Społeczne'),
+            _DocumentGrid(docs: socialDocs),
+          ],
           if (educationDocs.isNotEmpty) ...[
             const DocumentCategoryHeader(title: 'Edukacja'),
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => WideDocumentCard(
-                  title: educationDocs[index].title,
-                  subtitle: educationDocs[index].subtitle ?? '',
-                  expiry: educationDocs[index].expiryDate != null
-                      ? 'Ważna do ${educationDocs[index].expiryDate}'
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final doc = educationDocs[index];
+                final expiry = doc.expiryDate;
+                return WideDocumentCard(
+                  title: doc.title,
+                  subtitle: doc.subtitle,
+                  expiry: (expiry != null && expiry.isNotEmpty)
+                      ? 'Ważna do $expiry'
                       : '',
-                  icon: educationDocs[index].icon,
-                  color: educationDocs[index].themeColor,
+                  icon: DocumentIconMapper.getIcon(doc.iconName),
                   onTap: () => context.push(
-                    '${AppRoutes.documents}/detail/${educationDocs[index].id}',
-                    extra: educationDocs[index],
+                    AppRoutes.documentDetailPath(doc.id),
+                    extra: doc,
                   ),
-                ),
-                childCount: educationDocs.length,
-              ),
+                );
+              }, childCount: educationDocs.length),
             ),
           ],
           if (transportDocs.isNotEmpty) ...[
             const DocumentCategoryHeader(title: 'Transport i Podróże'),
             SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) => TicketTile(
-                  title: transportDocs[index].title,
-                  subtitle: transportDocs[index].subtitle ?? '',
-                  icon: transportDocs[index].icon,
-                  color: transportDocs[index].themeColor,
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final doc = transportDocs[index];
+                return TicketTile(
+                  title: doc.title,
+                  subtitle: doc.subtitle,
+                  icon: DocumentIconMapper.getIcon(doc.iconName),
                   onTap: () => context.push(
-                    '${AppRoutes.documents}/detail/${transportDocs[index].id}',
-                    extra: transportDocs[index],
+                    AppRoutes.documentDetailPath(doc.id),
+                    extra: doc,
                   ),
-                ),
-                childCount: transportDocs.length,
-              ),
+                );
+              }, childCount: transportDocs.length),
             ),
+          ],
+          if (otherDocs.isNotEmpty) ...[
+            const DocumentCategoryHeader(title: 'Pozostałe'),
+            _DocumentGrid(docs: otherDocs),
           ],
           const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
@@ -136,14 +185,11 @@ class _DocumentGrid extends StatelessWidget {
         final doc = docs[index];
         return DocumentCard(
           title: doc.title,
-          icon: doc.icon,
-          color: doc.themeColor,
+          icon: DocumentIconMapper.getIcon(doc.iconName),
           isVerified: doc.isVerified,
           status: doc.status,
-          onTap: () => context.push(
-            '${AppRoutes.documents}/detail/${doc.id}',
-            extra: doc,
-          ),
+          onTap: () =>
+              context.push(AppRoutes.documentDetailPath(doc.id), extra: doc),
         );
       }, childCount: docs.length),
     );

@@ -136,3 +136,49 @@ final class CryptoKeysDaoProvider
 }
 
 String _$cryptoKeysDaoHash() => r'48e307f0f865db35936247ce437acb77b3f22c2c';
+
+@ProviderFor(userDocumentsDao)
+final userDocumentsDaoProvider = UserDocumentsDaoProvider._();
+
+final class UserDocumentsDaoProvider
+    extends
+        $FunctionalProvider<
+          UserDocumentsDao,
+          UserDocumentsDao,
+          UserDocumentsDao
+        >
+    with $Provider<UserDocumentsDao> {
+  UserDocumentsDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userDocumentsDaoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userDocumentsDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<UserDocumentsDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  UserDocumentsDao create(Ref ref) {
+    return userDocumentsDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(UserDocumentsDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<UserDocumentsDao>(value),
+    );
+  }
+}
+
+String _$userDocumentsDaoHash() => r'0cea991e3ee0de514359af298db1de20091153c0';

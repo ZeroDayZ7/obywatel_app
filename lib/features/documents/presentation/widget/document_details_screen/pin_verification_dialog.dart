@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class PinVerificationDialog extends StatelessWidget {
+class PinVerificationDialog extends StatefulWidget {
   const PinVerificationDialog({super.key});
 
   static Future<bool> show(BuildContext context) async {
@@ -13,49 +13,72 @@ class PinVerificationDialog extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final TextEditingController pinController = TextEditingController();
+  State<PinVerificationDialog> createState() => _PinVerificationDialogState();
+}
 
+class _PinVerificationDialogState extends State<PinVerificationDialog> {
+  late final TextEditingController _pinController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_pinController.text == '1234') {
+      Navigator.of(context).pop(true);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Niepoprawny PIN'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: const Color(0xFF1E1E2E),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text(
-        'Weryfikacja dostępu',
-        style: TextStyle(color: Colors.white, fontSize: 18),
-        textAlign: TextAlign.center,
-      ),
+      title: const Text('Weryfikacja dostępu', textAlign: TextAlign.center),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
             'Wprowadź kod PIN, aby wyświetlić dane wrażliwe.',
-            style: TextStyle(color: Colors.grey, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
           TextField(
-            controller: pinController,
+            controller: _pinController,
             obscureText: true,
             keyboardType: TextInputType.number,
             maxLength: 4,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              letterSpacing: 16,
-            ),
+            autofocus: true,
+            onSubmitted: (_) => _submit(),
+            style: const TextStyle(fontSize: 24, letterSpacing: 16),
             decoration: InputDecoration(
               counterText: '',
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.white10),
+                borderSide: BorderSide(color: Theme.of(context).dividerColor),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: Colors.indigo),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
               filled: true,
-              fillColor: Colors.black26,
             ),
           ),
         ],
@@ -63,30 +86,10 @@ class PinVerificationDialog extends StatelessWidget {
       actionsAlignment: MainAxisAlignment.center,
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('Anuluj', style: TextStyle(color: Colors.grey)),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: const Text('Anuluj'),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.indigo,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: () {
-            if (pinController.text == '1234') {
-              Navigator.pop(context, true);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Niepoprawny PIN'),
-                  backgroundColor: Colors.redAccent,
-                ),
-              );
-            }
-          },
-          child: const Text('Zatwierdź', style: TextStyle(color: Colors.white)),
-        ),
+        ElevatedButton(onPressed: _submit, child: const Text('Zatwierdź')),
       ],
     );
   }

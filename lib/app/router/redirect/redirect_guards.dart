@@ -56,7 +56,11 @@ String? rootGuard(Ref ref, GoRouterState state) {
   }
 
   // 2. DOKĄD SECURITY NIE JEST GOTOWE LUB AUTH JEST W TRAKCIE STARTU -> TRZYMAMY NA /initial
-  if (!securityState.initialized || authState.isInitial) {
+  final isAllowableWithoutSecurity =
+      publicRoutes.contains(path) || authState.isTwoFaRequired;
+
+  if ((!securityState.initialized && !isAllowableWithoutSecurity) ||
+      authState.isInitial) {
     logger.d(
       '[Router Guard] Step 2 (Initialization check): Hold on /initial | '
       'securityInit=${securityState.initialized}, '

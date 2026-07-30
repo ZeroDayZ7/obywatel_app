@@ -13,8 +13,7 @@ class DrawerTile extends StatelessWidget {
       leading: Icon(item.icon),
       title: Text(item.labelKey.tr()),
       onTap: () {
-        context.push(item.route);
-        context.pop();
+        context.go(item.route);
       },
     );
   }

@@ -12,14 +12,23 @@
     "skip": "Pomiń",
     "confirm": "Potwierdź",
     "save_password": "Zapisz hasło",
-    "email": "Identyfikator",
+    "email": "Email",
+    "identifier": "Identyfikator",
     "password": "Hasło",
     "repeat_password": "Powtórz hasło",
     "phone": "Telefon",
     "reset_password": "Resetuj hasło",
     "enter_code": "Wprowadź kod",
     "send_code": "Wyślij kod",
-    "processing": "Przetwarzanie..."
+    "processing": "Przetwarzanie...",
+    "copy": "Kopiuj",
+    "copied_to_clipboard": "Skopiowano do schowka"
+  },
+  "navigation": {
+    "apps": "Aplikacje",
+    "civic_cases": "Sprawy Obywatelskie",
+    "home_title": "Pulpit",
+    "my_account": "Moje Konto"
   },
   "maintenance": {
     "title": "PRZERWA TECHNICZNA",
@@ -56,6 +65,7 @@
   },
   "validators": {
     "required_email": "Wpisz email",
+    "required_identifier": "Wpisz Identyfikator",
     "invalid_email": "Nieprawidłowy format email",
     "required_password": "Wpisz hasło",
     "password_min_length": "Hasło musi mieć minimum {min} znaków",
@@ -68,8 +78,15 @@
     "pin_too_simple": "PIN jest zbyt prosty",
     "required_field": "Pole wymagane",
     "invalid_email_or_phone": "Niepoprawny email lub numer telefonu",
+    "invalid_identifier": "Identyfikator musi składać się z 12 cyfr",
     "required_phone": "Wpisz numer telefonu",
-    "invalid_phone": "Nieprawidłowy format numeru telefonu"
+    "invalid_phone": "Nieprawidłowy format numeru telefonu",
+    "passwords_not_match": "Hasła nie są identyczne",
+    "req_min_chars": "Minimum 8 znaków",
+    "req_at_least_letter": "Przynajmniej jedna litera",
+    "req_at_least_digit": "Przynajmniej jedna cyfra",
+    "req_special_char": "Znak specjalny (!@#$&*~)",
+    "required_account_identifier": "Numer umowy lub identyfikator jest wymagany"
   },
   "errors": {
     "cache": "Błąd zapisu lub odczytu danych lokalnych",
@@ -88,8 +105,12 @@
     "UNKNOWN_BUSINESS": "Wystąpił błąd. Spróbuj ponownie.",
     "UNKNOWN_ERROR": "Wystąpił nieoczekiwany błąd",
     "SESSION_EXPIRED": "Sesja wygasła. Zaloguj się ponownie.",
+    "UNAUTHORIZED": "Twoja sesja wygasła. Zaloguj się ponownie.",
+    "FORBIDDEN": "Brak wymaganych uprawnień do wykonania tej operacji.",
     "EMAIL_IS_SEND_IF_EXISTS": "Jeśli konto istnieje, kod resetu został wysłany na podany email.",
     "TOO_MANY_REQUESTS": "Zbyt wiele prób. Spróbuj ponownie później.",
+    "INVALID_RESET_CODE": "Nieprawidłowy kod",
+    "RESET_SESSION_NOT_FOUND": "Sesja resetowania hasła wygasła.",
 
     "general": "Wystąpił nieoczekiwany błąd"
   },
@@ -101,12 +122,19 @@
   },
   "reset_password": {
     "title": "Reset hasła",
+    "set_new_password": "Ustaw nowe hasło",
     "new_password": "Nowe hasło",
     "email_label": "Email",
     "sms_label": "SMS",
     "success_message": "Hasło zostało pomyślnie zresetowane",
     "resend": "Wyślij ponownie",
-    "resend_in": "Wyślij ponownie za {seconds}s"
+    "resend_in": "Wyślij ponownie za {seconds}s",
+    "generate_strong_password": "Generuj silne hasło",
+    "password_generated_and_copied": "Hasło wygenerowane i skopiowane",
+    "account_identifier_label": "Numer umowy",
+    "account_identifier_hint": "Wpisz numer umowy",
+    "where_to_send_code": "Gdzie wysłać kod weryfikacyjny?",
+    "password_generated": "Wygenerowano bezpieczne hasło"
   },
   "reset_provider": {
     "invalid_code": "Niepoprawny kod",
@@ -186,6 +214,8 @@
     "language_subtitle": "Zmień język aplikacji",
     "theme": "Motyw",
     "theme_subtitle": "Dostosuj wygląd aplikacji",
+    "biometrics": "Biometria",
+    "biometrics_subtitle": "Logowanie odciskiem palca",
     "light_mode": "Jasny",
     "dark_mode": "Ciemny",
     "system_default": "Domyślny systemowy",
@@ -208,6 +238,7 @@
     "pin_mismatch": "PINy nie są zgodne",
     "pin_min_digits": "PIN musi mieć minimum 4 cyfry"
   },
+
   "homeMenu": {
     "chats": "Czaty",
     "contacts": "Kontakty",

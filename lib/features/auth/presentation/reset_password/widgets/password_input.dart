@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart'; // DODAJ TEN IMPORT
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
@@ -11,7 +11,6 @@ import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
 
-// 1. Zmiana na ConsumerStatefulWidget
 class PasswordInputWidget extends ConsumerStatefulWidget {
   final String code;
   final bool isLoading;
@@ -29,7 +28,6 @@ class PasswordInputWidget extends ConsumerStatefulWidget {
       _PasswordInputWidgetState();
 }
 
-// 2. Zmiana na ConsumerState
 class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
   final _formKey = GlobalKey<FormState>();
   final _passController = TextEditingController();
@@ -67,14 +65,27 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
       _isPassVisible = true;
     });
 
-    Clipboard.setData(ClipboardData(text: shuffled));
-
-    // Teraz 'ref' będzie działać poprawnie
     ref
         .read(globalNotificationProvider.notifier)
         .show(
           AppNotification(
-            messageKey: 'Hasło wygenerowane i skopiowane',
+            messageKey: LocaleKeys.reset_password_password_generated,
+            type: NotificationType.info,
+          ),
+        );
+  }
+
+  void _copyToClipboard() {
+    final text = _passController.text;
+    if (text.isEmpty) return;
+
+    Clipboard.setData(ClipboardData(text: text));
+
+    ref
+        .read(globalNotificationProvider.notifier)
+        .show(
+          AppNotification(
+            messageKey: LocaleKeys.common_copied_to_clipboard,
             type: NotificationType.success,
           ),
         );
@@ -82,6 +93,8 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final hasPassword = _passController.text.isNotEmpty;
+
     return Form(
       key: _formKey,
       child: Column(
@@ -92,7 +105,7 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Ustaw nowe hasło',
+                LocaleKeys.reset_password_set_new_password.tr(),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
@@ -100,7 +113,8 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
               IconButton(
                 onPressed: _generateStrongPassword,
                 icon: const Icon(Icons.auto_fix_high),
-                tooltip: 'Generuj silne hasło',
+                tooltip: LocaleKeys.reset_password_generate_strong_password
+                    .tr(),
               ),
             ],
           ),
@@ -110,14 +124,24 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
             obscureText: !_isPassVisible,
             decoration: InputDecoration(
               labelText: LocaleKeys.common_password.tr(),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
               prefixIcon: const Icon(Icons.lock_outline),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _isPassVisible ? Icons.visibility : Icons.visibility_off,
-                ),
-                onPressed: () =>
-                    setState(() => _isPassVisible = !_isPassVisible),
+              suffixIcon: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasPassword)
+                    IconButton(
+                      icon: const Icon(Icons.copy_rounded, size: 20),
+                      tooltip: LocaleKeys.common_copy.tr(),
+                      onPressed: _copyToClipboard,
+                    ),
+                  IconButton(
+                    icon: Icon(
+                      _isPassVisible ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () =>
+                        setState(() => _isPassVisible = !_isPassVisible),
+                  ),
+                ],
               ),
             ),
             validator: (val) => Validators.validatePassword(val, minLength: 8),
@@ -131,14 +155,15 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
               labelText: LocaleKeys.common_repeat_password.tr(),
               prefixIcon: const Icon(Icons.lock_reset),
             ),
-            validator: (val) =>
-                val != _passController.text ? 'Hasła nie są identyczne' : null,
+            validator: (val) => val != _passController.text
+                ? LocaleKeys.validators_passwords_not_match.tr()
+                : null,
           ),
           const SizedBox(height: 24),
           _PasswordRequirementsList(password: _passController.text),
           const SizedBox(height: 32),
           AppButton(
-            label: LocaleKeys.common_confirm,
+            label: LocaleKeys.common_confirm.tr(),
             isLoading: widget.isLoading,
             onPressed: widget.isLoading
                 ? null
@@ -158,35 +183,38 @@ class _PasswordInputWidgetState extends ConsumerState<PasswordInputWidget> {
   }
 }
 
-// Lokalny helper dla listy wymagań
 class _PasswordRequirementsList extends StatelessWidget {
   final String password;
   const _PasswordRequirementsList({required this.password});
 
   @override
   Widget build(BuildContext context) {
-    // Pobieramy style tutaj, gdzie context jest dostępny
     final theme = Theme.of(context);
     final hintColor = theme.textTheme.bodySmall?.color ?? Colors.grey;
 
     return Column(
       children: [
-        _buildReq(context, 'Minimum 8 znaków', password.length >= 8, hintColor),
         _buildReq(
           context,
-          'Przynajmniej jedna litera',
+          LocaleKeys.validators_req_min_chars.tr(),
+          password.length >= 8,
+          hintColor,
+        ),
+        _buildReq(
+          context,
+          LocaleKeys.validators_req_at_least_letter.tr(),
           RegExp(r'[A-Za-z]').hasMatch(password),
           hintColor,
         ),
         _buildReq(
           context,
-          'Przynajmniej jedna cyfra',
+          LocaleKeys.validators_req_at_least_digit.tr(),
           RegExp(r'\d').hasMatch(password),
           hintColor,
         ),
         _buildReq(
           context,
-          'Znak specjalny (!@#\$&*~)',
+          LocaleKeys.validators_req_special_char.tr(),
           RegExp(r'[!@#\$&*~]').hasMatch(password),
           hintColor,
         ),
@@ -194,7 +222,6 @@ class _PasswordRequirementsList extends StatelessWidget {
     );
   }
 
-  // Dodajemy BuildContext i hintColor jako argumenty
   Widget _buildReq(
     BuildContext context,
     String text,

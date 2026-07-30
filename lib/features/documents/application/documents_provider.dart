@@ -5,24 +5,28 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'documents_provider.g.dart';
 
 @riverpod
-class DocumentsNotifier extends _$DocumentsNotifier {
+class Documents extends _$Documents {
   @override
-  FutureOr<List<DocumentModel>> build() {
-    return ref.watch(documentRepositoryProvider).fetchDocuments();
+  Stream<List<DocumentModel>> build() {
+    final repository = ref.watch(documentRepositoryProvider);
+    _triggerInitialSync();
+
+    return repository.watchActiveDocuments();
   }
 
-  Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
-      () => ref.read(documentRepositoryProvider).fetchDocuments(),
-    );
+  Future<void> _triggerInitialSync() async {
+    final repository = ref.read(documentRepositoryProvider);
+    await repository.syncDocuments();
+  }
+
+  Future<void> sync() async {
+    final repository = ref.read(documentRepositoryProvider);
+    await repository.syncDocuments();
   }
 }
 
-@riverpod
-class DocumentDetailNotifier extends _$DocumentDetailNotifier {
-  @override
-  FutureOr<DocumentModel> build(String id) {
-    return ref.watch(documentRepositoryProvider).fetchDocumentById(id);
-  }
+@Riverpod(keepAlive: true)
+Future<DocumentModel?> documentDetail(Ref ref, String id) {
+  final repository = ref.watch(documentRepositoryProvider);
+  return repository.getDocumentById(id);
 }

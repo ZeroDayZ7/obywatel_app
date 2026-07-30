@@ -33,7 +33,7 @@ final class ActiveSessionsProvider
   ActiveSessions create() => ActiveSessions();
 }
 
-String _$activeSessionsHash() => r'e73ec7beace4be16aee22f12c6833ecd21b2e7a0';
+String _$activeSessionsHash() => r'bb10cc46083bfacd08b35cd83163ae6b2eb72d72';
 
 abstract class _$ActiveSessions extends $AsyncNotifier<List<UserSession>> {
   FutureOr<List<UserSession>> build();

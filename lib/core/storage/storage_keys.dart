@@ -1,38 +1,40 @@
 // lib/config/storage_keys.dart
-class StorageKeys {
-  static const accessToken = 'access_token';
-  static const refreshToken = 'refresh_token';
-  static const setupToken = 'setup_token';
-  static const challenge = 'challenge';
-  static const isTrusted = 'is_trusted';
-  static const twoFaToken = 'two_fa_token';
-  static const twoFaRequired = '2fa_required';
-  static const appDeviceId = 'app_device_id';
-  static const kekSalt = 'kek_salt';
+
+abstract final class StorageKeys {
+  static const String accessToken = 'access_token';
+  static const String refreshToken = 'refresh_token';
+  static const String userProfile = 'user_profile';
+  static const String setupToken = 'setup_token';
+  static const String challenge = 'challenge';
+  static const String isTrusted = 'is_trusted';
+  static const String twoFaToken = 'two_fa_token';
+  static const String twoFaRequired = '2fa_required';
+  static const String appDeviceId = 'app_device_id';
+  static const String kekSalt = 'kek_salt';
 
   // Device Identity & Cryptography
-  static const devicePrivateKey = 'device_private_key_enc';
-  static const devicePublicKey = 'device_public_key';
-  static const deviceKeySignature = 'device_key_signature';
-  static const identityKeyPair = 'identity_key_pair_enc';
+  static const String devicePrivateKey = 'device_private_key_enc';
+  static const String devicePublicKey = 'device_public_key';
+  static const String deviceKeySignature = 'device_key_signature';
+  static const String identityKeyPair = 'identity_key_pair_enc';
 
-  static const userPin = 'user_pin';
-  static const pinHash = 'pin_hash';
-  static const setupCompleted = 'setup_completed';
-  static const localLockEnabled = 'local_lock_enabled';
-  static const isPinConfigured = 'isPinConfigured';
-  static const isBiometricConfigured = 'isBiometricConfigured';
-  static const databaseKey = 'database_key';
+  static const String userPin = 'user_pin';
+  static const String pinHash = 'pin_hash';
+  static const String setupCompleted = 'setup_completed';
+  static const String localLockEnabled = 'local_lock_enabled';
+  static const String isPinConfigured = 'isPinConfigured';
+  static const String isBiometricConfigured = 'isBiometricConfigured';
+  static const String databaseKey = 'database_key';
 
-  static const pinAttempts = 'pin_attempts';
-  static const pinLockUntil = 'pin_lock_until';
-  static const userId = 'user_id';
+  static const String pinAttempts = 'pin_attempts';
+  static const String pinLockUntil = 'pin_lock_until';
+  static const String userId = 'user_id';
 
-  static const language = '_languageKey';
+  static const String language = '_languageKey';
 
-  static const securitySecret = 'security_secret';
-  static const securityConfig = 'security_config';
+  static const String securitySecret = 'security_secret';
+  static const String securityConfig = 'security_config';
 
   // Headers
-  static const headerFingerPrint = 'X-Device-Fingerprint';
+  static const String headerFingerPrint = 'X-Device-Fingerprint';
 }

@@ -5,7 +5,6 @@ class WideDocumentCard extends StatelessWidget {
   final String subtitle;
   final String expiry;
   final IconData icon;
-  final Color color;
   final VoidCallback? onTap;
 
   const WideDocumentCard({
@@ -14,57 +13,69 @@ class WideDocumentCard extends StatelessWidget {
     required this.subtitle,
     required this.expiry,
     required this.icon,
-    required this.color,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [color, color.withValues(alpha: 0.7)],
-          ),
+          color: colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.white, size: 48),
-            const SizedBox(width: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: colorScheme.primary, size: 36),
+            ),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
                   ),
                   Text(
                     subtitle,
-                    style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    expiry,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
+                  if (expiry.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      expiry,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white24,
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
               size: 16,
             ),
           ],

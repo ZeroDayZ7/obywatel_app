@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -7,6 +7,7 @@ import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
@@ -15,6 +16,7 @@ import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/pending_session_provider.dart';
@@ -78,21 +80,58 @@ class AuthController extends _$AuthController {
     }
   }
 
-  /// Metoda wywoływana po wprowadzeniu prawidłowego PIN-u przez użytkownika
   Future<bool> unlockWithPinAndValidateSession() async {
     _log.i(
-      'Rozpoczęcie procedury odblokowywania PIN-em...',
+      '[UNLOCK-SESSION][1] Rozpoczęcie procedury odblokowywania PIN-em...',
+      module: _logModule,
+    );
+    _log.d(
+      '[UNLOCK-SESSION][1.1] Aktualny stan przed odblokowaniem: $state',
       module: _logModule,
     );
 
+    // ⚡ SCENARIUSZ A: Jesteśmy w trakcie logowania na zaufanym urządzeniu
+    // Klucz prywatny został przed chwilą załadowany do RAM w PinVerificationController.
+    if (state.isPartiallyAuthenticated) {
+      _log.i(
+        '[UNLOCK-SESSION][2-A] Wykryto stan partiallyAuthenticated. Przechodzę do podpisu challenge\'a...',
+        module: _logModule,
+      );
+
+      await verifyDeviceSignature();
+
+      final isAuth = state.isAuthenticated;
+      _log.i(
+        '[UNLOCK-SESSION][2-A.1] Zakończono verifyDeviceSignature. Stan isAuthenticated: $isAuth (stan końcowy: $state)',
+        module: _logModule,
+      );
+      return isAuth;
+    }
+
+    // ⚡ SCENARIUSZ B: Standardowe odblokowanie zapisanej sesji po uruchomieniu/zablokowaniu aplikacji
+    _log.i(
+      '[UNLOCK-SESSION][2-B] Przejście do standardowego odblokowania sesji. Ustawiam stan AuthState.authenticating()',
+      module: _logModule,
+    );
     state = const AuthState.authenticating();
 
     try {
       // 1. Sprawdzenie obecności tokena na dysku
+      _log.i(
+        '[UNLOCK-SESSION][3] Sprawdzanie obecności refresh_token w SecureStorage...',
+        module: _logModule,
+      );
       final refreshToken = await _sessionService.getRefreshToken();
-      if (refreshToken == null || refreshToken.isEmpty) {
+
+      final tokenPresent = refreshToken != null && refreshToken.isNotEmpty;
+      _log.d(
+        '[UNLOCK-SESSION][3.1] Odczytany refresh_token: ${tokenPresent ? "OBECNY (len: ${refreshToken.length})" : "BRAK/EMPTY"}',
+        module: _logModule,
+      );
+
+      if (!tokenPresent) {
         _log.w(
-          'Brak refresh_token na dysku. Sesja wygasła.',
+          '[UNLOCK-SESSION][3.2] Brak refresh_token na dysku. Sesja wygasła - wywołuję logout().',
           module: _logModule,
         );
         await logout();
@@ -100,70 +139,147 @@ class AuthController extends _$AuthController {
       }
 
       // 2. Strzał do API po świeże dane profilu
-      _log.d('Pobieranie danych sesji z API (/auth/me)...', module: _logModule);
+      _log.i(
+        '[UNLOCK-SESSION][4] Wykonuję zapytanie do API (/auth/me)...',
+        module: _logModule,
+      );
       final user = await _authService.fetchAuthMe();
+      _log.d(
+        '[UNLOCK-SESSION][4.1] Pomyślnie pobrano dane użytkownika: ID=${user.id}, email=${user.email}',
+        module: _logModule,
+      );
+
+      await _sessionService.cacheUser(user);
 
       // 3. Zdejmij blokadę lokalną
+      _log.i(
+        '[UNLOCK-SESSION][5] Zdejmowanie blokady lokalnej w SecurityService...',
+        module: _logModule,
+      );
       await ref.read(securityServiceProvider.notifier).unlockApp();
+      _log.d(
+        '[UNLOCK-SESSION][5.1] Blokada lokalna zdjęta.',
+        module: _logModule,
+      );
 
       // 4. Ustaw stan na authenticated
+      _log.i(
+        '[UNLOCK-SESSION][6] Ustawianie stanu AuthState.authenticated...',
+        module: _logModule,
+      );
       state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
       _log.i(
-        '✅ Sesja pomyślnie odblokowana i zweryfikowana.',
+        '[UNLOCK-SESSION][7] ✅ Sesja pomyślnie odblokowana i zweryfikowana.',
         module: _logModule,
       );
       return true;
     } on AppFailure catch (failure, stack) {
       _log.w(
-        '⚠️ AppFailure podczas weryfikacji PIN: $failure',
+        '[UNLOCK-SESSION][ERR-APP] ⚠️ AppFailure podczas weryfikacji PIN: $failure',
         error: failure,
         stackTrace: stack,
         module: _logModule,
       );
 
-      // Jeśli błąd to 401 / 403 z serwera -> wylogowujemy
       final shouldLogout = failure.maybeWhen(
         server: (statusCode) => statusCode == 401 || statusCode == 403,
         orElse: () => false,
       );
 
+      _log.d(
+        '[UNLOCK-SESSION][ERR-APP.1] Weryfikacja powodu błędu: shouldLogout=$shouldLogout',
+        module: _logModule,
+      );
+
       if (shouldLogout) {
-        _log.w('🔒 Token unieważniony przez serwer. Następuje wylogowanie.');
+        _log.w(
+          '[UNLOCK-SESSION][ERR-APP.2] 🔒 Token unieważniony przez serwer (401/403). Następuje wylogowanie.',
+          module: _logModule,
+        );
         await logout();
       } else {
-        // W przypadku braku sieci (AppFailure.network) lub 500
-        // NIE wylogowujemy – przywracamy stan unauthenticated, zachowując tokeny na dysku
+        _log.w(
+          '[UNLOCK-SESSION][ERR-APP.3] Błąd po stronie aplikacji/sieci bez wylogowania. Ustawiam AuthState.unauthenticated().',
+          module: _logModule,
+        );
         state = const AuthState.unauthenticated();
       }
 
       return false;
     } on DioException catch (e, stack) {
-      // Awaryjne przechwycenie DioException, gdyby serwis nie zmapował na AppFailure
+      final appException = e.error is AppException
+          ? e.error as AppException
+          : null;
       final statusCode = e.response?.statusCode;
+
       _log.w(
-        '🌐 DioException podczas odblokowywania (status: $statusCode)',
+        '[UNLOCK-SESSION][ERR-DIO] 🌐 DioException podczas odblokowywania '
+        '(HTTP status: $statusCode, Exception: ${appException?.runtimeType ?? 'unknown'}, URL: ${e.requestOptions.path})',
         error: e,
         stackTrace: stack,
         module: _logModule,
       );
 
-      if (statusCode == 401 || statusCode == 403) {
-        await logout();
-      } else {
-        state = const AuthState.unauthenticated();
+      // 1. Brak sieci / Timeout / Upstream Unavailable -> Wpuszczamy w tryb offline
+      if (appException is NetworkException ||
+          appException is TimeoutException ||
+          appException is UpstreamUnavailableException) {
+        _log.w(
+          '[UNLOCK-SESSION] Brak łączności z serwerem. Zdejmowanie blokady lokalnej PIN i przejście w tryb offline.',
+          module: _logModule,
+        );
+
+        final cachedUser = await _sessionService.getCachedUser();
+
+        if (cachedUser == null) {
+          _log.e(
+            '[UNLOCK-SESSION] Brak skache\'owanego profilu użytkownika dla trybu offline! Wymuszam wylogowanie.',
+            module: _logModule,
+          );
+          await logout();
+          return false;
+        }
+
+        // Odblokowujemy aplikację lokalnie – PIN wpisany przez usera był poprawny!
+        await ref.read(securityServiceProvider.notifier).unlockApp();
+
+        // Ustawiamy stan sesji z profilem odczytanym z dysku
+        state = AuthState.authenticated(
+          user: cachedUser,
+          isDeviceTrusted: true,
+        );
+
+        return true;
       }
 
+      // 2. Błędy autoryzacji (401 / 403) -> Wylogowanie
+      if (appException is UnauthorizedException ||
+          appException is ForbiddenException ||
+          statusCode == 401 ||
+          statusCode == 403) {
+        _log.w(
+          '[UNLOCK-SESSION][ERR-DIO.1] Serwer odrzucił token (status $statusCode). Następuje wylogowanie.',
+          module: _logModule,
+        );
+        await logout();
+        return false;
+      }
+
+      // 3. Pozostałe błędy (np. 500, błąd walidacji po stronie serwera)
+      _log.e(
+        '[UNLOCK-SESSION][ERR-DIO.2] Błąd serwera/aplikacji (status: $statusCode). Brak wylogowania, odrzucenie PIN.',
+        module: _logModule,
+      );
       return false;
     } catch (e, stack) {
       _log.e(
-        '❌ Nieoczekiwany błąd podczas weryfikacji sesji po podaniu PIN-u.',
+        '[UNLOCK-SESSION][ERR-CRIT] ❌ Nieoczekiwany błąd podczas weryfikacji sesji po podaniu PIN-u.',
         error: e,
         stackTrace: stack,
         module: _logModule,
       );
 
-      state = const AuthState.unauthenticated();
       return false;
     }
   }
@@ -238,8 +354,7 @@ class AuthController extends _$AuthController {
         logger.i('Pending session created: $pending');
         ref.read(pendingSessionProvider.notifier).update(pending);
 
-        // KLUCZOWA POPRAWKA: Wrzucamy tymczasowy setupToken do Fresh Dio,
-        // aby zapytania takie jak /register-device wysyłały go w Authorization: Bearer
+        // Tymczasowy token do nagłówka Authorization dla zapytań setupowych
         await ref
             .read(authFreshProvider)
             .setToken(OAuth2Token(accessToken: setupToken, refreshToken: ''));
@@ -248,12 +363,13 @@ class AuthController extends _$AuthController {
           logger.i(
             '🛡️ Urządzenie jest zaufane... Uruchamiam automatyczną weryfikację podpisu...',
           );
+          // KLUCZOWY RETURN: Wyjście z funkcji po delegacji weryfikacji podpisu!
           await verifyDeviceSignature();
-        } else {
-          logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
+          return;
         }
+
+        logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
       },
-      // FIX 1: Dostosowano parametry (tylko accessToken i refreshToken)
       fullSuccess: (accessToken, refreshToken) async {
         try {
           logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
@@ -261,7 +377,7 @@ class AuthController extends _$AuthController {
           // 1. Zapis na dysku refreshTokena
           await _sessionService.saveSession(refreshToken: refreshToken);
 
-          // 2. Wrzucenie tokena do Fresh (RAM)
+          // 2. Wrzucenie pełnych tokenów do Fresh (RAM + Interceptory)
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -273,10 +389,20 @@ class AuthController extends _$AuthController {
 
           ref.read(pendingSessionProvider.notifier).clear();
 
-          // FIX 2: Hydratacja profilu użytkownika osobnym strzałem na /auth/me
+          // 3. Oznaczenie setupu bezpieczeństwa jako zainicjalizowanego
+          // Dzięki temu Router Guard weryfikujący setupCompleted = true wypuści użytkownika do aplikacji
+          await ref
+              .read(securityServiceProvider.notifier)
+              .markSecurityAsInitialized();
+
+          // 4. Hydratacja profilu użytkownika
           logger.i('🔄 Pobieranie profilu użytkownika z /auth/me...');
           final user = await _authService.fetchAuthMe();
 
+          // 💾 Cache'ujemy świeżo pobrany profil użytkownika w SecureStorage dla trybu offline
+          await _sessionService.cacheUser(user);
+
+          // 5. Ustawienie docelowego stanu AuthState.authenticated
           state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
           logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
@@ -365,8 +491,15 @@ class AuthController extends _$AuthController {
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
     final crypto = ref.read(cryptoServiceProvider.notifier);
+    final storage = ref.read(secureStorageProvider);
 
-    final publicKeyBytes = await crypto.generateAndHoldKeyPair();
+    // 1️⃣ Odczytujemy wygenerowany w kroku 4/6 klucz publiczny (Base64)
+    final publicKeyBase64 = await storage.read(
+      key: StorageKeys.devicePublicKey,
+    );
+    if (publicKeyBase64 == null || publicKeyBase64.isEmpty) {
+      throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
+    }
 
     final fingerprint = await deviceService.getFingerprint();
     final encryptedName = await deviceService.getEncryptedMarketingName();
@@ -376,11 +509,13 @@ class AuthController extends _$AuthController {
       orElse: () => throw Exception('Brak challenge'),
     );
 
+    // 2️⃣ Podpisujemy challenge kluczem aktywnym w RAM (_activeDeviceKeyPair)
     final signature = await crypto.signWithActiveKey(challenge);
 
+    // 3️⃣ Wysyłamy do backendu Go
     final response = await authService.registerTrustedDevice(
       fingerprint: fingerprint,
-      publicKey: base64Encode(publicKeyBytes),
+      publicKey: publicKeyBase64,
       encryptedName: encryptedName,
       platform: Platform.operatingSystem,
       signature: signature,
@@ -447,6 +582,8 @@ class AuthController extends _$AuthController {
     ref.invalidate(appDatabaseProvider);
     ref.invalidate(notificationsControllerProvider);
 
+    unawaited(ref.read(securityServiceProvider.notifier).init());
+
     // 5. Powrót do stanu niezalogowanego
     setUnauthenticated();
 
@@ -493,6 +630,15 @@ class AuthController extends _$AuthController {
       partiallyAuthenticated: (s) async {
         try {
           final crypto = ref.read(cryptoServiceProvider.notifier);
+
+          // Sprawdzenie czy klucz jest gotowy do użycia
+          if (!await crypto.hasActiveKey()) {
+            _log.w(
+              'Brak aktywnego klucza w RAM. Wymagane odblokowanie storage/PIN-em.',
+            );
+            return;
+          }
+
           final signature = await crypto.signWithActiveKey(s.challenge);
 
           final result = await _authService.verifyDevice(

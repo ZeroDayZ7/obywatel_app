@@ -1,29 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
 
-InputDecorationTheme buildInputDecorationTheme(
-  bool isDark,
-  ColorScheme colorScheme,
-) {
+InputDecorationTheme buildInputDecorationTheme(ColorScheme colorScheme) {
   return InputDecorationTheme(
-    labelStyle: TextStyle(
-      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-    ),
+    labelStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.7)),
     floatingLabelStyle: TextStyle(color: colorScheme.primary),
-    errorStyle: TextStyle(color: AppColors.error, fontWeight: FontWeight.w500),
+    errorStyle: TextStyle(
+      color: colorScheme.error,
+      fontWeight: FontWeight.w500,
+    ),
     enabledBorder: UnderlineInputBorder(
       borderSide: BorderSide(
-        color: isDark ? Colors.grey.shade700 : Colors.grey.shade400,
+        color: colorScheme.onSurface.withValues(alpha: 0.38),
       ),
     ),
     focusedBorder: UnderlineInputBorder(
       borderSide: BorderSide(color: colorScheme.primary, width: 2),
     ),
     errorBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppColors.error),
+      borderSide: BorderSide(color: colorScheme.error),
     ),
     focusedErrorBorder: UnderlineInputBorder(
-      borderSide: BorderSide(color: AppColors.error, width: 2),
+      borderSide: BorderSide(color: colorScheme.error, width: 2),
     ),
   );
 }

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class DocumentCard extends StatelessWidget {
   final String title;
   final IconData icon;
-  final Color color;
   final VoidCallback onTap;
   final bool isVerified;
   final String? status;
@@ -12,7 +11,6 @@ class DocumentCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.icon,
-    required this.color,
     required this.onTap,
     this.isVerified = false,
     this.status,
@@ -20,16 +18,20 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
+          color: colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,9 +40,9 @@ class DocumentCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(icon, color: color, size: 32),
+                Icon(icon, color: colorScheme.primary, size: 32),
                 if (isVerified)
-                  const Icon(Icons.verified, color: Colors.blue, size: 20),
+                  Icon(Icons.verified, color: colorScheme.primary, size: 20),
               ],
             ),
             Column(
@@ -48,13 +50,21 @@ class DocumentCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 13,
                   ),
                 ),
-                if (status != null)
-                  Text(status!, style: TextStyle(fontSize: 11, color: color)),
+                if (status != null && status!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    status!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ],
             ),
           ],

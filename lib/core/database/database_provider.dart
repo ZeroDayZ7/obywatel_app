@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
+import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -15,12 +16,9 @@ part 'database_provider.g.dart';
 AppDatabase appDatabase(Ref ref) {
   final storage = ref.watch(secureStorageProvider);
 
-  // Tworzymy LazyDatabase, który zajmie się asynchronicznym przygotowaniem klucza
   final executor = LazyDatabase(() async {
-    // 1. Pobieramy klucz ze Storage (w głównym wątku - bezpiecznie)
     String? encryptionKey = await storage.read(key: StorageKeys.databaseKey);
 
-    // 2. Jeśli klucza brak, generujemy go raz i zapisujemy
     if (encryptionKey == null) {
       final values = List<int>.generate(
         32,
@@ -30,7 +28,6 @@ AppDatabase appDatabase(Ref ref) {
       await storage.write(key: StorageKeys.databaseKey, value: encryptionKey);
     }
 
-    // 3. Zwracamy executor, który odpala SQL w tle, przekazując TYLKO Stringa
     return openConnection(encryptionKey);
   });
 
@@ -48,4 +45,9 @@ NotificationsDao notificationsDao(Ref ref) {
 @riverpod
 CryptoKeysDao cryptoKeysDao(Ref ref) {
   return ref.watch(appDatabaseProvider).cryptoKeysDao;
+}
+
+@riverpod
+UserDocumentsDao userDocumentsDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).userDocumentsDao;
 }

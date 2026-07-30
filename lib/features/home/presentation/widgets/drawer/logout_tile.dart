@@ -1,36 +1,53 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_confirm_dialog.dart';
 
-class LogoutTile extends StatelessWidget {
-  final ValueChanged<LogoutDialogResult>? onLogoutSelected;
+class LogoutTile extends ConsumerWidget {
+  final VoidCallback? onTap;
 
-  const LogoutTile({super.key, this.onLogoutSelected});
-
-  Future<void> _handleTap(BuildContext context) async {
-    final result = await showDialog<LogoutDialogResult>(
-      context: context,
-      builder: (context) => const LogoutConfirmDialog(),
-    );
-
-    if (result != null && result.confirmed) {
-      onLogoutSelected?.call(result);
-    }
-  }
+  const LogoutTile({super.key, this.onTap});
 
   @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: const Icon(Icons.logout, color: Colors.redAccent),
-      title: Text(
-        LocaleKeys.drawer_logout.tr(),
-        style: const TextStyle(
-          color: Colors.redAccent,
-          fontWeight: FontWeight.bold,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final errorColor = theme.colorScheme.error;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        hoverColor: errorColor.withValues(alpha: 0.08),
+        splashColor: errorColor.withValues(alpha: 0.12),
+        focusColor: errorColor.withValues(alpha: 0.12),
+        leading: Icon(Icons.logout_rounded, color: errorColor),
+        title: Text(
+          LocaleKeys.common_logout.tr(),
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: errorColor,
+            fontWeight: FontWeight.w600,
+          ),
         ),
+        onTap: onTap ?? () => unwrapAndHandleLogout(context, ref),
       ),
-      onTap: () => _handleTap(context),
     );
+  }
+}
+
+Future<void> unwrapAndHandleLogout(BuildContext context, WidgetRef ref) async {
+  final action = await LogoutConfirmDialog.show(context);
+  if (action == null || !context.mounted) return;
+
+  final authController = ref.read(authControllerProvider.notifier);
+
+  switch (action) {
+    case LogoutAction.unpairAndReset:
+      await authController.unpairAndReset();
+      break;
+    case LogoutAction.logout:
+      await authController.logout();
+      break;
   }
 }
