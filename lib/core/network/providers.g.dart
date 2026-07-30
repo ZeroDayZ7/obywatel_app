@@ -340,3 +340,51 @@ final class PublicApiClientProvider
 }
 
 String _$publicApiClientHash() => r'20b91b552704a886f8ae3ff7b5aca36f8d9154e9';
+
+@ProviderFor(appWebSocketClient)
+final appWebSocketClientProvider = AppWebSocketClientProvider._();
+
+final class AppWebSocketClientProvider
+    extends
+        $FunctionalProvider<
+          AppWebSocketClient,
+          AppWebSocketClient,
+          AppWebSocketClient
+        >
+    with $Provider<AppWebSocketClient> {
+  AppWebSocketClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appWebSocketClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appWebSocketClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppWebSocketClient> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AppWebSocketClient create(Ref ref) {
+    return appWebSocketClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppWebSocketClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppWebSocketClient>(value),
+    );
+  }
+}
+
+String _$appWebSocketClientHash() =>
+    r'df7e7d7895b863519e64a5e69b4ca7e720d00018';

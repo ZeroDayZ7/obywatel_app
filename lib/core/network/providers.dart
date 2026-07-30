@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
+import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
 import 'package:obywatel_plus/core/network/clients/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/clients/no_auth_client.dart';
 import 'package:obywatel_plus/core/network/clients/public_client.dart';
@@ -143,4 +144,16 @@ PublicApiClient publicApiClient(Ref ref) {
     dio: ref.watch(publicDioProvider),
     logger: ref.watch(appLoggerProvider),
   );
+}
+
+@Riverpod(keepAlive: true)
+AppWebSocketClient appWebSocketClient(Ref ref) {
+  final logger = ref.watch(appLoggerProvider);
+  final client = AppWebSocketClient(logger: logger);
+
+  ref.onDispose(() {
+    client.dispose();
+  });
+
+  return client;
 }
