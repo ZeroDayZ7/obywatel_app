@@ -92,7 +92,7 @@ Dio authDio(Ref ref) {
 
 @Riverpod(keepAlive: true)
 Dio refreshDio(Ref ref) {
-  return DioFactory.create(
+  return createDioInstance(
     profile: DioProfile.refreshToken,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
@@ -101,7 +101,7 @@ Dio refreshDio(Ref ref) {
 
 @Riverpod(keepAlive: true)
 Dio noAuthDio(Ref ref) {
-  final dio = DioFactory.create(
+  final dio = createDioInstance(
     profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
@@ -112,7 +112,7 @@ Dio noAuthDio(Ref ref) {
 
 @Riverpod(keepAlive: true)
 Dio publicDio(Ref ref) {
-  final dio = DioFactory.create(
+  final dio = createDioInstance(
     profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
