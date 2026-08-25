@@ -8,7 +8,7 @@ part of 'auth_response.dart';
 
 _TwoFaRequired _$TwoFaRequiredFromJson(Map<String, dynamic> json) =>
     _TwoFaRequired(
-      twoFaToken: json['twoFaToken'] as String,
+      twoFaToken: json['twoFaToken'] as String? ?? '',
       $type: json['runtimeType'] as String?,
     );
 
@@ -19,24 +19,24 @@ Map<String, dynamic> _$TwoFaRequiredToJson(_TwoFaRequired instance) =>
     };
 
 _PreTrust _$PreTrustFromJson(Map<String, dynamic> json) => _PreTrust(
-  setupToken: json['setupToken'] as String,
-  challenge: json['challenge'] as String,
-  isTrusted: json['isTrusted'] as bool? ?? false,
   userId: json['userId'] as String,
+  setupToken: json['setupToken'] as String? ?? '',
+  challenge: json['challenge'] as String? ?? '',
+  isTrusted: json['isTrusted'] as bool? ?? false,
   $type: json['runtimeType'] as String?,
 );
 
 Map<String, dynamic> _$PreTrustToJson(_PreTrust instance) => <String, dynamic>{
+  'userId': instance.userId,
   'setupToken': instance.setupToken,
   'challenge': instance.challenge,
   'isTrusted': instance.isTrusted,
-  'userId': instance.userId,
   'runtimeType': instance.$type,
 };
 
 _FullSuccess _$FullSuccessFromJson(Map<String, dynamic> json) => _FullSuccess(
-  accessToken: json['accessToken'] as String,
-  refreshToken: json['refreshToken'] as String,
+  accessToken: json['accessToken'] as String? ?? '',
+  refreshToken: json['refreshToken'] as String? ?? '',
   $type: json['runtimeType'] as String?,
 );
 

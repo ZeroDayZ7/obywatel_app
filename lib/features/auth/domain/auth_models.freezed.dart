@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$UserProfile {
 
-@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'display_name') String get displayName;@JsonKey(name: 'last_login') String get lastLogin; String get role;
+@JsonKey(name: 'user_id') String get userId;@JsonKey(readValue: _readDisplayName) String get displayName;@JsonKey(readValue: _readLastLogin) String get lastLogin; String get role;
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $UserProfileCopyWith<$Res>  {
   factory $UserProfileCopyWith(UserProfile value, $Res Function(UserProfile) _then) = _$UserProfileCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'display_name') String displayName,@JsonKey(name: 'last_login') String lastLogin, String role
+@JsonKey(name: 'user_id') String userId,@JsonKey(readValue: _readDisplayName) String displayName,@JsonKey(readValue: _readLastLogin) String lastLogin, String role
 });
 
 
@@ -153,7 +153,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(readValue: _readDisplayName)  String displayName, @JsonKey(readValue: _readLastLogin)  String lastLogin,  String role)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
 return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case _:
@@ -174,7 +174,7 @@ return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case 
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(readValue: _readDisplayName)  String displayName, @JsonKey(readValue: _readLastLogin)  String lastLogin,  String role)  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile():
 return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);}
@@ -191,7 +191,7 @@ return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'display_name')  String displayName, @JsonKey(name: 'last_login')  String lastLogin,  String role)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(readValue: _readDisplayName)  String displayName, @JsonKey(readValue: _readLastLogin)  String lastLogin,  String role)?  $default,) {final _that = this;
 switch (_that) {
 case _UserProfile() when $default != null:
 return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case _:
@@ -206,13 +206,13 @@ return $default(_that.userId,_that.displayName,_that.lastLogin,_that.role);case 
 @JsonSerializable()
 
 class _UserProfile implements UserProfile {
-  const _UserProfile({@JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'display_name') required this.displayName, @JsonKey(name: 'last_login') required this.lastLogin, required this.role});
+  const _UserProfile({@JsonKey(name: 'user_id') required this.userId, @JsonKey(readValue: _readDisplayName) required this.displayName, @JsonKey(readValue: _readLastLogin) this.lastLogin = '', this.role = 'CITIZEN'});
   factory _UserProfile.fromJson(Map<String, dynamic> json) => _$UserProfileFromJson(json);
 
 @override@JsonKey(name: 'user_id') final  String userId;
-@override@JsonKey(name: 'display_name') final  String displayName;
-@override@JsonKey(name: 'last_login') final  String lastLogin;
-@override final  String role;
+@override@JsonKey(readValue: _readDisplayName) final  String displayName;
+@override@JsonKey(readValue: _readLastLogin) final  String lastLogin;
+@override@JsonKey() final  String role;
 
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
@@ -247,7 +247,7 @@ abstract mixin class _$UserProfileCopyWith<$Res> implements $UserProfileCopyWith
   factory _$UserProfileCopyWith(_UserProfile value, $Res Function(_UserProfile) _then) = __$UserProfileCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'display_name') String displayName,@JsonKey(name: 'last_login') String lastLogin, String role
+@JsonKey(name: 'user_id') String userId,@JsonKey(readValue: _readDisplayName) String displayName,@JsonKey(readValue: _readLastLogin) String lastLogin, String role
 });
 
 
@@ -281,7 +281,7 @@ as String,
 /// @nodoc
 mixin _$RbacData {
 
- List<String> get permissions; String? get workContext;
+@JsonKey(readValue: _readPermissions) List<String> get permissions; String? get workContext;
 /// Create a copy of RbacData
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -314,7 +314,7 @@ abstract mixin class $RbacDataCopyWith<$Res>  {
   factory $RbacDataCopyWith(RbacData value, $Res Function(RbacData) _then) = _$RbacDataCopyWithImpl;
 @useResult
 $Res call({
- List<String> permissions, String? workContext
+@JsonKey(readValue: _readPermissions) List<String> permissions, String? workContext
 });
 
 
@@ -417,7 +417,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( List<String> permissions,  String? workContext)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readPermissions)  List<String> permissions,  String? workContext)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _RbacData() when $default != null:
 return $default(_that.permissions,_that.workContext);case _:
@@ -438,7 +438,7 @@ return $default(_that.permissions,_that.workContext);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( List<String> permissions,  String? workContext)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readPermissions)  List<String> permissions,  String? workContext)  $default,) {final _that = this;
 switch (_that) {
 case _RbacData():
 return $default(_that.permissions,_that.workContext);}
@@ -455,7 +455,7 @@ return $default(_that.permissions,_that.workContext);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( List<String> permissions,  String? workContext)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readPermissions)  List<String> permissions,  String? workContext)?  $default,) {final _that = this;
 switch (_that) {
 case _RbacData() when $default != null:
 return $default(_that.permissions,_that.workContext);case _:
@@ -470,11 +470,11 @@ return $default(_that.permissions,_that.workContext);case _:
 @JsonSerializable()
 
 class _RbacData implements RbacData {
-  const _RbacData({required final  List<String> permissions, this.workContext}): _permissions = permissions;
+  const _RbacData({@JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], this.workContext}): _permissions = permissions;
   factory _RbacData.fromJson(Map<String, dynamic> json) => _$RbacDataFromJson(json);
 
  final  List<String> _permissions;
-@override List<String> get permissions {
+@override@JsonKey(readValue: _readPermissions) List<String> get permissions {
   if (_permissions is EqualUnmodifiableListView) return _permissions;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_permissions);
@@ -515,7 +515,7 @@ abstract mixin class _$RbacDataCopyWith<$Res> implements $RbacDataCopyWith<$Res>
   factory _$RbacDataCopyWith(_RbacData value, $Res Function(_RbacData) _then) = __$RbacDataCopyWithImpl;
 @override @useResult
 $Res call({
- List<String> permissions, String? workContext
+@JsonKey(readValue: _readPermissions) List<String> permissions, String? workContext
 });
 
 

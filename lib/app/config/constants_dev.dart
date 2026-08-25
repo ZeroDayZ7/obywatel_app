@@ -14,10 +14,11 @@ class ApiConstants extends ApiConstantsBase {
   final Duration inactivityTimeout;
 
   const ApiConstants()
-    : baseUrl = 'http://localhost:8081',
+    : baseUrl = 'http://localhost:8090',
       enableSSLPinning = false,
       apiFingerprints = const [],
-      defaultEmail = 'root@plus.pl',
+      // defaultEmail = 'root@plus.pl',
+      defaultEmail = 'anna@plus.pl',
       defaultPassword = 'Zaq1@wsx',
       appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',

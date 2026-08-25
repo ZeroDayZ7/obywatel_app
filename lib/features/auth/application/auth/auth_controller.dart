@@ -336,14 +336,14 @@ class AuthController extends _$AuthController {
     }
   }
 
-  Future<void> _handleAuthResponse(AuthResponse result, String email) async {
+ Future<void> _handleAuthResponse(AuthResponse result, String email) async {
     final logger = ref.read(appLoggerProvider);
 
     await result.when(
       twoFaRequired: (token) {
         state = AuthState.twoFaRequired(email: email, tempToken: token);
       },
-      preTrust: (setupToken, challenge, isTrusted, userId) async {
+      preTrust: (userId, setupToken, challenge, isTrusted) async {
         state = AuthState.partiallyAuthenticated(
           setupToken: setupToken,
           challenge: challenge,
@@ -414,7 +414,6 @@ class AuthController extends _$AuthController {
       },
     );
   }
-
   Future<void> dumpRamState(Ref ref, AppLogger log) async {
     final authState = ref.read(authControllerProvider);
     final securityState = ref.read(securityServiceProvider);

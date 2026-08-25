@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthUser {
 
-@JsonKey(name: 'user_id') String get id; String get email;@JsonKey(name: 'display_name') String get displayName; String get status; String get role; List<String> get permissions;@JsonKey(name: 'last_login') String? get lastLogin;
+@JsonKey(readValue: _readUserId) String get id;@JsonKey(readValue: _readEmail) String get email;@JsonKey(readValue: _readDisplayName) String get displayName; String get status; String get role;@JsonKey(readValue: _readPermissions) List<String> get permissions;@JsonKey(name: 'last_login') String? get lastLogin;
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $AuthUserCopyWith<$Res>  {
   factory $AuthUserCopyWith(AuthUser value, $Res Function(AuthUser) _then) = _$AuthUserCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'user_id') String id, String email,@JsonKey(name: 'display_name') String displayName, String status, String role, List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
+@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
 });
 
 
@@ -156,7 +156,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String id,  String email, @JsonKey(name: 'display_name')  String displayName,  String status,  String role,  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
 return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
@@ -177,7 +177,7 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String id,  String email, @JsonKey(name: 'display_name')  String displayName,  String status,  String role,  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser():
 return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);}
@@ -194,7 +194,7 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String id,  String email, @JsonKey(name: 'display_name')  String displayName,  String status,  String role,  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
 return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
@@ -209,16 +209,16 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 @JsonSerializable()
 
 class _AuthUser implements AuthUser {
-  const _AuthUser({@JsonKey(name: 'user_id') required this.id, required this.email, @JsonKey(name: 'display_name') required this.displayName, required this.status, required this.role, final  List<String> permissions = const [], @JsonKey(name: 'last_login') this.lastLogin}): _permissions = permissions;
+  const _AuthUser({@JsonKey(readValue: _readUserId) required this.id, @JsonKey(readValue: _readEmail) this.email = '', @JsonKey(readValue: _readDisplayName) this.displayName = '', this.status = 'ACTIVE', this.role = 'CITIZEN', @JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], @JsonKey(name: 'last_login') this.lastLogin}): _permissions = permissions;
   factory _AuthUser.fromJson(Map<String, dynamic> json) => _$AuthUserFromJson(json);
 
-@override@JsonKey(name: 'user_id') final  String id;
-@override final  String email;
-@override@JsonKey(name: 'display_name') final  String displayName;
-@override final  String status;
-@override final  String role;
+@override@JsonKey(readValue: _readUserId) final  String id;
+@override@JsonKey(readValue: _readEmail) final  String email;
+@override@JsonKey(readValue: _readDisplayName) final  String displayName;
+@override@JsonKey() final  String status;
+@override@JsonKey() final  String role;
  final  List<String> _permissions;
-@override@JsonKey() List<String> get permissions {
+@override@JsonKey(readValue: _readPermissions) List<String> get permissions {
   if (_permissions is EqualUnmodifiableListView) return _permissions;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_permissions);
@@ -259,7 +259,7 @@ abstract mixin class _$AuthUserCopyWith<$Res> implements $AuthUserCopyWith<$Res>
   factory _$AuthUserCopyWith(_AuthUser value, $Res Function(_AuthUser) _then) = __$AuthUserCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'user_id') String id, String email,@JsonKey(name: 'display_name') String displayName, String status, String role, List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
+@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
 });
 
 
