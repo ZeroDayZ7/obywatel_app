@@ -134,7 +134,7 @@ final class RefreshDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$refreshDioHash() => r'a721ce324776cc0de0ff32aa4b6921257511a665';
+String _$refreshDioHash() => r'1cc88435f8faa7759efe295bd174ae376b3862e6';
 
 @ProviderFor(noAuthDio)
 final noAuthDioProvider = NoAuthDioProvider._();
@@ -174,7 +174,7 @@ final class NoAuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$noAuthDioHash() => r'c282cbc7be31bb6249a8bf7b16ec2b97f87448b9';
+String _$noAuthDioHash() => r'3f7e96b606eeec26019700dd20276a20270b477f';
 
 @ProviderFor(publicDio)
 final publicDioProvider = PublicDioProvider._();
@@ -214,7 +214,7 @@ final class PublicDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$publicDioHash() => r'3dbfc92ca38d77d439e736c88dd7ae0075eda085';
+String _$publicDioHash() => r'3c461d85e7183a02cd5832bf7dbb5ae2d23f79d7';
 
 @ProviderFor(apiClient)
 final apiClientProvider = ApiClientProvider._();

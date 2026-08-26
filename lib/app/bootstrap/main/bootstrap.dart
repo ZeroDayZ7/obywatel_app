@@ -4,11 +4,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/bootstrap/main/app_observer.dart';
 import 'package:obywatel_plus/app/lang/lang_config.dart';
 import 'package:obywatel_plus/core/errors/presentation/global_error_screen.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/logger/observers/app_provider_observer.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +35,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
 
     final prefsInstance = await SharedPreferences.getInstance();
     final sharedService = SharedPreferencesService(prefsInstance, _logger);
-    final observer = AppObserver(_logger);
+    final observer = AppProviderObserver(_logger);
 
     runApp(
       EasyLocalization(

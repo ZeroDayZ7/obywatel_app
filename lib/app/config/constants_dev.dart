@@ -6,7 +6,7 @@ class ApiConstants extends ApiConstantsBase {
   final bool serverOnline = true;
   final String baseUrl;
   final bool enableSSLPinning;
-  final String? apiFingerprint;
+  final List<String> apiFingerprints;
   final String defaultEmail;
   final String defaultPassword;
   final String appName;
@@ -14,10 +14,11 @@ class ApiConstants extends ApiConstantsBase {
   final Duration inactivityTimeout;
 
   const ApiConstants()
-    : baseUrl = 'http://localhost:8081',
+    : baseUrl = 'http://localhost:8090',
       enableSSLPinning = false,
-      apiFingerprint = null,
-      defaultEmail = 'root@plus.pl',
+      apiFingerprints = const [],
+      // defaultEmail = 'root@plus.pl',
+      defaultEmail = 'anna@plus.pl',
       defaultPassword = 'Zaq1@wsx',
       appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',

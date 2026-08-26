@@ -295,11 +295,14 @@ class CryptoService extends _$CryptoService {
     }
 
     try {
-      // 2. Dekodowanie challenge z Base64
+      // 2. Dekodowanie challenge z Base64 / Base64URL z obsługą paddingu
       _log.i(
-        '[SIGN-ACTIVE][2] Dekodowanie challenge\'a z Base64 do bajtów binarnych...',
+        '[SIGN-ACTIVE][2] Dekodowanie challenge\'a z Base64/Base64URL do bajtów binarnych...',
       );
-      final challengeBytes = base64Decode(challenge);
+      
+      final normalizedChallenge = base64Url.normalize(challenge);
+      final challengeBytes = base64Url.decode(normalizedChallenge);
+
       _log.d(
         '[SIGN-ACTIVE][2.1] Zdekodowano challengeBytes. '
         'Długość: ${challengeBytes.length} bajtów, bajty (pierwsze 4): ${challengeBytes.take(4).toList()}',

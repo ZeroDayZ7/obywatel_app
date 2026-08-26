@@ -152,11 +152,11 @@ return fullSuccess(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult Function( String accessToken,  String refreshToken)?  fullSuccess,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String userId,  String setupToken,  String challenge,  bool isTrusted)?  preTrust,TResult Function( String accessToken,  String refreshToken)?  fullSuccess,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
-return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess() when fullSuccess != null:
+return preTrust(_that.userId,_that.setupToken,_that.challenge,_that.isTrusted);case _FullSuccess() when fullSuccess != null:
 return fullSuccess(_that.accessToken,_that.refreshToken);case _:
   return orElse();
 
@@ -175,11 +175,11 @@ return fullSuccess(_that.accessToken,_that.refreshToken);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  bool isTrusted,  String userId)  preTrust,required TResult Function( String accessToken,  String refreshToken)  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String userId,  String setupToken,  String challenge,  bool isTrusted)  preTrust,required TResult Function( String accessToken,  String refreshToken)  fullSuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired():
 return twoFaRequired(_that.twoFaToken);case _PreTrust():
-return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess():
+return preTrust(_that.userId,_that.setupToken,_that.challenge,_that.isTrusted);case _FullSuccess():
 return fullSuccess(_that.accessToken,_that.refreshToken);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -194,11 +194,11 @@ return fullSuccess(_that.accessToken,_that.refreshToken);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  bool isTrusted,  String userId)?  preTrust,TResult? Function( String accessToken,  String refreshToken)?  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String userId,  String setupToken,  String challenge,  bool isTrusted)?  preTrust,TResult? Function( String accessToken,  String refreshToken)?  fullSuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
-return preTrust(_that.setupToken,_that.challenge,_that.isTrusted,_that.userId);case _FullSuccess() when fullSuccess != null:
+return preTrust(_that.userId,_that.setupToken,_that.challenge,_that.isTrusted);case _FullSuccess() when fullSuccess != null:
 return fullSuccess(_that.accessToken,_that.refreshToken);case _:
   return null;
 
@@ -211,10 +211,10 @@ return fullSuccess(_that.accessToken,_that.refreshToken);case _:
 @JsonSerializable()
 
 class _TwoFaRequired implements AuthResponse {
-  const _TwoFaRequired({required this.twoFaToken, final  String? $type}): $type = $type ?? 'twoFaRequired';
+  const _TwoFaRequired({this.twoFaToken = '', final  String? $type}): $type = $type ?? 'twoFaRequired';
   factory _TwoFaRequired.fromJson(Map<String, dynamic> json) => _$TwoFaRequiredFromJson(json);
 
- final  String twoFaToken;
+@JsonKey() final  String twoFaToken;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -284,13 +284,13 @@ as String,
 @JsonSerializable()
 
 class _PreTrust implements AuthResponse {
-  const _PreTrust({required this.setupToken, required this.challenge, this.isTrusted = false, required this.userId, final  String? $type}): $type = $type ?? 'preTrust';
+  const _PreTrust({required this.userId, this.setupToken = '', this.challenge = '', this.isTrusted = false, final  String? $type}): $type = $type ?? 'preTrust';
   factory _PreTrust.fromJson(Map<String, dynamic> json) => _$PreTrustFromJson(json);
 
- final  String setupToken;
- final  String challenge;
-@JsonKey() final  bool isTrusted;
  final  String userId;
+@JsonKey() final  String setupToken;
+@JsonKey() final  String challenge;
+@JsonKey() final  bool isTrusted;
 
 @JsonKey(name: 'runtimeType')
 final String $type;
@@ -309,16 +309,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreTrust&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.isTrusted, isTrusted) || other.isTrusted == isTrusted)&&(identical(other.userId, userId) || other.userId == userId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreTrust&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.isTrusted, isTrusted) || other.isTrusted == isTrusted));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,setupToken,challenge,isTrusted,userId);
+int get hashCode => Object.hash(runtimeType,userId,setupToken,challenge,isTrusted);
 
 @override
 String toString() {
-  return 'AuthResponse.preTrust(setupToken: $setupToken, challenge: $challenge, isTrusted: $isTrusted, userId: $userId)';
+  return 'AuthResponse.preTrust(userId: $userId, setupToken: $setupToken, challenge: $challenge, isTrusted: $isTrusted)';
 }
 
 
@@ -329,7 +329,7 @@ abstract mixin class _$PreTrustCopyWith<$Res> implements $AuthResponseCopyWith<$
   factory _$PreTrustCopyWith(_PreTrust value, $Res Function(_PreTrust) _then) = __$PreTrustCopyWithImpl;
 @useResult
 $Res call({
- String setupToken, String challenge, bool isTrusted, String userId
+ String userId, String setupToken, String challenge, bool isTrusted
 });
 
 
@@ -346,13 +346,13 @@ class __$PreTrustCopyWithImpl<$Res>
 
 /// Create a copy of AuthResponse
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? challenge = null,Object? isTrusted = null,Object? userId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? userId = null,Object? setupToken = null,Object? challenge = null,Object? isTrusted = null,}) {
   return _then(_PreTrust(
-setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
+userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String,setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
 as String,challenge: null == challenge ? _self.challenge : challenge // ignore: cast_nullable_to_non_nullable
 as String,isTrusted: null == isTrusted ? _self.isTrusted : isTrusted // ignore: cast_nullable_to_non_nullable
-as bool,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
-as String,
+as bool,
   ));
 }
 
@@ -363,11 +363,11 @@ as String,
 @JsonSerializable()
 
 class _FullSuccess implements AuthResponse {
-  const _FullSuccess({required this.accessToken, required this.refreshToken, final  String? $type}): $type = $type ?? 'fullSuccess';
+  const _FullSuccess({this.accessToken = '', this.refreshToken = '', final  String? $type}): $type = $type ?? 'fullSuccess';
   factory _FullSuccess.fromJson(Map<String, dynamic> json) => _$FullSuccessFromJson(json);
 
- final  String accessToken;
- final  String refreshToken;
+@JsonKey() final  String accessToken;
+@JsonKey() final  String refreshToken;
 
 @JsonKey(name: 'runtimeType')
 final String $type;

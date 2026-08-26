@@ -6,7 +6,7 @@ class ApiConstants extends ApiConstantsBase {
   final bool serverOnline = true;
   final String baseUrl;
   final bool enableSSLPinning;
-  final String? apiFingerprint;
+  final List<String> apiFingerprints;
   final String defaultEmail;
   final String defaultPassword;
   final String appName;
@@ -16,8 +16,10 @@ class ApiConstants extends ApiConstantsBase {
   const ApiConstants()
     : baseUrl = 'https://localhost-0.tail400384.ts.net',
       enableSSLPinning = true,
-      apiFingerprint =
-          '6D739691D5F16774369B7C96A8F1C946753204A4440375A81689D6C84B2BA510',
+      apiFingerprints = const [
+        '6D739691D5F16774369B7C96A8F1C946753204A4440375A81689D6C84B2BA510',
+        // 'TUTAJ_DODAJ_BACKUP_PIN_NA_WYPADEK_ROTACJI_CERTYFIKATU',
+      ],
       defaultEmail = '',
       defaultPassword = '',
       appName = 'Obywatel Plus',
