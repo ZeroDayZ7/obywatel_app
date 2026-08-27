@@ -134,6 +134,22 @@ class AuthService {
     return AuthResponse.fromMap(response.data as Map<String, dynamic>);
   }
 
+  /// Tworzy tymczasową sesję bez rejestracji zaufanego urządzenia
+  Future<AuthResponse> createTemporarySession({String? accessToken}) async {
+    final headers = <String, String>{};
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _noAuthApiClient.post(
+      ApiEndpoints
+          .createTemporarySession,
+      options: Options(headers: headers),
+    );
+
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
+  }
+
   /// Wylogowanie (Zabezpieczone -> ApiClient)
   Future<void> logout(String? refreshToken) async {
     try {

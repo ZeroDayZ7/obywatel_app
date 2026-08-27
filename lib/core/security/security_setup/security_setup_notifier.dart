@@ -106,6 +106,44 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     }
   }
 
+  /// Pominięcie rejestracji urządzenia (tworzenie sesji tymczasowej)
+  Future<void> skipDeviceRegistration() async {
+    final logger = ref.read(appLoggerProvider);
+    logger.d('[SecuritySetupNotifier] === START skipDeviceRegistration ===');
+
+    final current = state.requireValue;
+    state = const AsyncValue.loading();
+
+    try {
+      logger.d(
+        '[SecuritySetupNotifier] Requesting temporary session from AuthController...',
+      );
+
+      // Wywołanie endpointu w AuthController odpowiedzialnego za sesję tymczasową
+      await ref.read(authControllerProvider.notifier).createTemporarySession();
+
+      logger.d(
+        '[SecuritySetupNotifier] Finalizing security setup without device registration...',
+      );
+      await ref
+          .read(securityServiceProvider.notifier)
+          .completeSetup(enableBiometric: false);
+
+      state = AsyncValue.data(current);
+      logger.d(
+        '[SecuritySetupNotifier] === SKIP setup finished successfully ===',
+      );
+    } catch (e, st) {
+      logger.e(
+        '[SecuritySetupNotifier] === EXCEPTION in skipDeviceRegistration ===',
+        error: e,
+        stackTrace: st,
+      );
+      state = AsyncValue.error(e, st);
+      rethrow;
+    }
+  }
+
   Future<void> completeSetup() async {
     final logger = ref.read(appLoggerProvider);
     logger.d('[SecuritySetupNotifier] === START completeSetup ===');
@@ -187,6 +225,4 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       logger.d('[SecuritySetupNotifier] RAM cleanup completed.');
     }
   }
-
-
 }

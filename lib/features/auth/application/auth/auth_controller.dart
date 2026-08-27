@@ -558,7 +558,7 @@ class AuthController extends _$AuthController {
     }
   }
 
-Future<void> registerTrustedDevice() async {
+  Future<void> registerTrustedDevice() async {
     _log.i('[AuthController] Starting trusted device registration...');
 
     final pending = ref.read(pendingSessionProvider);
@@ -575,18 +575,24 @@ Future<void> registerTrustedDevice() async {
       );
 
       if (publicKeyBase64 == null || publicKeyBase64.isEmpty) {
-        _log.w('[AuthController] Device registration failed: Public key missing in storage');
+        _log.w(
+          '[AuthController] Device registration failed: Public key missing in storage',
+        );
         throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
       }
 
-      _log.d('[AuthController] Fetching device fingerprint and encrypted name...');
+      _log.d(
+        '[AuthController] Fetching device fingerprint and encrypted name...',
+      );
       final fingerprint = await deviceService.getFingerprint();
       final encryptedName = await deviceService.getEncryptedMarketingName();
 
       final challenge = state.maybeMap(
         partiallyAuthenticated: (s) => s.challenge,
         orElse: () {
-          _log.w('[AuthController] Device registration failed: Missing challenge in state');
+          _log.w(
+            '[AuthController] Device registration failed: Missing challenge in state',
+          );
           throw Exception('Brak challenge');
         },
       );
@@ -596,7 +602,9 @@ Future<void> registerTrustedDevice() async {
       final signature = await crypto.signWithActiveKey(challenge);
 
       // 3️⃣ Wysyłamy do backendu Go
-      _log.d('[AuthController] Sending registerTrustedDevice request to backend...');
+      _log.d(
+        '[AuthController] Sending registerTrustedDevice request to backend...',
+      );
       final response = await authService.registerTrustedDevice(
         fingerprint: fingerprint,
         publicKey: publicKeyBase64,
@@ -606,7 +614,9 @@ Future<void> registerTrustedDevice() async {
         accessToken: pending?.setupToken,
       );
 
-      _log.i('[AuthController] Trusted device registered successfully. Processing response...');
+      _log.i(
+        '[AuthController] Trusted device registered successfully. Processing response...',
+      );
       await _handleAuthResponse(response, '');
     } catch (e, st) {
       _log.e(
@@ -618,6 +628,37 @@ Future<void> registerTrustedDevice() async {
     }
   }
 
+  Future<void> createTemporarySession() async {
+    _log.i(
+      '[AuthController] Starting temporary session creation (skip trusted device)...',
+    );
+
+    final pending = ref.read(pendingSessionProvider);
+
+    try {
+      final setupToken = pending?.setupToken;
+
+      _log.d(
+        '[AuthController] Sending createTemporarySession request to backend...',
+      );
+      final response = await _authService.createTemporarySession(
+        accessToken: setupToken,
+      );
+
+      _log.i(
+        '[AuthController] Temporary session created successfully. Processing response...',
+      );
+      await _handleAuthResponse(response, '');
+    } catch (e, st) {
+      _log.e(
+        '[AuthController] Failed to create temporary session',
+        error: e,
+        stackTrace: st,
+      );
+      _handleError(e);
+      rethrow;
+    }
+  }
 
   Future<void> logout() async {
     _log.i('Rozpoczynam zwykłe wylogowanie...', module: _logModule);
