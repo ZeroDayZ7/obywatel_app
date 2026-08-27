@@ -27,6 +27,10 @@ AuthResponse _$AuthResponseFromJson(
           return _FullSuccess.fromJson(
             json
           );
+                case 'temporarySuccess':
+          return _TemporarySuccess.fromJson(
+            json
+          );
         
           default:
             throw CheckedFromJsonException(
@@ -85,13 +89,14 @@ extension AuthResponsePatterns on AuthResponse {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _TwoFaRequired value)?  twoFaRequired,TResult Function( _PreTrust value)?  preTrust,TResult Function( _FullSuccess value)?  fullSuccess,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _TwoFaRequired value)?  twoFaRequired,TResult Function( _PreTrust value)?  preTrust,TResult Function( _FullSuccess value)?  fullSuccess,TResult Function( _TemporarySuccess value)?  temporarySuccess,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that);case _PreTrust() when preTrust != null:
 return preTrust(_that);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that);case _:
+return fullSuccess(_that);case _TemporarySuccess() when temporarySuccess != null:
+return temporarySuccess(_that);case _:
   return orElse();
 
 }
@@ -109,13 +114,14 @@ return fullSuccess(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _TwoFaRequired value)  twoFaRequired,required TResult Function( _PreTrust value)  preTrust,required TResult Function( _FullSuccess value)  fullSuccess,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _TwoFaRequired value)  twoFaRequired,required TResult Function( _PreTrust value)  preTrust,required TResult Function( _FullSuccess value)  fullSuccess,required TResult Function( _TemporarySuccess value)  temporarySuccess,}){
 final _that = this;
 switch (_that) {
 case _TwoFaRequired():
 return twoFaRequired(_that);case _PreTrust():
 return preTrust(_that);case _FullSuccess():
-return fullSuccess(_that);}
+return fullSuccess(_that);case _TemporarySuccess():
+return temporarySuccess(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -129,13 +135,14 @@ return fullSuccess(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _TwoFaRequired value)?  twoFaRequired,TResult? Function( _PreTrust value)?  preTrust,TResult? Function( _FullSuccess value)?  fullSuccess,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _TwoFaRequired value)?  twoFaRequired,TResult? Function( _PreTrust value)?  preTrust,TResult? Function( _FullSuccess value)?  fullSuccess,TResult? Function( _TemporarySuccess value)?  temporarySuccess,}){
 final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that);case _PreTrust() when preTrust != null:
 return preTrust(_that);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that);case _:
+return fullSuccess(_that);case _TemporarySuccess() when temporarySuccess != null:
+return temporarySuccess(_that);case _:
   return null;
 
 }
@@ -152,12 +159,13 @@ return fullSuccess(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge)?  preTrust,TResult Function( String accessToken,  String refreshToken)?  fullSuccess,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String twoFaToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge)?  preTrust,TResult Function( String accessToken,  String refreshToken)?  fullSuccess,TResult Function( String accessToken)?  temporarySuccess,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
 return preTrust(_that.setupToken,_that.challenge);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that.accessToken,_that.refreshToken);case _:
+return fullSuccess(_that.accessToken,_that.refreshToken);case _TemporarySuccess() when temporarySuccess != null:
+return temporarySuccess(_that.accessToken);case _:
   return orElse();
 
 }
@@ -175,12 +183,13 @@ return fullSuccess(_that.accessToken,_that.refreshToken);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge)  preTrust,required TResult Function( String accessToken,  String refreshToken)  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String twoFaToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge)  preTrust,required TResult Function( String accessToken,  String refreshToken)  fullSuccess,required TResult Function( String accessToken)  temporarySuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired():
 return twoFaRequired(_that.twoFaToken);case _PreTrust():
 return preTrust(_that.setupToken,_that.challenge);case _FullSuccess():
-return fullSuccess(_that.accessToken,_that.refreshToken);}
+return fullSuccess(_that.accessToken,_that.refreshToken);case _TemporarySuccess():
+return temporarySuccess(_that.accessToken);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,12 +203,13 @@ return fullSuccess(_that.accessToken,_that.refreshToken);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge)?  preTrust,TResult? Function( String accessToken,  String refreshToken)?  fullSuccess,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String twoFaToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge)?  preTrust,TResult? Function( String accessToken,  String refreshToken)?  fullSuccess,TResult? Function( String accessToken)?  temporarySuccess,}) {final _that = this;
 switch (_that) {
 case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.twoFaToken);case _PreTrust() when preTrust != null:
 return preTrust(_that.setupToken,_that.challenge);case _FullSuccess() when fullSuccess != null:
-return fullSuccess(_that.accessToken,_that.refreshToken);case _:
+return fullSuccess(_that.accessToken,_that.refreshToken);case _TemporarySuccess() when temporarySuccess != null:
+return temporarySuccess(_that.accessToken);case _:
   return null;
 
 }
@@ -423,6 +433,79 @@ class __$FullSuccessCopyWithImpl<$Res>
   return _then(_FullSuccess(
 accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
 as String,refreshToken: null == refreshToken ? _self.refreshToken : refreshToken // ignore: cast_nullable_to_non_nullable
+as String,
+  ));
+}
+
+
+}
+
+/// @nodoc
+@JsonSerializable()
+
+class _TemporarySuccess implements AuthResponse {
+  const _TemporarySuccess({this.accessToken = '', final  String? $type}): $type = $type ?? 'temporarySuccess';
+  factory _TemporarySuccess.fromJson(Map<String, dynamic> json) => _$TemporarySuccessFromJson(json);
+
+@JsonKey() final  String accessToken;
+
+@JsonKey(name: 'runtimeType')
+final String $type;
+
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+_$TemporarySuccessCopyWith<_TemporarySuccess> get copyWith => __$TemporarySuccessCopyWithImpl<_TemporarySuccess>(this, _$identity);
+
+@override
+Map<String, dynamic> toJson() {
+  return _$TemporarySuccessToJson(this, );
+}
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TemporarySuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken));
+}
+
+@JsonKey(includeFromJson: false, includeToJson: false)
+@override
+int get hashCode => Object.hash(runtimeType,accessToken);
+
+@override
+String toString() {
+  return 'AuthResponse.temporarySuccess(accessToken: $accessToken)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class _$TemporarySuccessCopyWith<$Res> implements $AuthResponseCopyWith<$Res> {
+  factory _$TemporarySuccessCopyWith(_TemporarySuccess value, $Res Function(_TemporarySuccess) _then) = __$TemporarySuccessCopyWithImpl;
+@useResult
+$Res call({
+ String accessToken
+});
+
+
+
+
+}
+/// @nodoc
+class __$TemporarySuccessCopyWithImpl<$Res>
+    implements _$TemporarySuccessCopyWith<$Res> {
+  __$TemporarySuccessCopyWithImpl(this._self, this._then);
+
+  final _TemporarySuccess _self;
+  final $Res Function(_TemporarySuccess) _then;
+
+/// Create a copy of AuthResponse
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? accessToken = null,}) {
+  return _then(_TemporarySuccess(
+accessToken: null == accessToken ? _self.accessToken : accessToken // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

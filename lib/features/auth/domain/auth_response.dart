@@ -14,10 +14,16 @@ sealed class AuthResponse with _$AuthResponse {
     @Default('') String challenge,
   }) = _PreTrust;
 
+  // Pełny sukces - zaufane urządzenie, posiada refreshToken
   const factory AuthResponse.fullSuccess({
     @Default('') String accessToken,
     @Default('') String refreshToken,
   }) = _FullSuccess;
+
+  // Nowy stan: Pośredni / Tymczasowy - krótkotrwały dostęp bez refreshTokena
+  const factory AuthResponse.temporarySuccess({
+    @Default('') String accessToken,
+  }) = _TemporarySuccess;
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) =>
       _$AuthResponseFromJson(json);
@@ -33,7 +39,7 @@ sealed class AuthResponse with _$AuthResponse {
       );
     }
 
-    // 2. Pełny sukces (Logowanie/Zaufane urządzenie)
+    // 2. Pełny sukces (Zaufane urządzenie)
     if (type == 'SUCCESS') {
       final success = data['success'] as Map<String, dynamic>?;
       return AuthResponse.fullSuccess(
@@ -42,7 +48,16 @@ sealed class AuthResponse with _$AuthResponse {
       );
     }
 
-    // 3. PreTrust (Konfiguracja nowego urządzenia)
+    // 3. Sesja tymczasowa (Pominięcie rejestracji - tylko accessToken)
+    if (type == 'TEMPORARY_SUCCESS' || type == 'PARTIAL_SUCCESS') {
+      final success = data['temporary_success'] as Map<String, dynamic>? 
+          ?? data['success'] as Map<String, dynamic>?;
+      return AuthResponse.temporarySuccess(
+        accessToken: success?['access_token']?.toString() ?? '',
+      );
+    }
+
+    // 4. PreTrust (Konfiguracja nowego urządzenia)
     if (type == 'PRE_TRUST') {
       final preTrustData = data['pre_trust'] as Map<String, dynamic>?;
 

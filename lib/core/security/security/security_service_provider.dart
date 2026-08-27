@@ -138,8 +138,9 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   @override
   Future<void> markSecurityAsInitialized() async {
     final isPinConfigured = await _pinService.hasPin();
-    final isBiometricEnabled =
-        await _secureStorage.readBool(key: StorageKeys.isBiometricConfigured);
+    final isBiometricEnabled = await _secureStorage.readBool(
+      key: StorageKeys.isBiometricConfigured,
+    );
 
     state = state.copyWith(
       initialized: true,
@@ -311,6 +312,32 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     await _checkIntegrityOnResume();
 
     _disablePrivacyShield();
+  }
+
+  /// Finalizuje konfigurację dla sesji tymczasowej (bez rejestracji urządzenia i bez PIN-u)
+  Future<void> completeTemporarySetup() async {
+    await _secureStorage.writeBool(
+      key: StorageKeys.setupCompleted,
+      value: true,
+    );
+    await _secureStorage.writeBool(
+      key: StorageKeys.localLockEnabled,
+      value: false,
+    );
+    await _secureStorage.writeBool(
+      key: StorageKeys.isPinConfigured,
+      value: false,
+    );
+
+    state = state.copyWith(
+      hasLocalLock: false,
+      isPinConfigured: false,
+      isBiometricEnabled: false,
+      isSetupCompleted: true,
+    );
+
+    _logger.i('✅ Temporary Security Setup Completed (No PIN)');
+    debugSecurityState();
   }
 
   void onAppHidden() {

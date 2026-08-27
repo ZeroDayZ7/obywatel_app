@@ -437,7 +437,7 @@ class AuthController extends _$AuthController {
           await _sessionService.cacheUser(user);
 
           logger.d(
-            '[_handleAuthResponse - 17] Ustawiam state = AuthState.authenticated...',
+            '[_handleAuthResponse - 17] Ustawiam state = AuthState.authenticated (isDeviceTrusted: true)...',
           );
           state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
@@ -447,6 +447,59 @@ class AuthController extends _$AuthController {
         } catch (e, stackTrace) {
           logger.e(
             '❌ [_handleAuthResponse - ERROR] Wyjątek wewnątrz bloku fullSuccess: $e',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          _handleError(e);
+          setUnauthenticated();
+        }
+      },
+
+      temporarySuccess: (accessToken) async {
+        logger.d(
+          '[_handleAuthResponse - 10T] Weszło w przypadek: temporarySuccess',
+        );
+        try {
+          logger.d(
+            '[_handleAuthResponse - 11T] Zapisywanie tylko accessToken w Fresh (brak refreshToken)...',
+          );
+          await ref
+              .read(authFreshProvider)
+              .setToken(
+                OAuth2Token(accessToken: accessToken, refreshToken: ''),
+              );
+
+          logger.d('[_handleAuthResponse - 12T] Czyszczenie PendingSession...');
+          ref.read(pendingSessionProvider.notifier).clear();
+
+          logger.d(
+            '[_handleAuthResponse - 13T] Oznaczam security jako konfigurację tymczasową...',
+          );
+          await ref
+              .read(securityServiceProvider.notifier)
+              .completeTemporarySetup();
+
+          logger.i(
+            '🔄 [_handleAuthResponse - 14T] Pobieranie profilu użytkownika z /auth/me...',
+          );
+          final user = await _authService.fetchAuthMe();
+
+          logger.d(
+            '[_handleAuthResponse - 15T] Cache’uję profil użytkownika...',
+          );
+          await _sessionService.cacheUser(user);
+
+          logger.d(
+            '[_handleAuthResponse - 16T] Ustawiam state = AuthState.authenticated (isDeviceTrusted: false)...',
+          );
+          state = AuthState.authenticated(user: user, isDeviceTrusted: false);
+
+          logger.i(
+            '⏳ [_handleAuthResponse - 17T] Użytkownik zalogowany w trybie sesji tymczasowej (15 min).',
+          );
+        } catch (e, stackTrace) {
+          logger.e(
+            '❌ [_handleAuthResponse - ERROR] Wyjątek wewnątrz bloku temporarySuccess: $e',
             error: e,
             stackTrace: stackTrace,
           );
@@ -629,33 +682,35 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> createTemporarySession() async {
-    _log.i(
-      '[AuthController] Starting temporary session creation (skip trusted device)...',
-    );
-
-    final pending = ref.read(pendingSessionProvider);
+    final logger = ref.read(appLoggerProvider);
+    logger.i('⏳ [AuthController] Tworzenie sesji tymczasowej...');
 
     try {
-      final setupToken = pending?.setupToken;
+      final pendingSession = ref.read(pendingSessionProvider);
+      final setupToken = pendingSession?.setupToken;
 
-      _log.d(
-        '[AuthController] Sending createTemporarySession request to backend...',
-      );
+      if (setupToken == null || setupToken.isEmpty) {
+        throw Exception(
+          'Brak setupToken w PendingSession do utworzenia sesji tymczasowej.',
+        );
+      }
+
       final response = await _authService.createTemporarySession(
         accessToken: setupToken,
       );
 
-      _log.i(
-        '[AuthController] Temporary session created successfully. Processing response...',
-      );
-      await _handleAuthResponse(response, '');
-    } catch (e, st) {
-      _log.e(
-        '[AuthController] Failed to create temporary session',
+      final email = state.email ?? '';
+      await _handleAuthResponse(response, email);
+
+      logger.i('✅ [AuthController] Sesja tymczasowa utworzona pomyślnie.');
+    } catch (e, stackTrace) {
+      logger.e(
+        '❌ [AuthController] Błąd podczas tworzenia sesji tymczasowej: $e',
         error: e,
-        stackTrace: st,
+        stackTrace: stackTrace,
       );
       _handleError(e);
+      setUnauthenticated();
       rethrow;
     }
   }

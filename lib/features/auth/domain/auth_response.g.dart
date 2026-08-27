@@ -42,3 +42,15 @@ Map<String, dynamic> _$FullSuccessToJson(_FullSuccess instance) =>
       'refreshToken': instance.refreshToken,
       'runtimeType': instance.$type,
     };
+
+_TemporarySuccess _$TemporarySuccessFromJson(Map<String, dynamic> json) =>
+    _TemporarySuccess(
+      accessToken: json['accessToken'] as String? ?? '',
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$TemporarySuccessToJson(_TemporarySuccess instance) =>
+    <String, dynamic>{
+      'accessToken': instance.accessToken,
+      'runtimeType': instance.$type,
+    };

@@ -119,15 +119,15 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
         '[SecuritySetupNotifier] Requesting temporary session from AuthController...',
       );
 
-      // Wywołanie endpointu w AuthController odpowiedzialnego za sesję tymczasową
+      // 1. Wywołanie endpointu na backendzie dla sesji tymczasowej
       await ref.read(authControllerProvider.notifier).createTemporarySession();
 
       logger.d(
-        '[SecuritySetupNotifier] Finalizing security setup without device registration...',
+        '[SecuritySetupNotifier] Finalizing temporary security setup...',
       );
-      await ref
-          .read(securityServiceProvider.notifier)
-          .completeSetup(enableBiometric: false);
+
+      // 2. Dedykowana metoda dla trybu tymczasowego (BEZ PIN-u)
+      await ref.read(securityServiceProvider.notifier).completeTemporarySetup();
 
       state = AsyncValue.data(current);
       logger.d(

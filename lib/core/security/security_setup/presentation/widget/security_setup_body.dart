@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/pin_setup_dialog.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_notifier.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/biometric_tile.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/info_card.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/pin_tile.dart';
@@ -58,8 +59,8 @@ class SecuritySetupBody extends ConsumerWidget {
                           enabled: state.biometricSet,
                           onSetup: state.pinSet
                               ? () => ref
-                                  .read(securitySetupProvider.notifier)
-                                  .enableBiometric()
+                                    .read(securitySetupProvider.notifier)
+                                    .enableBiometric()
                               : null,
                         ),
                     ],
@@ -92,8 +93,8 @@ class SecuritySetupBody extends ConsumerWidget {
               onPressed: !isLoading
                   ? () async {
                       await ref
-                          .read(securitySetupProvider.notifier)
-                          .skipDeviceRegistration();
+                          .read(authControllerProvider.notifier)
+                          .createTemporarySession();
                     }
                   : null,
               isLoading: isLoading,
