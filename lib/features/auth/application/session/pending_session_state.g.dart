@@ -7,13 +7,7 @@ part of 'pending_session_state.dart';
 // **************************************************************************
 
 _PendingSession _$PendingSessionFromJson(Map<String, dynamic> json) =>
-    _PendingSession(
-      setupToken: json['setupToken'] as String,
-      userId: json['userId'] as String,
-    );
+    _PendingSession(setupToken: json['setupToken'] as String);
 
 Map<String, dynamic> _$PendingSessionToJson(_PendingSession instance) =>
-    <String, dynamic>{
-      'setupToken': instance.setupToken,
-      'userId': instance.userId,
-    };
+    <String, dynamic>{'setupToken': instance.setupToken};

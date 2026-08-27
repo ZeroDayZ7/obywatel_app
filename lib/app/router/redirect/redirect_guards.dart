@@ -25,7 +25,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   final publicRoutes = [AppRoutes.login, AppRoutes.resetPassword];
 
-  // 0. Autentykacja w toku (np. weryfikacja PIN/tokena) -> nie zmieniaj trasy
+  // 0. Autentykacja w toku -> nie zmieniaj trasy
   if (authState.isLoading) {
     logger.d(
       '[Router Guard] Authentication in progress -> Holding current screen',
@@ -33,8 +33,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  // 1. UNAUTHENTICATED (Niezalogowany / czysty storage / po wylogowaniu/rozparowaniu)
-  // Priorytet najwyższy: Niezalogowany użytkownik ZAWSZE trafia do ekranu logowania.
+  // 1. UNAUTHENTICATED
   if (authState.isUnauthenticated) {
     final isPublic = publicRoutes.contains(path);
     logger.d(
@@ -55,9 +54,11 @@ String? rootGuard(Ref ref, GoRouterState state) {
     return null;
   }
 
-  // 2. DOKĄD SECURITY NIE JEST GOTOWE LUB AUTH JEST W TRAKCIE STARTU -> TRZYMAMY NA /initial
-  final isAllowableWithoutSecurity =
-      publicRoutes.contains(path) || authState.isTwoFaRequired;
+  // 2. SPRAWDZENIE INICJALIZACJI
+  // Dopisano authState.isPartiallyAuthenticated do tras dozwolonych przed pełną inicjalizacją security
+  final isAllowableWithoutSecurity = publicRoutes.contains(path) ||
+      authState.isTwoFaRequired ||
+      authState.isPartiallyAuthenticated;
 
   if ((!securityState.initialized && !isAllowableWithoutSecurity) ||
       authState.isInitial) {
@@ -77,7 +78,6 @@ String? rootGuard(Ref ref, GoRouterState state) {
   }
 
   // 3. WERYFIKACJA BLOKADY (PIN / Biometria)
-  // Wykonywana TYLKO dla posiadaczy aktywnej lub częściowej sesji.
   final isAppLocked = securityState.shouldShowLock || authState.isLocked;
   logger.d(
     '[Router Guard] Step 3 (Lock check): isAppLocked=$isAppLocked '
@@ -140,8 +140,7 @@ String? rootGuard(Ref ref, GoRouterState state) {
 
   // 5. ZALOGOWANY I ODBLOKOWANY
   if (authState.isAuthenticated) {
-    final isAtAuthFlow =
-        isInitialScreen ||
+    final isAtAuthFlow = isInitialScreen ||
         isLoginScreen ||
         is2FaScreen ||
         isPinScreen ||

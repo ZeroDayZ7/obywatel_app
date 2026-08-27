@@ -54,28 +54,29 @@ class _GlobalNotificationOverlayState
     List<AppNotification> oldList,
     List<AppNotification> newList,
   ) {
-    // 1. Wykrywanie nowych elementów (Dodawanie)
+    // 1. Dodawanie nowych elementów
     for (final item in newList) {
-      if (!oldList.contains(item)) {
+      final exists = _currentItems.any((e) => e.id == item.id);
+      if (!exists) {
         _currentItems.add(item);
         _listKey.currentState?.insertItem(
           _currentItems.length - 1,
           duration: const Duration(milliseconds: 500),
         );
 
-        // TRIGGER FEEDBACK (Senior approach: Reagujemy tutaj)
         _triggerHapticFeedback(item.type);
       }
     }
 
-    // 2. Wykrywanie usuniętych elementów (Usuwanie)
+    // 2. Usuwanie nieobecnych elementów
     for (int i = _currentItems.length - 1; i >= 0; i--) {
       final item = _currentItems[i];
-      if (!newList.contains(item)) {
-        _currentItems.removeAt(i);
+      final stillExists = newList.any((e) => e.id == item.id);
+      if (!stillExists) {
+        final removedItem = _currentItems.removeAt(i);
         _listKey.currentState?.removeItem(
           i,
-          (context, animation) => _buildItem(item, animation),
+          (context, animation) => _buildItem(removedItem, animation),
           duration: const Duration(milliseconds: 300),
         );
       }

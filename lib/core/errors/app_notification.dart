@@ -22,13 +22,20 @@ class AppNotification {
     this.actionLabelKey,
     this.onActionPressed,
     this.duration = const Duration(seconds: 4),
-  }) : id = id ?? const Uuid().v4(),
-       createdAt = DateTime.now();
+  })  : id = id ?? const Uuid().v4(),
+        createdAt = DateTime.now();
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is AppNotification && id == other.id;
+      identical(this, other) ||
+      other is AppNotification &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
 
   @override
   int get hashCode => id.hashCode;
+
+  @override
+  String toString() =>
+      'AppNotification(id: $id, messageKey: $messageKey, type: $type)';
 }

@@ -69,9 +69,15 @@ class AuthService {
     );
 
     final data = response.data as Map<String, dynamic>;
-    final setupToken = data[StorageKeys.setupToken]?.toString();
 
-    if (setupToken == null) {
+    // Wyciągamy setup_token bezpośrednio z roota LUB z zagnieżdżonego obiektu pre_trust
+    final preTrust = data['pre_trust'] as Map<String, dynamic>?;
+    final setupToken =
+        data[StorageKeys.setupToken]?.toString() ??
+        preTrust?[StorageKeys.setupToken]?.toString();
+
+    if (setupToken == null || setupToken.isEmpty) {
+      _logger.e('Missing setup_token in 2FA response payload: $data');
       throw Exception('errors.INVALID_2FA');
     }
 

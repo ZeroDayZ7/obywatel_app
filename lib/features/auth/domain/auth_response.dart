@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:obywatel_plus/core/storage/storage_keys.dart';
 
 part 'auth_response.freezed.dart';
 part 'auth_response.g.dart';
@@ -11,14 +10,10 @@ sealed class AuthResponse with _$AuthResponse {
   }) = _TwoFaRequired;
 
   const factory AuthResponse.preTrust({
-    required String userId,
     @Default('') String setupToken,
     @Default('') String challenge,
-    @Default(false) bool isTrusted,
   }) = _PreTrust;
 
-  /// Czysty sukces uwierzytelnienia – zwraca TYLKO tokeny dostępowe.
-  /// Dane profilu, role i uprawnienia pobierane są osobnym strzałem hydratacyjnym (/auth/me).
   const factory AuthResponse.fullSuccess({
     @Default('') String accessToken,
     @Default('') String refreshToken,
@@ -28,31 +23,35 @@ sealed class AuthResponse with _$AuthResponse {
       _$AuthResponseFromJson(json);
 
   factory AuthResponse.fromMap(Map<String, dynamic> data) {
-    final is2Fa = data[StorageKeys.twoFaRequired] == true ||
-        data[StorageKeys.twoFaRequired]?.toString() == 'true';
+    final type = data['type']?.toString();
 
-    if (is2Fa) {
+    // 1. Krok 2FA
+    if (type == '2FA_REQUIRED') {
+      final twoFa = data['two_fa'] as Map<String, dynamic>?;
       return AuthResponse.twoFaRequired(
-        twoFaToken: data[StorageKeys.twoFaToken]?.toString() ?? '',
+        twoFaToken: twoFa?['two_fa_token']?.toString() ?? '',
       );
     }
 
-    final isTrusted = data[StorageKeys.isTrusted] == true ||
-        data[StorageKeys.isTrusted]?.toString() == 'true';
-    final refreshToken = data[StorageKeys.refreshToken]?.toString();
-
-    if (isTrusted && refreshToken != null && refreshToken.isNotEmpty) {
+    // 2. Pełny sukces (Logowanie/Zaufane urządzenie)
+    if (type == 'SUCCESS') {
+      final success = data['success'] as Map<String, dynamic>?;
       return AuthResponse.fullSuccess(
-        accessToken: data[StorageKeys.accessToken]?.toString() ?? '',
-        refreshToken: refreshToken,
+        accessToken: success?['access_token']?.toString() ?? '',
+        refreshToken: success?['refresh_token']?.toString() ?? '',
       );
     }
 
-    return AuthResponse.preTrust(
-      userId: data[StorageKeys.userId]?.toString() ?? '',
-      setupToken: data[StorageKeys.setupToken]?.toString() ?? '',
-      challenge: data[StorageKeys.challenge]?.toString() ?? '',
-      isTrusted: isTrusted,
-    );
+    // 3. PreTrust (Konfiguracja nowego urządzenia)
+    if (type == 'PRE_TRUST') {
+      final preTrustData = data['pre_trust'] as Map<String, dynamic>?;
+
+      return AuthResponse.preTrust(
+        setupToken: preTrustData?['setup_token']?.toString() ?? '',
+        challenge: preTrustData?['challenge']?.toString() ?? '',
+      );
+    }
+
+    throw ArgumentError('Nieznany typ odpowiedzi autoryzacyjnej: $type');
   }
 }
