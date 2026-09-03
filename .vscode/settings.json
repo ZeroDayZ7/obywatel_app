@@ -30,7 +30,7 @@
     // "**/logger/": true,
     // "**/": true
     // "**/": true
-    // "**/": true
+    // "**/": true,
 
     // "**/*.freezed.dart": true,
     // "**/*.g.dart": true

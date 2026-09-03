@@ -69,9 +69,15 @@ class AuthService {
     );
 
     final data = response.data as Map<String, dynamic>;
-    final setupToken = data[StorageKeys.setupToken]?.toString();
 
-    if (setupToken == null) {
+    // Wyciągamy setup_token bezpośrednio z roota LUB z zagnieżdżonego obiektu pre_trust
+    final preTrust = data['pre_trust'] as Map<String, dynamic>?;
+    final setupToken =
+        data[StorageKeys.setupToken]?.toString() ??
+        preTrust?[StorageKeys.setupToken]?.toString();
+
+    if (setupToken == null || setupToken.isEmpty) {
+      _logger.e('Missing setup_token in 2FA response payload: $data');
       throw Exception('errors.INVALID_2FA');
     }
 
@@ -98,9 +104,8 @@ class AuthService {
     return AuthUser.fromJson(response.data as Map<String, dynamic>);
   }
 
-  /// Rejestracja zaufanego urządzenia (Działa na tymczasowym setupToken)
+/// Rejestracja zaufanego urządzenia (Działa na tymczasowym setupToken)
   Future<AuthResponse> registerTrustedDevice({
-    required String fingerprint,
     required String publicKey,
     required String encryptedName,
     required String platform,
@@ -112,16 +117,30 @@ class AuthService {
       headers['Authorization'] = 'Bearer $accessToken';
     }
 
-    // ZMIANA: _noAuthApiClient zamiasat _apiClient, żeby Fresh nie mieszał w nagłówkach
+    // _noAuthApiClient zamiast _apiClient, żeby Fresh nie mieszał w nagłówkach
     final response = await _noAuthApiClient.post(
       ApiEndpoints.registerDevice,
       data: {
-        'fingerprint': fingerprint,
         'public_key': publicKey,
         'encrypted_name': encryptedName,
         'platform': platform,
         'signature': signature,
       },
+      options: Options(headers: headers),
+    );
+
+    return AuthResponse.fromMap(response.data as Map<String, dynamic>);
+  }
+  /// Tworzy tymczasową sesję bez rejestracji zaufanego urządzenia
+  Future<AuthResponse> createTemporarySession({String? accessToken}) async {
+    final headers = <String, String>{};
+    if (accessToken != null && accessToken.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $accessToken';
+    }
+
+    final response = await _noAuthApiClient.post(
+      ApiEndpoints
+          .createTemporarySession,
       options: Options(headers: headers),
     );
 

@@ -19,18 +19,14 @@ Map<String, dynamic> _$TwoFaRequiredToJson(_TwoFaRequired instance) =>
     };
 
 _PreTrust _$PreTrustFromJson(Map<String, dynamic> json) => _PreTrust(
-  userId: json['userId'] as String,
   setupToken: json['setupToken'] as String? ?? '',
   challenge: json['challenge'] as String? ?? '',
-  isTrusted: json['isTrusted'] as bool? ?? false,
   $type: json['runtimeType'] as String?,
 );
 
 Map<String, dynamic> _$PreTrustToJson(_PreTrust instance) => <String, dynamic>{
-  'userId': instance.userId,
   'setupToken': instance.setupToken,
   'challenge': instance.challenge,
-  'isTrusted': instance.isTrusted,
   'runtimeType': instance.$type,
 };
 
@@ -44,5 +40,17 @@ Map<String, dynamic> _$FullSuccessToJson(_FullSuccess instance) =>
     <String, dynamic>{
       'accessToken': instance.accessToken,
       'refreshToken': instance.refreshToken,
+      'runtimeType': instance.$type,
+    };
+
+_TemporarySuccess _$TemporarySuccessFromJson(Map<String, dynamic> json) =>
+    _TemporarySuccess(
+      accessToken: json['accessToken'] as String? ?? '',
+      $type: json['runtimeType'] as String?,
+    );
+
+Map<String, dynamic> _$TemporarySuccessToJson(_TemporarySuccess instance) =>
+    <String, dynamic>{
+      'accessToken': instance.accessToken,
       'runtimeType': instance.$type,
     };

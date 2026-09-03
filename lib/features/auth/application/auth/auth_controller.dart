@@ -336,48 +336,77 @@ class AuthController extends _$AuthController {
     }
   }
 
- Future<void> _handleAuthResponse(AuthResponse result, String email) async {
+  Future<void> _handleAuthResponse(AuthResponse result, String email) async {
     final logger = ref.read(appLoggerProvider);
+
+    logger.d(
+      '[_handleAuthResponse - 1] Rozpoczynam obsługę odpowiedzi auth. Typ: ${result.runtimeType}',
+    );
 
     await result.when(
       twoFaRequired: (token) {
-        state = AuthState.twoFaRequired(email: email, tempToken: token);
-      },
-      preTrust: (userId, setupToken, challenge, isTrusted) async {
-        state = AuthState.partiallyAuthenticated(
-          setupToken: setupToken,
-          challenge: challenge,
-          userId: userId,
+        logger.d('[_handleAuthResponse - 2] Weszło w przypadek: twoFaRequired');
+        logger.i(
+          '🔑 [_handleAuthResponse - 3] Wymagany krok 2FA. Ustawiam state na twoFaRequired.',
         );
 
-        final pending = PendingSession(setupToken: setupToken, userId: userId);
-        logger.i('Pending session created: $pending');
-        ref.read(pendingSessionProvider.notifier).update(pending);
+        state = AuthState.twoFaRequired(email: email, tempToken: token);
 
-        // Tymczasowy token do nagłówka Authorization dla zapytań setupowych
-        await ref
-            .read(authFreshProvider)
-            .setToken(OAuth2Token(accessToken: setupToken, refreshToken: ''));
-
-        if (isTrusted) {
-          logger.i(
-            '🛡️ Urządzenie jest zaufane... Uruchamiam automatyczną weryfikację podpisu...',
-          );
-          // KLUCZOWY RETURN: Wyjście z funkcji po delegacji weryfikacji podpisu!
-          await verifyDeviceSignature();
-          return;
-        }
-
-        logger.w('📱 Nowe urządzenie. Wymagany ręczny setup bezpieczeństwa.');
+        logger.d('[_handleAuthResponse - 4] Zakończono obsługę twoFaRequired.');
       },
-      fullSuccess: (accessToken, refreshToken) async {
-        try {
-          logger.i('✅ Weryfikacja zakończona sukcesem. Zapisywanie sesji...');
 
-          // 1. Zapis na dysku refreshTokena
+      preTrust: (setupToken, challenge) async {
+        logger.d(
+          '[_handleAuthResponse - 5] Weszło w przypadek: preTrust (PRE_TRUST)',
+        );
+        try {
+          logger.i(
+            '🔐 [_handleAuthResponse - 6] Ustawiam state = AuthState.partiallyAuthenticated...',
+          );
+
+          state = AuthState.partiallyAuthenticated(
+            setupToken: setupToken,
+            challenge: challenge,
+          );
+
+          logger.d(
+            '[_handleAuthResponse - 7] Stan zmieniony na partiallyAuthenticated. Aktualizuję PendingSession...',
+          );
+
+          final pending = PendingSession(setupToken: setupToken);
+          ref.read(pendingSessionProvider.notifier).update(pending);
+
+          logger.d(
+            '[_handleAuthResponse - 8] PendingSession zaktualizowany. Zapisuję setupToken do Fresh...',
+          );
+
+          await ref
+              .read(authFreshProvider)
+              .setToken(OAuth2Token(accessToken: setupToken, refreshToken: ''));
+
+          logger.w(
+            '📱 [_handleAuthResponse - 9] Sukces PreTrust! Token we Fresh zapisany. Oczekuję na reakcję routera/widoku.',
+          );
+        } catch (e, stackTrace) {
+          logger.e(
+            '❌ [_handleAuthResponse - ERROR] Wyjątek wewnątrz bloku preTrust: $e',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          _handleError(e);
+          setUnauthenticated();
+        }
+      },
+
+      fullSuccess: (accessToken, refreshToken) async {
+        logger.d('[_handleAuthResponse - 10] Weszło w przypadek: fullSuccess');
+        try {
+          logger.i(
+            '✅ [_handleAuthResponse - 11] Zapisywanie refreshToken na dysku...',
+          );
           await _sessionService.saveSession(refreshToken: refreshToken);
 
-          // 2. Wrzucenie pełnych tokenów do Fresh (RAM + Interceptory)
+          logger.d('[_handleAuthResponse - 12] Zapisywanie tokenów w Fresh...');
           await ref
               .read(authFreshProvider)
               .setToken(
@@ -387,33 +416,104 @@ class AuthController extends _$AuthController {
                 ),
               );
 
+          logger.d('[_handleAuthResponse - 13] Czyszczenie PendingSession...');
           ref.read(pendingSessionProvider.notifier).clear();
 
-          // 3. Oznaczenie setupu bezpieczeństwa jako zainicjalizowanego
-          // Dzięki temu Router Guard weryfikujący setupCompleted = true wypuści użytkownika do aplikacji
+          logger.d(
+            '[_handleAuthResponse - 14] Oznaczam security jako zainicjalizowane...',
+          );
           await ref
               .read(securityServiceProvider.notifier)
               .markSecurityAsInitialized();
 
-          // 4. Hydratacja profilu użytkownika
-          logger.i('🔄 Pobieranie profilu użytkownika z /auth/me...');
+          logger.i(
+            '🔄 [_handleAuthResponse - 15] Pobieranie profilu użytkownika z /auth/me...',
+          );
           final user = await _authService.fetchAuthMe();
 
-          // 💾 Cache'ujemy świeżo pobrany profil użytkownika w SecureStorage dla trybu offline
+          logger.d(
+            '[_handleAuthResponse - 16] Cache’uję profil użytkownika...',
+          );
           await _sessionService.cacheUser(user);
 
-          // 5. Ustawienie docelowego stanu AuthState.authenticated
+          logger.d(
+            '[_handleAuthResponse - 17] Ustawiam state = AuthState.authenticated (isDeviceTrusted: true)...',
+          );
           state = AuthState.authenticated(user: user, isDeviceTrusted: true);
 
-          logger.i('🚀 Użytkownik w pełni uwierzytelniony.');
-        } catch (e) {
-          logger.e('❌ Błąd podczas finalizacji sesji: $e');
+          logger.i(
+            '🚀 [_handleAuthResponse - 18] Użytkownik w pełni uwierzytelniony!',
+          );
+        } catch (e, stackTrace) {
+          logger.e(
+            '❌ [_handleAuthResponse - ERROR] Wyjątek wewnątrz bloku fullSuccess: $e',
+            error: e,
+            stackTrace: stackTrace,
+          );
+          _handleError(e);
+          setUnauthenticated();
+        }
+      },
+
+      temporarySuccess: (accessToken) async {
+        logger.d(
+          '[_handleAuthResponse - 10T] Weszło w przypadek: temporarySuccess',
+        );
+        try {
+          logger.d(
+            '[_handleAuthResponse - 11T] Zapisywanie tylko accessToken w Fresh (brak refreshToken)...',
+          );
+          await ref
+              .read(authFreshProvider)
+              .setToken(
+                OAuth2Token(accessToken: accessToken, refreshToken: ''),
+              );
+
+          logger.d('[_handleAuthResponse - 12T] Czyszczenie PendingSession...');
+          ref.read(pendingSessionProvider.notifier).clear();
+
+          logger.d(
+            '[_handleAuthResponse - 13T] Oznaczam security jako konfigurację tymczasową...',
+          );
+          await ref
+              .read(securityServiceProvider.notifier)
+              .completeTemporarySetup();
+
+          logger.i(
+            '🔄 [_handleAuthResponse - 14T] Pobieranie profilu użytkownika z /auth/me...',
+          );
+          final user = await _authService.fetchAuthMe();
+
+          logger.d(
+            '[_handleAuthResponse - 15T] Cache’uję profil użytkownika...',
+          );
+          await _sessionService.cacheUser(user);
+
+          logger.d(
+            '[_handleAuthResponse - 16T] Ustawiam state = AuthState.authenticated (isDeviceTrusted: false)...',
+          );
+          state = AuthState.authenticated(user: user, isDeviceTrusted: false);
+
+          logger.i(
+            '⏳ [_handleAuthResponse - 17T] Użytkownik zalogowany w trybie sesji tymczasowej (15 min).',
+          );
+        } catch (e, stackTrace) {
+          logger.e(
+            '❌ [_handleAuthResponse - ERROR] Wyjątek wewnątrz bloku temporarySuccess: $e',
+            error: e,
+            stackTrace: stackTrace,
+          );
           _handleError(e);
           setUnauthenticated();
         }
       },
     );
+
+    logger.d(
+      '[_handleAuthResponse - 19] Zakończono wykonywanie _handleAuthResponse.',
+    );
   }
+
   Future<void> dumpRamState(Ref ref, AppLogger log) async {
     final authState = ref.read(authControllerProvider);
     final securityState = ref.read(securityServiceProvider);
@@ -433,14 +533,24 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> login(String email, List<int> passwordBytes) async {
+    _log.i('[AuthController] Initiating login process for email: $email');
     state = const AuthState.authenticating();
+
     try {
       final result = await _authService.login(email, passwordBytes);
+      _log.d(
+        '[AuthController] Authentication request successful, processing response...',
+      );
 
       passwordBytes.fillRange(0, passwordBytes.length, 0);
 
       await _handleAuthResponse(result, email);
-    } catch (e) {
+    } catch (e, st) {
+      _log.e(
+        '[AuthController] Login failed for email: $email',
+        error: e,
+        stackTrace: st,
+      );
       passwordBytes.fillRange(0, passwordBytes.length, 0);
       _handleError(e);
       setUnauthenticated();
@@ -448,6 +558,8 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> verifyTwoFa(String code) async {
+    _log.i('[AuthController] Initiating 2FA verification...');
+
     final currentEmail = state.maybeMap(
       twoFaRequired: (s) => s.email,
       orElse: () => null,
@@ -458,6 +570,9 @@ class AuthController extends _$AuthController {
     );
 
     if (currentEmail == null || currentToken == null) {
+      _log.w(
+        '[AuthController] 2FA verification failed: missing session data (email or tempToken)',
+      );
       _showError(LocaleKeys.errors_SESSION_EXPIRED);
       return;
     }
@@ -466,14 +581,25 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
 
     try {
+      _log.d(
+        '[AuthController] Sending 2FA verification request for email: $currentEmail',
+      );
       final result = await _authService.verifyTwoFa(
         currentEmail,
         codeBytes,
         currentToken,
       );
 
+      _log.d(
+        '[AuthController] 2FA verification successful, processing response...',
+      );
       await _handleAuthResponse(result, currentEmail);
-    } catch (e) {
+    } catch (e, st) {
+      _log.e(
+        '[AuthController] 2FA verification failed for email: $currentEmail',
+        error: e,
+        stackTrace: st,
+      );
       codeBytes.fillRange(0, codeBytes.length, 0);
       state = AuthState.twoFaRequired(
         email: currentEmail,
@@ -486,42 +612,103 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> registerTrustedDevice() async {
+    _log.i('[AuthController] Starting trusted device registration...');
+
     final pending = ref.read(pendingSessionProvider);
     final deviceService = ref.read(deviceInfoServiceProvider);
     final authService = ref.read(authServiceProvider);
     final crypto = ref.read(cryptoServiceProvider.notifier);
     final storage = ref.read(secureStorageProvider);
 
-    // 1️⃣ Odczytujemy wygenerowany w kroku 4/6 klucz publiczny (Base64)
-    final publicKeyBase64 = await storage.read(
-      key: StorageKeys.devicePublicKey,
-    );
-    if (publicKeyBase64 == null || publicKeyBase64.isEmpty) {
-      throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
+    try {
+      // 1️⃣ Odczytujemy wygenerowany w kroku 4/6 klucz publiczny (Base64)
+      _log.d('[AuthController] Reading public key from secure storage...');
+      final publicKeyBase64 = await storage.read(
+        key: StorageKeys.devicePublicKey,
+      );
+
+      if (publicKeyBase64 == null || publicKeyBase64.isEmpty) {
+        _log.w(
+          '[AuthController] Device registration failed: Public key missing in storage',
+        );
+        throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
+      }
+
+      _log.d('[AuthController] Fetching encrypted device name...');
+      final encryptedName = await deviceService.getEncryptedMarketingName();
+
+      final challenge = state.maybeMap(
+        partiallyAuthenticated: (s) => s.challenge,
+        orElse: () {
+          _log.w(
+            '[AuthController] Device registration failed: Missing challenge in state',
+          );
+          throw Exception('Brak challenge');
+        },
+      );
+
+      // 2️⃣ Podpisujemy challenge kluczem aktywnym w RAM (_activeDeviceKeyPair)
+      _log.d('[AuthController] Signing challenge with active device key...');
+      final signature = await crypto.signWithActiveKey(challenge);
+
+      // 3️⃣ Wysyłamy do backendu Go (fingerprint jest wysyłany automatycznie w nagłówku przez interceptor)
+      _log.d(
+        '[AuthController] Sending registerTrustedDevice request to backend...',
+      );
+      final response = await authService.registerTrustedDevice(
+        publicKey: publicKeyBase64,
+        encryptedName: encryptedName,
+        platform: Platform.operatingSystem,
+        signature: signature,
+        accessToken: pending?.setupToken,
+      );
+
+      _log.i(
+        '[AuthController] Trusted device registered successfully. Processing response...',
+      );
+      await _handleAuthResponse(response, '');
+    } catch (e, st) {
+      _log.e(
+        '[AuthController] Failed to register trusted device',
+        error: e,
+        stackTrace: st,
+      );
+      rethrow;
     }
+  }
 
-    final fingerprint = await deviceService.getFingerprint();
-    final encryptedName = await deviceService.getEncryptedMarketingName();
+  Future<void> createTemporarySession() async {
+    final logger = ref.read(appLoggerProvider);
+    logger.i('⏳ [AuthController] Tworzenie sesji tymczasowej...');
 
-    final challenge = state.maybeMap(
-      partiallyAuthenticated: (s) => s.challenge,
-      orElse: () => throw Exception('Brak challenge'),
-    );
+    try {
+      final pendingSession = ref.read(pendingSessionProvider);
+      final setupToken = pendingSession?.setupToken;
 
-    // 2️⃣ Podpisujemy challenge kluczem aktywnym w RAM (_activeDeviceKeyPair)
-    final signature = await crypto.signWithActiveKey(challenge);
+      if (setupToken == null || setupToken.isEmpty) {
+        throw Exception(
+          'Brak setupToken w PendingSession do utworzenia sesji tymczasowej.',
+        );
+      }
 
-    // 3️⃣ Wysyłamy do backendu Go
-    final response = await authService.registerTrustedDevice(
-      fingerprint: fingerprint,
-      publicKey: publicKeyBase64,
-      encryptedName: encryptedName,
-      platform: Platform.operatingSystem,
-      signature: signature,
-      accessToken: pending?.setupToken,
-    );
+      final response = await _authService.createTemporarySession(
+        accessToken: setupToken,
+      );
 
-    await _handleAuthResponse(response, '');
+      final email = state.email ?? '';
+      await _handleAuthResponse(response, email);
+
+      logger.i('✅ [AuthController] Sesja tymczasowa utworzona pomyślnie.');
+    } catch (e, stackTrace) {
+      logger.e(
+        '❌ [AuthController] Błąd podczas tworzenia sesji tymczasowej: $e',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      _handleError(e);
+      setUnauthenticated();
+      rethrow;
+    }
   }
 
   Future<void> logout() async {

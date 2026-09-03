@@ -278,60 +278,57 @@ class CryptoService extends _$CryptoService {
     return publicKey.bytes;
   }
 
-  // Podpisuje challenge używając klucza z RAM
-  Future<String> signWithActiveKey(String challenge) async {
+  // Podpisuje challenge używając klucza z RAM oraz Domain Bindingu
+  Future<String> signWithActiveKey(
+    String challenge, {
+    String domain = 'obywatel.gov.pl',
+  }) async {
     _log.i(
-      '[SIGN-ACTIVE][1] Rozpoczynam procedurę podpisywania challenge\'a kluczem z RAM...',
+      '[SIGN-ACTIVE][1] Rozpoczynam procedurę podpisywania challenge\'a...',
     );
-    _log.d(
-      '[SIGN-ACTIVE][1.1] Otrzymany challenge (surowy string/Base64): $challenge',
-    );
+    _log.d('[SIGN-ACTIVE][1.1] Challenge: $challenge | Domain: $domain');
 
     if (_activeDeviceKeyPair == null) {
-      _log.e(
-        '[SIGN-ACTIVE][ERR] KRITYCZNY BŁĄD: Brak aktywnego klucza w RAM (_activeDeviceKeyPair jest NULL)!',
-      );
+      _log.e('[SIGN-ACTIVE][ERR] KRYTYCZNY BŁĄD: Brak aktywnego klucza w RAM!');
       throw Exception('No active key');
     }
 
     try {
-      // 2. Dekodowanie challenge z Base64 / Base64URL z obsługą paddingu
+      // 1. Dekodowanie challenge ze STANDARDOWEGO Base64
       _log.i(
-        '[SIGN-ACTIVE][2] Dekodowanie challenge\'a z Base64/Base64URL do bajtów binarnych...',
+        '[SIGN-ACTIVE][2] Dekodowanie challenge\'a ze standardowego Base64...',
       );
-      
-      final normalizedChallenge = base64Url.normalize(challenge);
-      final challengeBytes = base64Url.decode(normalizedChallenge);
+      final normalizedChallenge = base64.normalize(challenge);
+      final challengeBytes = base64.decode(normalizedChallenge);
+
+      // 2. Składanie payloadu bajtowego odpowiadającego fmt.Appendf(nil, "%s:%s", domain, string(challengeBytes))
+      // Generujemy bajty z domeny i dwukropka w UTF-8, a potem doklejamy surowe bajty challenge'a
+      final prefixBytes = utf8.encode('$domain:');
+      final payloadBytes = <int>[...prefixBytes, ...challengeBytes];
 
       _log.d(
-        '[SIGN-ACTIVE][2.1] Zdekodowano challengeBytes. '
-        'Długość: ${challengeBytes.length} bajtów, bajty (pierwsze 4): ${challengeBytes.take(4).toList()}',
+        '[SIGN-ACTIVE][2.1] Przygotowano payloadBytes (${payloadBytes.length} B). '
+        'Prefix len: ${prefixBytes.length}, Challenge len: ${challengeBytes.length}',
       );
 
-      // 3. Podpisywanie challenge'a algorytmem Ed25519
+      // 3. Podpisywanie Ed25519
       _log.i('[SIGN-ACTIVE][3] Wykonuję podpis algorytmem Ed25519...');
       final algorithm = Ed25519();
       final signature = await algorithm.sign(
-        challengeBytes,
+        payloadBytes,
         keyPair: _activeDeviceKeyPair!,
       );
 
-      _log.d(
-        '[SIGN-ACTIVE][3.1] Wygenerowano podpis. '
-        'Długość bajtów podpisu: ${signature.bytes.length}',
-      );
-
-      // 4. Kodowanie podpisu do Base64
+      // 4. Kodowanie podpisu do standardowego Base64
       final signatureBase64 = base64Encode(signature.bytes);
       _log.i(
-        '[SIGN-ACTIVE][4] ✅ Challenge pomyślnie podpisany. '
-        'Podpis (Base64): $signatureBase64',
+        '[SIGN-ACTIVE][4] ✅ Challenge podpisany pomyślnie. Podpis (Base64): $signatureBase64',
       );
 
       return signatureBase64;
     } catch (e, st) {
       _log.e(
-        '[SIGN-ACTIVE][ERR] Błąd podczas podpisywania challenge\'a kluczem z RAM!',
+        '[SIGN-ACTIVE][ERR] Błąd podczas podpisywania challenge\'a',
         error: e,
         stackTrace: st,
       );

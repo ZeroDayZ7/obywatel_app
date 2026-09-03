@@ -40,6 +40,7 @@ abstract class  LocaleKeys {
   static const security_setup_additional_security = 'security_setup.additional_security';
   static const security_setup_pin_or_biometric = 'security_setup.pin_or_biometric';
   static const security_setup_finish_setup = 'security_setup.finish_setup';
+  static const security_setup_skip_and_continue = 'security_setup.skip_and_continue';
   static const security_setup_security_settings = 'security_setup.security_settings';
   static const security_setup_retry = 'security_setup.retry';
   static const security_setup_pin_set = 'security_setup.pin_set';

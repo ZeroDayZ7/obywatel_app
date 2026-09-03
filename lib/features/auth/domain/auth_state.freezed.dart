@@ -134,7 +134,7 @@ return authenticated(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  locked,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  locked,TResult Function()?  unauthenticated,TResult Function()?  authenticating,TResult Function( String email,  String tempToken)?  twoFaRequired,TResult Function( String setupToken,  String challenge)?  partiallyAuthenticated,TResult Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Locked() when locked != null:
@@ -142,7 +142,7 @@ return locked();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
-return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
+return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated() when authenticated != null:
 return authenticated(_that.user,_that.isDeviceTrusted);case _:
   return orElse();
 
@@ -161,7 +161,7 @@ return authenticated(_that.user,_that.isDeviceTrusted);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  locked,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge,  String userId)  partiallyAuthenticated,required TResult Function( AuthUser user,  bool isDeviceTrusted)  authenticated,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  locked,required TResult Function()  unauthenticated,required TResult Function()  authenticating,required TResult Function( String email,  String tempToken)  twoFaRequired,required TResult Function( String setupToken,  String challenge)  partiallyAuthenticated,required TResult Function( AuthUser user,  bool isDeviceTrusted)  authenticated,}) {final _that = this;
 switch (_that) {
 case _Initial():
 return initial();case _Locked():
@@ -169,7 +169,7 @@ return locked();case _Unauthenticated():
 return unauthenticated();case _Authenticating():
 return authenticating();case _TwoFaRequired():
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated():
-return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated():
+return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated():
 return authenticated(_that.user,_that.isDeviceTrusted);}
 }
 /// A variant of `when` that fallback to returning `null`
@@ -184,7 +184,7 @@ return authenticated(_that.user,_that.isDeviceTrusted);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  locked,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge,  String userId)?  partiallyAuthenticated,TResult? Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  locked,TResult? Function()?  unauthenticated,TResult? Function()?  authenticating,TResult? Function( String email,  String tempToken)?  twoFaRequired,TResult? Function( String setupToken,  String challenge)?  partiallyAuthenticated,TResult? Function( AuthUser user,  bool isDeviceTrusted)?  authenticated,}) {final _that = this;
 switch (_that) {
 case _Initial() when initial != null:
 return initial();case _Locked() when locked != null:
@@ -192,7 +192,7 @@ return locked();case _Unauthenticated() when unauthenticated != null:
 return unauthenticated();case _Authenticating() when authenticating != null:
 return authenticating();case _TwoFaRequired() when twoFaRequired != null:
 return twoFaRequired(_that.email,_that.tempToken);case _PartiallyAuthenticated() when partiallyAuthenticated != null:
-return partiallyAuthenticated(_that.setupToken,_that.challenge,_that.userId);case _Authenticated() when authenticated != null:
+return partiallyAuthenticated(_that.setupToken,_that.challenge);case _Authenticated() when authenticated != null:
 return authenticated(_that.user,_that.isDeviceTrusted);case _:
   return null;
 
@@ -401,12 +401,11 @@ as String,
 
 
 class _PartiallyAuthenticated extends AuthState {
-  const _PartiallyAuthenticated({required this.setupToken, required this.challenge, required this.userId}): super._();
+  const _PartiallyAuthenticated({required this.setupToken, required this.challenge}): super._();
   
 
  final  String setupToken;
  final  String challenge;
- final  String userId;
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
@@ -418,16 +417,16 @@ _$PartiallyAuthenticatedCopyWith<_PartiallyAuthenticated> get copyWith => __$Par
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge)&&(identical(other.userId, userId) || other.userId == userId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,setupToken,challenge,userId);
+int get hashCode => Object.hash(runtimeType,setupToken,challenge);
 
 @override
 String toString() {
-  return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge, userId: $userId)';
+  return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge)';
 }
 
 
@@ -438,7 +437,7 @@ abstract mixin class _$PartiallyAuthenticatedCopyWith<$Res> implements $AuthStat
   factory _$PartiallyAuthenticatedCopyWith(_PartiallyAuthenticated value, $Res Function(_PartiallyAuthenticated) _then) = __$PartiallyAuthenticatedCopyWithImpl;
 @useResult
 $Res call({
- String setupToken, String challenge, String userId
+ String setupToken, String challenge
 });
 
 
@@ -455,11 +454,10 @@ class __$PartiallyAuthenticatedCopyWithImpl<$Res>
 
 /// Create a copy of AuthState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? challenge = null,Object? userId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? setupToken = null,Object? challenge = null,}) {
   return _then(_PartiallyAuthenticated(
 setupToken: null == setupToken ? _self.setupToken : setupToken // ignore: cast_nullable_to_non_nullable
 as String,challenge: null == challenge ? _self.challenge : challenge // ignore: cast_nullable_to_non_nullable
-as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
