@@ -5,9 +5,8 @@ part 'auth_response.g.dart';
 
 @freezed
 sealed class AuthResponse with _$AuthResponse {
-  const factory AuthResponse.twoFaRequired({
-    @Default('') String twoFaToken,
-  }) = _TwoFaRequired;
+  const factory AuthResponse.twoFaRequired({@Default('') String twoFaToken}) =
+      _TwoFaRequired;
 
   const factory AuthResponse.preTrust({
     @Default('') String setupToken,
@@ -29,44 +28,78 @@ sealed class AuthResponse with _$AuthResponse {
       _$AuthResponseFromJson(json);
 
   factory AuthResponse.fromMap(Map<String, dynamic> data) {
-    final type = data['type']?.toString();
+    final explicitType = data['type']?.toString();
 
     // 1. Krok 2FA
-    if (type == '2FA_REQUIRED') {
-      final twoFa = data['two_fa'] as Map<String, dynamic>?;
+    if (explicitType == '2FA_REQUIRED' || data.containsKey('two_fa')) {
+      final twoFa = data['two_fa'] is Map<String, dynamic>
+          ? data['two_fa'] as Map<String, dynamic>
+          : null;
       return AuthResponse.twoFaRequired(
-        twoFaToken: twoFa?['two_fa_token']?.toString() ?? '',
+        twoFaToken:
+            twoFa?['two_fa_token']?.toString() ??
+            data['two_fa_token']?.toString() ??
+            '',
       );
     }
 
-    // 2. Pełny sukces (Zaufane urządzenie)
-    if (type == 'SUCCESS') {
-      final success = data['success'] as Map<String, dynamic>?;
-      return AuthResponse.fullSuccess(
-        accessToken: success?['access_token']?.toString() ?? '',
-        refreshToken: success?['refresh_token']?.toString() ?? '',
-      );
-    }
-
-    // 3. Sesja tymczasowa (Pominięcie rejestracji - tylko accessToken)
-    if (type == 'TEMPORARY_SUCCESS' || type == 'PARTIAL_SUCCESS') {
-      final success = data['temporary_success'] as Map<String, dynamic>? 
-          ?? data['success'] as Map<String, dynamic>?;
-      return AuthResponse.temporarySuccess(
-        accessToken: success?['access_token']?.toString() ?? '',
-      );
-    }
-
-    // 4. PreTrust (Konfiguracja nowego urządzenia)
-    if (type == 'PRE_TRUST') {
-      final preTrustData = data['pre_trust'] as Map<String, dynamic>?;
-
+    // 2. PreTrust (Konfiguracja urządzenia)
+    if (explicitType == 'PRE_TRUST' || data.containsKey('pre_trust')) {
+      final preTrustData = data['pre_trust'] is Map<String, dynamic>
+          ? data['pre_trust'] as Map<String, dynamic>
+          : null;
       return AuthResponse.preTrust(
-        setupToken: preTrustData?['setup_token']?.toString() ?? '',
-        challenge: preTrustData?['challenge']?.toString() ?? '',
+        setupToken:
+            preTrustData?['setup_token']?.toString() ??
+            data['setup_token']?.toString() ??
+            '',
+        challenge:
+            preTrustData?['challenge']?.toString() ??
+            data['challenge']?.toString() ??
+            '',
       );
     }
 
-    throw ArgumentError('Nieznany typ odpowiedzi autoryzacyjnej: $type');
+    // 3. Pełny sukces (obługa odpowiedzi typu {"success": true, "access_token": "..."})
+    final isSuccessBool = data['success'] == true;
+    if (explicitType == 'SUCCESS' ||
+        (isSuccessBool &&
+            data.containsKey('access_token') &&
+            data.containsKey('refresh_token'))) {
+      final successObj = data['success'] is Map<String, dynamic>
+          ? data['success'] as Map<String, dynamic>
+          : null;
+
+      return AuthResponse.fullSuccess(
+        accessToken:
+            successObj?['access_token']?.toString() ??
+            data['access_token']?.toString() ??
+            '',
+        refreshToken:
+            successObj?['refresh_token']?.toString() ??
+            data['refresh_token']?.toString() ??
+            '',
+      );
+    }
+
+    // 4. Sesja tymczasowa
+    if (explicitType == 'TEMPORARY_SUCCESS' ||
+        explicitType == 'PARTIAL_SUCCESS' ||
+        (isSuccessBool && data.containsKey('access_token'))) {
+      final successObj = data['temporary_success'] is Map<String, dynamic>
+          ? data['temporary_success'] as Map<String, dynamic>
+          : (data['success'] is Map<String, dynamic>
+                ? data['success'] as Map<String, dynamic>
+                : null);
+
+      return AuthResponse.temporarySuccess(
+        accessToken:
+            successObj?['access_token']?.toString() ??
+            data['access_token']?.toString() ??
+            '',
+      );
+    }
+
+    throw ArgumentError('Nieznany typ odpowiedzi autoryzacyjnej: $data');
   }
 }

@@ -634,10 +634,7 @@ class AuthController extends _$AuthController {
         throw Exception('Brak wygenerowanego klucza publicznego w pamięci.');
       }
 
-      _log.d(
-        '[AuthController] Fetching device fingerprint and encrypted name...',
-      );
-      final fingerprint = await deviceService.getFingerprint();
+      _log.d('[AuthController] Fetching encrypted device name...');
       final encryptedName = await deviceService.getEncryptedMarketingName();
 
       final challenge = state.maybeMap(
@@ -654,12 +651,11 @@ class AuthController extends _$AuthController {
       _log.d('[AuthController] Signing challenge with active device key...');
       final signature = await crypto.signWithActiveKey(challenge);
 
-      // 3️⃣ Wysyłamy do backendu Go
+      // 3️⃣ Wysyłamy do backendu Go (fingerprint jest wysyłany automatycznie w nagłówku przez interceptor)
       _log.d(
         '[AuthController] Sending registerTrustedDevice request to backend...',
       );
       final response = await authService.registerTrustedDevice(
-        fingerprint: fingerprint,
         publicKey: publicKeyBase64,
         encryptedName: encryptedName,
         platform: Platform.operatingSystem,
