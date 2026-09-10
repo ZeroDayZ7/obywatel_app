@@ -20,7 +20,6 @@ sealed class AuthState with _$AuthState {
   const factory AuthState.partiallyAuthenticated({
     required String setupToken,
     required String challenge,
-    required String userId,
   }) = _PartiallyAuthenticated;
 
   const factory AuthState.authenticated({
@@ -37,29 +36,29 @@ sealed class AuthState with _$AuthState {
   bool get isAuthenticated => this is _Authenticated;
 
   String? get email => maybeMap(
-    twoFaRequired: (state) => state.email,
-    authenticated: (state) => state.user.email,
-    orElse: () => null,
-  );
+        twoFaRequired: (state) => state.email,
+        authenticated: (state) => state.user.email,
+        orElse: () => null,
+      );
 
   String? get tempToken =>
       maybeMap(twoFaRequired: (state) => state.tempToken, orElse: () => null);
 
+  // Getter zwraca ID tylko dla w pełni uwierzytelnionego użytkownika
   String? get userId => maybeMap(
-    partiallyAuthenticated: (state) => state.userId,
-    authenticated: (state) => state.user.id,
-    orElse: () => null,
-  );
+        authenticated: (state) => state.user.id,
+        orElse: () => null,
+      );
 
   List<String> get roles => maybeMap(
-    authenticated: (state) => [state.user.role],
-    orElse: () => const [],
-  );
+        authenticated: (state) => [state.user.role],
+        orElse: () => const [],
+      );
 
   List<String> get permissions => maybeMap(
-    authenticated: (state) => state.user.permissions,
-    orElse: () => const [],
-  );
+        authenticated: (state) => state.user.permissions,
+        orElse: () => const [],
+      );
 
   bool hasPermission(String permission) {
     return maybeMap(

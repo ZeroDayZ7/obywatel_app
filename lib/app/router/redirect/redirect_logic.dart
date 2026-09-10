@@ -8,7 +8,7 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 String? appRedirectLogic(Ref ref, GoRouterState state) {
   final logger = ref.read(appLoggerProvider);
 
-  logger.d('Redirect check for: ${state.uri.path}');
+  logger.d('[Router Guard] Redirect check for: ${state.uri.path}');
 
   // Kolejność ma znaczenie!
   final guards = [rootGuard];
@@ -21,6 +21,6 @@ String? appRedirectLogic(Ref ref, GoRouterState state) {
     }
   }
 
-  logger.d('No redirect needed');
+  logger.d('[Router Guard] No redirect needed');
   return null;
 }

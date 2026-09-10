@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/pin_setup_dialog.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_notifier.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/biometric_tile.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/info_card.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/pin_tile.dart';
@@ -18,6 +19,7 @@ class SecuritySetupBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncState = ref.watch(securitySetupProvider);
+    final isLoading = asyncState is AsyncLoading;
 
     return SingleChildScrollView(
       child: Column(
@@ -29,13 +31,12 @@ class SecuritySetupBody extends ConsumerWidget {
           ),
           const SizedBox(height: 30),
 
-          /// 1. Sekcja "Zaufaj temu urządzeniu" - teraz jako pierwsza (Punkt wejścia)
+          /// 1. Sekcja "Zaufaj temu urządzeniu"
           _buildTrustDeviceSwitch(context, ref),
 
           const SizedBox(height: 24),
 
-          /// 2. Animowany kontener dla opcji PIN i Biometrii
-          /// Pojawia się tylko gdy trustDevice == true
+          /// 2. Animowane opcje PIN / Biometria (tylko przy trustDevice == true)
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 400),
             transitionBuilder: (Widget child, Animation<double> animation) {
@@ -48,15 +49,11 @@ class SecuritySetupBody extends ConsumerWidget {
                 ? Column(
                     key: const ValueKey('security_options_visible'),
                     children: [
-                      // Kafelek PIN
                       PinTile(
                         pinSet: state.pinSet,
                         onSetup: () => _setupPin(context, ref),
                       ),
-
                       const SizedBox(height: 16),
-
-                      // Kafelek Biometrii (widoczny tylko jeśli urządzenie wspiera)
                       if (state.biometricAvailable)
                         BiometricTile(
                           enabled: state.biometricSet,
@@ -75,20 +72,36 @@ class SecuritySetupBody extends ConsumerWidget {
 
           const SizedBox(height: 40),
 
-          /// 3. Przycisk kończący
-          AppButton(
-            label: LocaleKeys.security_setup_finish_setup.tr(),
-            onPressed: state.canFinish && asyncState is! AsyncLoading
-                ? () async {
-                    await ref
-                        .read(securitySetupProvider.notifier)
-                        .completeSetup();
-                  }
-                : null,
-            isLoading: asyncState is AsyncLoading,
-            fullWidth: true,
-            variant: AppButtonVariant.primary,
-          ),
+          /// 3. Akcje końcowe (Rejestracja vs Pominięcie)
+          if (state.trustDevice) ...[
+            AppButton(
+              label: LocaleKeys.security_setup_finish_setup.tr(),
+              onPressed: state.canFinish && !isLoading
+                  ? () async {
+                      await ref
+                          .read(securitySetupProvider.notifier)
+                          .completeSetup();
+                    }
+                  : null,
+              isLoading: isLoading,
+              fullWidth: true,
+              variant: AppButtonVariant.primary,
+            ),
+          ] else ...[
+            AppButton(
+              label: LocaleKeys.security_setup_skip_and_continue.tr(),
+              onPressed: !isLoading
+                  ? () async {
+                      await ref
+                          .read(authControllerProvider.notifier)
+                          .createTemporarySession();
+                    }
+                  : null,
+              isLoading: isLoading,
+              fullWidth: true,
+              variant: AppButtonVariant.secondary,
+            ),
+          ],
 
           const SizedBox(height: 24),
         ],
@@ -96,7 +109,6 @@ class SecuritySetupBody extends ConsumerWidget {
     );
   }
 
-  /// Wyodrębniony widget Switcha dla czystości kodu
   Widget _buildTrustDeviceSwitch(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 

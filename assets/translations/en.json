@@ -40,6 +40,7 @@
     "additional_security": "Additional Security",
     "pin_or_biometric": "Set PIN or biometrics...",
     "finish_setup": "Finish setup",
+    "skip_and_continue": "Skip and continue",
     "security_settings": "Security Settings",
     "retry": "Try again",
     "pin_set": "PIN set",

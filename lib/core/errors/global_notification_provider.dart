@@ -13,13 +13,12 @@ class GlobalNotification extends _$GlobalNotification {
   @override
   List<AppNotification> build() => [];
 
-  /// Pokazuje powiadomienie i dodaje je do stosu
   void show(AppNotification notification) {
     state = [...state, notification];
 
-    // Automatyczne usuwanie po czasie zdefiniowanym w modelu
+    final targetId = notification.id;
     Future.delayed(notification.duration, () {
-      remove(notification.id);
+      remove(targetId);
     });
   }
 

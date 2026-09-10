@@ -19,7 +19,7 @@ class ServicesConfig {
   /// Used for login, logout, token refresh, etc.
   static String get authBaseUrl => apiConstants.isProduction
       ? 'https://localhost-0.tail400384.ts.net'
-      : 'http://localhost:8090';
+      : 'http://localhost:8080';
 
   /// Version service base URL
   static String get versionBaseUrl => apiConstants.isProduction

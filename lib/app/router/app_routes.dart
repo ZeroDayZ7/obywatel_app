@@ -13,6 +13,7 @@ abstract final class AppRoutes {
   static const error = '/error';
   static const test = '/test';
   static const update = '/update';
+  static const eVoting = '/evoting';
 
   static const setPin = 'set_pin';
   static const patternLock = 'pattern_lock';
