@@ -51,17 +51,21 @@ abstract final class AppTheme {
   }
 
   static ColorScheme _colorScheme(AppThemeType type) {
-    // Definica colorScheme...
     switch (type) {
       case AppThemeType.matrix:
         return const ColorScheme.dark(
           primary: AppColors.matrixGreen,
           onPrimary: Colors.black,
-          secondary: AppColors.matrixGreen,
+          primaryContainer: AppColors.matrixContainer,
+          onPrimaryContainer: AppColors.matrixGreen,
+          secondary: Color(0xFF00CC55),
           onSecondary: Colors.black,
+          tertiary: Color(0xFF00FFAA),
+          onTertiary: Colors.black,
           surface: AppColors.matrixDarkSurface,
           onSurface: AppColors.matrixGreen,
           surfaceContainerHigh: AppColors.matrixContainer,
+          outline: AppColors.matrixGreen,
           outlineVariant: Color(0xFF005522),
           error: AppColors.error,
           onError: AppColors.onError,
@@ -70,11 +74,16 @@ abstract final class AppTheme {
         return const ColorScheme.dark(
           primary: AppColors.cyanPrimary,
           onPrimary: Colors.black,
+          primaryContainer: Color(0xFF004D40),
+          onPrimaryContainer: Color(0xFF80DEEA),
           secondary: AppColors.cyanSecondary,
           onSecondary: Colors.black,
+          tertiary: Color(0xFFFFB74D),
+          onTertiary: Colors.black,
           surface: AppColors.darkBackground,
           onSurface: Color(0xFFE6E8EC),
           surfaceContainerHigh: AppColors.darkSurfaceContainer,
+          outline: Color(0xFF8E918F),
           outlineVariant: Color(0xFF3D4046),
           error: AppColors.error,
           onError: AppColors.onError,
@@ -84,11 +93,16 @@ abstract final class AppTheme {
         return const ColorScheme.light(
           primary: AppColors.cyanPrimary,
           onPrimary: Colors.white,
+          primaryContainer: Color(0xFFE0F7FA),
+          onPrimaryContainer: Color(0xFF006064),
           secondary: AppColors.cyanSecondary,
           onSecondary: Colors.white,
+          tertiary: Color(0xFFF57C00),
+          onTertiary: Colors.white,
           surface: AppColors.lightBackground,
           onSurface: Color(0xFF1A1C1E),
           surfaceContainerHigh: AppColors.lightSurfaceContainer,
+          outline: Color(0xFF74777F),
           outlineVariant: Color(0xFFE0E2E8),
           error: AppColors.error,
           onError: AppColors.onError,
