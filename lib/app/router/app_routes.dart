@@ -14,6 +14,17 @@ abstract final class AppRoutes {
   static const test = '/test';
   static const update = '/update';
   static const eVoting = '/evoting';
+  static const eVotingDetail = 'detail/:id';
+  static const eVotingVote = 'vote/:id';
+  static const eVotingCitizen = 'citizen/:citizenId';
+  static const eVotingDelegations = 'delegations';
+  static const eVotingMyVotes = 'my-votes';
+
+  static String eVotingDetailPath(String id) => '$eVoting/detail/$id';
+  static String eVotingVotePath(String id) => '$eVoting/vote/$id';
+  static String eVotingCitizenPath(String citizenId) => '$eVoting/citizen/$citizenId';
+  static String eVotingDelegationsPath() => '$eVoting/delegations';
+  static String eVotingMyVotesPath() => '$eVoting/my-votes';
 
   static const setPin = 'set_pin';
   static const patternLock = 'pattern_lock';

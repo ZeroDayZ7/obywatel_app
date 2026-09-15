@@ -1,9 +1,11 @@
-// lib/features/evoting/presentation/pages/evoting_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
+import 'package:obywatel_plus/features/evoting/data/mock/mock_evoting_repository.dart';
+import 'package:obywatel_plus/features/evoting/domain/models/voting_models.dart';
+import 'package:obywatel_plus/features/evoting/presentation/widgets/evoting_widgets.dart';
 
 class EVotingScreen extends StatefulWidget {
   const EVotingScreen({super.key});
@@ -13,15 +15,23 @@ class EVotingScreen extends StatefulWidget {
 }
 
 class _EVotingScreenState extends State<EVotingScreen> {
-  int _selectedCategoryIndex = 0;
+  final repository = MockEVotingRepository.instance;
+  late Future<List<Voting>> _votingsFuture;
+  VotingCategory _selectedCategory = VotingCategory.all;
+  VotingSort _selectedSort = VotingSort.endingSoonest;
 
-  final List<String> _categories = [
-    'Wszystkie',
-    'Lokalne (Twoja okolica)',
-    'Regionalne',
-    'Krajowe',
-    'Moje delegacje',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _reloadVotings();
+  }
+
+  void _reloadVotings() {
+    _votingsFuture = repository.getVotings(
+      category: _selectedCategory,
+      sort: _selectedSort,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,427 +58,305 @@ class _EVotingScreenState extends State<EVotingScreen> {
             ),
           ),
           actions: [
-            IconButton(
+            PopupMenuButton<VotingSort>(
               icon: const Icon(Icons.tune_rounded),
-              tooltip: 'Filtry',
-              onPressed: () {},
+              tooltip: 'Sortowanie',
+              onSelected: (sort) {
+                setState(() {
+                  _selectedSort = sort;
+                  _reloadVotings();
+                });
+              },
+              itemBuilder: (context) => VotingSort.values
+                  .map(
+                    (sort) => PopupMenuItem(
+                      value: sort,
+                      child: Text(sort.label),
+                    ),
+                  )
+                  .toList(),
             ),
             IconButton(
               icon: const Icon(Icons.how_to_reg_rounded),
               tooltip: 'Deleguj głos',
-              onPressed: () {},
+              onPressed: () => context.push(AppRoutes.eVotingDelegationsPath()),
             ),
             const SizedBox(width: 8),
           ],
         ),
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 1. Sekcja statusu / statystyk użytkownika
-            _buildUserVotingStatsCard(theme, colorScheme),
-            const SizedBox(height: 20),
+      child: FutureBuilder<List<Voting>>(
+        future: _votingsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-            // 2. Kategoria / Filtry horyzontalne
-            SizedBox(
-              height: 38,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _categories.length,
-                separatorBuilder: (_, _) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final isSelected = _selectedCategoryIndex == index;
-                  return ChoiceChip(
-                    label: Text(_categories[index]),
-                    selected: isSelected,
-                    onSelected: (_) =>
-                        setState(() => _selectedCategoryIndex = index),
-                    selectedColor: colorScheme.primary,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? colorScheme.onPrimary
-                          : colorScheme.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      fontSize: 12,
-                    ),
-                    backgroundColor: colorScheme.surfaceContainerHigh,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    side: BorderSide(
-                      color: isSelected
-                          ? colorScheme.primary
-                          : colorScheme.outlineVariant.withValues(alpha: 0.5),
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 20),
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Błąd ładowania głosowań: ${snapshot.error}'),
+            );
+          }
 
-            // 3. Nagłówek: Pilne / Aktywne
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Trwające głosowania',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  child: Text(
-                    'Zobacz wszystkie',
-                    style: TextStyle(color: colorScheme.primary, fontSize: 13),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
+          final votings = snapshot.data ?? const <Voting>[];
 
-            // 4. Glówne karty głosowań
-            _buildVotingCard(
-              theme: theme,
-              colorScheme: colorScheme,
-              tag: 'LOKALNE • Twoja Dzielnica',
-              tagColor: colorScheme.primary,
-              title:
-                  'Budowa ścieżki rowerowej oraz parku kieszonkowego przy ul. Lipowej',
-              timeLeft: 'Pozostało: 2 dni',
-              participantsCount: '1,420 głosów',
-              isUrgent: true,
-              voted: false,
-            ),
-            const SizedBox(height: 12),
-
-            _buildVotingCard(
-              theme: theme,
-              colorScheme: colorScheme,
-              tag: 'KRAJOWE • Ustawa',
-              tagColor: colorScheme.secondary,
-              title:
-                  'Projekt ustawy o cyfryzacji lokalnych procedur administracyjnych',
-              timeLeft: 'Pozostało: 5 dni',
-              participantsCount: '48,190 głosów',
-              isUrgent: false,
-              voted: true,
-            ),
-            const SizedBox(height: 12),
-
-            _buildVotingCard(
-              theme: theme,
-              colorScheme: colorScheme,
-              tag: 'REGIONALNE • Śląskie',
-              tagColor: colorScheme.tertiary,
-              title:
-                  'Alokacja środków z Budżetu Obywatelskiego na rozwój transportu publicznego',
-              timeLeft: 'Pozostało: 12 godz.',
-              participantsCount: '8,930 głosów',
-              isUrgent: true,
-              voted: false,
-            ),
-            const SizedBox(height: 24),
-
-            // 5. Sekcja Płynnej Demokracji (Delegowanie głosów)
-            _buildLiquidDemocracyBanner(theme, colorScheme),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Wymiarowy kafel statystyk na samej górze
-  Widget _buildUserVotingStatsCard(ThemeData theme, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _buildUserVotingStatsCard(theme, colorScheme),
+                const SizedBox(height: 20),
+                SizedBox(
+                  height: 42,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: VotingCategory.values.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final category = VotingCategory.values[index];
+                      final isSelected = _selectedCategory == category;
+                      return ChoiceChip(
+                        label: Text(category.label),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            _selectedCategory = category;
+                            _reloadVotings();
+                          });
+                        },
+                        selectedColor: colorScheme.primary,
+                        labelStyle: TextStyle(
+                          color: isSelected ? colorScheme.onPrimary : colorScheme.onSurface,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontSize: 12,
+                        ),
+                        backgroundColor: colorScheme.surfaceContainerHigh,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        side: BorderSide(
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.outlineVariant.withValues(alpha: 0.5),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.greenAccent,
-                        shape: BoxShape.circle,
+                    Text(
+                      'Trwające głosowania',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Text(
-                      'Twój status: Aktywny wyborca',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    TextButton(
+                      onPressed: () => context.push(AppRoutes.eVotingMyVotesPath()),
+                      child: Text(
+                        'Moje głosowania',
+                        style: TextStyle(color: colorScheme.primary, fontSize: 13),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Siła Twojego głosu: 1.0x',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Brak aktywnych delegacji na Ciebie',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
+                const SizedBox(height: 8),
+                if (votings.isEmpty)
+                  const EmptyState(
+                    title: 'Brak głosowań',
+                    message: 'W tej chwili nie ma aktywnych głosowań w wybranym filtrze.',
+                  )
+                else
+                  ...[
+                    for (var i = 0; i < votings.length; i++) ...[
+                      VotingCard(
+                        voting: votings[i],
+                        onTap: () => context.push(
+                          AppRoutes.eVotingDetailPath(votings[i].id),
+                        ),
+                      ),
+                      if (i < votings.length - 1) const SizedBox(height: 12),
+                    ],
+                  ],
+                const SizedBox(height: 24),
+                _buildLiquidDemocracyBanner(theme, colorScheme),
+                const SizedBox(height: 24),
               ],
             ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: colorScheme.primary.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  '12',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.primary,
-                  ),
-                ),
-                Text(
-                  'Oddane głosy',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontSize: 9,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  // Karta pojedynczego głosowania
-  Widget _buildVotingCard({
-    required ThemeData theme,
-    required ColorScheme colorScheme,
-    required String tag,
-    required Color tagColor,
-    required String title,
-    required String timeLeft,
-    required String participantsCount,
-    required bool isUrgent,
-    required bool voted,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isUrgent
-              ? colorScheme.error.withValues(alpha: 0.5)
-              : colorScheme.outlineVariant.withValues(alpha: 0.5),
-          width: isUrgent ? 1.5 : 1.0,
+  Widget _buildUserVotingStatsCard(ThemeData theme, ColorScheme colorScheme) {
+    return FutureBuilder<DashboardStats>(
+      future: repository.getDashboardStats(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ??
+            const DashboardStats(
+              activeVotingCount: 0,
+              votedCount: 0,
+              delegationsCount: 0,
+              currentVotingPower: 1.0,
+            );
+
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.greenAccent,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Twój status: Aktywny wyborca',
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Siła Twojego głosu: ${stats.currentVotingPower.toStringAsFixed(1)}x',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${stats.delegationsCount} aktywnych delegacji / ${stats.activeVotingCount} głosowań w toku',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${stats.votedCount}',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                        Text(
+                          'Oddane głosy',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontSize: 9,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${stats.activeVotingCount} aktywnych',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLiquidDemocracyBanner(ThemeData theme, ColorScheme colorScheme) {
+    return GestureDetector(
+      onTap: () => context.push(AppRoutes.eVotingDelegationsPath()),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.primary.withValues(alpha: 0.15),
+              colorScheme.secondary.withValues(alpha: 0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
         ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {},
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.alt_route_rounded,
+                color: colorScheme.onPrimary,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tagi i status
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: tagColor.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          tag,
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: tagColor,
-                          ),
-                        ),
-                      ),
-                      if (voted)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            children: [
-                              Icon(
-                                Icons.check_circle_rounded,
-                                size: 12,
-                                color: Colors.green,
-                              ),
-                              SizedBox(width: 4),
-                              Text(
-                                'Zagłosowano',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.green,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Tytuł uchwały/głosowania
                   Text(
-                    title,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      height: 1.3,
+                    'Nie masz czasu głosować?',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 16),
-
-                  // Stopka z danymi
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.timer_outlined,
-                        size: 14,
-                        color: isUrgent
-                            ? colorScheme.error
-                            : colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        timeLeft,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: isUrgent
-                              ? colorScheme.error
-                              : colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontWeight: isUrgent
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                      ),
-                      const Spacer(),
-                      Icon(
-                        Icons.how_to_vote_outlined,
-                        size: 14,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        participantsCount,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 2),
+                  Text(
+                    'Przekaż swój głos ekspertowi lub zaufanemu sąsiadowi.',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Baner zachęcający do płynnej demokracji
-  Widget _buildLiquidDemocracyBanner(ThemeData theme, ColorScheme colorScheme) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.15),
-            colorScheme.secondary.withValues(alpha: 0.05),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primary,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.alt_route_rounded,
-              color: colorScheme.onPrimary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Nie masz czasu głosować?',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'Przekaż swój głos ekspertowi lub zaufanemu sąsiadowi.',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.7),
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
