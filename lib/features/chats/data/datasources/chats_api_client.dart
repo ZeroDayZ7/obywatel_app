@@ -30,7 +30,7 @@ class ChatsApiClient {
   }) async {
     final queryParams = <String, dynamic>{
       'limit': limit,
-      if (beforeId != null) 'before_id': beforeId,
+      'before_id': beforeId,
     };
 
     final response = await _apiClient.get(
@@ -47,10 +47,7 @@ class ChatsApiClient {
 
   /// Przesyła wiadomości z lokalnego Outboxa w trybie offline-first
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
-    await _apiClient.post(
-      ApiEndpoints.syncOutbox,
-      data: {'messages': payload},
-    );
+    await _apiClient.post(ApiEndpoints.syncOutbox, data: {'messages': payload});
   }
 
   /// Pobiera klucze pre-key użytkownika dla protokołu X3DH / E2EE
