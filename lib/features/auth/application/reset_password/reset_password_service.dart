@@ -29,7 +29,7 @@ Future<Map<String, dynamic>> verifyResetCodeApi({
   final api = ref.read(noAuthApiClientProvider);
   final response = await api.post(
     ApiEndpoints.verifyResetCode,
-    data: {'code': code, if (token != null) 'token': token},
+    data: {'code': code, 'token': token},
   );
   return response.data as Map<String, dynamic>;
 }

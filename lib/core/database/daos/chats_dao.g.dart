@@ -8,4 +8,19 @@ mixin _$ChatsDaoMixin on DatabaseAccessor<AppDatabase> {
   $ConversationMembersTable get conversationMembers =>
       attachedDatabase.conversationMembers;
   $MessagesTable get messages => attachedDatabase.messages;
+  ChatsDaoManager get managers => ChatsDaoManager(this);
+}
+
+class ChatsDaoManager {
+  final _$ChatsDaoMixin _db;
+  ChatsDaoManager(this._db);
+  $$ConversationsTableTableManager get conversations =>
+      $$ConversationsTableTableManager(_db.attachedDatabase, _db.conversations);
+  $$ConversationMembersTableTableManager get conversationMembers =>
+      $$ConversationMembersTableTableManager(
+        _db.attachedDatabase,
+        _db.conversationMembers,
+      );
+  $$MessagesTableTableManager get messages =>
+      $$MessagesTableTableManager(_db.attachedDatabase, _db.messages);
 }

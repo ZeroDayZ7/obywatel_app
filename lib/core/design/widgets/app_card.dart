@@ -46,10 +46,7 @@ class AppCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (icon != null) icon!,
-                if (topRight != null) topRight!,
-              ],
+              children: [?icon, ?topRight],
             ),
             DefaultTextStyle(
               style:
