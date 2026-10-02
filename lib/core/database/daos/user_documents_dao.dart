@@ -9,10 +9,11 @@ class UserDocumentsDao extends DatabaseAccessor<AppDatabase>
     with _$UserDocumentsDaoMixin {
   UserDocumentsDao(super.db);
 
-  // Reaktywny stream aktywnych dokumentów (zmieniono && na &)
-  Stream<List<DbUserDocument>> watchActiveDocuments() {
+  // Reaktywny stream wszystkich nieusuniętych dokumentów.
+  // Status (active/expired/revoked) jest wykorzystywany do prezentacji, nie do filtrowania listy.
+  Stream<List<DbUserDocument>> watchDocuments() {
     return (select(userDocuments)
-          ..where((t) => t.deletedAt.isNull() & t.status.equals('active'))
+          ..where((t) => t.deletedAt.isNull())
           ..orderBy([(t) => OrderingTerm.asc(t.title)]))
         .watch();
   }

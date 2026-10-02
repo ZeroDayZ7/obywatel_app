@@ -19,7 +19,7 @@ DocumentRepository documentRepository(Ref ref) {
 }
 
 abstract class DocumentRepository {
-  Stream<List<DocumentModel>> watchActiveDocuments();
+  Stream<List<DocumentModel>> watchDocuments();
   Future<DocumentModel?> getDocumentById(String id);
   Future<void> syncDocuments();
 }
@@ -31,8 +31,8 @@ class LocalFirstDocumentRepository implements DocumentRepository {
   LocalFirstDocumentRepository(this._ref, this._dao);
 
   @override
-  Stream<List<DocumentModel>> watchActiveDocuments() {
-    return _dao.watchActiveDocuments().map(
+  Stream<List<DocumentModel>> watchDocuments() {
+    return _dao.watchDocuments().map(
       (dbRows) => dbRows.map(_mapDbToDomain).toList(),
     );
   }
@@ -50,11 +50,12 @@ class LocalFirstDocumentRepository implements DocumentRepository {
     final logger = _ref.read(appLoggerProvider);
 
     try {
-      final maxVersion = await _dao.getMaxVersion();
-      final response = await apiClient.get(
-        ApiEndpoints.documentsMe,
-        queryParams: {'since_version': maxVersion},
-      );
+      // final maxVersion = await _dao.getMaxVersion();
+      // final response = await apiClient.get(
+      //   ApiEndpoints.documentsMe,
+      //   queryParameters: {'since_version': maxVersion},
+      // );
+      final response = await apiClient.get(ApiEndpoints.documentsMe);
 
       if (response.data == null || response.data is! List) return;
 
