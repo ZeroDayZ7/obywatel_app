@@ -42,6 +42,22 @@ class QuickAccessScreen extends StatelessWidget {
     route: AppRoutes.chats,
   );
 
+  static const _liquidDemocracyItem = QuickAccessItem(
+    title: 'Płynna Demokracja',
+    subtitle: 'Głosowanie i delegacje',
+    icon: Icons.how_to_vote_rounded,
+    accent: QuickAccessAccent.primary,
+    route: AppRoutes.eVoting,
+  );
+
+  static final _marketItem = QuickAccessItem(
+    title: 'Giełda Polityków',
+    subtitle: 'Rynek reputacji',
+    icon: Icons.trending_up_rounded,
+    accent: QuickAccessAccent.tertiary,
+    route: AppRoutes.eVotingExchangePath(),
+  );
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -56,7 +72,6 @@ class QuickAccessScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Nagłówek sekcji
             Row(
               children: [
                 Container(
@@ -82,8 +97,6 @@ class QuickAccessScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-
-            // Górny wiersz z dwoma kwadratowymi kafelkami
             Row(
               children: const [
                 Expanded(child: _QuickAccessCard(item: _contactsItem)),
@@ -91,11 +104,14 @@ class QuickAccessScreen extends StatelessWidget {
                 Expanded(child: _QuickAccessCard(item: _messagesItem)),
               ],
             ),
-
             const SizedBox(height: 14),
-
-            // Dolny szeroki kafel e-Voting (zajmujący pełną szerokość / 2 kwadraty)
-            const _EVotingWideCard(),
+            Row(
+              children: [
+                Expanded(child: _QuickAccessCard(item: _liquidDemocracyItem)),
+                const SizedBox(width: 14),
+                Expanded(child: _QuickAccessCard(item: _marketItem)),
+              ],
+            ),
           ],
         ),
       ),
@@ -219,107 +235,3 @@ class _QuickAccessCard extends StatelessWidget {
   }
 }
 
-// Szeroki kafel e-Voting zoptymalizowany pod ekrany mobilne
-class _EVotingWideCard extends StatelessWidget {
-  const _EVotingWideCard();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final accentColor = colorScheme.tertiary;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => context.go(AppRoutes.eVoting),
-            splashColor: accentColor.withValues(alpha: 0.1),
-            highlightColor: accentColor.withValues(alpha: 0.05),
-            child: Padding(
-              // Zmniejszona czcionka i padding pod ekrany mobilne
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14.0,
-                vertical: 14.0,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: accentColor.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Icon(
-                      Icons.how_to_vote_rounded,
-                      color: accentColor,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Płynna Demokracja & e-Voting',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            color: colorScheme.onSurface,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Głosuj bezpośrednio lub przekazuj głos w czasie rzeczywistym.',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(alpha: 0.6),
-                            fontSize: 11,
-                            height: 1.2,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    size: 14,
-                    color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

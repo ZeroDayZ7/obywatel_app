@@ -52,7 +52,7 @@ class _EVotingScreenState extends State<EVotingScreen> {
             onPressed: () => context.go(AppRoutes.home),
           ),
           title: Text(
-            'e-Voting Plus',
+            'Płynna Demokracja',
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -75,11 +75,6 @@ class _EVotingScreenState extends State<EVotingScreen> {
                     ),
                   )
                   .toList(),
-            ),
-            IconButton(
-              icon: const Icon(Icons.how_to_reg_rounded),
-              tooltip: 'Giełda Delegacji',
-              onPressed: () => context.push(AppRoutes.eVotingExchangePath()),
             ),
             const SizedBox(width: 8),
           ],
@@ -181,9 +176,6 @@ class _EVotingScreenState extends State<EVotingScreen> {
                       if (i < votings.length - 1) const SizedBox(height: 12),
                     ],
                   ],
-                const SizedBox(height: 24),
-                _buildLiquidDemocracyBanner(theme, colorScheme),
-                const SizedBox(height: 24),
               ],
             ),
           );
@@ -302,62 +294,4 @@ class _EVotingScreenState extends State<EVotingScreen> {
     );
   }
 
-  Widget _buildLiquidDemocracyBanner(ThemeData theme, ColorScheme colorScheme) {
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.eVotingExchangePath()),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              colorScheme.primary.withValues(alpha: 0.15),
-              colorScheme.secondary.withValues(alpha: 0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.alt_route_rounded,
-                color: colorScheme.onPrimary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Giełda delegacji',
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Przejrzyj aktywne oferty, porównaj zaufanie i prześlij głos ekspertowi.',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }

@@ -41,7 +41,7 @@ class ExchangeMarketScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(
-          'Giełda delegacji',
+          'Giełda Polityków',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
           ),
@@ -66,14 +66,14 @@ class ExchangeMarketScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Rynek głosu i delegacji',
+            'Rynek reputacji i wpływu',
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Znajdź zaufanych delegatów, śledź płynność i aktywne obszary polityki.',
+            'Śledź notowania polityków, porównuj zaufanie i analizuj aktywne obszary poparcia.',
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurfaceVariant,
             ),
