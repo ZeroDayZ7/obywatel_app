@@ -78,8 +78,8 @@ class _EVotingScreenState extends State<EVotingScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.how_to_reg_rounded),
-              tooltip: 'Deleguj głos',
-              onPressed: () => context.push(AppRoutes.eVotingDelegationsPath()),
+              tooltip: 'Giełda Delegacji',
+              onPressed: () => context.push(AppRoutes.eVotingExchangePath()),
             ),
             const SizedBox(width: 8),
           ],
@@ -304,7 +304,7 @@ class _EVotingScreenState extends State<EVotingScreen> {
 
   Widget _buildLiquidDemocracyBanner(ThemeData theme, ColorScheme colorScheme) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.eVotingDelegationsPath()),
+      onTap: () => context.push(AppRoutes.eVotingExchangePath()),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -339,14 +339,14 @@ class _EVotingScreenState extends State<EVotingScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Nie masz czasu głosować?',
+                    'Giełda delegacji',
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Przekaż swój głos ekspertowi lub zaufanemu sąsiadowi.',
+                    'Przejrzyj aktywne oferty, porównaj zaufanie i prześlij głos ekspertowi.',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 11,
