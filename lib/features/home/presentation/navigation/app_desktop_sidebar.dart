@@ -7,7 +7,7 @@ import 'package:obywatel_plus/features/home/presentation/widgets/drawer/logout_t
 class AppDesktopSidebar extends ConsumerWidget {
   final int notificationCount;
 
-  const AppDesktopSidebar({super.key, this.notificationCount = 4});
+  const AppDesktopSidebar({super.key, required this.notificationCount});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,17 +54,21 @@ class AppDesktopSidebar extends ConsumerWidget {
                 fontWeight: FontWeight.bold,
               ),
               destinations: items.map((item) {
+                final hasBadge = item.badgeCount != null && item.badgeCount! > 0;
+
                 return NavigationRailDestination(
                   icon: Badge(
-                    isLabelVisible:
-                        item.badgeCount != null && item.badgeCount! > 0,
+                    isLabelVisible: hasBadge,
                     label: Text('${item.badgeCount}'),
+                    backgroundColor: colorScheme.error,
+                    textColor: colorScheme.onError,
                     child: Icon(item.icon),
                   ),
                   selectedIcon: Badge(
-                    isLabelVisible:
-                        item.badgeCount != null && item.badgeCount! > 0,
+                    isLabelVisible: hasBadge,
                     label: Text('${item.badgeCount}'),
+                    backgroundColor: colorScheme.error,
+                    textColor: colorScheme.onError,
                     child: Icon(item.activeIcon),
                   ),
                   label: Text(item.label),

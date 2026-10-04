@@ -10,16 +10,14 @@ class ServicesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const badgeCounts = {'notifications': 4, 'chats': 2};
-
     return AppScaffold(
       appBar: AppBar(title: Text(LocaleKeys.navigation_apps.tr())),
       size: ContainerSize.medium,
-      child: SingleChildScrollView(
+      child: const SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [HomeGridMenu(badgeCounts: badgeCounts)],
+          children: [HomeGridMenu()],
         ),
       ),
     );

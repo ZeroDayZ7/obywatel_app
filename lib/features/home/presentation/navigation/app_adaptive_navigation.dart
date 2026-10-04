@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/app_bottom_bar.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/app_desktop_sidebar.dart';
+import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
 
-class AppAdaptiveNavigation extends StatelessWidget {
+class AppAdaptiveNavigation extends ConsumerWidget {
   final Widget child;
   final double desktopBreakpoint;
 
@@ -13,7 +15,13 @@ class AppAdaptiveNavigation extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notificationsAsync = ref.watch(notificationsControllerProvider);
+    final unreadCount = notificationsAsync.maybeWhen(
+      data: (items) => items.where((item) => !item.isRead).length,
+      orElse: () => 0,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= desktopBreakpoint;
@@ -22,7 +30,7 @@ class AppAdaptiveNavigation extends StatelessWidget {
           return Scaffold(
             body: Row(
               children: [
-                const AppDesktopSidebar(),
+                AppDesktopSidebar(notificationCount: unreadCount),
                 const VerticalDivider(thickness: 1, width: 1),
                 Expanded(child: child),
               ],
@@ -30,7 +38,10 @@ class AppAdaptiveNavigation extends StatelessWidget {
           );
         }
 
-        return Scaffold(body: child, bottomNavigationBar: const AppBottomBar());
+        return Scaffold(
+          body: child,
+          bottomNavigationBar: AppBottomBar(notificationCount: unreadCount),
+        );
       },
     );
   }

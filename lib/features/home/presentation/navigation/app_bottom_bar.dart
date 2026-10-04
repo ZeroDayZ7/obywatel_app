@@ -5,7 +5,7 @@ import 'package:obywatel_plus/features/home/presentation/navigation/navigation_i
 class AppBottomBar extends StatelessWidget {
   final int notificationCount;
 
-  const AppBottomBar({super.key, this.notificationCount = 4});
+  const AppBottomBar({super.key, required this.notificationCount});
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +53,8 @@ class AppBottomBar extends StatelessWidget {
         ? colorScheme.primary
         : colorScheme.onSurface.withValues(alpha: 0.6);
 
+    final hasBadge = item.badgeCount != null && item.badgeCount! > 0;
+
     return InkWell(
       onTap: () => context.go(item.route),
       borderRadius: BorderRadius.circular(12),
@@ -61,40 +63,18 @@ class AppBottomBar extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(
-                  isSelected ? item.activeIcon : item.icon,
-                  color: color,
-                  size: 24,
-                ),
-                if (item.badgeCount != null && item.badgeCount! > 0)
-                  Positioned(
-                    right: -6,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.error,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 14,
-                        minHeight: 14,
-                      ),
-                      child: Text(
-                        '${item.badgeCount}',
-                        style: TextStyle(
-                          color: colorScheme.onError,
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
+            Badge(
+              isLabelVisible: hasBadge,
+              label: Text('${item.badgeCount}'),
+              alignment: Alignment.topRight,
+              offset: const Offset(6, -6),
+              backgroundColor: colorScheme.error,
+              textColor: colorScheme.onError,
+              child: Icon(
+                isSelected ? item.activeIcon : item.icon,
+                color: color,
+                size: 24,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
