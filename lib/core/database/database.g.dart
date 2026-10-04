@@ -1919,6 +1919,17 @@ class $ContactsTable extends Contacts
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
+  static const VerificationMeta _localAliasMeta = const VerificationMeta(
+    'localAlias',
+  );
+  @override
+  late final GeneratedColumn<String> localAlias = GeneratedColumn<String>(
+    'local_alias',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _encryptedAliasMeta = const VerificationMeta(
     'encryptedAlias',
   );
@@ -1984,6 +1995,7 @@ class $ContactsTable extends Contacts
     ownerId,
     contactId,
     status,
+    localAlias,
     encryptedAlias,
     version,
     createdAt,
@@ -2027,6 +2039,12 @@ class $ContactsTable extends Contacts
       context.handle(
         _statusMeta,
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('local_alias')) {
+      context.handle(
+        _localAliasMeta,
+        localAlias.isAcceptableOrUnknown(data['local_alias']!, _localAliasMeta),
       );
     }
     if (data.containsKey('encrypted_alias')) {
@@ -2087,6 +2105,10 @@ class $ContactsTable extends Contacts
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      localAlias: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_alias'],
+      ),
       encryptedAlias: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}encrypted_alias'],
@@ -2121,6 +2143,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
   final String ownerId;
   final String contactId;
   final String status;
+  final String? localAlias;
   final Uint8List? encryptedAlias;
   final BigInt version;
   final DateTime createdAt;
@@ -2131,6 +2154,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     required this.ownerId,
     required this.contactId,
     required this.status,
+    this.localAlias,
     this.encryptedAlias,
     required this.version,
     required this.createdAt,
@@ -2144,6 +2168,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     map['owner_id'] = Variable<String>(ownerId);
     map['contact_id'] = Variable<String>(contactId);
     map['status'] = Variable<String>(status);
+    if (!nullToAbsent || localAlias != null) {
+      map['local_alias'] = Variable<String>(localAlias);
+    }
     if (!nullToAbsent || encryptedAlias != null) {
       map['encrypted_alias'] = Variable<Uint8List>(encryptedAlias);
     }
@@ -2162,6 +2189,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: Value(ownerId),
       contactId: Value(contactId),
       status: Value(status),
+      localAlias: localAlias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localAlias),
       encryptedAlias: encryptedAlias == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptedAlias),
@@ -2184,6 +2214,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: serializer.fromJson<String>(json['ownerId']),
       contactId: serializer.fromJson<String>(json['contactId']),
       status: serializer.fromJson<String>(json['status']),
+      localAlias: serializer.fromJson<String?>(json['localAlias']),
       encryptedAlias: serializer.fromJson<Uint8List?>(json['encryptedAlias']),
       version: serializer.fromJson<BigInt>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2199,6 +2230,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       'ownerId': serializer.toJson<String>(ownerId),
       'contactId': serializer.toJson<String>(contactId),
       'status': serializer.toJson<String>(status),
+      'localAlias': serializer.toJson<String?>(localAlias),
       'encryptedAlias': serializer.toJson<Uint8List?>(encryptedAlias),
       'version': serializer.toJson<BigInt>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2212,6 +2244,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     String? ownerId,
     String? contactId,
     String? status,
+    Value<String?> localAlias = const Value.absent(),
     Value<Uint8List?> encryptedAlias = const Value.absent(),
     BigInt? version,
     DateTime? createdAt,
@@ -2222,6 +2255,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId: ownerId ?? this.ownerId,
     contactId: contactId ?? this.contactId,
     status: status ?? this.status,
+    localAlias: localAlias.present ? localAlias.value : this.localAlias,
     encryptedAlias: encryptedAlias.present
         ? encryptedAlias.value
         : this.encryptedAlias,
@@ -2236,6 +2270,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       status: data.status.present ? data.status.value : this.status,
+      localAlias: data.localAlias.present
+          ? data.localAlias.value
+          : this.localAlias,
       encryptedAlias: data.encryptedAlias.present
           ? data.encryptedAlias.value
           : this.encryptedAlias,
@@ -2253,6 +2290,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -2268,6 +2306,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId,
     contactId,
     status,
+    localAlias,
     $driftBlobEquality.hash(encryptedAlias),
     version,
     createdAt,
@@ -2282,6 +2321,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           other.ownerId == this.ownerId &&
           other.contactId == this.contactId &&
           other.status == this.status &&
+          other.localAlias == this.localAlias &&
           $driftBlobEquality.equals(
             other.encryptedAlias,
             this.encryptedAlias,
@@ -2297,6 +2337,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
   final Value<String> ownerId;
   final Value<String> contactId;
   final Value<String> status;
+  final Value<String?> localAlias;
   final Value<Uint8List?> encryptedAlias;
   final Value<BigInt> version;
   final Value<DateTime> createdAt;
@@ -2308,6 +2349,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     this.ownerId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.status = const Value.absent(),
+    this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2320,6 +2362,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     required String ownerId,
     required String contactId,
     this.status = const Value.absent(),
+    this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2334,6 +2377,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Expression<String>? ownerId,
     Expression<String>? contactId,
     Expression<String>? status,
+    Expression<String>? localAlias,
     Expression<Uint8List>? encryptedAlias,
     Expression<BigInt>? version,
     Expression<DateTime>? createdAt,
@@ -2346,6 +2390,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       if (ownerId != null) 'owner_id': ownerId,
       if (contactId != null) 'contact_id': contactId,
       if (status != null) 'status': status,
+      if (localAlias != null) 'local_alias': localAlias,
       if (encryptedAlias != null) 'encrypted_alias': encryptedAlias,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
@@ -2360,6 +2405,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Value<String>? ownerId,
     Value<String>? contactId,
     Value<String>? status,
+    Value<String?>? localAlias,
     Value<Uint8List?>? encryptedAlias,
     Value<BigInt>? version,
     Value<DateTime>? createdAt,
@@ -2372,6 +2418,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       ownerId: ownerId ?? this.ownerId,
       contactId: contactId ?? this.contactId,
       status: status ?? this.status,
+      localAlias: localAlias ?? this.localAlias,
       encryptedAlias: encryptedAlias ?? this.encryptedAlias,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
@@ -2395,6 +2442,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
+    }
+    if (localAlias.present) {
+      map['local_alias'] = Variable<String>(localAlias.value);
     }
     if (encryptedAlias.present) {
       map['encrypted_alias'] = Variable<Uint8List>(encryptedAlias.value);
@@ -2424,6 +2474,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -7389,6 +7440,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       required String ownerId,
       required String contactId,
       Value<String> status,
+      Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
       Value<DateTime> createdAt,
@@ -7402,6 +7454,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String> ownerId,
       Value<String> contactId,
       Value<String> status,
+      Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
       Value<DateTime> createdAt,
@@ -7436,6 +7489,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7494,6 +7552,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<Uint8List> get encryptedAlias => $composableBuilder(
     column: $table.encryptedAlias,
     builder: (column) => ColumnOrderings(column),
@@ -7540,6 +7603,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get encryptedAlias => $composableBuilder(
     column: $table.encryptedAlias,
@@ -7594,6 +7662,7 @@ class $$ContactsTableTableManager
                 Value<String> ownerId = const Value.absent(),
                 Value<String> contactId = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -7605,6 +7674,7 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
                 createdAt: createdAt,
@@ -7618,6 +7688,7 @@ class $$ContactsTableTableManager
                 required String ownerId,
                 required String contactId,
                 Value<String> status = const Value.absent(),
+                Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -7629,6 +7700,7 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
                 createdAt: createdAt,

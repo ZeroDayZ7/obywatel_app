@@ -10,7 +10,10 @@ class Contacts extends Table {
   // Status: 'pending', 'accepted', 'blocked'
   TextColumn get status => text().withDefault(const Constant('pending'))();
 
-  // Szyfrowany alias nadany lokalnie przez użytkownika
+  // Główna, lokalna nazwa użytkownika nadana przez osobę dodającą.
+  TextColumn get localAlias => text().nullable()();
+
+  // Legacy: pozostawione dla kompatybilności migracyjnej.
   BlobColumn get encryptedAlias => blob().nullable()();
 
   // Wersjonowanie dla silnika Delta Sync

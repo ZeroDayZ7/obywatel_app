@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactDto {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'OwnerID') String get ownerId;@JsonKey(name: 'ContactID') String get contactId;@JsonKey(name: 'Status') String get status;@JsonKey(name: 'Version') int get version;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+@JsonKey(name: 'ID') String get id;@JsonKey(name: 'OwnerID') String get ownerId;@JsonKey(name: 'ContactID') String get contactId;@JsonKey(name: 'Status') String get status;@JsonKey(name: 'local_alias') String? get localAlias;@JsonKey(name: 'Version') int get version;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
 /// Create a copy of ContactDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $ContactDtoCopyWith<ContactDto> get copyWith => _$ContactDtoCopyWithImpl<Contact
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactDto&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.status, status) || other.status == status)&&(identical(other.version, version) || other.version == version)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ContactDto&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.status, status) || other.status == status)&&(identical(other.localAlias, localAlias) || other.localAlias == localAlias)&&(identical(other.version, version) || other.version == version)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,contactId,status,version,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,ownerId,contactId,status,localAlias,version,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ContactDto(id: $id, ownerId: $ownerId, contactId: $contactId, status: $status, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ContactDto(id: $id, ownerId: $ownerId, contactId: $contactId, status: $status, localAlias: $localAlias, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $ContactDtoCopyWith<$Res>  {
   factory $ContactDtoCopyWith(ContactDto value, $Res Function(ContactDto) _then) = _$ContactDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'local_alias') String? localAlias,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -65,13 +65,14 @@ class _$ContactDtoCopyWithImpl<$Res>
 
 /// Create a copy of ContactDto
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? ownerId = null,Object? contactId = null,Object? status = null,Object? version = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? ownerId = null,Object? contactId = null,Object? status = null,Object? localAlias = freezed,Object? version = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,contactId: null == contactId ? _self.contactId : contactId // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String,localAlias: freezed == localAlias ? _self.localAlias : localAlias // ignore: cast_nullable_to_non_nullable
+as String?,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,
@@ -159,10 +160,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ContactDto() when $default != null:
-return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.version,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
   return orElse();
 
 }
@@ -180,10 +181,10 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.versio
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ContactDto():
-return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.version,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -200,10 +201,10 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.versio
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ContactDto() when $default != null:
-return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.version,_that.createdAt,_that.updatedAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
   return null;
 
 }
@@ -215,13 +216,14 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.versio
 @JsonSerializable()
 
 class _ContactDto implements ContactDto {
-  const _ContactDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'OwnerID') required this.ownerId, @JsonKey(name: 'ContactID') required this.contactId, @JsonKey(name: 'Status') required this.status, @JsonKey(name: 'Version') required this.version, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _ContactDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'OwnerID') required this.ownerId, @JsonKey(name: 'ContactID') required this.contactId, @JsonKey(name: 'Status') required this.status, @JsonKey(name: 'local_alias') this.localAlias, @JsonKey(name: 'Version') required this.version, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
   factory _ContactDto.fromJson(Map<String, dynamic> json) => _$ContactDtoFromJson(json);
 
 @override@JsonKey(name: 'ID') final  String id;
 @override@JsonKey(name: 'OwnerID') final  String ownerId;
 @override@JsonKey(name: 'ContactID') final  String contactId;
 @override@JsonKey(name: 'Status') final  String status;
+@override@JsonKey(name: 'local_alias') final  String? localAlias;
 @override@JsonKey(name: 'Version') final  int version;
 @override@JsonKey(name: 'created_at') final  DateTime? createdAt;
 @override@JsonKey(name: 'updated_at') final  DateTime? updatedAt;
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactDto&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.status, status) || other.status == status)&&(identical(other.version, version) || other.version == version)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ContactDto&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactId, contactId) || other.contactId == contactId)&&(identical(other.status, status) || other.status == status)&&(identical(other.localAlias, localAlias) || other.localAlias == localAlias)&&(identical(other.version, version) || other.version == version)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,contactId,status,version,createdAt,updatedAt);
+int get hashCode => Object.hash(runtimeType,id,ownerId,contactId,status,localAlias,version,createdAt,updatedAt);
 
 @override
 String toString() {
-  return 'ContactDto(id: $id, ownerId: $ownerId, contactId: $contactId, status: $status, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
+  return 'ContactDto(id: $id, ownerId: $ownerId, contactId: $contactId, status: $status, localAlias: $localAlias, version: $version, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$ContactDtoCopyWith<$Res> implements $ContactDtoCopyWith<$
   factory _$ContactDtoCopyWith(_ContactDto value, $Res Function(_ContactDto) _then) = __$ContactDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'local_alias') String? localAlias,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -276,13 +278,14 @@ class __$ContactDtoCopyWithImpl<$Res>
 
 /// Create a copy of ContactDto
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? ownerId = null,Object? contactId = null,Object? status = null,Object? version = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? ownerId = null,Object? contactId = null,Object? status = null,Object? localAlias = freezed,Object? version = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
   return _then(_ContactDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,contactId: null == contactId ? _self.contactId : contactId // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as String,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
+as String,localAlias: freezed == localAlias ? _self.localAlias : localAlias // ignore: cast_nullable_to_non_nullable
+as String?,version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as int,createdAt: freezed == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,updatedAt: freezed == updatedAt ? _self.updatedAt : updatedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/contacts/application/contacts_service.dart';
+import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -19,6 +20,7 @@ enum _AddContactTab { sendRequest, myQr }
 class _AddContactModalState extends ConsumerState<AddContactModal> {
   _AddContactTab _selectedTab = _AddContactTab.sendRequest;
   final _controller = TextEditingController();
+  final _aliasController = TextEditingController();
   bool _isLoading = false;
   String _myUserId = '';
 
@@ -46,17 +48,38 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   @override
   void dispose() {
     _controller.dispose();
+    _aliasController.dispose();
     super.dispose();
   }
 
-  Future<void> _submitRequest(String userId) async {
+  Future<void> _submitRequest(String userId, {String? localAlias}) async {
     final trimmed = userId.trim();
     if (trimmed.isEmpty) return;
+
+    late final ContactIdentifier identifier;
+    try {
+      identifier = ContactIdentifier.parse(trimmed);
+    } on FormatException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final normalizedAlias = ContactIdentifier.normalizeAlias(localAlias);
 
     setState(() => _isLoading = true);
 
     try {
-      await ref.read(contactsServiceProvider).addContact(trimmed);
+      await ref.read(contactsServiceProvider).addContact(
+        identifier.normalized,
+        localAlias: normalizedAlias.isEmpty ? null : normalizedAlias,
+      );
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +112,10 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
 
     if (scannedCode != null && scannedCode.isNotEmpty) {
       _controller.text = scannedCode;
-      _submitRequest(scannedCode);
+      _submitRequest(
+        scannedCode,
+        localAlias: _aliasController.text,
+      );
     }
   }
 
@@ -156,9 +182,23 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                   controller: _controller,
                   enabled: !_isLoading,
                   decoration: InputDecoration(
-                    labelText: 'ID / Nick użytkownika',
-                    hintText: 'Wpisz identyfikator...',
+                    labelText: 'ID / tag / QR',
+                    hintText: 'Wpisz identyfikator UUID, tag lub kod QR...',
                     prefixIcon: const Icon(Icons.person_search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _aliasController,
+                  enabled: !_isLoading,
+                  maxLength: 40,
+                  decoration: InputDecoration(
+                    labelText: 'Nazwa lokalna (opcjonalnie)',
+                    hintText: 'np. Janek, Mama, Współpracownik',
+                    prefixIcon: const Icon(Icons.label_outline),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -168,7 +208,10 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                 FilledButton.icon(
                   onPressed: _isLoading
                       ? null
-                      : () => _submitRequest(_controller.text),
+                      : () => _submitRequest(
+                            _controller.text,
+                            localAlias: _aliasController.text,
+                          ),
                   icon: _isLoading
                       ? const SizedBox(
                           width: 20,

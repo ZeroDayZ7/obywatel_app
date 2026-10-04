@@ -10,6 +10,7 @@ abstract class Contact with _$Contact {
     required String ownerId,
     required String contactUserId,
     required String status,
+    String? localAlias,
     required String displayName,
     String? avatarUrl,
     bool? isOnline,
@@ -17,13 +18,18 @@ abstract class Contact with _$Contact {
   }) = _Contact;
 
   factory Contact.fromEntity(ContactEntity entity) {
+    final normalizedAlias = (entity.localAlias ?? '').trim();
+    final resolvedDisplayName = normalizedAlias.isNotEmpty
+        ? normalizedAlias
+        : 'Użytkownik ${entity.contactId.length >= 4 ? entity.contactId.substring(0, 4) : entity.contactId}';
+
     return Contact(
       id: entity.id,
       ownerId: entity.ownerId,
       contactUserId: entity.contactId,
       status: entity.status,
-      displayName:
-          'Użytkownik ${entity.contactId.length >= 4 ? entity.contactId.substring(0, 4) : entity.contactId}',
+      localAlias: normalizedAlias.isNotEmpty ? normalizedAlias : null,
+      displayName: resolvedDisplayName,
       createdAt: entity.createdAt,
     );
   }

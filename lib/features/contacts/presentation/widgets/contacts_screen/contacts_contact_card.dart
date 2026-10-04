@@ -37,7 +37,9 @@ class ContactsContactCard extends ConsumerWidget {
           ),
         ),
         title: Text(
-          contact.displayName,
+          contact.localAlias?.trim().isNotEmpty == true
+              ? contact.localAlias!
+              : contact.displayName,
           style: theme.textTheme.titleMedium?.copyWith(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w600,
@@ -56,16 +58,20 @@ class ContactsContactCard extends ConsumerWidget {
         onTap: () async {
           try {
             final repository = ref.read(chatsRepositoryProvider);
+            final conversationTitle = contact.localAlias?.trim().isNotEmpty == true
+                ? contact.localAlias!
+                : contact.displayName;
+
             final conversationId = await repository.ensureConversationForContact(
               contact.contactUserId,
-              title: contact.displayName,
+              title: conversationTitle,
             );
 
             if (!context.mounted) return;
 
             context.push(
               '/chats/${Uri.encodeComponent(conversationId)}',
-              extra: contact.displayName,
+              extra: conversationTitle,
             );
           } catch (error) {
             if (!context.mounted) return;
