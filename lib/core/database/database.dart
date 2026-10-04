@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
@@ -32,7 +33,14 @@ part 'database.g.dart';
     Messages,
     OutboxEvents,
   ],
-  daos: [CryptoKeysDao, NotificationsDao, UserDocumentsDao, ContactsDao, OutboxDao],
+  daos: [
+    CryptoKeysDao,
+    NotificationsDao,
+    UserDocumentsDao,
+    ContactsDao,
+    ChatsDao,
+    OutboxDao,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);

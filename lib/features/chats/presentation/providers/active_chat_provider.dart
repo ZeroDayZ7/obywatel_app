@@ -10,6 +10,7 @@ part 'active_chat_provider.g.dart';
 @riverpod
 class ActiveChat extends _$ActiveChat {
   StreamSubscription<Message>? _messageSubscription;
+  StreamSubscription<List<Message>>? _messagesSubscription;
 
   @override
   Future<List<Message>> build(String conversationId) async {
@@ -21,9 +22,20 @@ class ActiveChat extends _$ActiveChat {
         _appendIncomingMessage(msg);
       }
     });
-    ref.onDispose(() => _messageSubscription?.cancel());
 
-    return repository.getMessageHistory(conversationId);
+    _messagesSubscription?.cancel();
+    _messagesSubscription = repository
+        .watchMessagesForConversation(conversationId)
+        .listen((messages) {
+      state = AsyncValue.data(messages);
+    });
+
+    ref.onDispose(() {
+      _messageSubscription?.cancel();
+      _messagesSubscription?.cancel();
+    });
+
+    return repository.watchMessagesForConversation(conversationId).first;
   }
 
   Future<void> sendMessage(String text) async {
@@ -39,17 +51,6 @@ class ActiveChat extends _$ActiveChat {
       conversationId: conversationId,
       content: payloadToSend,
     );
-
-    final optimisticMessage = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      conversationId: conversationId,
-      senderId: 'my_user_id',
-      content: text,
-      isMine: true,
-      createdAt: DateTime.now(),
-    );
-
-    _appendIncomingMessage(optimisticMessage);
   }
 
   void _appendIncomingMessage(Message message) {

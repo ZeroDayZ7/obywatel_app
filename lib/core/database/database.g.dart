@@ -4623,6 +4623,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final ContactsDao contactsDao = ContactsDao(this as AppDatabase);
+  late final ChatsDao chatsDao = ChatsDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>

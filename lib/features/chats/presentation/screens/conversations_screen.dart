@@ -3,6 +3,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
+import 'package:obywatel_plus/features/chats/application/chat_sync_service.dart';
+import 'package:obywatel_plus/features/chats/application/sync_status.dart';
 import 'package:obywatel_plus/features/chats/presentation/providers/conversations_provider.dart';
 import 'package:obywatel_plus/features/chats/presentation/screens/chat_room_screen.dart';
 
@@ -14,14 +16,37 @@ class ConversationsScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final conversationsState = ref.watch(conversationsProvider);
+    final syncStatus = ref.watch(chatSyncStatusControllerProvider);
 
     return Scaffold(
       appBar: const AppAppBar(
         title: 'Wiadomości',
-        showBackButton:
-            true,
+        showBackButton: true,
       ),
-      body: conversationsState.when(
+      body: Column(
+        children: [
+          if (syncStatus == SyncStatus.offline)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: colorScheme.errorContainer,
+              child: Row(
+                children: [
+                  const Icon(Icons.signal_wifi_off_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Brak połączenia z serwerem. Tryb offline',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colorScheme.onErrorContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Expanded(
+            child: conversationsState.when(
         data: (conversations) {
           if (conversations.isEmpty) {
             return Center(
@@ -122,28 +147,31 @@ class ConversationsScreen extends ConsumerWidget {
             ),
           );
         },
-        loading: () => Center(
-          child: CircularProgressIndicator(color: colorScheme.primary),
-        ),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Wystąpił błąd podczas ładowania wiadomości',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.error,
+              loading: () => Center(
+                child: CircularProgressIndicator(color: colorScheme.primary),
+              ),
+              error: (error, stack) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Wystąpił błąd podczas ładowania wiadomości',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.error,
+                      ),
+                    ),
+                    const SizedBox(height: 8.0),
+                    ElevatedButton(
+                      onPressed: () =>
+                          ref.read(conversationsProvider.notifier).refresh(),
+                      child: const Text('Spróbuj ponownie'),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8.0),
-              ElevatedButton(
-                onPressed: () =>
-                    ref.read(conversationsProvider.notifier).refresh(),
-                child: const Text('Spróbuj ponownie'),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

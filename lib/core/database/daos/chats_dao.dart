@@ -79,6 +79,22 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
         .watch();
   }
 
+  Future<List<MessageEntity>> getMessagesForConversation(
+    String conversationId, {
+    int limit = 50,
+  }) {
+    return (select(messages)
+          ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
+          ..orderBy([
+            (t) => OrderingTerm(
+                  expression: t.sequence,
+                  mode: OrderingMode.asc,
+                ),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
   Future<BigInt> getMaxMessageSequence(String conversationId) async {
     final maxSeqExpr = messages.sequence.max();
     final query = selectOnly(messages)

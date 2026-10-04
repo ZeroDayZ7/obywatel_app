@@ -1,17 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
+import 'package:obywatel_plus/features/chats/application/sync_status.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/chats/domain/models/message.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'chat_sync_service.g.dart';
-
-/// Mapuje domenowy model [Message] na strukture JSON wymaganą przez Outbox API.
 Map<String, dynamic> messageToOutboxJson(Message message) {
   return {
     'id': message.id,
@@ -26,16 +25,21 @@ class ChatSyncService {
   final ChatsWsClient _wsClient;
   final ChatsRepositoryImpl _repository;
   final AppLogger _logger;
+  final void Function(SyncStatus status) _updateStatus;
 
   StreamSubscription<WsConnectionStatus>? _statusSubscription;
   bool _isSyncing = false;
+  SyncStatus _currentStatus = SyncStatus.idle;
 
   ChatSyncService(
     this._apiClient,
     this._wsClient,
     this._repository,
     this._logger,
+    this._updateStatus,
   );
+
+  SyncStatus get currentStatus => _currentStatus;
 
   void init() {
     _statusSubscription = _wsClient.statusStream.listen(_onStatusChanged);
@@ -47,19 +51,30 @@ class ChatSyncService {
         'Połączenie WS nawiązane. Uruchamianie synchronizacji...',
         module: 'ChatSync',
       );
-      syncPendingData();
+      unawaited(syncPendingData());
     }
   }
 
-  /// Pełny cykl synchronizacji: opróżnienie Outboxa oraz dociągnięcie wiadomości z API.
   Future<void> syncPendingData() async {
     if (_isSyncing) return;
     _isSyncing = true;
+    _updateStatus(SyncStatus.syncing);
 
     try {
       await _flushOutbox();
       await _fetchLatestConversations();
+      _currentStatus = SyncStatus.idle;
+      _updateStatus(SyncStatus.idle);
+    } on SocketException {
+      _currentStatus = SyncStatus.offline;
+      _updateStatus(SyncStatus.offline);
+      _logger.w(
+        'Brak połączenia z serwerem. Tryb offline.',
+        module: 'ChatSync',
+      );
     } catch (e, st) {
+      _currentStatus = SyncStatus.error;
+      _updateStatus(SyncStatus.error);
       _logger.e(
         'Błąd podczas synchronizacji czatu',
         error: e,
@@ -71,7 +86,6 @@ class ChatSyncService {
     }
   }
 
-  /// Wysyła wiadomości z kolejki offline (Outbox) do API.
   Future<void> _flushOutbox() async {
     final pendingMessages = await _repository.getPendingOutboxMessages();
     if (pendingMessages.isEmpty) return;
@@ -88,7 +102,6 @@ class ChatSyncService {
     );
   }
 
-  /// Pobiera aktualną listę konwersacji i najnowsze wiadomości
   Future<void> _fetchLatestConversations() async {
     _logger.i(
       'Pobieranie aktualnej listy konwersacji z REST API',
@@ -103,16 +116,36 @@ class ChatSyncService {
   }
 }
 
-@riverpod
-ChatSyncService chatSyncService(Ref ref) {
+class ChatSyncStatusController extends Notifier<SyncStatus> {
+  @override
+  SyncStatus build() => SyncStatus.idle;
+
+  void update(SyncStatus status) {
+    state = status;
+  }
+}
+
+final chatSyncStatusControllerProvider =
+    NotifierProvider<ChatSyncStatusController, SyncStatus>(
+  ChatSyncStatusController.new,
+);
+
+final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
   final wsClient = ref.watch(chatsWsClientProvider);
   final repository = ref.watch(chatsRepositoryProvider) as ChatsRepositoryImpl;
   final logger = ref.watch(appLoggerProvider);
+  final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);
 
-  final service = ChatSyncService(apiClient, wsClient, repository, logger);
+  final service = ChatSyncService(
+    apiClient,
+    wsClient,
+    repository,
+    logger,
+    syncStatus.update,
+  );
   service.init();
 
   ref.onDispose(() => service.dispose());
   return service;
-}
+});

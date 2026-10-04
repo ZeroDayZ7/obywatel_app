@@ -2,18 +2,18 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-part 'database_provider.g.dart';
+final appDatabaseProvider = Provider<AppDatabase>((ref) {
+  ref.keepAlive();
 
-@Riverpod(keepAlive: true)
-AppDatabase appDatabase(Ref ref) {
   final storage = ref.watch(secureStorageProvider);
 
   final executor = LazyDatabase(() async {
@@ -35,19 +35,20 @@ AppDatabase appDatabase(Ref ref) {
 
   ref.onDispose(() => db.close());
   return db;
-}
+});
 
-@riverpod
-NotificationsDao notificationsDao(Ref ref) {
+final notificationsDaoProvider = Provider<NotificationsDao>((ref) {
   return ref.watch(appDatabaseProvider).notificationsDao;
-}
+});
 
-@riverpod
-CryptoKeysDao cryptoKeysDao(Ref ref) {
+final cryptoKeysDaoProvider = Provider<CryptoKeysDao>((ref) {
   return ref.watch(appDatabaseProvider).cryptoKeysDao;
-}
+});
 
-@riverpod
-UserDocumentsDao userDocumentsDao(Ref ref) {
+final userDocumentsDaoProvider = Provider<UserDocumentsDao>((ref) {
   return ref.watch(appDatabaseProvider).userDocumentsDao;
-}
+});
+
+final chatsDaoProvider = Provider<ChatsDao>((ref) {
+  return ref.watch(appDatabaseProvider).chatsDao;
+});

@@ -3,6 +3,9 @@ import 'package:obywatel_plus/features/chats/domain/models/conversation.dart';
 import 'package:obywatel_plus/features/chats/domain/models/message.dart';
 
 abstract class ChatsRepository {
+  Stream<List<Conversation>> watchConversations();
+  Stream<List<Message>> watchMessagesForConversation(String conversationId);
+
   Future<List<Conversation>> getConversations();
   Future<List<Message>> getMessageHistory(
     String conversationId, {
