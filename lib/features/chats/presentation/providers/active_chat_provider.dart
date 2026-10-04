@@ -20,11 +20,10 @@ class ActiveChat extends _$ActiveChat {
     final repository = ref.read(chatsRepositoryProvider);
 
     final encrypted = await cryptoService.encryptMessage(conversationId, text);
-    final payloadToSend = encrypted?.ciphertextBase64 ?? text;
 
     await repository.sendMessage(
       conversationId: conversationId,
-      content: payloadToSend,
+      content: encrypted.ciphertextBase64,
     );
   }
 }

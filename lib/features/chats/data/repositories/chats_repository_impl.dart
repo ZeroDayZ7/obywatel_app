@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
+import 'package:obywatel_plus/features/chats/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
@@ -289,6 +290,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }) async {
     final createdAt = DateTime.now();
     final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
+
+    if (content.trim().isEmpty) {
+      throw const FormatException('Ciphertext wiadomości nie może być pusty');
+    }
+
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: conversationId,
@@ -298,6 +304,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       createdAt: createdAt,
     );
 
+    final outboxEventPayload = buildOutboxEventPayload(message, senderDeviceId);
+
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(message, senderDeviceId: senderDeviceId),
     ]);
@@ -306,14 +314,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         id: Value(message.id),
         eventType: const Value('SEND_MESSAGE'),
         conversationId: Value(conversationId),
-        payload: Value(
-          jsonEncode({
-            'id': message.id,
-            'conversation_id': conversationId,
-            'content': content,
-            'created_at': createdAt.toIso8601String(),
-          }),
-        ),
+        payload: Value(jsonEncode(outboxEventPayload)),
         status: const Value('pending'),
         retryCount: const Value(0),
         createdAt: Value(createdAt),
@@ -328,12 +329,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final events = await _db.outboxDao.getPendingEvents();
     return events.map((event) {
       final payload = jsonDecode(event.payload) as Map<String, dynamic>;
-      final createdAtValue = payload['created_at'] as String?;
+      final nestedPayload = payload['payload'] as Map<String, dynamic>? ?? const {};
+      final createdAtValue = nestedPayload['created_at'] as String? ?? payload['created_at'] as String?;
       return Message(
-        id: event.id,
+        id: payload['event_id'] as String? ?? event.id,
         conversationId: payload['conversation_id'] as String? ?? event.conversationId ?? '',
-        senderId: payload['sender_id'] as String? ?? _currentUserId,
-        content: payload['content']?.toString() ?? '',
+        senderId: nestedPayload['sender_id'] as String? ?? _currentUserId,
+        content: nestedPayload['content']?.toString() ?? '',
         isMine: true,
         createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
       );

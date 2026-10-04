@@ -101,6 +101,15 @@ class DeviceKeyBundle {
   });
 }
 
+class EncryptionFailureException implements Exception {
+  final String message;
+
+  const EncryptionFailureException(this.message);
+
+  @override
+  String toString() => 'EncryptionFailureException: $message';
+}
+
 class E2eeCryptoService {
   final SecureStorageService _secureStorage;
   final AppLogger _logger;
@@ -199,30 +208,34 @@ class E2eeCryptoService {
   }
 
   /// Szyfruje tekst wiadomości z użyciem klucza dedykowanego dla konwersacji.
-  Future<EncryptedData?> encryptMessage(
+  Future<EncryptedData> encryptMessage(
     String conversationId,
     String plaintext,
   ) async {
     try {
       final keyBase64 = await getSessionKey(conversationId);
       if (keyBase64 == null) {
-        _logger.e(
-          'Brak klucza sesyjnego dla konwersacji: $conversationId',
-          module: 'E2eeCrypto',
-        );
-        return null;
+        const message = 'Brak klucza sesyjnego dla konwersacji';
+        _logger.e('$message: $conversationId', module: 'E2eeCrypto');
+        throw const EncryptionFailureException(message);
       }
 
       final keyBytes = base64Decode(keyBase64);
       return await encryptPayload(plaintext, keyBytes);
     } catch (e, st) {
+      if (e is EncryptionFailureException) {
+        rethrow;
+      }
+
       _logger.e(
         'Błąd szyfrowania wiadomości',
         error: e,
         stackTrace: st,
         module: 'E2eeCrypto',
       );
-      return null;
+      throw EncryptionFailureException(
+        'Nie można zaszyfrować wiadomości dla konwersacji $conversationId',
+      );
     }
   }
 

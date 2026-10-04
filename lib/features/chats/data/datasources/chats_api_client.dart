@@ -85,7 +85,7 @@ class ChatsApiClient {
   /// Wysyła lokalny outbox do backendu w trybie offline-first.
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
     await _runWithRetry(() async {
-      await _apiClient.post(ApiEndpoints.syncOutbox, data: {'messages': payload});
+      await _apiClient.post(ApiEndpoints.syncOutbox, data: payload);
     });
   }
 

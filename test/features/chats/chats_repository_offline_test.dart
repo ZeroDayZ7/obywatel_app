@@ -8,10 +8,13 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/chats/application/e2ee_crypto_service.dart';
+import 'package:obywatel_plus/features/chats/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/chats/domain/models/message.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -66,6 +69,47 @@ void main() {
 
     expect(firstDeviceId, isNotEmpty);
     expect(secondDeviceId, equals(firstDeviceId));
+  });
+
+  test('outbox event payload should match backend contract and keep ciphertext nested', () {
+    final message = Message(
+      id: 'event-123',
+      conversationId: 'conv-123',
+      senderId: 'user-123',
+      content: 'ciphertext-payload',
+      isMine: true,
+      createdAt: DateTime.utc(2024, 1, 1, 10, 0),
+    );
+
+    final event = buildOutboxEventPayload(message, 'device-abc');
+
+    expect(event['event_id'], 'event-123');
+    expect(event['event_type'], 'SEND_MESSAGE');
+    expect(event['payload'], isA<Map<String, dynamic>>());
+    expect((event['payload'] as Map<String, dynamic>)['content'], 'ciphertext-payload');
+    expect(event['device_id'], 'device-abc');
+  });
+
+  test('encryption should fail hard when no session key exists', () async {
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final crypto = E2eeCryptoService(
+      secureStorage,
+      logger,
+      ApiClient(
+        dio: Dio(),
+        storage: secureStorage,
+        logger: logger,
+      ),
+      DeviceInfoService(logger),
+    );
+
+    await expectLater(
+      crypto.encryptMessage('missing-session-conversation', 'plain text'),
+      throwsA(isA<EncryptionFailureException>()),
+    );
   });
 
   test(

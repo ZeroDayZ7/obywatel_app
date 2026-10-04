@@ -6,23 +6,15 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/chats/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/chats/application/sync_status.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/chats/domain/models/message.dart';
 
-Map<String, dynamic> messageToOutboxJson(Message message, String deviceId) {
-  return {
-    'id': message.id,
-    'conversation_id': message.conversationId,
-    'event_type': 'SEND_MESSAGE',
-    'sender_id': message.senderId,
-    'device_id': deviceId,
-    'content': message.content,
-    'created_at': message.createdAt.toIso8601String(),
-  };
-}
+Map<String, dynamic> messageToOutboxJson(Message message, String deviceId) =>
+    buildOutboxEventPayload(message, deviceId);
 
 class ChatSyncService {
   final ChatsApiClient _apiClient;
