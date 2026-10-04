@@ -223,3 +223,44 @@ final class ChatsDaoProvider
 }
 
 String _$chatsDaoHash() => r'd8b01660ce853d742b183456e86d061150ff4c20';
+
+@ProviderFor(syncStateDao)
+final syncStateDaoProvider = SyncStateDaoProvider._();
+
+final class SyncStateDaoProvider
+    extends $FunctionalProvider<SyncStateDao, SyncStateDao, SyncStateDao>
+    with $Provider<SyncStateDao> {
+  SyncStateDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncStateDaoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncStateDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncStateDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SyncStateDao create(Ref ref) {
+    return syncStateDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncStateDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncStateDao>(value),
+    );
+  }
+}
+
+String _$syncStateDaoHash() => r'53b63c33655f5842f8d381d58ae31200e2f5d68e';

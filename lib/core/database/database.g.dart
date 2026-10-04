@@ -4603,6 +4603,359 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   }
 }
 
+class $SyncStateTable extends SyncState
+    with TableInfo<$SyncStateTable, SyncStateEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastKnownMessageVersionMeta =
+      const VerificationMeta('lastKnownMessageVersion');
+  @override
+  late final GeneratedColumn<BigInt> lastKnownMessageVersion =
+      GeneratedColumn<BigInt>(
+        'last_known_message_version',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _lastKnownContactVersionMeta =
+      const VerificationMeta('lastKnownContactVersion');
+  @override
+  late final GeneratedColumn<BigInt> lastKnownContactVersion =
+      GeneratedColumn<BigInt>(
+        'last_known_contact_version',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    lastKnownMessageVersion,
+    lastKnownContactVersion,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_state';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncStateEntity> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('last_known_message_version')) {
+      context.handle(
+        _lastKnownMessageVersionMeta,
+        lastKnownMessageVersion.isAcceptableOrUnknown(
+          data['last_known_message_version']!,
+          _lastKnownMessageVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastKnownMessageVersionMeta);
+    }
+    if (data.containsKey('last_known_contact_version')) {
+      context.handle(
+        _lastKnownContactVersionMeta,
+        lastKnownContactVersion.isAcceptableOrUnknown(
+          data['last_known_contact_version']!,
+          _lastKnownContactVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastKnownContactVersionMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId};
+  @override
+  SyncStateEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncStateEntity(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      lastKnownMessageVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}last_known_message_version'],
+      )!,
+      lastKnownContactVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}last_known_contact_version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncStateTable createAlias(String alias) {
+    return $SyncStateTable(attachedDatabase, alias);
+  }
+}
+
+class SyncStateEntity extends DataClass implements Insertable<SyncStateEntity> {
+  final String userId;
+  final BigInt lastKnownMessageVersion;
+  final BigInt lastKnownContactVersion;
+  final DateTime updatedAt;
+  const SyncStateEntity({
+    required this.userId,
+    required this.lastKnownMessageVersion,
+    required this.lastKnownContactVersion,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['last_known_message_version'] = Variable<BigInt>(
+      lastKnownMessageVersion,
+    );
+    map['last_known_contact_version'] = Variable<BigInt>(
+      lastKnownContactVersion,
+    );
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SyncStateCompanion toCompanion(bool nullToAbsent) {
+    return SyncStateCompanion(
+      userId: Value(userId),
+      lastKnownMessageVersion: Value(lastKnownMessageVersion),
+      lastKnownContactVersion: Value(lastKnownContactVersion),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SyncStateEntity.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncStateEntity(
+      userId: serializer.fromJson<String>(json['userId']),
+      lastKnownMessageVersion: serializer.fromJson<BigInt>(
+        json['lastKnownMessageVersion'],
+      ),
+      lastKnownContactVersion: serializer.fromJson<BigInt>(
+        json['lastKnownContactVersion'],
+      ),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'lastKnownMessageVersion': serializer.toJson<BigInt>(
+        lastKnownMessageVersion,
+      ),
+      'lastKnownContactVersion': serializer.toJson<BigInt>(
+        lastKnownContactVersion,
+      ),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SyncStateEntity copyWith({
+    String? userId,
+    BigInt? lastKnownMessageVersion,
+    BigInt? lastKnownContactVersion,
+    DateTime? updatedAt,
+  }) => SyncStateEntity(
+    userId: userId ?? this.userId,
+    lastKnownMessageVersion:
+        lastKnownMessageVersion ?? this.lastKnownMessageVersion,
+    lastKnownContactVersion:
+        lastKnownContactVersion ?? this.lastKnownContactVersion,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SyncStateEntity copyWithCompanion(SyncStateCompanion data) {
+    return SyncStateEntity(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      lastKnownMessageVersion: data.lastKnownMessageVersion.present
+          ? data.lastKnownMessageVersion.value
+          : this.lastKnownMessageVersion,
+      lastKnownContactVersion: data.lastKnownContactVersion.present
+          ? data.lastKnownContactVersion.value
+          : this.lastKnownContactVersion,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncStateEntity(')
+          ..write('userId: $userId, ')
+          ..write('lastKnownMessageVersion: $lastKnownMessageVersion, ')
+          ..write('lastKnownContactVersion: $lastKnownContactVersion, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    userId,
+    lastKnownMessageVersion,
+    lastKnownContactVersion,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncStateEntity &&
+          other.userId == this.userId &&
+          other.lastKnownMessageVersion == this.lastKnownMessageVersion &&
+          other.lastKnownContactVersion == this.lastKnownContactVersion &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SyncStateCompanion extends UpdateCompanion<SyncStateEntity> {
+  final Value<String> userId;
+  final Value<BigInt> lastKnownMessageVersion;
+  final Value<BigInt> lastKnownContactVersion;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SyncStateCompanion({
+    this.userId = const Value.absent(),
+    this.lastKnownMessageVersion = const Value.absent(),
+    this.lastKnownContactVersion = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncStateCompanion.insert({
+    required String userId,
+    required BigInt lastKnownMessageVersion,
+    required BigInt lastKnownContactVersion,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       lastKnownMessageVersion = Value(lastKnownMessageVersion),
+       lastKnownContactVersion = Value(lastKnownContactVersion);
+  static Insertable<SyncStateEntity> custom({
+    Expression<String>? userId,
+    Expression<BigInt>? lastKnownMessageVersion,
+    Expression<BigInt>? lastKnownContactVersion,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (lastKnownMessageVersion != null)
+        'last_known_message_version': lastKnownMessageVersion,
+      if (lastKnownContactVersion != null)
+        'last_known_contact_version': lastKnownContactVersion,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncStateCompanion copyWith({
+    Value<String>? userId,
+    Value<BigInt>? lastKnownMessageVersion,
+    Value<BigInt>? lastKnownContactVersion,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SyncStateCompanion(
+      userId: userId ?? this.userId,
+      lastKnownMessageVersion:
+          lastKnownMessageVersion ?? this.lastKnownMessageVersion,
+      lastKnownContactVersion:
+          lastKnownContactVersion ?? this.lastKnownContactVersion,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (lastKnownMessageVersion.present) {
+      map['last_known_message_version'] = Variable<BigInt>(
+        lastKnownMessageVersion.value,
+      );
+    }
+    if (lastKnownContactVersion.present) {
+      map['last_known_contact_version'] = Variable<BigInt>(
+        lastKnownContactVersion.value,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncStateCompanion(')
+          ..write('userId: $userId, ')
+          ..write('lastKnownMessageVersion: $lastKnownMessageVersion, ')
+          ..write('lastKnownContactVersion: $lastKnownContactVersion, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4615,6 +4968,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ConversationMembersTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
   late final $OutboxEventsTable outboxEvents = $OutboxEventsTable(this);
+  late final $SyncStateTable syncState = $SyncStateTable(this);
   late final CryptoKeysDao cryptoKeysDao = CryptoKeysDao(this as AppDatabase);
   late final NotificationsDao notificationsDao = NotificationsDao(
     this as AppDatabase,
@@ -4625,6 +4979,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final ContactsDao contactsDao = ContactsDao(this as AppDatabase);
   late final ChatsDao chatsDao = ChatsDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
+  late final SyncStateDao syncStateDao = SyncStateDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4638,6 +4993,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     conversationMembers,
     messages,
     outboxEvents,
+    syncState,
   ];
 }
 
@@ -6933,6 +7289,191 @@ typedef $$OutboxEventsTableProcessedTableManager =
       OutboxEventEntity,
       PrefetchHooks Function()
     >;
+typedef $$SyncStateTableCreateCompanionBuilder =
+    SyncStateCompanion Function({
+      required String userId,
+      required BigInt lastKnownMessageVersion,
+      required BigInt lastKnownContactVersion,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SyncStateTableUpdateCompanionBuilder =
+    SyncStateCompanion Function({
+      Value<String> userId,
+      Value<BigInt> lastKnownMessageVersion,
+      Value<BigInt> lastKnownContactVersion,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SyncStateTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncStateTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncStateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SyncStateTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncStateTable,
+          SyncStateEntity,
+          $$SyncStateTableFilterComposer,
+          $$SyncStateTableOrderingComposer,
+          $$SyncStateTableAnnotationComposer,
+          $$SyncStateTableCreateCompanionBuilder,
+          $$SyncStateTableUpdateCompanionBuilder,
+          (
+            SyncStateEntity,
+            BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateEntity>,
+          ),
+          SyncStateEntity,
+          PrefetchHooks Function()
+        > {
+  $$SyncStateTableTableManager(_$AppDatabase db, $SyncStateTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncStateTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<BigInt> lastKnownMessageVersion = const Value.absent(),
+                Value<BigInt> lastKnownContactVersion = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStateCompanion(
+                userId: userId,
+                lastKnownMessageVersion: lastKnownMessageVersion,
+                lastKnownContactVersion: lastKnownContactVersion,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required BigInt lastKnownMessageVersion,
+                required BigInt lastKnownContactVersion,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStateCompanion.insert(
+                userId: userId,
+                lastKnownMessageVersion: lastKnownMessageVersion,
+                lastKnownContactVersion: lastKnownContactVersion,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncStateTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncStateTable,
+      SyncStateEntity,
+      $$SyncStateTableFilterComposer,
+      $$SyncStateTableOrderingComposer,
+      $$SyncStateTableAnnotationComposer,
+      $$SyncStateTableCreateCompanionBuilder,
+      $$SyncStateTableUpdateCompanionBuilder,
+      (
+        SyncStateEntity,
+        BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateEntity>,
+      ),
+      SyncStateEntity,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6953,4 +7494,6 @@ class $AppDatabaseManager {
       $$MessagesTableTableManager(_db, _db.messages);
   $$OutboxEventsTableTableManager get outboxEvents =>
       $$OutboxEventsTableTableManager(_db, _db.outboxEvents);
+  $$SyncStateTableTableManager get syncState =>
+      $$SyncStateTableTableManager(_db, _db.syncState);
 }

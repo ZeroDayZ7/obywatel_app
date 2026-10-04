@@ -54,6 +54,49 @@ Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
   );
 }
 
+List<MessageDto> parseRemoteMessageDtos(dynamic rawMessages) {
+  final messageList = rawMessages as List<dynamic>? ?? const [];
+  return messageList
+      .map((item) => MessageDto.fromJson(item as Map<String, dynamic>))
+      .toList();
+}
+
+int resolveLastKnownMessageVersion(
+  Iterable<MessageDto> remoteMessages,
+  int fallbackVersion,
+) {
+  var maxVersion = fallbackVersion;
+
+  for (final dto in remoteMessages) {
+    if (dto.version > maxVersion) {
+      maxVersion = dto.version;
+    }
+  }
+
+  return maxVersion;
+}
+
+int resolveLastKnownContactVersion(
+  dynamic updatedContacts,
+  int fallbackVersion,
+) {
+  final contactList = updatedContacts as List<dynamic>? ?? const [];
+  var maxVersion = fallbackVersion;
+
+  for (final item in contactList) {
+    final contactMap = item as Map<String, dynamic>?;
+    final version = int.tryParse(
+          (contactMap?['version'] ?? contactMap?['Version'] ?? 0).toString(),
+        ) ??
+        0;
+    if (version > maxVersion) {
+      maxVersion = version;
+    }
+  }
+
+  return maxVersion;
+}
+
 class ChatsRepositoryImpl implements ChatsRepository {
   final ChatsApiClient _apiClient;
   final AppDatabase _db;
@@ -303,16 +346,24 @@ class ChatsRepositoryImpl implements ChatsRepository {
     int lastKnownMessageVersion = 0,
   }) async {
     try {
+      final checkpoint = await _db.syncStateDao.getForUser(_currentUserId);
+      final resolvedLastKnownContactVersion =
+          lastKnownContactVersion == 0
+              ? (checkpoint?.lastKnownContactVersion ?? BigInt.zero).toInt()
+              : lastKnownContactVersion;
+      final resolvedLastKnownMessageVersion =
+          lastKnownMessageVersion == 0
+              ? (checkpoint?.lastKnownMessageVersion ?? BigInt.zero).toInt()
+              : lastKnownMessageVersion;
+
       final payload = await _apiClient.syncDelta(
-        lastKnownContactVersion: lastKnownContactVersion,
-        lastKnownMessageVersion: lastKnownMessageVersion,
+        lastKnownContactVersion: resolvedLastKnownContactVersion,
+        lastKnownMessageVersion: resolvedLastKnownMessageVersion,
       );
 
       final updatedContacts = payload['updated_contacts'] as List<dynamic>? ?? const [];
       final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
-      final remoteMessageDtos = newMessages
-          .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
-          .toList();
+      final remoteMessageDtos = parseRemoteMessageDtos(newMessages);
 
       if (remoteMessageDtos.isNotEmpty) {
         await _db.chatsDao.upsertMessages(
@@ -320,8 +371,26 @@ class ChatsRepositoryImpl implements ChatsRepository {
         );
       }
 
+      final nextMessageVersion = resolveLastKnownMessageVersion(
+        remoteMessageDtos,
+        resolvedLastKnownMessageVersion,
+      );
+      final nextContactVersion = resolveLastKnownContactVersion(
+        updatedContacts,
+        resolvedLastKnownContactVersion,
+      );
+
+      await _db.syncStateDao.upsertCheckpoint(
+        userId: _currentUserId,
+        lastKnownMessageVersion: BigInt.from(nextMessageVersion),
+        lastKnownContactVersion: BigInt.from(nextContactVersion),
+      );
+
       return [
-        {'updated_contacts': updatedContacts.length, 'new_messages': remoteMessageDtos.length},
+        {
+          'updated_contacts': updatedContacts.length,
+          'new_messages': remoteMessageDtos.length,
+        },
       ];
     } catch (e, st) {
       _logger.e(
