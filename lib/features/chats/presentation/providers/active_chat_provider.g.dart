@@ -13,7 +13,7 @@ part of 'active_chat_provider.dart';
 final activeChatProvider = ActiveChatFamily._();
 
 final class ActiveChatProvider
-    extends $AsyncNotifierProvider<ActiveChat, List<Message>> {
+    extends $StreamNotifierProvider<ActiveChat, List<Message>> {
   ActiveChatProvider._({
     required ActiveChatFamily super.from,
     required String super.argument,
@@ -50,7 +50,7 @@ final class ActiveChatProvider
   }
 }
 
-String _$activeChatHash() => r'8e744fc0801877dec6fa2e8555464d29be49431f';
+String _$activeChatHash() => r'afea37ab8f071d6acc4bf1dcb9ce3a3e329337f2';
 
 final class ActiveChatFamily extends $Family
     with
@@ -58,7 +58,7 @@ final class ActiveChatFamily extends $Family
           ActiveChat,
           AsyncValue<List<Message>>,
           List<Message>,
-          FutureOr<List<Message>>,
+          Stream<List<Message>>,
           String
         > {
   ActiveChatFamily._()
@@ -77,11 +77,11 @@ final class ActiveChatFamily extends $Family
   String toString() => r'activeChatProvider';
 }
 
-abstract class _$ActiveChat extends $AsyncNotifier<List<Message>> {
+abstract class _$ActiveChat extends $StreamNotifier<List<Message>> {
   late final _$args = ref.$arg as String;
   String get conversationId => _$args;
 
-  FutureOr<List<Message>> build(String conversationId);
+  Stream<List<Message>> build(String conversationId);
   @$mustCallSuper
   @override
   void runBuild() {

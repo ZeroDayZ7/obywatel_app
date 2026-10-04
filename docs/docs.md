@@ -25,3 +25,6 @@ dart run flutter_native_splash:create
 # Release
 
 flutter build apk --obfuscate --split-debug-info=./debug_info
+
+git diff > roznice.patch
+git show a1b2c3d > moj_commit.patch

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
@@ -10,8 +9,12 @@ import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final appDatabaseProvider = Provider<AppDatabase>((ref) {
+part 'database_provider.g.dart';
+
+@Riverpod(keepAlive: true)
+AppDatabase appDatabase(Ref ref) {
   ref.keepAlive();
 
   final storage = ref.watch(secureStorageProvider);
@@ -35,20 +38,24 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 
   ref.onDispose(() => db.close());
   return db;
-});
+}
 
-final notificationsDaoProvider = Provider<NotificationsDao>((ref) {
+@riverpod
+NotificationsDao notificationsDao(Ref ref) {
   return ref.watch(appDatabaseProvider).notificationsDao;
-});
+}
 
-final cryptoKeysDaoProvider = Provider<CryptoKeysDao>((ref) {
+@riverpod
+CryptoKeysDao cryptoKeysDao(Ref ref) {
   return ref.watch(appDatabaseProvider).cryptoKeysDao;
-});
+}
 
-final userDocumentsDaoProvider = Provider<UserDocumentsDao>((ref) {
+@riverpod
+UserDocumentsDao userDocumentsDao(Ref ref) {
   return ref.watch(appDatabaseProvider).userDocumentsDao;
-});
+}
 
-final chatsDaoProvider = Provider<ChatsDao>((ref) {
+@riverpod
+ChatsDao chatsDao(Ref ref) {
   return ref.watch(appDatabaseProvider).chatsDao;
-});
+}
