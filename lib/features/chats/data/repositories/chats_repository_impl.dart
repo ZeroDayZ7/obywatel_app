@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
@@ -58,10 +59,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final StreamController<Message> _incomingMessagesController =
       StreamController.broadcast();
   final AppLogger _logger;
+  final String _currentUserId;
 
-  final String _currentUserId = 'my_user_id';
-
-  ChatsRepositoryImpl(this._apiClient, this._db, this._logger);
+  ChatsRepositoryImpl(
+    this._apiClient,
+    this._db,
+    this._logger,
+    String currentUserId,
+  ) : _currentUserId = currentUserId;
 
   @override
   Stream<Message> get incomingMessagesStream =>
@@ -355,5 +360,7 @@ ChatsRepository chatsRepository(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
   final logger = ref.watch(appLoggerProvider);
-  return ChatsRepositoryImpl(apiClient, db, logger);
+  final currentUserId = ref.watch(currentUserIdProvider);
+
+  return ChatsRepositoryImpl(apiClient, db, logger, currentUserId);
 }

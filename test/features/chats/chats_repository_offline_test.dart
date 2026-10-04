@@ -38,7 +38,12 @@ void main() {
         ),
       );
 
-      final repository = ChatsRepositoryImpl(apiClient, database, logger);
+      final repository = ChatsRepositoryImpl(
+        apiClient,
+        database,
+        logger,
+        'user-123',
+      );
 
       await repository.saveConversationsFromRemote([
         ConversationDto(
