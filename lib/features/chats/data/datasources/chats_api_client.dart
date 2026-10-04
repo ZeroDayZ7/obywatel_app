@@ -6,6 +6,8 @@ import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
+import 'package:obywatel_plus/features/chats/data/dtos/message_envelope.dart';
+import 'package:obywatel_plus/features/chats/data/dtos/message_record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chats_api_client.g.dart';
@@ -105,6 +107,42 @@ class ChatsApiClient {
 
       final data = response.data as Map<String, dynamic>? ?? const {};
       return data;
+    });
+  }
+
+  /// Wysyła zaszyfrowaną kopertę do trwałego archiwum wiadomości.
+  Future<MessageEnvelope> sendMessageEnvelope(MessageEnvelope envelope) async {
+    return _runWithRetry(() async {
+      final response = await _apiClient.post(
+        ApiEndpoints.messages,
+        data: envelope.toJson(),
+      );
+      return MessageEnvelope.fromJson(Map<String, dynamic>.from(response.data as Map));
+    });
+  }
+
+  /// Pobiera zaszyfrowaną historię konwersacji z archiwum po `since`.
+  Future<List<MessageRecord>> getMessageHistoryEnvelope({
+    required String conversationId,
+    int since = 0,
+    int limit = 50,
+  }) async {
+    return _runWithRetry(() async {
+      final response = await _apiClient.get(
+        ApiEndpoints.messageHistory,
+        queryParams: {
+          'conversation_id': conversationId,
+          'since': since,
+          'limit': limit,
+        },
+      );
+
+      final data = response.data as List<dynamic>? ?? const <dynamic>[];
+      return data
+          .map(
+            (json) => MessageRecord.fromJson(Map<String, dynamic>.from(json as Map)),
+          )
+          .toList();
     });
   }
 
