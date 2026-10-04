@@ -11,6 +11,7 @@ import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_sc
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_error_view.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_online_section.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_search_delegate.dart';
+import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_settings_sheet.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   const ContactsScreen({super.key});
@@ -24,6 +25,18 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
 
   void _openAddContactModal(BuildContext context) {
     showDialog(context: context, builder: (_) => const AddContactModal());
+  }
+
+  void _openSettingsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+      ),
+      builder: (_) => const ContactsSettingsSheet(),
+    );
   }
 
   Future<void> _respondToRequest(Contact contact, bool accept) async {
@@ -41,10 +54,8 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             ? contact.localAlias!
             : contact.displayName;
 
-        final conversationId = await chatsRepository.ensureConversationForContact(
-          contact.contactUserId,
-          title: title,
-        );
+        final conversationId = await chatsRepository
+            .ensureConversationForContact(contact.contactUserId, title: title);
 
         if (!mounted) return;
 
@@ -189,6 +200,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             backgroundColor: colorScheme.surface,
             actions: [
               IconButton(
+                icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
+                tooltip: 'Ustawienia kontaktów',
+                onPressed: () => _openSettingsSheet(context),
+              ),
+              IconButton(
                 icon: Icon(Icons.search, color: colorScheme.onSurface),
                 tooltip: 'Szukaj kontaktów',
                 onPressed: () {
@@ -206,6 +222,64 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 },
               ),
             ],
+          ),
+
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CONTACTS / NETWORK STATUS',
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${contacts.length} trusted contacts • ${onlineContacts.length} online • ${pendingContacts.length} pending',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primaryContainer,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                    child: Text(
+                      'SECURED',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           if (pendingContacts.isNotEmpty) ...[
@@ -230,39 +304,94 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final contact = pendingContacts[index];
-                    final isBusy = _processingRequestIds.contains(contact.id);
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final contact = pendingContacts[index];
+                  final isBusy = _processingRequestIds.contains(contact.id);
 
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          child: Text(contact.displayName.isNotEmpty ? contact.displayName[0].toUpperCase() : '?'),
+                  return Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surface,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.35,
                         ),
-                        title: Text(contact.displayName),
-                        subtitle: Text(contact.status),
-                        trailing: Row(
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            contact.displayName.isNotEmpty
+                                ? contact.displayName[0].toUpperCase()
+                                : '?',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                contact.localAlias?.trim().isNotEmpty == true
+                                    ? contact.localAlias!
+                                    : contact.displayName,
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  color: colorScheme.onSurface,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                contact.status,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            TextButton.icon(
-                              onPressed: isBusy ? null : () => _respondToRequest(contact, true),
-                              icon: const Icon(Icons.check),
-                              label: const Text('Akceptuj'),
+                            IconButton(
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _respondToRequest(contact, true),
+                              tooltip: 'Akceptuj',
+                              color: colorScheme.primary,
+                              icon: const Icon(Icons.check_rounded),
                             ),
-                            TextButton.icon(
-                              onPressed: isBusy ? null : () => _respondToRequest(contact, false),
-                              icon: const Icon(Icons.close),
-                              label: const Text('Odrzuć'),
+                            IconButton(
+                              onPressed: isBusy
+                                  ? null
+                                  : () => _respondToRequest(contact, false),
+                              tooltip: 'Odrzuć',
+                              color: colorScheme.error,
+                              icon: const Icon(Icons.close_rounded),
                             ),
                           ],
                         ),
-                      ),
-                    );
-                  },
-                  childCount: pendingContacts.length,
-                ),
+                      ],
+                    ),
+                  );
+                }, childCount: pendingContacts.length),
               ),
             ),
           ],
