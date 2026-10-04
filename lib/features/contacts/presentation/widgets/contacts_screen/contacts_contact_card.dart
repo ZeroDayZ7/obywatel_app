@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 
 class ContactsContactCard extends StatelessWidget {
@@ -51,7 +52,10 @@ class ContactsContactCard extends StatelessWidget {
           color: colorScheme.onSurface.withValues(alpha: 0.4),
         ),
         onTap: () {
-          // Navigacja do czatu z danym użytkownikiem
+          context.push(
+            '/chats/${Uri.encodeComponent(contact.contactUserId)}',
+            extra: contact.displayName,
+          );
         },
       ),
     );

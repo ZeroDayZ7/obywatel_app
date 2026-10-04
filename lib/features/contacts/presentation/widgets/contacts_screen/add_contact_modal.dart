@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/contacts/application/contacts_service.dart';
 import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -19,6 +20,7 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   _AddContactTab _selectedTab = _AddContactTab.sendRequest;
   final _controller = TextEditingController();
   bool _isLoading = false;
+  String _myUserId = '';
 
   // Sprawdzanie platformy (Android / iOS)
   bool get _isMobilePlatform =>
@@ -26,8 +28,20 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS);
 
-  // Podmień na ID zalogowanego użytkownika (np. z authProvider)
-  final String _myUserId = '707a8869-6867-4601-9337-e23fcb51b0ad';
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentUserId();
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    final cachedUser = await ref.read(sessionServiceProvider).getCachedUser();
+    if (!mounted) return;
+
+    setState(() {
+      _myUserId = cachedUser?.id ?? '';
+    });
+  }
 
   @override
   void dispose() {
@@ -191,41 +205,54 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          spreadRadius: 2,
-                        ),
-                      ],
+                if (_myUserId.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: Text(
+                      'Nie udało się odczytać profilu użytkownika z sesji.',
+                      textAlign: TextAlign.center,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                    child: QrImageView(
-                      data: _myUserId,
-                      version: QrVersions.auto,
-                      size: 180.0,
+                  )
+                else ...[
+                  Center(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 10,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: QrImageView(
+                        data: _myUserId,
+                        version: QrVersions.auto,
+                        size: 180.0,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: _myUserId));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Skopiowano Twoje ID do schowka!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.copy, size: 18),
-                  label: Text('Kopiuj moje ID'),
-                ),
+                  const SizedBox(height: 12),
+                  TextButton.icon(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: _myUserId));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Skopiowano Twoje ID do schowka!'),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.copy, size: 18),
+                    label: const Text('Kopiuj moje ID'),
+                  ),
+                ],
               ],
             ],
           ),
