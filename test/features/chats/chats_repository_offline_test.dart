@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
@@ -43,6 +44,7 @@ void main() {
         database,
         logger,
         'user-123',
+        DeviceInfoService(logger),
       );
 
       await repository.saveConversationsFromRemote([

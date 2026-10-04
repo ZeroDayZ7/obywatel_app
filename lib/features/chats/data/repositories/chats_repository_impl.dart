@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
@@ -60,12 +61,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
       StreamController.broadcast();
   final AppLogger _logger;
   final String _currentUserId;
+  final DeviceInfoService _deviceInfoService;
 
   ChatsRepositoryImpl(
     this._apiClient,
     this._db,
     this._logger,
     String currentUserId,
+    this._deviceInfoService,
   ) : _currentUserId = currentUserId;
 
   @override
@@ -242,6 +245,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     required String content,
   }) async {
     final createdAt = DateTime.now();
+    final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: conversationId,
@@ -251,7 +255,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       createdAt: createdAt,
     );
 
-    await _db.chatsDao.upsertMessages([_messageToCompanion(message)]);
+    await _db.chatsDao.upsertMessages([
+      _messageToCompanion(message, senderDeviceId: senderDeviceId),
+    ]);
     await _db.outboxDao.enqueueEvent(
       OutboxEventsCompanion(
         id: Value(message.id),
@@ -375,12 +381,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
   }
 
-  MessagesCompanion _messageToCompanion(Message message) {
+  MessagesCompanion _messageToCompanion(
+    Message message, {
+    String? senderDeviceId,
+  }) {
     return MessagesCompanion(
       id: Value(message.id),
       conversationId: Value(message.conversationId),
       senderId: Value(message.senderId),
-      senderDeviceId: const Value('local-device'),
+      senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
       type: const Value('text'),
       sequence: Value(BigInt.from(DateTime.now().millisecondsSinceEpoch)),
       encryptedPayload: Value(utf8.encode(message.content)),
@@ -410,6 +419,7 @@ ChatsRepository chatsRepository(Ref ref) {
   final db = ref.watch(appDatabaseProvider);
   final logger = ref.watch(appLoggerProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
+  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
 
-  return ChatsRepositoryImpl(apiClient, db, logger, currentUserId);
+  return ChatsRepositoryImpl(apiClient, db, logger, currentUserId, deviceInfoService);
 }

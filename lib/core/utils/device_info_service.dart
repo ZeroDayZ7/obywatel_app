@@ -132,13 +132,17 @@ class DeviceInfoService {
     return name;
   }
 
-  /// Prywatne helpery
-  Future<String> _getOrCreateDeviceId() async {
+  /// Zwraca stabilny identyfikator urządzenia dla tej instalacji aplikacji.
+  /// Każde urządzenie ma swój własny `app_device_id`, niezależnie od `user_id`.
+  Future<String> getOrCreateDeviceId() async {
     var id = await _storage.read(key: StorageKeys.appDeviceId);
-    if (id == null) {
+    if (id == null || id.isEmpty) {
       id = const Uuid().v4();
       await _storage.write(key: StorageKeys.appDeviceId, value: id);
     }
     return id;
   }
+
+  /// Prywatne helpery
+  Future<String> _getOrCreateDeviceId() async => getOrCreateDeviceId();
 }
