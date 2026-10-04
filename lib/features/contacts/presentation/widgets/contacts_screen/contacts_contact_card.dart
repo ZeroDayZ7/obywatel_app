@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 
-class ContactsContactCard extends StatelessWidget {
+class ContactsContactCard extends ConsumerWidget {
   final Contact contact;
 
   const ContactsContactCard({
@@ -11,7 +13,7 @@ class ContactsContactCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -51,11 +53,29 @@ class ContactsContactCard extends StatelessWidget {
           Icons.chevron_right,
           color: colorScheme.onSurface.withValues(alpha: 0.4),
         ),
-        onTap: () {
-          context.push(
-            '/chats/${Uri.encodeComponent(contact.contactUserId)}',
-            extra: contact.displayName,
-          );
+        onTap: () async {
+          try {
+            final repository = ref.read(chatsRepositoryProvider);
+            final conversationId = await repository.ensureConversationForContact(
+              contact.contactUserId,
+              title: contact.displayName,
+            );
+
+            if (!context.mounted) return;
+
+            context.push(
+              '/chats/${Uri.encodeComponent(conversationId)}',
+              extra: contact.displayName,
+            );
+          } catch (error) {
+            if (!context.mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Nie udało się otworzyć czatu: $error'),
+                backgroundColor: Theme.of(context).colorScheme.error,
+              ),
+            );
+          }
         },
       ),
     );

@@ -109,6 +109,55 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   @override
+  Future<String> ensureConversationForContact(
+    String contactUserId, {
+    String? title,
+  }) async {
+    if (contactUserId.trim().isEmpty) {
+      throw ArgumentError.value(contactUserId, 'contactUserId', 'Nie może być puste');
+    }
+
+    final sortedIds = [
+      _currentUserId,
+      contactUserId,
+    ]..sort();
+    final conversationId = sortedIds.join(':');
+    final currentTime = DateTime.now();
+
+    await _db.chatsDao.upsertConversations([
+      ConversationsCompanion(
+        id: Value(conversationId),
+        type: Value('direct'),
+        title: Value(title ?? 'Kontakt'),
+        lastSequence: Value(BigInt.zero),
+        updatedAt: Value(currentTime),
+        createdAt: Value(currentTime),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    final memberIds = <String>{_currentUserId, contactUserId};
+    await _db.chatsDao.upsertMembers(
+      memberIds
+          .map(
+            (userId) => ConversationMembersCompanion(
+              id: Value('$conversationId:$userId'),
+              conversationId: Value(conversationId),
+              userId: Value(userId),
+              role: Value(userId == _currentUserId ? 'admin' : 'member'),
+              lastReadSequence: Value(BigInt.zero),
+              createdAt: Value(currentTime),
+              updatedAt: Value(currentTime),
+              deletedAt: const Value.absent(),
+            ),
+          )
+          .toList(),
+    );
+
+    return conversationId;
+  }
+
+  @override
   Future<List<Conversation>> getConversations() async {
     try {
       final entities = await _db.chatsDao.watchActiveConversations().first;
