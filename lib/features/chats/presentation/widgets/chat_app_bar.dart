@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final String? subtitle;
+  final List<Widget>? actions;
 
-  const ChatAppBar({super.key, required this.title, this.subtitle});
+  const ChatAppBar({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.actions,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -12,17 +18,26 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     final colorScheme = theme.colorScheme;
 
     return AppBar(
-      titleSpacing: 0,
+      titleSpacing: 12,
+      elevation: 0,
+      backgroundColor: colorScheme.surface,
+      foregroundColor: colorScheme.onSurface,
+      actions: actions,
       title: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+          Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: colorScheme.primary,
+              borderRadius: BorderRadius.circular(4),
+            ),
             child: Text(
               title.isNotEmpty ? title[0].toUpperCase() : '?',
               style: theme.textTheme.titleMedium?.copyWith(
                 color: colorScheme.onPrimary,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -36,16 +51,32 @@ class ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                   title,
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w700,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 if (subtitle != null)
-                  Text(
-                    subtitle!,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.primary,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          subtitle!,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

@@ -45,7 +45,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     final textState = ref.watch(messageInputProvider(widget.conversationId));
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         border: Border(
@@ -55,53 +55,107 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         ),
       ),
       child: SafeArea(
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Expanded(
-              child: TextField(
-                controller: _controller,
-                onChanged: (val) {
-                  ref
-                      .read(
-                        messageInputProvider(widget.conversationId).notifier,
-                      )
-                      .updateText(val);
-                },
-                minLines: 1,
-                maxLines: 4,
-                style: theme.textTheme.bodyMedium,
-                decoration: InputDecoration(
-                  hintText: 'Napisz wiadomość...',
-                  hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHigh,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 10.0,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24.0),
-                    borderSide: BorderSide.none,
-                  ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(2),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
                 ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.sync_rounded,
+                    size: 12,
+                    color: colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'OUTBOX: queue stable • sending batch • delivered',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        letterSpacing: 0.2,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 8.0),
-            IconButton.filled(
-              onPressed: textState.trim().isNotEmpty ? _sendMessage : null,
-              icon: const Icon(Icons.send_rounded),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.primary,
-                foregroundColor: colorScheme.onPrimary,
-                disabledBackgroundColor: colorScheme.onSurface.withValues(
-                  alpha: 0.12,
+            Row(
+              children: [
+                IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.attach_file_rounded),
+                  tooltip: 'Dodaj załącznik',
+                  color: colorScheme.onSurface,
                 ),
-                disabledForegroundColor: colorScheme.onSurface.withValues(
-                  alpha: 0.38,
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    onChanged: (val) {
+                      ref
+                          .read(
+                            messageInputProvider(widget.conversationId).notifier,
+                          )
+                          .updateText(val);
+                    },
+                    minLines: 1,
+                    maxLines: 4,
+                    style: theme.textTheme.bodyMedium,
+                    decoration: InputDecoration(
+                      hintText: 'Wpisz komunikat...',
+                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      filled: true,
+                      fillColor: colorScheme.surfaceContainerHighest,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        borderSide: BorderSide(
+                          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        borderSide: BorderSide(
+                          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        borderSide: BorderSide(
+                          color: colorScheme.primary,
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8.0),
+                IconButton.filled(
+                  onPressed: textState.trim().isNotEmpty ? _sendMessage : null,
+                  icon: const Icon(Icons.send_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                    disabledForegroundColor: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

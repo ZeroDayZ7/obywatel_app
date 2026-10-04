@@ -29,50 +29,92 @@ class ChatRoomScreen extends ConsumerWidget {
       data: (status) {
         switch (status) {
           case E2eeSessionUiStatus.ready:
-            return 'Zaszyfrowano E2EE';
+            return 'Signal E2EE active';
           case E2eeSessionUiStatus.initializing:
-            return 'Inicjalizacja kluczy E2EE...';
+            return 'E2EE handshake in progress';
           case E2eeSessionUiStatus.failed:
-            return 'Błąd inicjalizacji kluczy E2EE';
+            return 'E2EE session compromised';
         }
       },
-      loading: () => 'Inicjalizacja kluczy E2EE...',
-      orElse: () => 'Status E2EE nieznany',
+      loading: () => 'Session bootstrap pending',
+      orElse: () => 'Session state unknown',
     );
 
+    final syncMessage = switch (syncStatus) {
+      SyncStatus.idle => 'Synced',
+      SyncStatus.syncing => 'Syncing',
+      SyncStatus.offline => 'Offline',
+      SyncStatus.error => 'Sync error',
+    };
+
+    final syncColor = switch (syncStatus) {
+      SyncStatus.idle => colorScheme.primary,
+      SyncStatus.syncing => colorScheme.tertiary,
+      SyncStatus.offline => colorScheme.error,
+      SyncStatus.error => colorScheme.error,
+    };
+
     return Scaffold(
-      appBar: ChatAppBar(title: title, subtitle: e2eeSubtitle),
+      backgroundColor: colorScheme.surface,
+      appBar: ChatAppBar(
+        title: title,
+        subtitle: e2eeSubtitle,
+        actions: [
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.shield_outlined),
+            tooltip: 'Session status',
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'More options',
+          ),
+        ],
+      ),
       body: Column(
         children: [
-          if (syncStatus == SyncStatus.offline)
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              color: colorScheme.errorContainer,
-              child: Row(
-                children: [
-                  const Icon(Icons.signal_wifi_off_rounded, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Brak połączenia z serwerem. Tryb offline',
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onErrorContainer,
-                      ),
-                    ),
-                  ),
-                ],
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                ),
               ),
             ),
+            child: Row(
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: syncColor,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'SYNC: $syncMessage',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    letterSpacing: 0.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: chatState.when(
               data: (messages) {
                 if (messages.isEmpty) {
                   return Center(
                     child: Text(
-                      'Brak wiadomości. Rozpocznij konwersację!',
+                      'Brak wiadomości. Rozpocznij konwersację.',
                       style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        color: colorScheme.onSurfaceVariant,
                       ),
                     ),
                   );
