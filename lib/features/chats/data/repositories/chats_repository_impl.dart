@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
+import 'package:obywatel_plus/features/chats/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/chats/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
@@ -106,6 +107,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final AppLogger _logger;
   final String _currentUserId;
   final DeviceInfoService _deviceInfoService;
+  final E2eeCryptoService _cryptoService;
 
   ChatsRepositoryImpl(
     this._apiClient,
@@ -113,6 +115,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     this._logger,
     String currentUserId,
     this._deviceInfoService,
+    this._cryptoService,
   ) : _currentUserId = currentUserId;
 
   @override
@@ -201,7 +204,28 @@ class ChatsRepositoryImpl implements ChatsRepository {
           .toList(),
     );
 
+    await ensureE2eeSessionForContact(contactUserId);
+
     return conversationId;
+  }
+
+  @override
+  Future<void> ensureE2eeSessionForContact(String contactUserId) async {
+    if (contactUserId.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      await _cryptoService.ensureSessionForPeer(contactUserId);
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Nie udało się zainicjalizować sesji E2EE dla kontaktu $contactUserId',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
   }
 
   @override
@@ -528,6 +552,14 @@ ChatsRepository chatsRepository(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
   final currentUserId = ref.watch(currentUserIdProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
+  final cryptoService = ref.watch(e2eeCryptoServiceProvider);
 
-  return ChatsRepositoryImpl(apiClient, db, logger, currentUserId, deviceInfoService);
+  return ChatsRepositoryImpl(
+    apiClient,
+    db,
+    logger,
+    currentUserId,
+    deviceInfoService,
+    cryptoService,
+  );
 }

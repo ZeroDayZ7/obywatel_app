@@ -117,15 +117,27 @@ void main() {
   test(
     'repository should persist remote conversations to local db and expose them via stream',
     () async {
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
       final apiClient = ChatsApiClient(
         ApiClient(
           dio: Dio(),
-          storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ),
+          storage: secureStorage,
           logger: logger,
         ),
+      );
+      final crypto = E2eeCryptoService(
+        secureStorage,
+        logger,
+        ApiClient(
+          dio: Dio(),
+          storage: secureStorage,
+          logger: logger,
+        ),
+        DeviceInfoService(logger),
+        DriftSignalProtocolStore(database),
       );
 
       final repository = ChatsRepositoryImpl(
@@ -134,6 +146,7 @@ void main() {
         logger,
         'user-123',
         DeviceInfoService(logger),
+        crypto,
       );
 
       await repository.saveConversationsFromRemote([

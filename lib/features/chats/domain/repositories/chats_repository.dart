@@ -11,6 +11,7 @@ abstract class ChatsRepository {
     String contactUserId, {
     String? title,
   });
+  Future<void> ensureE2eeSessionForContact(String contactUserId);
   Future<List<Message>> getMessageHistory(
     String conversationId, {
     String? beforeId,

@@ -237,6 +237,24 @@ class E2eeCryptoService {
     await _signalStore.saveIdentity(address, remoteBundle.getIdentityKey());
   }
 
+  Future<void> ensureSessionForPeer(
+    String remoteUserId, {
+    int deviceId = 1,
+  }) async {
+    final address = SignalProtocolAddress(remoteUserId, deviceId);
+    final sessionExists = await _signalStore.containsSession(address);
+    if (sessionExists) {
+      return;
+    }
+
+    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId);
+    await initializeSessionForPeer(
+      remoteUserId,
+      remoteBundle: remoteBundle,
+      deviceId: deviceId,
+    );
+  }
+
   Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
 

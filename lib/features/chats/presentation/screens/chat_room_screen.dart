@@ -23,9 +23,25 @@ class ChatRoomScreen extends ConsumerWidget {
     final colorScheme = theme.colorScheme;
     final chatState = ref.watch(activeChatProvider(conversationId));
     final syncStatus = ref.watch(chatSyncStatusControllerProvider);
+    final e2eeStatus = ref.watch(chatE2eeSessionStatusProvider(conversationId));
+
+    final e2eeSubtitle = e2eeStatus.maybeWhen(
+      data: (status) {
+        switch (status) {
+          case E2eeSessionUiStatus.ready:
+            return 'Zaszyfrowano E2EE';
+          case E2eeSessionUiStatus.initializing:
+            return 'Inicjalizacja kluczy E2EE...';
+          case E2eeSessionUiStatus.failed:
+            return 'Błąd inicjalizacji kluczy E2EE';
+        }
+      },
+      loading: () => 'Inicjalizacja kluczy E2EE...',
+      orElse: () => 'Status E2EE nieznany',
+    );
 
     return Scaffold(
-      appBar: ChatAppBar(title: title, subtitle: 'Zaszyfrowano E2EE'),
+      appBar: ChatAppBar(title: title, subtitle: e2eeSubtitle),
       body: Column(
         children: [
           if (syncStatus == SyncStatus.offline)
