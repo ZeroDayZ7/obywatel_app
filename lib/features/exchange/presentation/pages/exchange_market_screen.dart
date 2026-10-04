@@ -37,7 +37,7 @@ class ExchangeMarketScreen extends ConsumerWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          onPressed: () => context.pop(),
+          onPressed: () => context.go(AppRoutes.home),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(
