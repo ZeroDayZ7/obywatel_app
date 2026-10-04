@@ -16,6 +16,11 @@ import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
 import 'package:obywatel_plus/core/database/tables/messages.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
 import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
+import 'package:obywatel_plus/core/database/tables/signal_identity_keys.dart';
+import 'package:obywatel_plus/core/database/tables/signal_local_identity.dart';
+import 'package:obywatel_plus/core/database/tables/signal_pre_keys.dart';
+import 'package:obywatel_plus/core/database/tables/signal_sessions.dart';
+import 'package:obywatel_plus/core/database/tables/signal_signed_pre_keys.dart';
 import 'package:obywatel_plus/core/database/tables/sync_state.dart';
 import 'package:obywatel_plus/core/database/tables/user_documents.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
@@ -35,6 +40,11 @@ part 'database.g.dart';
     Messages,
     OutboxEvents,
     SyncState,
+    SignalLocalIdentity,
+    SignalIdentityKeys,
+    SignalPreKeys,
+    SignalSignedPreKeys,
+    SignalSessions,
   ],
   daos: [
     CryptoKeysDao,
@@ -50,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -71,6 +81,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 5) {
         await m.createTable(syncState);
+      }
+      if (from < 6) {
+        await m.createTable(signalLocalIdentity);
+        await m.createTable(signalIdentityKeys);
+        await m.createTable(signalPreKeys);
+        await m.createTable(signalSignedPreKeys);
+        await m.createTable(signalSessions);
       }
     },
     beforeOpen: (details) async {
