@@ -25,6 +25,12 @@ abstract class ChatsRepository {
   /// Pobiera niepotwierdzone wiadomości z lokalnego outboxa (dla offline sync)
   Future<List<Message>> getPendingOutboxMessages();
 
+  /// Synchronicznie pobiera i aplikuje delta sync z backendu.
+  Future<List<Map<String, dynamic>>> syncDeltaFromRemote({
+    int lastKnownContactVersion = 0,
+    int lastKnownMessageVersion = 0,
+  });
+
   /// Usuwa wysłane wiadomości z lokalnej kolejki outbox po udanej synchronizacji
   Future<void> clearSentOutboxMessages(List<String> messageIds);
 

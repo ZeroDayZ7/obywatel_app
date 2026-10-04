@@ -1,9 +1,15 @@
 import 'dart:convert';
+import 'dart:math';
 
+import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/clients/api_client.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'e2ee_crypto_service.g.dart';
@@ -75,13 +81,109 @@ Future<String> decryptPayload(
   return utf8.decode(clearTextBytes);
 }
 
+class DeviceKeyBundle {
+  final String deviceId;
+  final String publicKey;
+  final String privateKey;
+  final String signedPreKey;
+  final String signedPreKeySignature;
+  final int signedPreKeyId;
+  final List<String> oneTimePreKeys;
+
+  const DeviceKeyBundle({
+    required this.deviceId,
+    required this.publicKey,
+    required this.privateKey,
+    required this.signedPreKey,
+    required this.signedPreKeySignature,
+    required this.signedPreKeyId,
+    required this.oneTimePreKeys,
+  });
+}
+
 class E2eeCryptoService {
   final SecureStorageService _secureStorage;
   final AppLogger _logger;
+  final ApiClient _apiClient;
+  final DeviceInfoService _deviceInfoService;
 
   static const String _sessionKeyPrefix = 'e2ee_session_key_';
 
-  const E2eeCryptoService(this._secureStorage, this._logger);
+  const E2eeCryptoService(
+    this._secureStorage,
+    this._logger,
+    this._apiClient,
+    this._deviceInfoService,
+  );
+
+  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+    final deviceId = await _deviceInfoService.getOrCreateDeviceId();
+
+    final storedPrivate = await _secureStorage.read(key: StorageKeys.devicePrivateKey);
+    final storedPublic = await _secureStorage.read(key: StorageKeys.devicePublicKey);
+
+    if (storedPrivate != null && storedPrivate.isNotEmpty &&
+        storedPublic != null && storedPublic.isNotEmpty) {
+      final signedPreKey = base64Encode(
+        List<int>.generate(32, (_) => Random.secure().nextInt(256)),
+      );
+      final signedPreKeySignature = base64Encode(
+        sha256.convert(utf8.encode('$deviceId:$signedPreKey')).bytes,
+      );
+
+      return DeviceKeyBundle(
+        deviceId: deviceId,
+        publicKey: storedPublic,
+        privateKey: storedPrivate,
+        signedPreKey: signedPreKey,
+        signedPreKeySignature: signedPreKeySignature,
+        signedPreKeyId: 1,
+        oneTimePreKeys: const [],
+      );
+    }
+
+    final privateKeyBytes = List<int>.generate(32, (_) => Random.secure().nextInt(256));
+    final privateKey = base64Encode(privateKeyBytes);
+    final publicKey = base64Encode(
+      sha256.convert(utf8.encode(privateKey)).bytes,
+    );
+
+    await _secureStorage.write(key: StorageKeys.devicePrivateKey, value: privateKey);
+    await _secureStorage.write(key: StorageKeys.devicePublicKey, value: publicKey);
+
+    final signedPreKey = base64Encode(
+      List<int>.generate(32, (_) => Random.secure().nextInt(256)),
+    );
+    final signedPreKeySignature = base64Encode(
+      sha256.convert(utf8.encode('$deviceId:$signedPreKey')).bytes,
+    );
+
+    return DeviceKeyBundle(
+      deviceId: deviceId,
+      publicKey: publicKey,
+      privateKey: privateKey,
+      signedPreKey: signedPreKey,
+      signedPreKeySignature: signedPreKeySignature,
+      signedPreKeyId: 1,
+      oneTimePreKeys: const [],
+    );
+  }
+
+  Future<void> registerDeviceIdentity() async {
+    final bundle = await ensureDeviceIdentityBundle();
+
+    await _apiClient.post(
+      '/crypto/keys/device',
+      data: {
+        'device_id': bundle.deviceId,
+        'public_key': bundle.publicKey,
+        'signed_pre_key': bundle.signedPreKey,
+        'signed_pre_key_sig': bundle.signedPreKeySignature,
+        'signed_pre_key_id': bundle.signedPreKeyId,
+        'one_time_pre_keys': bundle.oneTimePreKeys,
+      },
+    );
+  }
 
   /// Zapisuje klucz sesyjny dla danej konwersacji w bezpiecznej pamięci.
   Future<void> storeSessionKey(String conversationId, String base64Key) async {
@@ -158,6 +260,13 @@ class E2eeCryptoService {
 E2eeCryptoService e2eeCryptoService(Ref ref) {
   final secureStorage = ref.watch(secureStorageProvider);
   final logger = ref.watch(appLoggerProvider);
+  final apiClient = ref.watch(apiClientProvider);
+  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
 
-  return E2eeCryptoService(secureStorage, logger);
+  return E2eeCryptoService(
+    secureStorage,
+    logger,
+    apiClient,
+    deviceInfoService,
+  );
 }

@@ -289,12 +289,49 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return Message(
         id: event.id,
         conversationId: payload['conversation_id'] as String? ?? event.conversationId ?? '',
-        senderId: _currentUserId,
+        senderId: payload['sender_id'] as String? ?? _currentUserId,
         content: payload['content']?.toString() ?? '',
         isMine: true,
         createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
       );
     }).toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> syncDeltaFromRemote({
+    int lastKnownContactVersion = 0,
+    int lastKnownMessageVersion = 0,
+  }) async {
+    try {
+      final payload = await _apiClient.syncDelta(
+        lastKnownContactVersion: lastKnownContactVersion,
+        lastKnownMessageVersion: lastKnownMessageVersion,
+      );
+
+      final updatedContacts = payload['updated_contacts'] as List<dynamic>? ?? const [];
+      final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
+      final remoteMessageDtos = newMessages
+          .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
+          .toList();
+
+      if (remoteMessageDtos.isNotEmpty) {
+        await _db.chatsDao.upsertMessages(
+          remoteMessageDtos.map(_messageDtoToCompanion).toList(),
+        );
+      }
+
+      return [
+        {'updated_contacts': updatedContacts.length, 'new_messages': remoteMessageDtos.length},
+      ];
+    } catch (e, st) {
+      _logger.e(
+        'Błąd podczas synchronizacji delta',
+        error: e,
+        stackTrace: st,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
   }
 
   @override

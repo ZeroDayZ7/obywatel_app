@@ -5,16 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/chats/application/sync_status.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/chats/domain/models/message.dart';
 
-Map<String, dynamic> messageToOutboxJson(Message message) {
+Map<String, dynamic> messageToOutboxJson(Message message, String deviceId) {
   return {
     'id': message.id,
     'conversation_id': message.conversationId,
+    'event_type': 'SEND_MESSAGE',
+    'sender_id': message.senderId,
+    'device_id': deviceId,
     'content': message.content,
     'created_at': message.createdAt.toIso8601String(),
   };
@@ -25,6 +29,7 @@ class ChatSyncService {
   final ChatsWsClient _wsClient;
   final ChatsRepositoryImpl _repository;
   final AppLogger _logger;
+  final DeviceInfoService _deviceInfoService;
   final void Function(SyncStatus status) _updateStatus;
 
   StreamSubscription<WsConnectionStatus>? _statusSubscription;
@@ -36,6 +41,7 @@ class ChatSyncService {
     this._wsClient,
     this._repository,
     this._logger,
+    this._deviceInfoService,
     this._updateStatus,
   );
 
@@ -62,6 +68,7 @@ class ChatSyncService {
 
     try {
       await _flushOutbox();
+      await _fetchDeltaSync();
       await _fetchLatestConversations();
       _currentStatus = SyncStatus.idle;
       _updateStatus(SyncStatus.idle);
@@ -90,15 +97,30 @@ class ChatSyncService {
     final pendingMessages = await _repository.getPendingOutboxMessages();
     if (pendingMessages.isEmpty) return;
 
+    final deviceId = await _deviceInfoService.getOrCreateDeviceId();
+
     _logger.i(
       'Wysyłanie ${pendingMessages.length} zaległych wiadomości z outboxa',
       module: 'ChatSync',
     );
 
-    final payload = pendingMessages.map(messageToOutboxJson).toList();
+    final payload = pendingMessages
+        .map((message) => messageToOutboxJson(message, deviceId))
+        .toList();
+
     await _apiClient.sendOutboxBatch(payload);
     await _repository.clearSentOutboxMessages(
       pendingMessages.map((m) => m.id).toList(),
+    );
+  }
+
+  Future<void> _fetchDeltaSync() async {
+    final delta = await _repository.syncDeltaFromRemote();
+    if (delta.isEmpty) return;
+
+    _logger.i(
+      'Zaaplikowano ${delta.length} elementów z delta sync',
+      module: 'ChatSync',
     );
   }
 
@@ -135,6 +157,7 @@ final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
   final wsClient = ref.watch(chatsWsClientProvider);
   final repository = ref.watch(chatsRepositoryProvider) as ChatsRepositoryImpl;
   final logger = ref.watch(appLoggerProvider);
+  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);
 
   final service = ChatSyncService(
@@ -142,6 +165,7 @@ final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
     wsClient,
     repository,
     logger,
+    deviceInfoService,
     syncStatus.update,
   );
   service.init();

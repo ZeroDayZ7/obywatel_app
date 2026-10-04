@@ -82,14 +82,40 @@ class ChatsApiClient {
     });
   }
 
-  /// Przesyła wiadomości z lokalnego Outboxa w trybie offline-first
+  /// Wysyła lokalny outbox do backendu w trybie offline-first.
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
     await _runWithRetry(() async {
       await _apiClient.post(ApiEndpoints.syncOutbox, data: {'messages': payload});
     });
   }
 
-  /// Pobiera klucze pre-key użytkownika dla protokołu X3DH / E2EE
+  /// Pobiera i aplikuje zmiany różnicowe z ostatniego znanego stanu synchronizacji.
+  Future<Map<String, dynamic>> syncDelta({
+    int lastKnownContactVersion = 0,
+    int lastKnownMessageVersion = 0,
+  }) async {
+    return _runWithRetry(() async {
+      final response = await _apiClient.post(
+        ApiEndpoints.syncDelta,
+        data: {
+          'last_known_contact_version': lastKnownContactVersion,
+          'last_known_message_version': lastKnownMessageVersion,
+        },
+      );
+
+      final data = response.data as Map<String, dynamic>? ?? const {};
+      return data;
+    });
+  }
+
+  /// Rejestruje klucze urządzenia dla mechanizmu E2EE / X3DH.
+  Future<void> uploadDeviceKeys(Map<String, dynamic> payload) async {
+    await _runWithRetry(() async {
+      await _apiClient.post(ApiEndpoints.cryptoDeviceKeys, data: payload);
+    });
+  }
+
+  /// Pobiera klucze pre-key użytkownika dla protokołu X3DH / E2EE.
   Future<Map<String, dynamic>> getUserPreKeys(String userId) async {
     return _runWithRetry(() async {
       final response = await _apiClient.get(ApiEndpoints.userPreKeys(userId));
