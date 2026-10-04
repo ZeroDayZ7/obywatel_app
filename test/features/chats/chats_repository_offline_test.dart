@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/database/database.dart';
@@ -13,6 +14,36 @@ import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  final secureStorageValues = <String, String>{};
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+    const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+    (call) async {
+      final args = call.arguments as Map<dynamic, dynamic>? ?? const {};
+      switch (call.method) {
+        case 'read':
+          return secureStorageValues[args['key'] as String];
+        case 'write':
+          final key = args['key'] as String;
+          final value = args['value'] as String;
+          secureStorageValues[key] = value;
+          return null;
+        case 'delete':
+          secureStorageValues.remove(args['key'] as String);
+          return null;
+        case 'deleteAll':
+          secureStorageValues.clear();
+          return null;
+        case 'readAll':
+          return Map<String, String>.from(secureStorageValues);
+        default:
+          return null;
+      }
+    },
+  );
+
   late AppDatabase database;
   late AppLogger logger;
 
@@ -23,6 +54,18 @@ void main() {
 
   tearDown(() async {
     await database.close();
+  });
+
+  test('device identity should stay stable per installation', () async {
+    const secureStorage = FlutterSecureStorage();
+    await secureStorage.deleteAll();
+
+    final deviceInfoService = DeviceInfoService(logger);
+    final firstDeviceId = await deviceInfoService.getOrCreateDeviceId();
+    final secondDeviceId = await deviceInfoService.getOrCreateDeviceId();
+
+    expect(firstDeviceId, isNotEmpty);
+    expect(secondDeviceId, equals(firstDeviceId));
   });
 
   test(
