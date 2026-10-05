@@ -9,10 +9,28 @@ class DocumentHeaderBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isVerified = doc.isVerified;
 
-    final badgeColor = isVerified ? colorScheme.primary : colorScheme.error;
-    final badgeText = isVerified ? 'DOKUMENT WAŻNY' : 'NIEAKTYWNY';
+    final badgeColor = switch (doc.normalizedStatus) {
+      'ACTIVE' => colorScheme.primary,
+      'PENDING' => Colors.orange.shade700,
+      'EXPIRED' || 'REVOKED' => colorScheme.error,
+      _ => colorScheme.onSurfaceVariant,
+    };
+
+    final badgeText = switch (doc.normalizedStatus) {
+      'ACTIVE' => 'DOKUMENT WAŻNY',
+      'PENDING' => 'OCZEKUJĄCY',
+      'EXPIRED' => 'WYGASŁY',
+      'REVOKED' => 'UNIEWAŻNIONY',
+      _ => 'STATUS',
+    };
+
+    final badgeIcon = switch (doc.normalizedStatus) {
+      'ACTIVE' => Icons.verified_user,
+      'PENDING' => Icons.pending_actions,
+      'EXPIRED' || 'REVOKED' => Icons.gpp_maybe,
+      _ => Icons.info_outline,
+    };
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -27,7 +45,7 @@ class DocumentHeaderBadge extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                isVerified ? Icons.verified_user : Icons.gpp_maybe,
+                badgeIcon,
                 size: 16,
                 color: badgeColor,
               ),

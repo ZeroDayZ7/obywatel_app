@@ -131,6 +131,13 @@ class DocumentModel {
     }
   }
 
-  bool get isVerified => status.toLowerCase() == 'active';
+  String get normalizedStatus => status.toUpperCase();
+
+  bool get isActive => normalizedStatus == 'ACTIVE';
+  bool get isPending => normalizedStatus == 'PENDING';
+  bool get isExpired => normalizedStatus == 'EXPIRED';
+  bool get isRevoked => normalizedStatus == 'REVOKED';
+
+  bool get isVerified => isActive;
   String? get expiryDate => expiresAt;
 }

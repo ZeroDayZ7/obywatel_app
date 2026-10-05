@@ -114,9 +114,9 @@ class LocalFirstDocumentRepository implements DocumentRepository {
           continue;
         }
 
-        final metaJson = _parseMetadata(map['encrypted_meta'] as String?);
+        final metaJson = _extractMetadata(map);
         final rawSignature = map['issuer_signature'] as String? ?? '';
-        final typeCode = (map['type_code'] ?? map['type'] ?? '').toString();
+        final typeCode = (map['type_code'] ?? map['document_type'] ?? map['type'] ?? '').toString();
         final version = map['version'] is int ? map['version'] as int : 1;
 
         List<int> signatureBytes;
@@ -168,6 +168,14 @@ class LocalFirstDocumentRepository implements DocumentRepository {
     } catch (e, stackTrace) {
       logger.e('Failed to sync documents', error: e, stackTrace: stackTrace);
     }
+  }
+
+  Map<String, dynamic> _extractMetadata(Map<String, dynamic> payload) {
+    final metadata = payload['metadata'];
+    if (metadata is Map) {
+      return Map<String, dynamic>.from(metadata);
+    }
+    return _parseMetadata(payload['encrypted_meta'] as String?);
   }
 
   Map<String, dynamic> _parseMetadata(String? rawMeta) {

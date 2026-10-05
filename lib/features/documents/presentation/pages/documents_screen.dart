@@ -83,22 +83,31 @@ class _DocumentsList extends StatelessWidget {
       );
     }
 
-    final identityDocs = documents
+    final sortedDocuments = [...documents]
+      ..sort((a, b) {
+        final order = {'ACTIVE': 0, 'PENDING': 1, 'EXPIRED': 2, 'REVOKED': 3};
+        final aOrder = order[a.normalizedStatus] ?? 99;
+        final bOrder = order[b.normalizedStatus] ?? 99;
+        if (aOrder != bOrder) return aOrder.compareTo(bOrder);
+        return a.title.compareTo(b.title);
+      });
+
+    final identityDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.identity)
         .toList();
-    final permissionsDocs = documents
+    final permissionsDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.permissions)
         .toList();
-    final educationDocs = documents
+    final educationDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.education)
         .toList();
-    final transportDocs = documents
+    final transportDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.transport)
         .toList();
-    final socialDocs = documents
+    final socialDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.social)
         .toList();
-    final otherDocs = documents
+    final otherDocs = sortedDocuments
         .where((d) => d.category == DocumentCategory.other)
         .toList();
 
