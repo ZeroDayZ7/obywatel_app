@@ -65,11 +65,28 @@ class AppBottomBar extends StatelessWidget {
           children: [
             Badge(
               isLabelVisible: hasBadge,
-              label: Text('${item.badgeCount}'),
+              label: Text(
+                '${item.badgeCount}',
+                textAlign: TextAlign.center,
+                strutStyle: const StrutStyle(
+                  forceStrutHeight: true,
+                  height: 1.0,
+                ),
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  height: 1.0,
+                  color: colorScheme.onError,
+                ),
+                textHeightBehavior: const TextHeightBehavior(
+                  applyHeightToFirstAscent: false,
+                  applyHeightToLastDescent: false,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
               alignment: Alignment.topRight,
               offset: const Offset(6, -6),
               backgroundColor: colorScheme.error,
-              textColor: colorScheme.onError,
               child: Icon(
                 isSelected ? item.activeIcon : item.icon,
                 color: color,
