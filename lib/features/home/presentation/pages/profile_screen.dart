@@ -10,6 +10,7 @@ import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/utils/date_formatter.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_user.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -33,8 +34,11 @@ class ProfileScreen extends ConsumerWidget {
       );
     }
 
+    final resolvedDisplayName = user.resolvedDisplayName.isNotEmpty
+        ? user.resolvedDisplayName
+        : user.email;
     final formattedStatus = _formatStatus(user.status);
-    final formattedLastLogin = user.lastLogin != null
+    final formattedLastLogin = (user.lastLogin ?? '').trim().isNotEmpty
         ? DateFormatter.formatRelativeDateTime(user.lastLogin!)
         : null;
 
@@ -63,7 +67,7 @@ class ProfileScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user.displayName,
+                        resolvedDisplayName,
                         style: theme.textTheme.headlineMedium?.copyWith(
                           fontSize: 22,
                           color: colorScheme.onSurface,

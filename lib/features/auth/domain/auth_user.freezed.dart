@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$AuthUser {
 
-@JsonKey(readValue: _readUserId) String get id;@JsonKey(readValue: _readEmail) String get email;@JsonKey(readValue: _readDisplayName) String get displayName; String get status; String get role;@JsonKey(readValue: _readPermissions) List<String> get permissions;@JsonKey(name: 'last_login') String? get lastLogin;
+@JsonKey(readValue: _readUserId) String get id;@JsonKey(readValue: _readUsername) String get username;@JsonKey(readValue: _readEmail) String get email;@JsonKey(readValue: _readDisplayName) String get displayName; String get status; String get role;@JsonKey(readValue: _readPermissions) List<String> get permissions;@JsonKey(readValue: _readLastLogin, name: 'last_login') String? get lastLogin;
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $AuthUserCopyWith<AuthUser> get copyWith => _$AuthUserCopyWithImpl<AuthUser>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,displayName,status,role,const DeepCollectionEquality().hash(permissions),lastLogin);
+int get hashCode => Object.hash(runtimeType,id,username,email,displayName,status,role,const DeepCollectionEquality().hash(permissions),lastLogin);
 
 @override
 String toString() {
-  return 'AuthUser(id: $id, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
+  return 'AuthUser(id: $id, username: $username, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $AuthUserCopyWith<$Res>  {
   factory $AuthUserCopyWith(AuthUser value, $Res Function(AuthUser) _then) = _$AuthUserCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
+@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readUsername) String username,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(readValue: _readLastLogin, name: 'last_login') String? lastLogin
 });
 
 
@@ -65,9 +65,10 @@ class _$AuthUserCopyWithImpl<$Res>
 
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? email = null,Object? displayName = null,Object? status = null,Object? role = null,Object? permissions = null,Object? lastLogin = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? username = null,Object? email = null,Object? displayName = null,Object? status = null,Object? role = null,Object? permissions = null,Object? lastLogin = freezed,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -156,10 +157,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readUsername)  String username, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(readValue: _readLastLogin, name: 'last_login')  String? lastLogin)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
-return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
+return $default(_that.id,_that.username,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
   return orElse();
 
 }
@@ -177,10 +178,10 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readUsername)  String username, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(readValue: _readLastLogin, name: 'last_login')  String? lastLogin)  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser():
-return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);}
+return $default(_that.id,_that.username,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +195,10 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(name: 'last_login')  String? lastLogin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(readValue: _readUserId)  String id, @JsonKey(readValue: _readUsername)  String username, @JsonKey(readValue: _readEmail)  String email, @JsonKey(readValue: _readDisplayName)  String displayName,  String status,  String role, @JsonKey(readValue: _readPermissions)  List<String> permissions, @JsonKey(readValue: _readLastLogin, name: 'last_login')  String? lastLogin)?  $default,) {final _that = this;
 switch (_that) {
 case _AuthUser() when $default != null:
-return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
+return $default(_that.id,_that.username,_that.email,_that.displayName,_that.status,_that.role,_that.permissions,_that.lastLogin);case _:
   return null;
 
 }
@@ -208,11 +209,12 @@ return $default(_that.id,_that.email,_that.displayName,_that.status,_that.role,_
 /// @nodoc
 @JsonSerializable()
 
-class _AuthUser implements AuthUser {
-  const _AuthUser({@JsonKey(readValue: _readUserId) required this.id, @JsonKey(readValue: _readEmail) this.email = '', @JsonKey(readValue: _readDisplayName) this.displayName = '', this.status = 'ACTIVE', this.role = 'CITIZEN', @JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], @JsonKey(name: 'last_login') this.lastLogin}): _permissions = permissions;
+class _AuthUser extends AuthUser {
+  const _AuthUser({@JsonKey(readValue: _readUserId) required this.id, @JsonKey(readValue: _readUsername) this.username = '', @JsonKey(readValue: _readEmail) this.email = '', @JsonKey(readValue: _readDisplayName) this.displayName = '', this.status = 'ACTIVE', this.role = 'CITIZEN', @JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], @JsonKey(readValue: _readLastLogin, name: 'last_login') this.lastLogin}): _permissions = permissions,super._();
   factory _AuthUser.fromJson(Map<String, dynamic> json) => _$AuthUserFromJson(json);
 
 @override@JsonKey(readValue: _readUserId) final  String id;
+@override@JsonKey(readValue: _readUsername) final  String username;
 @override@JsonKey(readValue: _readEmail) final  String email;
 @override@JsonKey(readValue: _readDisplayName) final  String displayName;
 @override@JsonKey() final  String status;
@@ -224,7 +226,7 @@ class _AuthUser implements AuthUser {
   return EqualUnmodifiableListView(_permissions);
 }
 
-@override@JsonKey(name: 'last_login') final  String? lastLogin;
+@override@JsonKey(readValue: _readLastLogin, name: 'last_login') final  String? lastLogin;
 
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
@@ -239,16 +241,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,email,displayName,status,role,const DeepCollectionEquality().hash(_permissions),lastLogin);
+int get hashCode => Object.hash(runtimeType,id,username,email,displayName,status,role,const DeepCollectionEquality().hash(_permissions),lastLogin);
 
 @override
 String toString() {
-  return 'AuthUser(id: $id, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
+  return 'AuthUser(id: $id, username: $username, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
 }
 
 
@@ -259,7 +261,7 @@ abstract mixin class _$AuthUserCopyWith<$Res> implements $AuthUserCopyWith<$Res>
   factory _$AuthUserCopyWith(_AuthUser value, $Res Function(_AuthUser) _then) = __$AuthUserCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(name: 'last_login') String? lastLogin
+@JsonKey(readValue: _readUserId) String id,@JsonKey(readValue: _readUsername) String username,@JsonKey(readValue: _readEmail) String email,@JsonKey(readValue: _readDisplayName) String displayName, String status, String role,@JsonKey(readValue: _readPermissions) List<String> permissions,@JsonKey(readValue: _readLastLogin, name: 'last_login') String? lastLogin
 });
 
 
@@ -276,9 +278,10 @@ class __$AuthUserCopyWithImpl<$Res>
 
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? email = null,Object? displayName = null,Object? status = null,Object? role = null,Object? permissions = null,Object? lastLogin = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? username = null,Object? email = null,Object? displayName = null,Object? status = null,Object? role = null,Object? permissions = null,Object? lastLogin = freezed,}) {
   return _then(_AuthUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable

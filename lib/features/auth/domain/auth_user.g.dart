@@ -8,6 +8,7 @@ part of 'auth_user.dart';
 
 _AuthUser _$AuthUserFromJson(Map<String, dynamic> json) => _AuthUser(
   id: _readUserId(json, 'id') as String,
+  username: _readUsername(json, 'username') as String? ?? '',
   email: _readEmail(json, 'email') as String? ?? '',
   displayName: _readDisplayName(json, 'displayName') as String? ?? '',
   status: json['status'] as String? ?? 'ACTIVE',
@@ -17,11 +18,12 @@ _AuthUser _$AuthUserFromJson(Map<String, dynamic> json) => _AuthUser(
           ?.map((e) => e as String)
           .toList() ??
       const [],
-  lastLogin: json['last_login'] as String?,
+  lastLogin: _readLastLogin(json, 'last_login') as String?,
 );
 
 Map<String, dynamic> _$AuthUserToJson(_AuthUser instance) => <String, dynamic>{
   'id': instance.id,
+  'username': instance.username,
   'email': instance.email,
   'displayName': instance.displayName,
   'status': instance.status,
