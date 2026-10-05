@@ -50,98 +50,152 @@ class ProfileScreen extends ConsumerWidget {
       size: ContainerSize.medium,
       title: Text(LocaleKeys.navigation_my_account.tr()),
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
+        padding: const EdgeInsets.symmetric(vertical: 12.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                const CircleAvatar(
-                  radius: 44,
-                  backgroundImage: AssetImage(
-                    'assets/images/avatar_placeholder.png',
-                  ),
+            // --- HEADER OPERATORA ---
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  width: 1,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        resolvedDisplayName,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontSize: 22,
-                          color: colorScheme.onSurface,
-                        ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.6),
+                        width: 2,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ID: ${user.id}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontSize: 12,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    child: const CircleAvatar(
+                      radius: 38,
+                      backgroundImage: AssetImage(
+                        'assets/images/avatar_placeholder.png',
                       ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: statusColor,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            formattedStatus,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.onSurface,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          resolvedDisplayName,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.onSurface,
+                            letterSpacing: 0.3,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        // ID z etykietą taktyczną
+                        Text(
+                          'ID: ${user.id}',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontFamily: 'monospace',
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize: 11,
+                            letterSpacing: 0.8,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 10),
+                        // Idealnie wyśrodkowany status z kropką
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(
+                                color: statusColor,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: statusColor.withValues(alpha: 0.5),
+                                    blurRadius: 6,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              formattedStatus.toUpperCase(),
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.0,
+                                color: colorScheme.onSurface,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 24),
 
-            _ProfileCard(
-              icon: Icons.email_outlined,
-              title: 'Adres e-mail',
+            const SizedBox(height: 20),
+
+            // --- PUDELKO / BOX E-MAIL (Militarized Data Block) ---
+            _MilitaryDataBox(
+              tag: 'EMAIL',
+              icon: Icons.alternate_email_rounded,
               value: user.email,
             ),
-            if (formattedLastLogin != null)
-              _ProfileCard(
-                icon: Icons.access_time_rounded,
-                title: 'Ostatnie logowanie',
+
+            if (formattedLastLogin != null) ...[
+              const SizedBox(height: 12),
+              _MilitaryDataBox(
+                tag: 'LAST_LOG_TIMESTAMP',
+                icon: Icons.history_toggle_off_rounded,
                 value: formattedLastLogin,
               ),
+            ],
 
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
 
+            // --- PRZYCISKI AKCJI (Taktyczne kafelki) ---
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _ActionButton(
-                  icon: Icons.qr_code_rounded,
-                  label: 'Pokaż QR',
-                  onTap: () {},
+                Expanded(
+                  child: _ActionButton(
+                    icon: Icons.qr_code_2_rounded,
+                    label: 'QR CODE',
+                    onTap: () {},
+                  ),
                 ),
-                _ActionButton(
-                  icon: Icons.verified_user_outlined,
-                  label: 'Weryfikacja',
-                  onTap: () {},
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _ActionButton(
+                    icon: Icons.verified_user_outlined,
+                    label: 'WERYFIKACJA',
+                    onTap: () {},
+                  ),
                 ),
-                _ActionButton(
-                  icon: Icons.settings_outlined,
-                  label: 'Ustawienia',
-                  onTap: () => context.push(AppRoutes.settings),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _ActionButton(
+                    icon: Icons.tune_rounded,
+                    label: 'USTAWIENIA',
+                    onTap: () => context.push(AppRoutes.settings),
+                  ),
                 ),
               ],
             ),
@@ -165,14 +219,15 @@ class ProfileScreen extends ConsumerWidget {
   }
 }
 
-class _ProfileCard extends StatelessWidget {
+/// Dedykowane pudełko na dane użytkownika w militarnym stylu
+class _MilitaryDataBox extends StatelessWidget {
+  final String tag;
   final IconData icon;
-  final String title;
   final String value;
 
-  const _ProfileCard({
+  const _MilitaryDataBox({
+    required this.tag,
     required this.icon,
-    required this.title,
     required this.value,
   });
 
@@ -181,38 +236,57 @@ class _ProfileCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      elevation: 0,
-      color: colorScheme.surfaceContainerHigh,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+          width: 1,
         ),
       ),
-      child: ListTile(
-        leading: Icon(icon, color: colorScheme.primary),
-        title: Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontSize: 12,
-            color: colorScheme.onSurface.withValues(alpha: 0.6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Subtelny taktyczny nagłówek w pudełku
+          Row(
+            children: [
+              Icon(
+                icon,
+                size: 14,
+                color: colorScheme.primary,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                tag,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontFamily: 'monospace',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                  color: colorScheme.primary.withValues(alpha: 0.9),
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
           ),
-        ),
-        subtitle: Text(
-          value,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface,
+          const SizedBox(height: 6),
+          // Zawartość wpisu
+          SelectableText(
+            value,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
+/// Taktyczny przycisk akcji
 class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
@@ -229,31 +303,44 @@ class _ActionButton extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: colorScheme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, size: 28, color: colorScheme.primary),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: colorScheme.primary.withValues(alpha: 0.25),
+              width: 1,
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: colorScheme.onSurface,
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 22,
+                color: colorScheme.primary,
               ),
-            ),
-          ],
+              const SizedBox(height: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurface,
+                  letterSpacing: 0.6,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
       ),
     );
