@@ -21,6 +21,13 @@ class DocumentCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final normalizedStatus = (status ?? '').toUpperCase();
+    final displayStatus = switch (normalizedStatus) {
+      'ACTIVE' => 'Ważny',
+      'PENDING' => 'Oczekujący',
+      'EXPIRED' => 'Wygasły',
+      'REVOKED' => 'Unieważniony',
+      _ => 'Nieznany',
+    };
     final isInactive = normalizedStatus == 'PENDING' ||
         normalizedStatus == 'EXPIRED' ||
         normalizedStatus == 'REVOKED';
@@ -74,7 +81,7 @@ class DocumentCard extends StatelessWidget {
                   if (status != null && status!.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      status!,
+                      displayStatus,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: badgeColor,
                         fontWeight: FontWeight.w600,

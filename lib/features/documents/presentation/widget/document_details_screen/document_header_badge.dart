@@ -18,10 +18,10 @@ class DocumentHeaderBadge extends StatelessWidget {
     };
 
     final badgeText = switch (doc.normalizedStatus) {
-      'ACTIVE' => 'DOKUMENT WAŻNY',
-      'PENDING' => 'OCZEKUJĄCY',
-      'EXPIRED' => 'WYGASŁY',
-      'REVOKED' => 'UNIEWAŻNIONY',
+      'ACTIVE' => doc.statusLabel,
+      'PENDING' => doc.statusLabel,
+      'EXPIRED' => doc.statusLabel,
+      'REVOKED' => doc.statusLabel,
       _ => 'STATUS',
     };
 

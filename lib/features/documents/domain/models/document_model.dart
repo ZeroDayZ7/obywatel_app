@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 enum DocumentCategory {
   identity,
   transport,
@@ -43,38 +45,42 @@ class DocumentModel {
   });
 
   String get title {
-    final metaTitle = metadata['title'] as String?;
-    if (metaTitle != null && metaTitle.isNotEmpty) return metaTitle;
+    final metaTitle = metadata['title']?.toString();
+    if (metaTitle != null && metaTitle.trim().isNotEmpty) return metaTitle;
 
-    switch (type) {
+    final normalizedType = type.toUpperCase();
+    switch (normalizedType) {
       case 'ID_CARD':
-      case 'id_card':
         return 'Dowód osobisty';
-      case 'DRIVER_LICENSE':
-      case 'driver_license':
+      case 'DRIVERS_LICENSE':
         return 'Prawo jazdy';
+      case 'PASSPORT':
+        return 'Paszport';
       case 'LARGE_FAMILY_CARD':
-      case 'large_family_card':
         return 'Karta Dużej Rodziny';
+      case 'VEHICLE_REGISTRATION':
+        return 'Dowód rejestracyjny';
       default:
         return 'Dokument';
     }
   }
 
   String get subtitle {
-    final issuer = metadata['issuer'] as String?;
-    if (issuer != null && issuer.isNotEmpty) return issuer;
+    final issuer = metadata['issuer']?.toString();
+    if (issuer != null && issuer.trim().isNotEmpty) return issuer;
 
-    switch (type) {
+    final normalizedType = type.toUpperCase();
+    switch (normalizedType) {
       case 'ID_CARD':
-      case 'id_card':
         return 'Rzeczpospolita Polska';
-      case 'DRIVER_LICENSE':
-      case 'driver_license':
+      case 'DRIVERS_LICENSE':
         return 'Uprawnienia do kierowania';
+      case 'PASSPORT':
+        return 'Dokument podróżny';
       case 'LARGE_FAMILY_CARD':
-      case 'large_family_card':
         return 'Rodzina 3+';
+      case 'VEHICLE_REGISTRATION':
+        return 'Rejestracja pojazdu';
       default:
         return 'Dokument tożsamości';
     }
@@ -83,16 +89,18 @@ class DocumentModel {
   String get documentNumber => metadata['document_number'] as String? ?? '';
 
   String get iconName {
-    switch (type) {
+    final normalizedType = type.toUpperCase();
+    switch (normalizedType) {
       case 'ID_CARD':
-      case 'id_card':
         return 'badge';
-      case 'DRIVER_LICENSE':
-      case 'driver_license':
+      case 'DRIVERS_LICENSE':
         return 'directions_car';
+      case 'PASSPORT':
+        return 'travel_explore';
       case 'LARGE_FAMILY_CARD':
-      case 'large_family_card':
         return 'family_restroom';
+      case 'VEHICLE_REGISTRATION':
+        return 'directions_car';
       default:
         return 'article';
     }
@@ -116,16 +124,16 @@ class DocumentModel {
       }
     }
 
-    switch (type) {
+    switch (type.toUpperCase()) {
       case 'ID_CARD':
-      case 'id_card':
         return DocumentCategory.identity;
-      case 'DRIVER_LICENSE':
-      case 'driver_license':
+      case 'DRIVERS_LICENSE':
+      case 'PASSPORT':
         return DocumentCategory.permissions;
       case 'LARGE_FAMILY_CARD':
-      case 'large_family_card':
         return DocumentCategory.social;
+      case 'VEHICLE_REGISTRATION':
+        return DocumentCategory.transport;
       default:
         return DocumentCategory.other;
     }
@@ -133,11 +141,42 @@ class DocumentModel {
 
   String get normalizedStatus => status.toUpperCase();
 
+  String get statusLabel {
+    switch (normalizedStatus) {
+      case 'ACTIVE':
+        return 'Ważny';
+      case 'PENDING':
+        return 'Oczekujący';
+      case 'EXPIRED':
+        return 'Wygasły';
+      case 'REVOKED':
+        return 'Unieważniony';
+      default:
+        return 'Nieznany';
+    }
+  }
+
   bool get isActive => normalizedStatus == 'ACTIVE';
   bool get isPending => normalizedStatus == 'PENDING';
   bool get isExpired => normalizedStatus == 'EXPIRED';
   bool get isRevoked => normalizedStatus == 'REVOKED';
 
   bool get isVerified => isActive;
-  String? get expiryDate => expiresAt;
+
+  String? get formattedIssuedAt => _formatDisplayDate(issuedAt);
+  String? get formattedExpiresAt => _formatDisplayDate(expiresAt);
+  String? get expiryDate => formattedExpiresAt;
+
+  String? _formatDisplayDate(String? rawDate) {
+    if (rawDate == null || rawDate.trim().isEmpty) {
+      return null;
+    }
+
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed == null) {
+      return rawDate;
+    }
+
+    return DateFormat('dd.MM.yyyy', 'pl').format(parsed);
+  }
 }

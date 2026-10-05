@@ -89,6 +89,88 @@ class DocumentDetailsScreen extends ConsumerWidget {
   }
 }
 
+class _MetadataDetailsSection extends StatelessWidget {
+  final Map<String, dynamic> metadata;
+
+  const _MetadataDetailsSection({required this.metadata});
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = metadata.entries
+        .where(
+          (entry) =>
+              entry.key != 'title' &&
+              entry.key != 'issuer' &&
+              entry.key != 'document_number' &&
+              entry.key != 'category',
+        )
+        .toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    if (entries.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 24),
+        Text(
+          'Szczegóły dokumentu',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...entries.map((entry) {
+          final label = _formatLabel(entry.key);
+          final value = _formatValue(entry.value);
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 140,
+                  child: Text(
+                    label,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    value,
+                    style: theme.textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  String _formatLabel(String key) {
+    return key
+        .replaceAll('_', ' ')
+        .split(' ')
+        .map((part) => part.isEmpty ? part : part[0].toUpperCase() + part.substring(1))
+        .join(' ');
+  }
+
+  String _formatValue(dynamic value) {
+    if (value == null) return '—';
+    if (value is bool) return value ? 'Tak' : 'Nie';
+    if (value is List) return value.map((item) => item.toString()).join(', ');
+    return value.toString();
+  }
+}
+
 class _MobileLayout extends StatelessWidget {
   final DocumentModel doc;
 
@@ -117,6 +199,7 @@ class _MobileLayout extends StatelessWidget {
           const SizedBox(height: 16),
           DocumentExpiryBadge(date: expiryDate),
         ],
+        if (doc.metadata.isNotEmpty) _MetadataDetailsSection(metadata: doc.metadata),
         if (doc.qrData != null) ...[
           const SizedBox(height: 24),
           DocumentQrSection(data: doc.qrData!),
@@ -162,6 +245,8 @@ class _DesktopLayout extends StatelessWidget {
                     const SizedBox(height: 16),
                     DocumentExpiryBadge(date: expiryDate),
                   ],
+                  if (doc.metadata.isNotEmpty)
+                    _MetadataDetailsSection(metadata: doc.metadata),
                 ],
               ),
             ),
