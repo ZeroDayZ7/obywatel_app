@@ -47,15 +47,42 @@ class GlobalErrorInterceptor extends Interceptor {
     return handler.next(options);
   }
 
+  AppException mapToException(DioException error) => _mapToException(error);
+
+  bool shouldRetry(DioException error) => _shouldRetry(error, mapToException(error));
+
+  bool isHardBackendUnavailable(DioException error) => _isHardBackendUnavailable(error);
+
+  bool shouldOpenCircuitImmediately(DioException error) =>
+      _isHardBackendUnavailable(error);
+
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
     final requestOptions = err.requestOptions;
-    final appException = _mapToException(err);
+    final appException = mapToException(err);
 
-    if (_shouldRetry(err, appException)) {
+    if (shouldOpenCircuitImmediately(err)) {
+      networkManager.markBackendUnavailable(cooldown: backendCooldown);
+      logger.w(
+        '[NETWORK] Hard backend failure detected for ${requestOptions.path}; circuit opened immediately',
+        module: 'NETWORK',
+        error: err,
+      );
+
+      return handler.reject(
+        DioException(
+          requestOptions: requestOptions,
+          response: err.response,
+          type: err.type,
+          error: const BackendUnavailableException(),
+        ),
+      );
+    }
+
+    if (shouldRetry(err)) {
       final retryCount = requestOptions.extra['retry_count'] as int? ?? 0;
       final nextRetry = retryCount + 1;
 
@@ -150,10 +177,6 @@ class GlobalErrorInterceptor extends Interceptor {
       return true;
     }
 
-    if (exception is BackendUnavailableException) {
-      return true;
-    }
-
     if (exception is UpstreamUnavailableException) {
       return true;
     }
@@ -161,6 +184,52 @@ class GlobalErrorInterceptor extends Interceptor {
     if (error.response?.statusCode == 502 ||
         error.response?.statusCode == 503 ||
         error.response?.statusCode == 504) {
+      return true;
+    }
+
+    return false;
+  }
+
+  bool _isHardBackendUnavailable(DioException error) {
+    if (networkManager.state == NetworkState.offline) {
+      return false;
+    }
+
+    final message = (error.message ?? error.error.toString()).toLowerCase();
+    final socketException = error.error is SocketException
+        ? error.error as SocketException
+        : null;
+    final socketMessage = socketException?.message.toLowerCase() ?? '';
+    final socketErrorCode = socketException?.osError?.errorCode;
+
+    final hardBackendRefusalCodes = {
+      61,
+      111,
+      1225,
+      10061,
+    };
+
+    final isRefusedByPeer =
+        socketErrorCode != null && hardBackendRefusalCodes.contains(socketErrorCode);
+
+    final isConnectionRefusedText =
+        message.contains('connection refused') ||
+        message.contains('refused the connection') ||
+        message.contains('failed to connect to') ||
+        message.contains('connection reset by peer') ||
+        message.contains('no route to host') ||
+        message.contains('odrzucił połączenie') ||
+        message.contains('odrzucił połączenie') ||
+        socketMessage.contains('connection refused') ||
+        socketMessage.contains('refused the connection') ||
+        socketMessage.contains('failed to connect to') ||
+        socketMessage.contains('connection reset by peer') ||
+        socketMessage.contains('no route to host') ||
+        socketMessage.contains('odrzucił połączenie') ||
+        socketMessage.contains('odrzucił połączenie');
+
+    if (error.type == DioExceptionType.connectionError &&
+        (isRefusedByPeer || isConnectionRefusedText)) {
       return true;
     }
 
@@ -176,18 +245,26 @@ class GlobalErrorInterceptor extends Interceptor {
       return const BackendUnavailableException();
     }
 
-    if (error.type == DioExceptionType.connectionError ||
-        error.type == DioExceptionType.connectionTimeout ||
-        error.error is SocketException) {
-      if (networkManager.state == NetworkState.offline) {
-        return const NetworkException();
-      }
+    if (_isHardBackendUnavailable(error)) {
       return const BackendUnavailableException();
+    }
+
+    if (networkManager.state == NetworkState.offline) {
+      return const NetworkException();
+    }
+
+    if (error.type == DioExceptionType.connectionError ||
+        error.type == DioExceptionType.connectionTimeout) {
+      return const NetworkException();
     }
 
     if (error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
       return const TimeoutException();
+    }
+
+    if (error.error is SocketException) {
+      return const NetworkException();
     }
 
     if (_isUpstreamUnavailable(data)) {
