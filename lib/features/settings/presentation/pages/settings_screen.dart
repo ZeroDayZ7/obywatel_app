@@ -31,33 +31,31 @@ class SettingsScreen extends ConsumerWidget {
         title: LocaleKeys.settings_title.tr(),
         showBackButton: true,
       ),
-      child: ListView.builder(
-        itemCount: sections.length,
-        itemBuilder: (context, index) {
-          final section = sections[index];
-          final items = section['items'] as List<ActionItem>;
-
-          return ActionGroup(
-            title: section['title'] as String,
-            children: items
-                .map(
-                  (item) => ActionTile(
-                    icon: item.icon,
-                    title: item.title,
-                    subtitle: item.subtitle,
-                    isDanger: item.isDanger,
-                    showArrow: item.type == ActionType.navigation,
-                    onToggle: item.type == ActionType.toggle
-                        ? item.onToggle
-                        : null,
-                    value: item.initialValue,
-                    onTap: item.onTap,
-                    isEnabled: item.isEnabled,
-                  ),
-                )
-                .toList(),
-          );
-        },
+      child: ListView(
+        children: sections
+            .map(
+              (section) => ActionGroup(
+                title: section.title,
+                children: section.items
+                    .map(
+                      (item) => ActionTile(
+                        icon: item.icon,
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        isDanger: item.isDanger,
+                        showArrow: item.type == ActionType.navigation,
+                        onToggle: item.type == ActionType.toggle
+                            ? item.onToggle
+                            : null,
+                        value: item.initialValue,
+                        onTap: item.onTap,
+                        isEnabled: item.isEnabled,
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+            .toList(),
       ),
     );
   }

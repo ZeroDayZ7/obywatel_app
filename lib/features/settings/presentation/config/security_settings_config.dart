@@ -7,19 +7,20 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/models/action_item.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
+import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
 
 class SecuritySettingsConfig {
-  static List<Map<String, dynamic>> getSections(
+  static List<SettingsSection> getSections(
     BuildContext context,
     WidgetRef ref, {
     required SecurityState state,
     required SecurityService notifier,
   }) {
     return [
-      {
-        'title': LocaleKeys.settings_security_pin_section.tr(),
-        'items': [
+      SettingsSection(
+        title: LocaleKeys.settings_security_pin_section.tr(),
+        items: [
           ActionItem(
             icon: Icons.lock_person_outlined,
             title: LocaleKeys.settings_security_pin.tr(),
@@ -32,10 +33,10 @@ class SecuritySettingsConfig {
             ),
           ),
         ],
-      },
-      {
-        'title': LocaleKeys.settings_security_biometrics.tr(),
-        'items': [
+      ),
+      SettingsSection(
+        title: LocaleKeys.settings_security_biometrics.tr(),
+        items: [
           ActionItem(
             icon: Icons.fingerprint,
             title: LocaleKeys.settings_security_biometrics.tr(),
@@ -48,10 +49,10 @@ class SecuritySettingsConfig {
             isEnabled: state.canUseBiometrics,
           ),
         ],
-      },
-      {
-        'title': LocaleKeys.settings_security_access_section.tr(),
-        'items': [
+      ),
+      SettingsSection(
+        title: LocaleKeys.settings_security_access_section.tr(),
+        items: [
           ActionItem(
             icon: Icons.devices,
             title: LocaleKeys.settings_security_active_sessions.tr(),
@@ -68,7 +69,7 @@ class SecuritySettingsConfig {
             isDanger: true,
           ),
         ],
-      },
+      ),
     ];
   }
 }

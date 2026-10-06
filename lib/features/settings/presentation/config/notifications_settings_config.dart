@@ -5,17 +5,18 @@ import 'package:obywatel_plus/core/design/models/action_item.dart';
 import 'package:obywatel_plus/core/utils/device_capabilities_state.dart';
 import 'package:obywatel_plus/features/settings/domain/notification_settings_notifier.dart';
 import 'package:obywatel_plus/features/settings/domain/notification_settings_state.dart';
+import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 
 class NotificationsSettingsConfig {
-  static List<Map<String, dynamic>> getSections({
+  static List<SettingsSection> getSections({
     required DeviceCapabilitiesState caps,
     required NotificationSettings settings,
     required NotificationSettingsNotifier notifier,
   }) {
     return [
-      {
-        'title': 'Ogólne powiadomienia',
-        'items': [
+      SettingsSection(
+        title: 'Ogólne powiadomienia',
+        items: [
           ActionItem(
             icon: Icons.notifications,
             title: LocaleKeys.settings_notifications_settings_app_notifications
@@ -43,10 +44,10 @@ class NotificationsSettingsConfig {
             isEnabled: caps.hasVibration,
           ),
         ],
-      },
-      {
-        'title': 'Kanały powiadomień',
-        'items': [
+      ),
+      SettingsSection(
+        title: 'Kanały powiadomień',
+        items: [
           ActionItem(
             icon: Icons.email,
             title: LocaleKeys.settings_notifications_settings_email.tr(),
@@ -62,7 +63,7 @@ class NotificationsSettingsConfig {
             onToggle: notifier.toggleSms,
           ),
         ],
-      },
+      ),
     ];
   }
 }

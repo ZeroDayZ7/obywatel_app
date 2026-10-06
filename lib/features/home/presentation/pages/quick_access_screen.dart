@@ -51,7 +51,7 @@ class QuickAccessScreen extends StatelessWidget {
   );
 
   static final _marketItem = QuickAccessItem(
-    title: 'Giełda Polityków',
+    title: 'Giełda Zaufania',
     subtitle: 'Rynek reputacji',
     icon: Icons.trending_up_rounded,
     accent: QuickAccessAccent.tertiary,

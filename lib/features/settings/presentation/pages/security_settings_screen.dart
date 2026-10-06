@@ -28,33 +28,31 @@ class SecuritySettingsScreen extends ConsumerWidget {
     return AppScaffold(
       title: Text(LocaleKeys.settings_security_title.tr()),
       size: ContainerSize.medium,
-      child: ListView.builder(
-        itemCount: sections.length,
-        itemBuilder: (context, index) {
-          final section = sections[index];
-          final items = section['items'] as List<ActionItem>;
-
-          return ActionGroup(
-            title: section['title'] as String?,
-            children: items
-                .map(
-                  (item) => ActionTile(
-                    icon: item.icon,
-                    title: item.title,
-                    subtitle: item.subtitle,
-                    isDanger: item.isDanger,
-                    isEnabled: item.isEnabled,
-                    showArrow: item.type == ActionType.navigation,
-                    onTap: item.onTap,
-                    onToggle: item.type == ActionType.toggle
-                        ? item.onToggle
-                        : null,
-                    value: item.initialValue,
-                  ),
-                )
-                .toList(),
-          );
-        },
+      child: ListView(
+        children: sections
+            .map(
+              (section) => ActionGroup(
+                title: section.title,
+                children: section.items
+                    .map(
+                      (item) => ActionTile(
+                        icon: item.icon,
+                        title: item.title,
+                        subtitle: item.subtitle,
+                        isDanger: item.isDanger,
+                        isEnabled: item.isEnabled,
+                        showArrow: item.type == ActionType.navigation,
+                        onTap: item.onTap,
+                        onToggle: item.type == ActionType.toggle
+                            ? item.onToggle
+                            : null,
+                        value: item.initialValue,
+                      ),
+                    )
+                    .toList(),
+              ),
+            )
+            .toList(),
       ),
     );
   }

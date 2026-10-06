@@ -4,9 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/models/action_item.dart';
+import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 
 class SettingsConfig {
-  static List<Map<String, dynamic>> getSections(
+  static List<SettingsSection> getSections(
     BuildContext context, {
     required VoidCallback onLanguageTap,
     required VoidCallback onThemeTap,
@@ -15,9 +16,9 @@ class SettingsConfig {
     bool isBiometryAvailable = false,
   }) {
     return [
-      {
-        'title': LocaleKeys.settings_general.tr(),
-        'items': [
+      SettingsSection(
+        title: LocaleKeys.settings_general.tr(),
+        items: [
           ActionItem(
             icon: Icons.notifications,
             title: LocaleKeys.settings_notifications.tr(),
@@ -42,10 +43,10 @@ class SettingsConfig {
             onTap: onThemeTap,
           ),
         ],
-      },
-      {
-        'title': LocaleKeys.settings_security_title.tr(),
-        'items': [
+      ),
+      SettingsSection(
+        title: LocaleKeys.settings_security_title.tr(),
+        items: [
           ActionItem(
             icon: Icons.security,
             title: LocaleKeys.settings_security_title.tr(),
@@ -65,7 +66,7 @@ class SettingsConfig {
             isEnabled: isBiometryAvailable,
           ),
         ],
-      },
+      ),
     ];
   }
 }
