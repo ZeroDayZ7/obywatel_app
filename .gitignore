@@ -33,7 +33,7 @@ migrate_working_dir/
 /build/
 /coverage/
 
-**/*.patch
+**/*.patch*
 
 # Symbolication related
 app.*.symbols

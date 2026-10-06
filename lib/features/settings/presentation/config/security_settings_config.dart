@@ -19,8 +19,17 @@ class SecuritySettingsConfig {
   }) {
     return [
       SettingsSection(
-        title: LocaleKeys.settings_security_pin_section.tr(),
+        title: LocaleKeys.settings_security_access_section.tr(),
         items: [
+          ActionItem(
+            icon: Icons.lock_outline_rounded,
+            title: LocaleKeys.settings_security_change_password.tr(),
+            subtitle: LocaleKeys.settings_security_change_password_description.tr(),
+            type: ActionType.navigation,
+            onTap: () => context.push(
+              '${AppRoutes.settings}/${AppRoutes.settingsChangePassword}',
+            ),
+          ),
           ActionItem(
             icon: Icons.lock_person_outlined,
             title: LocaleKeys.settings_security_pin.tr(),
@@ -35,7 +44,7 @@ class SecuritySettingsConfig {
         ],
       ),
       SettingsSection(
-        title: LocaleKeys.settings_security_biometrics.tr(),
+        title: LocaleKeys.settings_security_biometrics_section.tr(),
         items: [
           ActionItem(
             icon: Icons.fingerprint,
@@ -45,7 +54,9 @@ class SecuritySettingsConfig {
                 : LocaleKeys.settings_notifications_settings_not_available.tr(),
             type: ActionType.toggle,
             initialValue: state.isBiometricEnabled,
-            onToggle: notifier.toggleBiometrics,
+            onToggle: state.canUseBiometrics
+                ? notifier.toggleBiometrics
+                : null,
             isEnabled: state.canUseBiometrics,
           ),
         ],
@@ -64,7 +75,7 @@ class SecuritySettingsConfig {
           ActionItem(
             icon: Icons.lock_reset,
             title: LocaleKeys.settings_security_emergency_lock.tr(),
-            type: ActionType.navigation,
+            type: ActionType.action,
             onTap: () => EmergencyLockDialog.show(context, ref),
             isDanger: true,
           ),

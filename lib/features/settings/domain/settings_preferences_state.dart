@@ -27,11 +27,10 @@ sealed class SettingsPreferencesState with _$SettingsPreferencesState {
   const factory SettingsPreferencesState({
     @Default(AppLockTimeout.minute1) AppLockTimeout appLockTimeout,
     @Default(PrivacyMode.balanced) PrivacyMode privacyMode,
-    @Default(false) bool biometricPrompt,
-    @Default(false) bool compactMode,
+    @Default(DisplayMode.adaptive) DisplayMode displayMode,
+    @Default(true) bool biometricPrompt,
     @Default(false) bool reducedMotion,
     @Default(false) bool dataSharingOptIn,
-    @Default(false) bool highContrast,
   }) = _SettingsPreferencesState;
 
   factory SettingsPreferencesState.fromJson(Map<String, dynamic> json) =>

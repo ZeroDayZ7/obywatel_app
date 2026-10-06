@@ -15,11 +15,12 @@ _SettingsPreferencesState _$SettingsPreferencesStateFromJson(
   privacyMode:
       $enumDecodeNullable(_$PrivacyModeEnumMap, json['privacyMode']) ??
       PrivacyMode.balanced,
-  biometricPrompt: json['biometricPrompt'] as bool? ?? false,
-  compactMode: json['compactMode'] as bool? ?? false,
+  displayMode:
+      $enumDecodeNullable(_$DisplayModeEnumMap, json['displayMode']) ??
+      DisplayMode.adaptive,
+  biometricPrompt: json['biometricPrompt'] as bool? ?? true,
   reducedMotion: json['reducedMotion'] as bool? ?? false,
   dataSharingOptIn: json['dataSharingOptIn'] as bool? ?? false,
-  highContrast: json['highContrast'] as bool? ?? false,
 );
 
 Map<String, dynamic> _$SettingsPreferencesStateToJson(
@@ -27,11 +28,10 @@ Map<String, dynamic> _$SettingsPreferencesStateToJson(
 ) => <String, dynamic>{
   'appLockTimeout': _$AppLockTimeoutEnumMap[instance.appLockTimeout]!,
   'privacyMode': _$PrivacyModeEnumMap[instance.privacyMode]!,
+  'displayMode': _$DisplayModeEnumMap[instance.displayMode]!,
   'biometricPrompt': instance.biometricPrompt,
-  'compactMode': instance.compactMode,
   'reducedMotion': instance.reducedMotion,
   'dataSharingOptIn': instance.dataSharingOptIn,
-  'highContrast': instance.highContrast,
 };
 
 const _$AppLockTimeoutEnumMap = {
@@ -45,4 +45,10 @@ const _$PrivacyModeEnumMap = {
   PrivacyMode.standard: 'standard',
   PrivacyMode.balanced: 'balanced',
   PrivacyMode.strict: 'strict',
+};
+
+const _$DisplayModeEnumMap = {
+  DisplayMode.adaptive: 'adaptive',
+  DisplayMode.compact: 'compact',
+  DisplayMode.highContrast: 'highContrast',
 };

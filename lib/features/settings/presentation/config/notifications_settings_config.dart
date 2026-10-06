@@ -15,7 +15,7 @@ class NotificationsSettingsConfig {
   }) {
     return [
       SettingsSection(
-        title: 'Ogólne powiadomienia',
+        title: LocaleKeys.settings_notifications_section_general.tr(),
         items: [
           ActionItem(
             icon: Icons.notifications,
@@ -46,7 +46,7 @@ class NotificationsSettingsConfig {
         ],
       ),
       SettingsSection(
-        title: 'Kanały powiadomień',
+        title: LocaleKeys.settings_notifications_section_channels.tr(),
         items: [
           ActionItem(
             icon: Icons.email,

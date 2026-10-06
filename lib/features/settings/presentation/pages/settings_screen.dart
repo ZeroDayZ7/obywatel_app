@@ -19,10 +19,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sections = SettingsConfig.getSections(
       context,
+      ref,
       onLanguageTap: () => _showLanguageSelectorSheet(context),
       onThemeTap: () => _showThemeSelectorSheet(context),
-      biometryValue: true,
-      onBiometryToggle: (val) {},
     );
 
     return AppScaffold(
@@ -31,31 +30,31 @@ class SettingsScreen extends ConsumerWidget {
         title: LocaleKeys.settings_title.tr(),
         showBackButton: true,
       ),
-      child: ListView(
-        children: sections
-            .map(
-              (section) => ActionGroup(
-                title: section.title,
-                children: section.items
-                    .map(
-                      (item) => ActionTile(
-                        icon: item.icon,
-                        title: item.title,
-                        subtitle: item.subtitle,
-                        isDanger: item.isDanger,
-                        showArrow: item.type == ActionType.navigation,
-                        onToggle: item.type == ActionType.toggle
-                            ? item.onToggle
-                            : null,
-                        value: item.initialValue,
-                        onTap: item.onTap,
-                        isEnabled: item.isEnabled,
-                      ),
-                    )
-                    .toList(),
-              ),
-            )
-            .toList(),
+      child: ListView.builder(
+        itemCount: sections.length,
+        itemBuilder: (context, sectionIndex) {
+          final section = sections[sectionIndex];
+          return ActionGroup(
+            title: section.title,
+            children: section.items
+                .map(
+                  (item) => ActionTile(
+                    icon: item.icon,
+                    title: item.title,
+                    subtitle: item.subtitle,
+                    isDanger: item.isDanger,
+                    showArrow: item.type == ActionType.navigation ||
+                        item.type == ActionType.sheet ||
+                        item.type == ActionType.selection,
+                    onToggle: item.type == ActionType.toggle ? item.onToggle : null,
+                    value: item.initialValue,
+                    onTap: item.onTap,
+                    isEnabled: item.isEnabled,
+                  ),
+                )
+                .toList(),
+          );
+        },
       ),
     );
   }

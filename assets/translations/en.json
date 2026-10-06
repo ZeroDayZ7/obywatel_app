@@ -196,9 +196,28 @@
       "emergency_lock": "Emergency Lock",
       "emergency_lock_description": "This action will immediately lock your account, log out all devices, and suspend certificates.",
       "emergency_lock_slider": "Slide to lock",
-      "emergency_lock_cancel": "Cancel"
+      "emergency_lock_cancel": "Cancel",
+      "change_password": "Change Password",
+      "change_password_description": "Update the password you use to access the app."
     },
     "notifications": "Notifications",
+    "notifications_section_general": "General notifications",
+    "notifications_section_channels": "Notification channels",
+    "privacy_title": "Privacy",
+    "privacy_mode": "Privacy mode",
+    "feature_disabled": "Currently unavailable",
+    "data_sharing": "Data sharing",
+    "appearance_title": "Appearance",
+    "display_mode": "Display mode",
+    "reduced_motion": "Reduced motion",
+    "change_password": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "requirements": "Your new password must include:",
+      "submit": "Change Password",
+      "backend_pending": "Password change is not yet connected to the backend."
+    },
     "notifications_subtitle": "Manage your notifications",
     "notifications_settings": {
       "title": "Notification Settings",

@@ -2,7 +2,14 @@
 
 import 'package:flutter/material.dart';
 
-enum ActionType { navigation, sheet, toggle }
+enum ActionType {
+  navigation,
+  sheet,
+  toggle,
+  selection,
+  action,
+  destructiveAction,
+}
 
 class ActionItem {
   final IconData icon;
