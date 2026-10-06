@@ -23,12 +23,8 @@ class ContactsApiClient {
         .toList();
   }
 
-  Future<void> sendContactRequest(String targetUserId, {String? localAlias}) async {
+  Future<void> sendContactRequest(String targetUserId) async {
     final payload = {'target_user_id': targetUserId};
-    if (localAlias != null && localAlias.trim().isNotEmpty) {
-      payload['local_alias'] = localAlias.trim();
-    }
-
     await _apiClient.post(
       '/contacts/request',
       data: payload,

@@ -38,22 +38,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
   }
 
   @override
-  Future<void> sendRequest(String targetUserId, {String? localAlias}) async {
+  Future<void> sendRequest(String targetUserId) async {
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
-    final normalizedAlias = ContactIdentifier.normalizeAlias(localAlias);
 
-    await _apiClient.sendContactRequest(
-      normalized,
-      localAlias: normalizedAlias.isEmpty ? null : normalizedAlias,
-    );
+    await _apiClient.sendContactRequest(normalized);
 
-    if (normalizedAlias.isNotEmpty) {
-      await _dao.updateLocalAlias(
-        contactId: normalized,
-        localAlias: normalizedAlias,
-      );
-    }
-
+    // Do not set local alias during request flow; alias can be set later
     await fetchAndSyncContacts();
   }
 

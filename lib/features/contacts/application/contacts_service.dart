@@ -9,8 +9,8 @@ class ContactsService {
 
   ContactsService(this._repository);
 
-  Future<void> addContact(String userId, {String? localAlias}) async {
-    await _repository.sendRequest(userId, localAlias: localAlias);
+  Future<void> addContact(String userId) async {
+    await _repository.sendRequest(userId);
   }
 
   Future<void> updateLocalAlias(String contactId, String localAlias) async {
