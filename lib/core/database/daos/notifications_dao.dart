@@ -39,6 +39,13 @@ class NotificationsDao extends DatabaseAccessor<AppDatabase>
         .map((rows) => rows.map((row) => _mapToModel(row)).toList());
   }
 
+  Stream<int> watchUnreadNotificationCount() {
+    return (select(notifications)
+          ..where((t) => t.deletedAt.isNull() & t.isRead.equals(false)))
+        .watch()
+        .map((rows) => rows.length);
+  }
+
   // NOWE: Stream specjalnie dla widoku Kosza
   Stream<List<NotificationModel>> watchTrashNotifications() {
     return (select(notifications)

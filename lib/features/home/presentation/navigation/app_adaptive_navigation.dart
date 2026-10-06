@@ -16,11 +16,7 @@ class AppAdaptiveNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notificationsAsync = ref.watch(notificationsControllerProvider);
-    final unreadCount = notificationsAsync.maybeWhen(
-      data: (items) => items.where((item) => !item.isRead).length,
-      orElse: () => 0,
-    );
+    final unreadCount = ref.watch(unreadNotificationsCountProvider).value ?? 0;
 
     return LayoutBuilder(
       builder: (context, constraints) {
