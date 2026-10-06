@@ -1,0 +1,140 @@
+import 'dart:async';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+enum NetworkState {
+  online,
+  offline,
+  retrying,
+  backendUnavailable,
+}
+
+class NetworkManager {
+  NetworkManager({
+    Connectivity? connectivity,
+    DateTime Function()? clock,
+  })  : _connectivity = connectivity ?? Connectivity(),
+        _clock = clock ?? DateTime.now;
+
+  final Connectivity _connectivity;
+  final DateTime Function() _clock;
+  final StreamController<NetworkState> _stateController =
+      StreamController<NetworkState>.broadcast();
+
+  DateTime? _backendUnavailableUntil;
+  NetworkState _state = NetworkState.online;
+  StreamSubscription<List<ConnectivityResult>>? _subscription;
+
+  Stream<NetworkState> get stream => _stateController.stream;
+  NetworkState get state => _state;
+
+  bool get isOffline => _state == NetworkState.offline;
+
+  bool get isBackendUnavailable =>
+      _state == NetworkState.backendUnavailable ||
+      (_backendUnavailableUntil != null &&
+          _backendUnavailableUntil!.isAfter(_clock()));
+
+  Future<void> start() async {
+    _subscription ??= _connectivity.onConnectivityChanged.listen((results) {
+      _applyConnectivity(results);
+    });
+
+    final results = await _connectivity.checkConnectivity();
+    _applyConnectivity(results);
+  }
+
+  void dispose() {
+    _subscription?.cancel();
+    _stateController.close();
+  }
+
+  void _emitState() {
+    if (!_stateController.isClosed) {
+      _stateController.add(_state);
+    }
+  }
+
+  void _applyConnectivity(List<ConnectivityResult> results) {
+    final isOffline = results.contains(ConnectivityResult.none);
+
+    if (isOffline) {
+      markOffline();
+      return;
+    }
+
+    if (_backendUnavailableUntil != null &&
+        _backendUnavailableUntil!.isAfter(_clock())) {
+      _state = NetworkState.backendUnavailable;
+      _emitState();
+      return;
+    }
+
+    markOnline();
+  }
+
+  bool shouldFailFast() {
+    final now = _clock();
+
+    if (_state == NetworkState.offline) {
+      return true;
+    }
+
+    if (_backendUnavailableUntil != null &&
+        _backendUnavailableUntil!.isAfter(now)) {
+      _state = NetworkState.backendUnavailable;
+      _emitState();
+      return true;
+    }
+
+    if (_backendUnavailableUntil != null &&
+        !_backendUnavailableUntil!.isAfter(now)) {
+      _backendUnavailableUntil = null;
+      _state = NetworkState.online;
+      _emitState();
+    }
+
+    return false;
+  }
+
+  void markOffline() {
+    _backendUnavailableUntil = null;
+    _state = NetworkState.offline;
+    _emitState();
+  }
+
+  void markOnline() {
+    _backendUnavailableUntil = null;
+    _state = NetworkState.online;
+    _emitState();
+  }
+
+  void markRetrying() {
+    _state = NetworkState.retrying;
+    _emitState();
+  }
+
+  void markBackendUnavailable({Duration cooldown = const Duration(seconds: 30)}) {
+    _backendUnavailableUntil = _clock().add(cooldown);
+    _state = NetworkState.backendUnavailable;
+    _emitState();
+  }
+
+  void resetAfterConnectivityRecovery() {
+    _backendUnavailableUntil = null;
+    _state = NetworkState.online;
+    _emitState();
+  }
+}
+
+final networkManagerProvider = Provider<NetworkManager>((ref) {
+  final manager = NetworkManager();
+  ref.onDispose(manager.dispose);
+  return manager;
+});
+
+final networkStateProvider = StreamProvider<NetworkState>((ref) {
+  final manager = ref.watch(networkManagerProvider);
+  return manager.stream;
+});

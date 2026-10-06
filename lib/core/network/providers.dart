@@ -14,6 +14,7 @@ import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
 import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
+import 'package:obywatel_plus/core/network/network_manager.dart';
 import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -62,6 +63,7 @@ Fresh<OAuth2Token> authFresh(Ref ref) {
 @Riverpod(keepAlive: true)
 Dio authDio(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
+  final networkManager = ref.watch(networkManagerProvider);
 
   final dio = Dio(
     BaseOptions(
@@ -85,7 +87,9 @@ Dio authDio(Ref ref) {
   dio.interceptors.add(SecuritySyncInterceptor(ref));
 
   // 5. Global Error Interceptor (przetwarza błędy po nieudanej próbie refreshu)
-  dio.interceptors.add(GlobalErrorInterceptor(logger: logger));
+  dio.interceptors.add(
+    GlobalErrorInterceptor(logger: logger, networkManager: networkManager),
+  );
 
   return dio;
 }
@@ -96,6 +100,7 @@ Dio refreshDio(Ref ref) {
     profile: DioProfile.refreshToken,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
+    networkManager: ref.watch(networkManagerProvider),
   );
 }
 
@@ -105,6 +110,7 @@ Dio noAuthDio(Ref ref) {
     profile: DioProfile.noAuthAuth,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
+    networkManager: ref.watch(networkManagerProvider),
   );
   dio.interceptors.add(SecuritySyncInterceptor(ref));
   return dio;
@@ -116,6 +122,7 @@ Dio publicDio(Ref ref) {
     profile: DioProfile.public,
     logger: ref.watch(appLoggerProvider),
     deviceInfoRef: ref,
+    networkManager: ref.watch(networkManagerProvider),
   );
   dio.interceptors.add(SecuritySyncInterceptor(ref));
   return dio;

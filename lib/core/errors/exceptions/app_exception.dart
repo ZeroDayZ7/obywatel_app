@@ -23,8 +23,18 @@ final class RevokedTokenException extends AppException {
 /// Brak internetu / problem z połączeniem klient -> gateway
 final class NetworkException extends AppException {
   const NetworkException({
-    super.message = 'Brak połączenia z serwerem.',
+    super.message = 'Brak połączenia z internetem.',
     super.code = 'NETWORK_ERROR',
+  });
+}
+
+/// Backend jest chwilowo niedostępny; globalny cooldown jest aktywny
+final class BackendUnavailableException extends AppException {
+  const BackendUnavailableException({
+    super.message =
+        'Serwer jest chwilowo niedostępny. Spróbujemy ponownie później.',
+    super.code = 'BACKEND_UNAVAILABLE',
+    super.statusCode = 503,
   });
 }
 
