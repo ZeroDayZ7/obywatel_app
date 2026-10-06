@@ -1919,6 +1919,17 @@ class $ContactsTable extends Contacts
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
+  static const VerificationMeta _localAliasMeta = const VerificationMeta(
+    'localAlias',
+  );
+  @override
+  late final GeneratedColumn<String> localAlias = GeneratedColumn<String>(
+    'local_alias',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _encryptedAliasMeta = const VerificationMeta(
     'encryptedAlias',
   );
@@ -1984,6 +1995,7 @@ class $ContactsTable extends Contacts
     ownerId,
     contactId,
     status,
+    localAlias,
     encryptedAlias,
     version,
     createdAt,
@@ -2027,6 +2039,12 @@ class $ContactsTable extends Contacts
       context.handle(
         _statusMeta,
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('local_alias')) {
+      context.handle(
+        _localAliasMeta,
+        localAlias.isAcceptableOrUnknown(data['local_alias']!, _localAliasMeta),
       );
     }
     if (data.containsKey('encrypted_alias')) {
@@ -2087,6 +2105,10 @@ class $ContactsTable extends Contacts
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      localAlias: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_alias'],
+      ),
       encryptedAlias: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}encrypted_alias'],
@@ -2121,6 +2143,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
   final String ownerId;
   final String contactId;
   final String status;
+  final String? localAlias;
   final Uint8List? encryptedAlias;
   final BigInt version;
   final DateTime createdAt;
@@ -2131,6 +2154,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     required this.ownerId,
     required this.contactId,
     required this.status,
+    this.localAlias,
     this.encryptedAlias,
     required this.version,
     required this.createdAt,
@@ -2144,6 +2168,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     map['owner_id'] = Variable<String>(ownerId);
     map['contact_id'] = Variable<String>(contactId);
     map['status'] = Variable<String>(status);
+    if (!nullToAbsent || localAlias != null) {
+      map['local_alias'] = Variable<String>(localAlias);
+    }
     if (!nullToAbsent || encryptedAlias != null) {
       map['encrypted_alias'] = Variable<Uint8List>(encryptedAlias);
     }
@@ -2162,6 +2189,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: Value(ownerId),
       contactId: Value(contactId),
       status: Value(status),
+      localAlias: localAlias == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localAlias),
       encryptedAlias: encryptedAlias == null && nullToAbsent
           ? const Value.absent()
           : Value(encryptedAlias),
@@ -2184,6 +2214,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: serializer.fromJson<String>(json['ownerId']),
       contactId: serializer.fromJson<String>(json['contactId']),
       status: serializer.fromJson<String>(json['status']),
+      localAlias: serializer.fromJson<String?>(json['localAlias']),
       encryptedAlias: serializer.fromJson<Uint8List?>(json['encryptedAlias']),
       version: serializer.fromJson<BigInt>(json['version']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -2199,6 +2230,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       'ownerId': serializer.toJson<String>(ownerId),
       'contactId': serializer.toJson<String>(contactId),
       'status': serializer.toJson<String>(status),
+      'localAlias': serializer.toJson<String?>(localAlias),
       'encryptedAlias': serializer.toJson<Uint8List?>(encryptedAlias),
       'version': serializer.toJson<BigInt>(version),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -2212,6 +2244,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     String? ownerId,
     String? contactId,
     String? status,
+    Value<String?> localAlias = const Value.absent(),
     Value<Uint8List?> encryptedAlias = const Value.absent(),
     BigInt? version,
     DateTime? createdAt,
@@ -2222,6 +2255,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId: ownerId ?? this.ownerId,
     contactId: contactId ?? this.contactId,
     status: status ?? this.status,
+    localAlias: localAlias.present ? localAlias.value : this.localAlias,
     encryptedAlias: encryptedAlias.present
         ? encryptedAlias.value
         : this.encryptedAlias,
@@ -2236,6 +2270,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       status: data.status.present ? data.status.value : this.status,
+      localAlias: data.localAlias.present
+          ? data.localAlias.value
+          : this.localAlias,
       encryptedAlias: data.encryptedAlias.present
           ? data.encryptedAlias.value
           : this.encryptedAlias,
@@ -2253,6 +2290,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -2268,6 +2306,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId,
     contactId,
     status,
+    localAlias,
     $driftBlobEquality.hash(encryptedAlias),
     version,
     createdAt,
@@ -2282,6 +2321,7 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           other.ownerId == this.ownerId &&
           other.contactId == this.contactId &&
           other.status == this.status &&
+          other.localAlias == this.localAlias &&
           $driftBlobEquality.equals(
             other.encryptedAlias,
             this.encryptedAlias,
@@ -2297,6 +2337,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
   final Value<String> ownerId;
   final Value<String> contactId;
   final Value<String> status;
+  final Value<String?> localAlias;
   final Value<Uint8List?> encryptedAlias;
   final Value<BigInt> version;
   final Value<DateTime> createdAt;
@@ -2308,6 +2349,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     this.ownerId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.status = const Value.absent(),
+    this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2320,6 +2362,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     required String ownerId,
     required String contactId,
     this.status = const Value.absent(),
+    this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -2334,6 +2377,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Expression<String>? ownerId,
     Expression<String>? contactId,
     Expression<String>? status,
+    Expression<String>? localAlias,
     Expression<Uint8List>? encryptedAlias,
     Expression<BigInt>? version,
     Expression<DateTime>? createdAt,
@@ -2346,6 +2390,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       if (ownerId != null) 'owner_id': ownerId,
       if (contactId != null) 'contact_id': contactId,
       if (status != null) 'status': status,
+      if (localAlias != null) 'local_alias': localAlias,
       if (encryptedAlias != null) 'encrypted_alias': encryptedAlias,
       if (version != null) 'version': version,
       if (createdAt != null) 'created_at': createdAt,
@@ -2360,6 +2405,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Value<String>? ownerId,
     Value<String>? contactId,
     Value<String>? status,
+    Value<String?>? localAlias,
     Value<Uint8List?>? encryptedAlias,
     Value<BigInt>? version,
     Value<DateTime>? createdAt,
@@ -2372,6 +2418,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       ownerId: ownerId ?? this.ownerId,
       contactId: contactId ?? this.contactId,
       status: status ?? this.status,
+      localAlias: localAlias ?? this.localAlias,
       encryptedAlias: encryptedAlias ?? this.encryptedAlias,
       version: version ?? this.version,
       createdAt: createdAt ?? this.createdAt,
@@ -2395,6 +2442,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
+    }
+    if (localAlias.present) {
+      map['local_alias'] = Variable<String>(localAlias.value);
     }
     if (encryptedAlias.present) {
       map['encrypted_alias'] = Variable<Uint8List>(encryptedAlias.value);
@@ -2424,6 +2474,7 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
           ..write('createdAt: $createdAt, ')
@@ -4603,6 +4654,1826 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   }
 }
 
+class $SyncStateTable extends SyncState
+    with TableInfo<$SyncStateTable, SyncStateEntity> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncStateTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastKnownMessageVersionMeta =
+      const VerificationMeta('lastKnownMessageVersion');
+  @override
+  late final GeneratedColumn<BigInt> lastKnownMessageVersion =
+      GeneratedColumn<BigInt>(
+        'last_known_message_version',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _lastKnownContactVersionMeta =
+      const VerificationMeta('lastKnownContactVersion');
+  @override
+  late final GeneratedColumn<BigInt> lastKnownContactVersion =
+      GeneratedColumn<BigInt>(
+        'last_known_contact_version',
+        aliasedName,
+        false,
+        type: DriftSqlType.bigInt,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    lastKnownMessageVersion,
+    lastKnownContactVersion,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_state';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncStateEntity> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('last_known_message_version')) {
+      context.handle(
+        _lastKnownMessageVersionMeta,
+        lastKnownMessageVersion.isAcceptableOrUnknown(
+          data['last_known_message_version']!,
+          _lastKnownMessageVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastKnownMessageVersionMeta);
+    }
+    if (data.containsKey('last_known_contact_version')) {
+      context.handle(
+        _lastKnownContactVersionMeta,
+        lastKnownContactVersion.isAcceptableOrUnknown(
+          data['last_known_contact_version']!,
+          _lastKnownContactVersionMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_lastKnownContactVersionMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId};
+  @override
+  SyncStateEntity map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncStateEntity(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      lastKnownMessageVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}last_known_message_version'],
+      )!,
+      lastKnownContactVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}last_known_contact_version'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncStateTable createAlias(String alias) {
+    return $SyncStateTable(attachedDatabase, alias);
+  }
+}
+
+class SyncStateEntity extends DataClass implements Insertable<SyncStateEntity> {
+  final String userId;
+  final BigInt lastKnownMessageVersion;
+  final BigInt lastKnownContactVersion;
+  final DateTime updatedAt;
+  const SyncStateEntity({
+    required this.userId,
+    required this.lastKnownMessageVersion,
+    required this.lastKnownContactVersion,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['last_known_message_version'] = Variable<BigInt>(
+      lastKnownMessageVersion,
+    );
+    map['last_known_contact_version'] = Variable<BigInt>(
+      lastKnownContactVersion,
+    );
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SyncStateCompanion toCompanion(bool nullToAbsent) {
+    return SyncStateCompanion(
+      userId: Value(userId),
+      lastKnownMessageVersion: Value(lastKnownMessageVersion),
+      lastKnownContactVersion: Value(lastKnownContactVersion),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SyncStateEntity.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncStateEntity(
+      userId: serializer.fromJson<String>(json['userId']),
+      lastKnownMessageVersion: serializer.fromJson<BigInt>(
+        json['lastKnownMessageVersion'],
+      ),
+      lastKnownContactVersion: serializer.fromJson<BigInt>(
+        json['lastKnownContactVersion'],
+      ),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'lastKnownMessageVersion': serializer.toJson<BigInt>(
+        lastKnownMessageVersion,
+      ),
+      'lastKnownContactVersion': serializer.toJson<BigInt>(
+        lastKnownContactVersion,
+      ),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SyncStateEntity copyWith({
+    String? userId,
+    BigInt? lastKnownMessageVersion,
+    BigInt? lastKnownContactVersion,
+    DateTime? updatedAt,
+  }) => SyncStateEntity(
+    userId: userId ?? this.userId,
+    lastKnownMessageVersion:
+        lastKnownMessageVersion ?? this.lastKnownMessageVersion,
+    lastKnownContactVersion:
+        lastKnownContactVersion ?? this.lastKnownContactVersion,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SyncStateEntity copyWithCompanion(SyncStateCompanion data) {
+    return SyncStateEntity(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      lastKnownMessageVersion: data.lastKnownMessageVersion.present
+          ? data.lastKnownMessageVersion.value
+          : this.lastKnownMessageVersion,
+      lastKnownContactVersion: data.lastKnownContactVersion.present
+          ? data.lastKnownContactVersion.value
+          : this.lastKnownContactVersion,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncStateEntity(')
+          ..write('userId: $userId, ')
+          ..write('lastKnownMessageVersion: $lastKnownMessageVersion, ')
+          ..write('lastKnownContactVersion: $lastKnownContactVersion, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    userId,
+    lastKnownMessageVersion,
+    lastKnownContactVersion,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncStateEntity &&
+          other.userId == this.userId &&
+          other.lastKnownMessageVersion == this.lastKnownMessageVersion &&
+          other.lastKnownContactVersion == this.lastKnownContactVersion &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SyncStateCompanion extends UpdateCompanion<SyncStateEntity> {
+  final Value<String> userId;
+  final Value<BigInt> lastKnownMessageVersion;
+  final Value<BigInt> lastKnownContactVersion;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SyncStateCompanion({
+    this.userId = const Value.absent(),
+    this.lastKnownMessageVersion = const Value.absent(),
+    this.lastKnownContactVersion = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncStateCompanion.insert({
+    required String userId,
+    required BigInt lastKnownMessageVersion,
+    required BigInt lastKnownContactVersion,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       lastKnownMessageVersion = Value(lastKnownMessageVersion),
+       lastKnownContactVersion = Value(lastKnownContactVersion);
+  static Insertable<SyncStateEntity> custom({
+    Expression<String>? userId,
+    Expression<BigInt>? lastKnownMessageVersion,
+    Expression<BigInt>? lastKnownContactVersion,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (lastKnownMessageVersion != null)
+        'last_known_message_version': lastKnownMessageVersion,
+      if (lastKnownContactVersion != null)
+        'last_known_contact_version': lastKnownContactVersion,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncStateCompanion copyWith({
+    Value<String>? userId,
+    Value<BigInt>? lastKnownMessageVersion,
+    Value<BigInt>? lastKnownContactVersion,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SyncStateCompanion(
+      userId: userId ?? this.userId,
+      lastKnownMessageVersion:
+          lastKnownMessageVersion ?? this.lastKnownMessageVersion,
+      lastKnownContactVersion:
+          lastKnownContactVersion ?? this.lastKnownContactVersion,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (lastKnownMessageVersion.present) {
+      map['last_known_message_version'] = Variable<BigInt>(
+        lastKnownMessageVersion.value,
+      );
+    }
+    if (lastKnownContactVersion.present) {
+      map['last_known_contact_version'] = Variable<BigInt>(
+        lastKnownContactVersion.value,
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncStateCompanion(')
+          ..write('userId: $userId, ')
+          ..write('lastKnownMessageVersion: $lastKnownMessageVersion, ')
+          ..write('lastKnownContactVersion: $lastKnownContactVersion, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SignalLocalIdentityTable extends SignalLocalIdentity
+    with TableInfo<$SignalLocalIdentityTable, SignalLocalIdentityData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalLocalIdentityTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityKeyPairMeta = const VerificationMeta(
+    'identityKeyPair',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> identityKeyPair =
+      GeneratedColumn<Uint8List>(
+        'identity_key_pair',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _registrationIdMeta = const VerificationMeta(
+    'registrationId',
+  );
+  @override
+  late final GeneratedColumn<int> registrationId = GeneratedColumn<int>(
+    'registration_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    identityKeyPair,
+    registrationId,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_local_identity';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalLocalIdentityData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('identity_key_pair')) {
+      context.handle(
+        _identityKeyPairMeta,
+        identityKeyPair.isAcceptableOrUnknown(
+          data['identity_key_pair']!,
+          _identityKeyPairMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_identityKeyPairMeta);
+    }
+    if (data.containsKey('registration_id')) {
+      context.handle(
+        _registrationIdMeta,
+        registrationId.isAcceptableOrUnknown(
+          data['registration_id']!,
+          _registrationIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_registrationIdMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SignalLocalIdentityData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalLocalIdentityData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      identityKeyPair: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}identity_key_pair'],
+      )!,
+      registrationId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}registration_id'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalLocalIdentityTable createAlias(String alias) {
+    return $SignalLocalIdentityTable(attachedDatabase, alias);
+  }
+}
+
+class SignalLocalIdentityData extends DataClass
+    implements Insertable<SignalLocalIdentityData> {
+  final String id;
+  final Uint8List identityKeyPair;
+  final int registrationId;
+  final DateTime updatedAt;
+  const SignalLocalIdentityData({
+    required this.id,
+    required this.identityKeyPair,
+    required this.registrationId,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['identity_key_pair'] = Variable<Uint8List>(identityKeyPair);
+    map['registration_id'] = Variable<int>(registrationId);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SignalLocalIdentityCompanion toCompanion(bool nullToAbsent) {
+    return SignalLocalIdentityCompanion(
+      id: Value(id),
+      identityKeyPair: Value(identityKeyPair),
+      registrationId: Value(registrationId),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SignalLocalIdentityData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalLocalIdentityData(
+      id: serializer.fromJson<String>(json['id']),
+      identityKeyPair: serializer.fromJson<Uint8List>(json['identityKeyPair']),
+      registrationId: serializer.fromJson<int>(json['registrationId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'identityKeyPair': serializer.toJson<Uint8List>(identityKeyPair),
+      'registrationId': serializer.toJson<int>(registrationId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SignalLocalIdentityData copyWith({
+    String? id,
+    Uint8List? identityKeyPair,
+    int? registrationId,
+    DateTime? updatedAt,
+  }) => SignalLocalIdentityData(
+    id: id ?? this.id,
+    identityKeyPair: identityKeyPair ?? this.identityKeyPair,
+    registrationId: registrationId ?? this.registrationId,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SignalLocalIdentityData copyWithCompanion(SignalLocalIdentityCompanion data) {
+    return SignalLocalIdentityData(
+      id: data.id.present ? data.id.value : this.id,
+      identityKeyPair: data.identityKeyPair.present
+          ? data.identityKeyPair.value
+          : this.identityKeyPair,
+      registrationId: data.registrationId.present
+          ? data.registrationId.value
+          : this.registrationId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalLocalIdentityData(')
+          ..write('id: $id, ')
+          ..write('identityKeyPair: $identityKeyPair, ')
+          ..write('registrationId: $registrationId, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    $driftBlobEquality.hash(identityKeyPair),
+    registrationId,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalLocalIdentityData &&
+          other.id == this.id &&
+          $driftBlobEquality.equals(
+            other.identityKeyPair,
+            this.identityKeyPair,
+          ) &&
+          other.registrationId == this.registrationId &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SignalLocalIdentityCompanion
+    extends UpdateCompanion<SignalLocalIdentityData> {
+  final Value<String> id;
+  final Value<Uint8List> identityKeyPair;
+  final Value<int> registrationId;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SignalLocalIdentityCompanion({
+    this.id = const Value.absent(),
+    this.identityKeyPair = const Value.absent(),
+    this.registrationId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SignalLocalIdentityCompanion.insert({
+    required String id,
+    required Uint8List identityKeyPair,
+    required int registrationId,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       identityKeyPair = Value(identityKeyPair),
+       registrationId = Value(registrationId);
+  static Insertable<SignalLocalIdentityData> custom({
+    Expression<String>? id,
+    Expression<Uint8List>? identityKeyPair,
+    Expression<int>? registrationId,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (identityKeyPair != null) 'identity_key_pair': identityKeyPair,
+      if (registrationId != null) 'registration_id': registrationId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SignalLocalIdentityCompanion copyWith({
+    Value<String>? id,
+    Value<Uint8List>? identityKeyPair,
+    Value<int>? registrationId,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SignalLocalIdentityCompanion(
+      id: id ?? this.id,
+      identityKeyPair: identityKeyPair ?? this.identityKeyPair,
+      registrationId: registrationId ?? this.registrationId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (identityKeyPair.present) {
+      map['identity_key_pair'] = Variable<Uint8List>(identityKeyPair.value);
+    }
+    if (registrationId.present) {
+      map['registration_id'] = Variable<int>(registrationId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalLocalIdentityCompanion(')
+          ..write('id: $id, ')
+          ..write('identityKeyPair: $identityKeyPair, ')
+          ..write('registrationId: $registrationId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SignalIdentityKeysTable extends SignalIdentityKeys
+    with TableInfo<$SignalIdentityKeysTable, SignalIdentityKey> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalIdentityKeysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _identityKeyMeta = const VerificationMeta(
+    'identityKey',
+  );
+  @override
+  late final GeneratedColumn<Uint8List> identityKey =
+      GeneratedColumn<Uint8List>(
+        'identity_key',
+        aliasedName,
+        false,
+        type: DriftSqlType.blob,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    name,
+    deviceId,
+    identityKey,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_identity_keys';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalIdentityKey> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('identity_key')) {
+      context.handle(
+        _identityKeyMeta,
+        identityKey.isAcceptableOrUnknown(
+          data['identity_key']!,
+          _identityKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_identityKeyMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name, deviceId};
+  @override
+  SignalIdentityKey map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalIdentityKey(
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      identityKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}identity_key'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalIdentityKeysTable createAlias(String alias) {
+    return $SignalIdentityKeysTable(attachedDatabase, alias);
+  }
+}
+
+class SignalIdentityKey extends DataClass
+    implements Insertable<SignalIdentityKey> {
+  final String name;
+  final int deviceId;
+  final Uint8List identityKey;
+  final DateTime createdAt;
+  const SignalIdentityKey({
+    required this.name,
+    required this.deviceId,
+    required this.identityKey,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    map['device_id'] = Variable<int>(deviceId);
+    map['identity_key'] = Variable<Uint8List>(identityKey);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  SignalIdentityKeysCompanion toCompanion(bool nullToAbsent) {
+    return SignalIdentityKeysCompanion(
+      name: Value(name),
+      deviceId: Value(deviceId),
+      identityKey: Value(identityKey),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory SignalIdentityKey.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalIdentityKey(
+      name: serializer.fromJson<String>(json['name']),
+      deviceId: serializer.fromJson<int>(json['deviceId']),
+      identityKey: serializer.fromJson<Uint8List>(json['identityKey']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+      'deviceId': serializer.toJson<int>(deviceId),
+      'identityKey': serializer.toJson<Uint8List>(identityKey),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  SignalIdentityKey copyWith({
+    String? name,
+    int? deviceId,
+    Uint8List? identityKey,
+    DateTime? createdAt,
+  }) => SignalIdentityKey(
+    name: name ?? this.name,
+    deviceId: deviceId ?? this.deviceId,
+    identityKey: identityKey ?? this.identityKey,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  SignalIdentityKey copyWithCompanion(SignalIdentityKeysCompanion data) {
+    return SignalIdentityKey(
+      name: data.name.present ? data.name.value : this.name,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      identityKey: data.identityKey.present
+          ? data.identityKey.value
+          : this.identityKey,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalIdentityKey(')
+          ..write('name: $name, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('identityKey: $identityKey, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    name,
+    deviceId,
+    $driftBlobEquality.hash(identityKey),
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalIdentityKey &&
+          other.name == this.name &&
+          other.deviceId == this.deviceId &&
+          $driftBlobEquality.equals(other.identityKey, this.identityKey) &&
+          other.createdAt == this.createdAt);
+}
+
+class SignalIdentityKeysCompanion extends UpdateCompanion<SignalIdentityKey> {
+  final Value<String> name;
+  final Value<int> deviceId;
+  final Value<Uint8List> identityKey;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const SignalIdentityKeysCompanion({
+    this.name = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.identityKey = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SignalIdentityKeysCompanion.insert({
+    required String name,
+    required int deviceId,
+    required Uint8List identityKey,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : name = Value(name),
+       deviceId = Value(deviceId),
+       identityKey = Value(identityKey);
+  static Insertable<SignalIdentityKey> custom({
+    Expression<String>? name,
+    Expression<int>? deviceId,
+    Expression<Uint8List>? identityKey,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (deviceId != null) 'device_id': deviceId,
+      if (identityKey != null) 'identity_key': identityKey,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SignalIdentityKeysCompanion copyWith({
+    Value<String>? name,
+    Value<int>? deviceId,
+    Value<Uint8List>? identityKey,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return SignalIdentityKeysCompanion(
+      name: name ?? this.name,
+      deviceId: deviceId ?? this.deviceId,
+      identityKey: identityKey ?? this.identityKey,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<int>(deviceId.value);
+    }
+    if (identityKey.present) {
+      map['identity_key'] = Variable<Uint8List>(identityKey.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalIdentityKeysCompanion(')
+          ..write('name: $name, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('identityKey: $identityKey, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SignalPreKeysTable extends SignalPreKeys
+    with TableInfo<$SignalPreKeysTable, SignalPreKey> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalPreKeysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recordMeta = const VerificationMeta('record');
+  @override
+  late final GeneratedColumn<Uint8List> record = GeneratedColumn<Uint8List>(
+    'record',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, record, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_pre_keys';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalPreKey> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('record')) {
+      context.handle(
+        _recordMeta,
+        record.isAcceptableOrUnknown(data['record']!, _recordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SignalPreKey map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalPreKey(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      record: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}record'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalPreKeysTable createAlias(String alias) {
+    return $SignalPreKeysTable(attachedDatabase, alias);
+  }
+}
+
+class SignalPreKey extends DataClass implements Insertable<SignalPreKey> {
+  final int id;
+  final Uint8List record;
+  final DateTime updatedAt;
+  const SignalPreKey({
+    required this.id,
+    required this.record,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['record'] = Variable<Uint8List>(record);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SignalPreKeysCompanion toCompanion(bool nullToAbsent) {
+    return SignalPreKeysCompanion(
+      id: Value(id),
+      record: Value(record),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SignalPreKey.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalPreKey(
+      id: serializer.fromJson<int>(json['id']),
+      record: serializer.fromJson<Uint8List>(json['record']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'record': serializer.toJson<Uint8List>(record),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SignalPreKey copyWith({int? id, Uint8List? record, DateTime? updatedAt}) =>
+      SignalPreKey(
+        id: id ?? this.id,
+        record: record ?? this.record,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  SignalPreKey copyWithCompanion(SignalPreKeysCompanion data) {
+    return SignalPreKey(
+      id: data.id.present ? data.id.value : this.id,
+      record: data.record.present ? data.record.value : this.record,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalPreKey(')
+          ..write('id: $id, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, $driftBlobEquality.hash(record), updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalPreKey &&
+          other.id == this.id &&
+          $driftBlobEquality.equals(other.record, this.record) &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SignalPreKeysCompanion extends UpdateCompanion<SignalPreKey> {
+  final Value<int> id;
+  final Value<Uint8List> record;
+  final Value<DateTime> updatedAt;
+  const SignalPreKeysCompanion({
+    this.id = const Value.absent(),
+    this.record = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SignalPreKeysCompanion.insert({
+    this.id = const Value.absent(),
+    required Uint8List record,
+    this.updatedAt = const Value.absent(),
+  }) : record = Value(record);
+  static Insertable<SignalPreKey> custom({
+    Expression<int>? id,
+    Expression<Uint8List>? record,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (record != null) 'record': record,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SignalPreKeysCompanion copyWith({
+    Value<int>? id,
+    Value<Uint8List>? record,
+    Value<DateTime>? updatedAt,
+  }) {
+    return SignalPreKeysCompanion(
+      id: id ?? this.id,
+      record: record ?? this.record,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (record.present) {
+      map['record'] = Variable<Uint8List>(record.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalPreKeysCompanion(')
+          ..write('id: $id, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SignalSignedPreKeysTable extends SignalSignedPreKeys
+    with TableInfo<$SignalSignedPreKeysTable, SignalSignedPreKey> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalSignedPreKeysTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recordMeta = const VerificationMeta('record');
+  @override
+  late final GeneratedColumn<Uint8List> record = GeneratedColumn<Uint8List>(
+    'record',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, record, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_signed_pre_keys';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalSignedPreKey> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('record')) {
+      context.handle(
+        _recordMeta,
+        record.isAcceptableOrUnknown(data['record']!, _recordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SignalSignedPreKey map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalSignedPreKey(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      record: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}record'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalSignedPreKeysTable createAlias(String alias) {
+    return $SignalSignedPreKeysTable(attachedDatabase, alias);
+  }
+}
+
+class SignalSignedPreKey extends DataClass
+    implements Insertable<SignalSignedPreKey> {
+  final int id;
+  final Uint8List record;
+  final DateTime updatedAt;
+  const SignalSignedPreKey({
+    required this.id,
+    required this.record,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['record'] = Variable<Uint8List>(record);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SignalSignedPreKeysCompanion toCompanion(bool nullToAbsent) {
+    return SignalSignedPreKeysCompanion(
+      id: Value(id),
+      record: Value(record),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SignalSignedPreKey.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalSignedPreKey(
+      id: serializer.fromJson<int>(json['id']),
+      record: serializer.fromJson<Uint8List>(json['record']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'record': serializer.toJson<Uint8List>(record),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SignalSignedPreKey copyWith({
+    int? id,
+    Uint8List? record,
+    DateTime? updatedAt,
+  }) => SignalSignedPreKey(
+    id: id ?? this.id,
+    record: record ?? this.record,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SignalSignedPreKey copyWithCompanion(SignalSignedPreKeysCompanion data) {
+    return SignalSignedPreKey(
+      id: data.id.present ? data.id.value : this.id,
+      record: data.record.present ? data.record.value : this.record,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSignedPreKey(')
+          ..write('id: $id, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, $driftBlobEquality.hash(record), updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalSignedPreKey &&
+          other.id == this.id &&
+          $driftBlobEquality.equals(other.record, this.record) &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SignalSignedPreKeysCompanion extends UpdateCompanion<SignalSignedPreKey> {
+  final Value<int> id;
+  final Value<Uint8List> record;
+  final Value<DateTime> updatedAt;
+  const SignalSignedPreKeysCompanion({
+    this.id = const Value.absent(),
+    this.record = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  SignalSignedPreKeysCompanion.insert({
+    this.id = const Value.absent(),
+    required Uint8List record,
+    this.updatedAt = const Value.absent(),
+  }) : record = Value(record);
+  static Insertable<SignalSignedPreKey> custom({
+    Expression<int>? id,
+    Expression<Uint8List>? record,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (record != null) 'record': record,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  SignalSignedPreKeysCompanion copyWith({
+    Value<int>? id,
+    Value<Uint8List>? record,
+    Value<DateTime>? updatedAt,
+  }) {
+    return SignalSignedPreKeysCompanion(
+      id: id ?? this.id,
+      record: record ?? this.record,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (record.present) {
+      map['record'] = Variable<Uint8List>(record.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSignedPreKeysCompanion(')
+          ..write('id: $id, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SignalSessionsTable extends SignalSessions
+    with TableInfo<$SignalSessionsTable, SignalSession> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SignalSessionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<int> deviceId = GeneratedColumn<int>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _recordMeta = const VerificationMeta('record');
+  @override
+  late final GeneratedColumn<Uint8List> record = GeneratedColumn<Uint8List>(
+    'record',
+    aliasedName,
+    false,
+    type: DriftSqlType.blob,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [name, deviceId, record, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'signal_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SignalSession> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('record')) {
+      context.handle(
+        _recordMeta,
+        record.isAcceptableOrUnknown(data['record']!, _recordMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_recordMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {name, deviceId};
+  @override
+  SignalSession map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SignalSession(
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}device_id'],
+      )!,
+      record: attachedDatabase.typeMapping.read(
+        DriftSqlType.blob,
+        data['${effectivePrefix}record'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $SignalSessionsTable createAlias(String alias) {
+    return $SignalSessionsTable(attachedDatabase, alias);
+  }
+}
+
+class SignalSession extends DataClass implements Insertable<SignalSession> {
+  final String name;
+  final int deviceId;
+  final Uint8List record;
+  final DateTime updatedAt;
+  const SignalSession({
+    required this.name,
+    required this.deviceId,
+    required this.record,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['name'] = Variable<String>(name);
+    map['device_id'] = Variable<int>(deviceId);
+    map['record'] = Variable<Uint8List>(record);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  SignalSessionsCompanion toCompanion(bool nullToAbsent) {
+    return SignalSessionsCompanion(
+      name: Value(name),
+      deviceId: Value(deviceId),
+      record: Value(record),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SignalSession.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SignalSession(
+      name: serializer.fromJson<String>(json['name']),
+      deviceId: serializer.fromJson<int>(json['deviceId']),
+      record: serializer.fromJson<Uint8List>(json['record']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'name': serializer.toJson<String>(name),
+      'deviceId': serializer.toJson<int>(deviceId),
+      'record': serializer.toJson<Uint8List>(record),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SignalSession copyWith({
+    String? name,
+    int? deviceId,
+    Uint8List? record,
+    DateTime? updatedAt,
+  }) => SignalSession(
+    name: name ?? this.name,
+    deviceId: deviceId ?? this.deviceId,
+    record: record ?? this.record,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SignalSession copyWithCompanion(SignalSessionsCompanion data) {
+    return SignalSession(
+      name: data.name.present ? data.name.value : this.name,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      record: data.record.present ? data.record.value : this.record,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSession(')
+          ..write('name: $name, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(name, deviceId, $driftBlobEquality.hash(record), updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SignalSession &&
+          other.name == this.name &&
+          other.deviceId == this.deviceId &&
+          $driftBlobEquality.equals(other.record, this.record) &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SignalSessionsCompanion extends UpdateCompanion<SignalSession> {
+  final Value<String> name;
+  final Value<int> deviceId;
+  final Value<Uint8List> record;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SignalSessionsCompanion({
+    this.name = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.record = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SignalSessionsCompanion.insert({
+    required String name,
+    required int deviceId,
+    required Uint8List record,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : name = Value(name),
+       deviceId = Value(deviceId),
+       record = Value(record);
+  static Insertable<SignalSession> custom({
+    Expression<String>? name,
+    Expression<int>? deviceId,
+    Expression<Uint8List>? record,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (name != null) 'name': name,
+      if (deviceId != null) 'device_id': deviceId,
+      if (record != null) 'record': record,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SignalSessionsCompanion copyWith({
+    Value<String>? name,
+    Value<int>? deviceId,
+    Value<Uint8List>? record,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SignalSessionsCompanion(
+      name: name ?? this.name,
+      deviceId: deviceId ?? this.deviceId,
+      record: record ?? this.record,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<int>(deviceId.value);
+    }
+    if (record.present) {
+      map['record'] = Variable<Uint8List>(record.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SignalSessionsCompanion(')
+          ..write('name: $name, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('record: $record, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -4615,6 +6486,15 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $ConversationMembersTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
   late final $OutboxEventsTable outboxEvents = $OutboxEventsTable(this);
+  late final $SyncStateTable syncState = $SyncStateTable(this);
+  late final $SignalLocalIdentityTable signalLocalIdentity =
+      $SignalLocalIdentityTable(this);
+  late final $SignalIdentityKeysTable signalIdentityKeys =
+      $SignalIdentityKeysTable(this);
+  late final $SignalPreKeysTable signalPreKeys = $SignalPreKeysTable(this);
+  late final $SignalSignedPreKeysTable signalSignedPreKeys =
+      $SignalSignedPreKeysTable(this);
+  late final $SignalSessionsTable signalSessions = $SignalSessionsTable(this);
   late final CryptoKeysDao cryptoKeysDao = CryptoKeysDao(this as AppDatabase);
   late final NotificationsDao notificationsDao = NotificationsDao(
     this as AppDatabase,
@@ -4623,7 +6503,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final ContactsDao contactsDao = ContactsDao(this as AppDatabase);
+  late final ChatsDao chatsDao = ChatsDao(this as AppDatabase);
   late final OutboxDao outboxDao = OutboxDao(this as AppDatabase);
+  late final SyncStateDao syncStateDao = SyncStateDao(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -4637,6 +6519,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     conversationMembers,
     messages,
     outboxEvents,
+    syncState,
+    signalLocalIdentity,
+    signalIdentityKeys,
+    signalPreKeys,
+    signalSignedPreKeys,
+    signalSessions,
   ];
 }
 
@@ -5552,6 +7440,7 @@ typedef $$ContactsTableCreateCompanionBuilder =
       required String ownerId,
       required String contactId,
       Value<String> status,
+      Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
       Value<DateTime> createdAt,
@@ -5565,6 +7454,7 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String> ownerId,
       Value<String> contactId,
       Value<String> status,
+      Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
       Value<DateTime> createdAt,
@@ -5599,6 +7489,11 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5657,6 +7552,11 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<Uint8List> get encryptedAlias => $composableBuilder(
     column: $table.encryptedAlias,
     builder: (column) => ColumnOrderings(column),
@@ -5703,6 +7603,11 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get localAlias => $composableBuilder(
+    column: $table.localAlias,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<Uint8List> get encryptedAlias => $composableBuilder(
     column: $table.encryptedAlias,
@@ -5757,6 +7662,7 @@ class $$ContactsTableTableManager
                 Value<String> ownerId = const Value.absent(),
                 Value<String> contactId = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -5768,6 +7674,7 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
                 createdAt: createdAt,
@@ -5781,6 +7688,7 @@ class $$ContactsTableTableManager
                 required String ownerId,
                 required String contactId,
                 Value<String> status = const Value.absent(),
+                Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -5792,6 +7700,7 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
                 createdAt: createdAt,
@@ -6932,6 +8841,1099 @@ typedef $$OutboxEventsTableProcessedTableManager =
       OutboxEventEntity,
       PrefetchHooks Function()
     >;
+typedef $$SyncStateTableCreateCompanionBuilder =
+    SyncStateCompanion Function({
+      required String userId,
+      required BigInt lastKnownMessageVersion,
+      required BigInt lastKnownContactVersion,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SyncStateTableUpdateCompanionBuilder =
+    SyncStateCompanion Function({
+      Value<String> userId,
+      Value<BigInt> lastKnownMessageVersion,
+      Value<BigInt> lastKnownContactVersion,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SyncStateTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncStateTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncStateTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncStateTable> {
+  $$SyncStateTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<BigInt> get lastKnownMessageVersion => $composableBuilder(
+    column: $table.lastKnownMessageVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<BigInt> get lastKnownContactVersion => $composableBuilder(
+    column: $table.lastKnownContactVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SyncStateTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncStateTable,
+          SyncStateEntity,
+          $$SyncStateTableFilterComposer,
+          $$SyncStateTableOrderingComposer,
+          $$SyncStateTableAnnotationComposer,
+          $$SyncStateTableCreateCompanionBuilder,
+          $$SyncStateTableUpdateCompanionBuilder,
+          (
+            SyncStateEntity,
+            BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateEntity>,
+          ),
+          SyncStateEntity,
+          PrefetchHooks Function()
+        > {
+  $$SyncStateTableTableManager(_$AppDatabase db, $SyncStateTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncStateTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<BigInt> lastKnownMessageVersion = const Value.absent(),
+                Value<BigInt> lastKnownContactVersion = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStateCompanion(
+                userId: userId,
+                lastKnownMessageVersion: lastKnownMessageVersion,
+                lastKnownContactVersion: lastKnownContactVersion,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required BigInt lastKnownMessageVersion,
+                required BigInt lastKnownContactVersion,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncStateCompanion.insert(
+                userId: userId,
+                lastKnownMessageVersion: lastKnownMessageVersion,
+                lastKnownContactVersion: lastKnownContactVersion,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncStateTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncStateTable,
+      SyncStateEntity,
+      $$SyncStateTableFilterComposer,
+      $$SyncStateTableOrderingComposer,
+      $$SyncStateTableAnnotationComposer,
+      $$SyncStateTableCreateCompanionBuilder,
+      $$SyncStateTableUpdateCompanionBuilder,
+      (
+        SyncStateEntity,
+        BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateEntity>,
+      ),
+      SyncStateEntity,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalLocalIdentityTableCreateCompanionBuilder =
+    SignalLocalIdentityCompanion Function({
+      required String id,
+      required Uint8List identityKeyPair,
+      required int registrationId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SignalLocalIdentityTableUpdateCompanionBuilder =
+    SignalLocalIdentityCompanion Function({
+      Value<String> id,
+      Value<Uint8List> identityKeyPair,
+      Value<int> registrationId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SignalLocalIdentityTableFilterComposer
+    extends Composer<_$AppDatabase, $SignalLocalIdentityTable> {
+  $$SignalLocalIdentityTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get identityKeyPair => $composableBuilder(
+    column: $table.identityKeyPair,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get registrationId => $composableBuilder(
+    column: $table.registrationId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalLocalIdentityTableOrderingComposer
+    extends Composer<_$AppDatabase, $SignalLocalIdentityTable> {
+  $$SignalLocalIdentityTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get identityKeyPair => $composableBuilder(
+    column: $table.identityKeyPair,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get registrationId => $composableBuilder(
+    column: $table.registrationId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalLocalIdentityTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SignalLocalIdentityTable> {
+  $$SignalLocalIdentityTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get identityKeyPair => $composableBuilder(
+    column: $table.identityKeyPair,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get registrationId => $composableBuilder(
+    column: $table.registrationId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SignalLocalIdentityTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SignalLocalIdentityTable,
+          SignalLocalIdentityData,
+          $$SignalLocalIdentityTableFilterComposer,
+          $$SignalLocalIdentityTableOrderingComposer,
+          $$SignalLocalIdentityTableAnnotationComposer,
+          $$SignalLocalIdentityTableCreateCompanionBuilder,
+          $$SignalLocalIdentityTableUpdateCompanionBuilder,
+          (
+            SignalLocalIdentityData,
+            BaseReferences<
+              _$AppDatabase,
+              $SignalLocalIdentityTable,
+              SignalLocalIdentityData
+            >,
+          ),
+          SignalLocalIdentityData,
+          PrefetchHooks Function()
+        > {
+  $$SignalLocalIdentityTableTableManager(
+    _$AppDatabase db,
+    $SignalLocalIdentityTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalLocalIdentityTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SignalLocalIdentityTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SignalLocalIdentityTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<Uint8List> identityKeyPair = const Value.absent(),
+                Value<int> registrationId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalLocalIdentityCompanion(
+                id: id,
+                identityKeyPair: identityKeyPair,
+                registrationId: registrationId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required Uint8List identityKeyPair,
+                required int registrationId,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalLocalIdentityCompanion.insert(
+                id: id,
+                identityKeyPair: identityKeyPair,
+                registrationId: registrationId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalLocalIdentityTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SignalLocalIdentityTable,
+      SignalLocalIdentityData,
+      $$SignalLocalIdentityTableFilterComposer,
+      $$SignalLocalIdentityTableOrderingComposer,
+      $$SignalLocalIdentityTableAnnotationComposer,
+      $$SignalLocalIdentityTableCreateCompanionBuilder,
+      $$SignalLocalIdentityTableUpdateCompanionBuilder,
+      (
+        SignalLocalIdentityData,
+        BaseReferences<
+          _$AppDatabase,
+          $SignalLocalIdentityTable,
+          SignalLocalIdentityData
+        >,
+      ),
+      SignalLocalIdentityData,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalIdentityKeysTableCreateCompanionBuilder =
+    SignalIdentityKeysCompanion Function({
+      required String name,
+      required int deviceId,
+      required Uint8List identityKey,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$SignalIdentityKeysTableUpdateCompanionBuilder =
+    SignalIdentityKeysCompanion Function({
+      Value<String> name,
+      Value<int> deviceId,
+      Value<Uint8List> identityKey,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$SignalIdentityKeysTableFilterComposer
+    extends Composer<_$AppDatabase, $SignalIdentityKeysTable> {
+  $$SignalIdentityKeysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get identityKey => $composableBuilder(
+    column: $table.identityKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalIdentityKeysTableOrderingComposer
+    extends Composer<_$AppDatabase, $SignalIdentityKeysTable> {
+  $$SignalIdentityKeysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get identityKey => $composableBuilder(
+    column: $table.identityKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalIdentityKeysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SignalIdentityKeysTable> {
+  $$SignalIdentityKeysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get identityKey => $composableBuilder(
+    column: $table.identityKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$SignalIdentityKeysTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SignalIdentityKeysTable,
+          SignalIdentityKey,
+          $$SignalIdentityKeysTableFilterComposer,
+          $$SignalIdentityKeysTableOrderingComposer,
+          $$SignalIdentityKeysTableAnnotationComposer,
+          $$SignalIdentityKeysTableCreateCompanionBuilder,
+          $$SignalIdentityKeysTableUpdateCompanionBuilder,
+          (
+            SignalIdentityKey,
+            BaseReferences<
+              _$AppDatabase,
+              $SignalIdentityKeysTable,
+              SignalIdentityKey
+            >,
+          ),
+          SignalIdentityKey,
+          PrefetchHooks Function()
+        > {
+  $$SignalIdentityKeysTableTableManager(
+    _$AppDatabase db,
+    $SignalIdentityKeysTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalIdentityKeysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SignalIdentityKeysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SignalIdentityKeysTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> name = const Value.absent(),
+                Value<int> deviceId = const Value.absent(),
+                Value<Uint8List> identityKey = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalIdentityKeysCompanion(
+                name: name,
+                deviceId: deviceId,
+                identityKey: identityKey,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String name,
+                required int deviceId,
+                required Uint8List identityKey,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalIdentityKeysCompanion.insert(
+                name: name,
+                deviceId: deviceId,
+                identityKey: identityKey,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalIdentityKeysTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SignalIdentityKeysTable,
+      SignalIdentityKey,
+      $$SignalIdentityKeysTableFilterComposer,
+      $$SignalIdentityKeysTableOrderingComposer,
+      $$SignalIdentityKeysTableAnnotationComposer,
+      $$SignalIdentityKeysTableCreateCompanionBuilder,
+      $$SignalIdentityKeysTableUpdateCompanionBuilder,
+      (
+        SignalIdentityKey,
+        BaseReferences<
+          _$AppDatabase,
+          $SignalIdentityKeysTable,
+          SignalIdentityKey
+        >,
+      ),
+      SignalIdentityKey,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalPreKeysTableCreateCompanionBuilder =
+    SignalPreKeysCompanion Function({
+      Value<int> id,
+      required Uint8List record,
+      Value<DateTime> updatedAt,
+    });
+typedef $$SignalPreKeysTableUpdateCompanionBuilder =
+    SignalPreKeysCompanion Function({
+      Value<int> id,
+      Value<Uint8List> record,
+      Value<DateTime> updatedAt,
+    });
+
+class $$SignalPreKeysTableFilterComposer
+    extends Composer<_$AppDatabase, $SignalPreKeysTable> {
+  $$SignalPreKeysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalPreKeysTableOrderingComposer
+    extends Composer<_$AppDatabase, $SignalPreKeysTable> {
+  $$SignalPreKeysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalPreKeysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SignalPreKeysTable> {
+  $$SignalPreKeysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get record =>
+      $composableBuilder(column: $table.record, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SignalPreKeysTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SignalPreKeysTable,
+          SignalPreKey,
+          $$SignalPreKeysTableFilterComposer,
+          $$SignalPreKeysTableOrderingComposer,
+          $$SignalPreKeysTableAnnotationComposer,
+          $$SignalPreKeysTableCreateCompanionBuilder,
+          $$SignalPreKeysTableUpdateCompanionBuilder,
+          (
+            SignalPreKey,
+            BaseReferences<_$AppDatabase, $SignalPreKeysTable, SignalPreKey>,
+          ),
+          SignalPreKey,
+          PrefetchHooks Function()
+        > {
+  $$SignalPreKeysTableTableManager(_$AppDatabase db, $SignalPreKeysTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalPreKeysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SignalPreKeysTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SignalPreKeysTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<Uint8List> record = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SignalPreKeysCompanion(
+                id: id,
+                record: record,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required Uint8List record,
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SignalPreKeysCompanion.insert(
+                id: id,
+                record: record,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalPreKeysTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SignalPreKeysTable,
+      SignalPreKey,
+      $$SignalPreKeysTableFilterComposer,
+      $$SignalPreKeysTableOrderingComposer,
+      $$SignalPreKeysTableAnnotationComposer,
+      $$SignalPreKeysTableCreateCompanionBuilder,
+      $$SignalPreKeysTableUpdateCompanionBuilder,
+      (
+        SignalPreKey,
+        BaseReferences<_$AppDatabase, $SignalPreKeysTable, SignalPreKey>,
+      ),
+      SignalPreKey,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalSignedPreKeysTableCreateCompanionBuilder =
+    SignalSignedPreKeysCompanion Function({
+      Value<int> id,
+      required Uint8List record,
+      Value<DateTime> updatedAt,
+    });
+typedef $$SignalSignedPreKeysTableUpdateCompanionBuilder =
+    SignalSignedPreKeysCompanion Function({
+      Value<int> id,
+      Value<Uint8List> record,
+      Value<DateTime> updatedAt,
+    });
+
+class $$SignalSignedPreKeysTableFilterComposer
+    extends Composer<_$AppDatabase, $SignalSignedPreKeysTable> {
+  $$SignalSignedPreKeysTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalSignedPreKeysTableOrderingComposer
+    extends Composer<_$AppDatabase, $SignalSignedPreKeysTable> {
+  $$SignalSignedPreKeysTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalSignedPreKeysTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SignalSignedPreKeysTable> {
+  $$SignalSignedPreKeysTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get record =>
+      $composableBuilder(column: $table.record, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SignalSignedPreKeysTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SignalSignedPreKeysTable,
+          SignalSignedPreKey,
+          $$SignalSignedPreKeysTableFilterComposer,
+          $$SignalSignedPreKeysTableOrderingComposer,
+          $$SignalSignedPreKeysTableAnnotationComposer,
+          $$SignalSignedPreKeysTableCreateCompanionBuilder,
+          $$SignalSignedPreKeysTableUpdateCompanionBuilder,
+          (
+            SignalSignedPreKey,
+            BaseReferences<
+              _$AppDatabase,
+              $SignalSignedPreKeysTable,
+              SignalSignedPreKey
+            >,
+          ),
+          SignalSignedPreKey,
+          PrefetchHooks Function()
+        > {
+  $$SignalSignedPreKeysTableTableManager(
+    _$AppDatabase db,
+    $SignalSignedPreKeysTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalSignedPreKeysTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SignalSignedPreKeysTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$SignalSignedPreKeysTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<Uint8List> record = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SignalSignedPreKeysCompanion(
+                id: id,
+                record: record,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required Uint8List record,
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => SignalSignedPreKeysCompanion.insert(
+                id: id,
+                record: record,
+                updatedAt: updatedAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalSignedPreKeysTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SignalSignedPreKeysTable,
+      SignalSignedPreKey,
+      $$SignalSignedPreKeysTableFilterComposer,
+      $$SignalSignedPreKeysTableOrderingComposer,
+      $$SignalSignedPreKeysTableAnnotationComposer,
+      $$SignalSignedPreKeysTableCreateCompanionBuilder,
+      $$SignalSignedPreKeysTableUpdateCompanionBuilder,
+      (
+        SignalSignedPreKey,
+        BaseReferences<
+          _$AppDatabase,
+          $SignalSignedPreKeysTable,
+          SignalSignedPreKey
+        >,
+      ),
+      SignalSignedPreKey,
+      PrefetchHooks Function()
+    >;
+typedef $$SignalSessionsTableCreateCompanionBuilder =
+    SignalSessionsCompanion Function({
+      required String name,
+      required int deviceId,
+      required Uint8List record,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SignalSessionsTableUpdateCompanionBuilder =
+    SignalSessionsCompanion Function({
+      Value<String> name,
+      Value<int> deviceId,
+      Value<Uint8List> record,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SignalSessionsTableFilterComposer
+    extends Composer<_$AppDatabase, $SignalSessionsTable> {
+  $$SignalSessionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SignalSessionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $SignalSessionsTable> {
+  $$SignalSessionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<Uint8List> get record => $composableBuilder(
+    column: $table.record,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SignalSessionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SignalSessionsTable> {
+  $$SignalSessionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<Uint8List> get record =>
+      $composableBuilder(column: $table.record, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SignalSessionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SignalSessionsTable,
+          SignalSession,
+          $$SignalSessionsTableFilterComposer,
+          $$SignalSessionsTableOrderingComposer,
+          $$SignalSessionsTableAnnotationComposer,
+          $$SignalSessionsTableCreateCompanionBuilder,
+          $$SignalSessionsTableUpdateCompanionBuilder,
+          (
+            SignalSession,
+            BaseReferences<_$AppDatabase, $SignalSessionsTable, SignalSession>,
+          ),
+          SignalSession,
+          PrefetchHooks Function()
+        > {
+  $$SignalSessionsTableTableManager(
+    _$AppDatabase db,
+    $SignalSessionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SignalSessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SignalSessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SignalSessionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> name = const Value.absent(),
+                Value<int> deviceId = const Value.absent(),
+                Value<Uint8List> record = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSessionsCompanion(
+                name: name,
+                deviceId: deviceId,
+                record: record,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String name,
+                required int deviceId,
+                required Uint8List record,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SignalSessionsCompanion.insert(
+                name: name,
+                deviceId: deviceId,
+                record: record,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SignalSessionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SignalSessionsTable,
+      SignalSession,
+      $$SignalSessionsTableFilterComposer,
+      $$SignalSessionsTableOrderingComposer,
+      $$SignalSessionsTableAnnotationComposer,
+      $$SignalSessionsTableCreateCompanionBuilder,
+      $$SignalSessionsTableUpdateCompanionBuilder,
+      (
+        SignalSession,
+        BaseReferences<_$AppDatabase, $SignalSessionsTable, SignalSession>,
+      ),
+      SignalSession,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -6952,4 +9954,16 @@ class $AppDatabaseManager {
       $$MessagesTableTableManager(_db, _db.messages);
   $$OutboxEventsTableTableManager get outboxEvents =>
       $$OutboxEventsTableTableManager(_db, _db.outboxEvents);
+  $$SyncStateTableTableManager get syncState =>
+      $$SyncStateTableTableManager(_db, _db.syncState);
+  $$SignalLocalIdentityTableTableManager get signalLocalIdentity =>
+      $$SignalLocalIdentityTableTableManager(_db, _db.signalLocalIdentity);
+  $$SignalIdentityKeysTableTableManager get signalIdentityKeys =>
+      $$SignalIdentityKeysTableTableManager(_db, _db.signalIdentityKeys);
+  $$SignalPreKeysTableTableManager get signalPreKeys =>
+      $$SignalPreKeysTableTableManager(_db, _db.signalPreKeys);
+  $$SignalSignedPreKeysTableTableManager get signalSignedPreKeys =>
+      $$SignalSignedPreKeysTableTableManager(_db, _db.signalSignedPreKeys);
+  $$SignalSessionsTableTableManager get signalSessions =>
+      $$SignalSessionsTableTableManager(_db, _db.signalSessions);
 }

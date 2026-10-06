@@ -65,6 +65,8 @@ abstract class ApiEndpoints {
   // ===========================================================================
   static String get syncDelta => '/sync/delta';
   static String get syncOutbox => '/sync/outbox';
+  static String get messageHistory => '/messages/history';
+  static String get messages => '/messages';
 
   // ===========================================================================
   // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---

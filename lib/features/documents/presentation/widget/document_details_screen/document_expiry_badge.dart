@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DocumentExpiryBadge extends StatelessWidget {
   final String date;
@@ -7,6 +8,8 @@ class DocumentExpiryBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final formattedDate = _formatDisplayDate(date);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
@@ -21,7 +24,7 @@ class DocumentExpiryBadge extends StatelessWidget {
           const Icon(Icons.event_available, size: 18, color: Colors.orange),
           const SizedBox(width: 8),
           Text(
-            'Wygasa: $date',
+            'Wygasa: $formattedDate',
             style: const TextStyle(
               color: Colors.orange,
               fontWeight: FontWeight.bold,
@@ -31,5 +34,13 @@ class DocumentExpiryBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _formatDisplayDate(String rawDate) {
+    final parsed = DateTime.tryParse(rawDate);
+    if (parsed == null) {
+      return rawDate;
+    }
+    return DateFormat('dd.MM.yyyy', 'pl').format(parsed);
   }
 }

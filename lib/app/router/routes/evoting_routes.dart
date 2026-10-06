@@ -7,6 +7,8 @@ import 'package:obywatel_plus/features/evoting/presentation/pages/evoting_screen
 import 'package:obywatel_plus/features/evoting/presentation/pages/my_votes_screen.dart';
 import 'package:obywatel_plus/features/evoting/presentation/pages/vote_screen.dart';
 import 'package:obywatel_plus/features/evoting/presentation/pages/voting_detail_screen.dart';
+import 'package:obywatel_plus/features/exchange/presentation/pages/exchange_market_screen.dart';
+import 'package:obywatel_plus/features/exchange/presentation/pages/offer_details_screen.dart';
 
 final eVotingRoutes = [
   GoRoute(
@@ -41,6 +43,19 @@ final eVotingRoutes = [
       GoRoute(
         path: 'my-votes',
         builder: (context, state) => const MyVotesScreen(),
+      ),
+      GoRoute(
+        path: 'exchange',
+        builder: (context, state) => const ExchangeMarketScreen(),
+        routes: [
+          GoRoute(
+            path: ':id',
+            builder: (context, state) {
+              final offerId = state.pathParameters['id'] ?? '';
+              return OfferDetailsScreen(offerId: offerId);
+            },
+          ),
+        ],
       ),
     ],
   ),

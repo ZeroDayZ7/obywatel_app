@@ -46,6 +46,25 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  Future<void> updateLocalAlias({
+    required String contactId,
+    required String localAlias,
+  }) async {
+    final normalized = localAlias.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
+
+    await (update(contacts)
+          ..where((t) => t.contactId.equals(contactId) & t.deletedAt.isNull()))
+        .write(
+      ContactsCompanion(
+        localAlias: Value(normalized),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   Future<void> updateStatus({
     required String id,
     required String status,

@@ -2,8 +2,11 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
+import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
+import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
+import 'package:obywatel_plus/core/database/daos/sync_state_dao.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
@@ -14,6 +17,8 @@ part 'database_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 AppDatabase appDatabase(Ref ref) {
+  ref.keepAlive();
+
   final storage = ref.watch(secureStorageProvider);
 
   final executor = LazyDatabase(() async {
@@ -50,4 +55,19 @@ CryptoKeysDao cryptoKeysDao(Ref ref) {
 @riverpod
 UserDocumentsDao userDocumentsDao(Ref ref) {
   return ref.watch(appDatabaseProvider).userDocumentsDao;
+}
+
+@riverpod
+ChatsDao chatsDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).chatsDao;
+}
+
+@riverpod
+SyncStateDao syncStateDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).syncStateDao;
+}
+
+@riverpod
+OutboxDao outboxDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).outboxDao;
 }

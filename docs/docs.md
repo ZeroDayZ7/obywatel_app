@@ -3,7 +3,7 @@ adb devices
 5200d78bfa479449 device 17
 310008a89dd353f9 unauthorized 16
 
-adb -s 5200d78bfa479449 reverse tcp:8081 tcp:8081
+adb -s 5200d78bfa479449 reverse tcp:8080 tcp:8080
 
 .\scrcpy -s 5200d78bfa479449
 .\scrcpy -s 310008a89dd353f9
@@ -15,6 +15,8 @@ flutter run
 
 adb -s 5200d78bfa479449 shell top
 
+flutter run -d 5200d78bfa479449
+
 # Generate app icons
 
 dart run flutter_launcher_icons:main
@@ -25,3 +27,7 @@ dart run flutter_native_splash:create
 # Release
 
 flutter build apk --obfuscate --split-debug-info=./debug_info
+
+git diff > roznice.patch
+git show a1b2c3d > moj_commit.patch
+find . -type f -name "combined.txt" -delete

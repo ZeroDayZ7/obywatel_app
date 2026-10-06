@@ -11,7 +11,7 @@ class Documents extends _$Documents {
     final repository = ref.watch(documentRepositoryProvider);
     _triggerInitialSync();
 
-    return repository.watchActiveDocuments();
+    return repository.watchDocuments();
   }
 
   Future<void> _triggerInitialSync() async {

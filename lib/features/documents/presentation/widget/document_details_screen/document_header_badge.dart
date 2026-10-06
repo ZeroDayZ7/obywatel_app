@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 
 class DocumentHeaderBadge extends StatelessWidget {
@@ -7,12 +8,31 @@ class DocumentHeaderBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isVerified = doc.isVerified;
+    final theme = context.theme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
-    final badgeColor = isVerified ? colorScheme.primary : colorScheme.error;
-    final badgeText = isVerified ? 'DOKUMENT WAŻNY' : 'NIEAKTYWNY';
+    final badgeColor = switch (doc.normalizedStatus) {
+      'ACTIVE' => colorScheme.primary,
+      'PENDING' => statusColors.warning,
+      'EXPIRED' || 'REVOKED' => colorScheme.error,
+      _ => colorScheme.onSurfaceVariant,
+    };
+
+    final badgeText = switch (doc.normalizedStatus) {
+      'ACTIVE' => doc.statusLabel,
+      'PENDING' => doc.statusLabel,
+      'EXPIRED' => doc.statusLabel,
+      'REVOKED' => doc.statusLabel,
+      _ => 'STATUS',
+    };
+
+    final badgeIcon = switch (doc.normalizedStatus) {
+      'ACTIVE' => Icons.verified_user,
+      'PENDING' => Icons.pending_actions,
+      'EXPIRED' || 'REVOKED' => Icons.gpp_maybe,
+      _ => Icons.info_outline,
+    };
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -27,7 +47,7 @@ class DocumentHeaderBadge extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                isVerified ? Icons.verified_user : Icons.gpp_maybe,
+                badgeIcon,
                 size: 16,
                 color: badgeColor,
               ),

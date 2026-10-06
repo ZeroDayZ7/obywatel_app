@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
+import 'package:obywatel_plus/core/database/daos/sync_state_dao.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/tables/contacts.dart';
 import 'package:obywatel_plus/core/database/tables/conversation_members.dart';
@@ -14,6 +16,12 @@ import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
 import 'package:obywatel_plus/core/database/tables/messages.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
 import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
+import 'package:obywatel_plus/core/database/tables/signal_identity_keys.dart';
+import 'package:obywatel_plus/core/database/tables/signal_local_identity.dart';
+import 'package:obywatel_plus/core/database/tables/signal_pre_keys.dart';
+import 'package:obywatel_plus/core/database/tables/signal_sessions.dart';
+import 'package:obywatel_plus/core/database/tables/signal_signed_pre_keys.dart';
+import 'package:obywatel_plus/core/database/tables/sync_state.dart';
 import 'package:obywatel_plus/core/database/tables/user_documents.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:path/path.dart' as p;
@@ -31,14 +39,28 @@ part 'database.g.dart';
     ConversationMembers,
     Messages,
     OutboxEvents,
+    SyncState,
+    SignalLocalIdentity,
+    SignalIdentityKeys,
+    SignalPreKeys,
+    SignalSignedPreKeys,
+    SignalSessions,
   ],
-  daos: [CryptoKeysDao, NotificationsDao, UserDocumentsDao, ContactsDao, OutboxDao],
+  daos: [
+    CryptoKeysDao,
+    NotificationsDao,
+    UserDocumentsDao,
+    ContactsDao,
+    ChatsDao,
+    OutboxDao,
+    SyncStateDao,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -56,6 +78,16 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(conversationMembers);
         await m.createTable(messages);
         await m.createTable(outboxEvents);
+      }
+      if (from < 5) {
+        await m.createTable(syncState);
+      }
+      if (from < 6) {
+        await m.createTable(signalLocalIdentity);
+        await m.createTable(signalIdentityKeys);
+        await m.createTable(signalPreKeys);
+        await m.createTable(signalSignedPreKeys);
+        await m.createTable(signalSessions);
       }
     },
     beforeOpen: (details) async {

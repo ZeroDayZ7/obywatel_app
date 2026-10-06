@@ -48,7 +48,7 @@ final class AppDatabaseProvider
   }
 }
 
-String _$appDatabaseHash() => r'9ae0f333087389c5f5153f3a4962fe4d4a4eb397';
+String _$appDatabaseHash() => r'86b13c1c5a29d73accf7101fdc480651c29452e5';
 
 @ProviderFor(notificationsDao)
 final notificationsDaoProvider = NotificationsDaoProvider._();
@@ -182,3 +182,126 @@ final class UserDocumentsDaoProvider
 }
 
 String _$userDocumentsDaoHash() => r'0cea991e3ee0de514359af298db1de20091153c0';
+
+@ProviderFor(chatsDao)
+final chatsDaoProvider = ChatsDaoProvider._();
+
+final class ChatsDaoProvider
+    extends $FunctionalProvider<ChatsDao, ChatsDao, ChatsDao>
+    with $Provider<ChatsDao> {
+  ChatsDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'chatsDaoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$chatsDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<ChatsDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  ChatsDao create(Ref ref) {
+    return chatsDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(ChatsDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ChatsDao>(value),
+    );
+  }
+}
+
+String _$chatsDaoHash() => r'd8b01660ce853d742b183456e86d061150ff4c20';
+
+@ProviderFor(syncStateDao)
+final syncStateDaoProvider = SyncStateDaoProvider._();
+
+final class SyncStateDaoProvider
+    extends $FunctionalProvider<SyncStateDao, SyncStateDao, SyncStateDao>
+    with $Provider<SyncStateDao> {
+  SyncStateDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'syncStateDaoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$syncStateDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<SyncStateDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  SyncStateDao create(Ref ref) {
+    return syncStateDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(SyncStateDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<SyncStateDao>(value),
+    );
+  }
+}
+
+String _$syncStateDaoHash() => r'53b63c33655f5842f8d381d58ae31200e2f5d68e';
+
+@ProviderFor(outboxDao)
+final outboxDaoProvider = OutboxDaoProvider._();
+
+final class OutboxDaoProvider
+    extends $FunctionalProvider<OutboxDao, OutboxDao, OutboxDao>
+    with $Provider<OutboxDao> {
+  OutboxDaoProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'outboxDaoProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$outboxDaoHash();
+
+  @$internal
+  @override
+  $ProviderElement<OutboxDao> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  OutboxDao create(Ref ref) {
+    return outboxDao(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(OutboxDao value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<OutboxDao>(value),
+    );
+  }
+}
+
+String _$outboxDaoHash() => r'f5fc8522d9658ded8f7d4be525c1b62e10c603f8';

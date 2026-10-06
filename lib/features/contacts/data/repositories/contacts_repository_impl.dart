@@ -4,6 +4,7 @@ import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/features/contacts/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/contacts/data/dtos/contact_dto.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
+import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
 import 'package:obywatel_plus/features/contacts/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -38,9 +39,26 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> sendRequest(String targetUserId) async {
-    await _apiClient.sendContactRequest(targetUserId);
-    // Po udanym request wywołujemy sync, aby pobrać wpis z bazą
+    final normalized = ContactIdentifier.parse(targetUserId).normalized;
+
+    await _apiClient.sendContactRequest(normalized);
+
+    // Do not set local alias during request flow; alias can be set later
     await fetchAndSyncContacts();
+  }
+
+  @override
+  Future<void> updateLocalAlias(String contactId, String localAlias) async {
+    final normalized = ContactIdentifier.parse(contactId).normalized;
+    final normalizedAlias = ContactIdentifier.normalizeAlias(localAlias);
+    if (normalizedAlias.isEmpty) {
+      return;
+    }
+
+    await _dao.updateLocalAlias(
+      contactId: normalized,
+      localAlias: normalizedAlias,
+    );
   }
 
   @override

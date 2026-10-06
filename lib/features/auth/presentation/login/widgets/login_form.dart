@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -65,7 +66,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
-    final iconColor = Colors.green.shade700;
+    final iconColor = context.statusColors.success;
 
     final isLoading = authState.maybeWhen(
       authenticating: () => true,

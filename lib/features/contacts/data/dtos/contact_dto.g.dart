@@ -11,6 +11,7 @@ _ContactDto _$ContactDtoFromJson(Map<String, dynamic> json) => _ContactDto(
   ownerId: json['OwnerID'] as String,
   contactId: json['ContactID'] as String,
   status: json['Status'] as String,
+  localAlias: json['local_alias'] as String?,
   version: (json['Version'] as num).toInt(),
   createdAt: json['created_at'] == null
       ? null
@@ -26,6 +27,7 @@ Map<String, dynamic> _$ContactDtoToJson(_ContactDto instance) =>
       'OwnerID': instance.ownerId,
       'ContactID': instance.contactId,
       'Status': instance.status,
+      'local_alias': instance.localAlias,
       'Version': instance.version,
       'created_at': instance.createdAt?.toIso8601String(),
       'updated_at': instance.updatedAt?.toIso8601String(),

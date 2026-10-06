@@ -2,6 +2,7 @@
 
 import 'dart:async';
 
+import 'package:obywatel_plus/features/chats/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/chats/domain/models/conversation.dart';
 import 'package:obywatel_plus/features/chats/domain/models/message.dart';
@@ -12,6 +13,7 @@ part 'conversations_provider.g.dart';
 @riverpod
 class Conversations extends _$Conversations {
   StreamSubscription<Message>? _messageSubscription;
+  StreamSubscription<List<Conversation>>? _conversationsSubscription;
 
   @override
   Future<List<Conversation>> build() async {
@@ -21,16 +23,27 @@ class Conversations extends _$Conversations {
     _messageSubscription = repository.incomingMessagesStream.listen(
       _handleIncomingMessage,
     );
-    ref.onDispose(() => _messageSubscription?.cancel());
 
-    return repository.getConversations();
+    _conversationsSubscription?.cancel();
+    _conversationsSubscription = repository.watchConversations().listen((items) {
+      state = AsyncValue.data(items);
+    });
+
+    ref.onDispose(() {
+      _messageSubscription?.cancel();
+      _conversationsSubscription?.cancel();
+    });
+
+    return repository.watchConversations().first;
   }
 
   Future<void> refresh() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final repository = ref.read(chatsRepositoryProvider);
-      return repository.getConversations();
+      final syncService = ref.read(chatSyncServiceProvider);
+      await syncService.syncPendingData();
+      return repository.watchConversations().first;
     });
   }
 

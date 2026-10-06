@@ -1,7 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:drift/drift.dart';
+import 'package:obywatel_plus/core/database/database.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
+import 'package:obywatel_plus/features/chats/application/e2ee_crypto_service.dart';
+import 'package:obywatel_plus/features/chats/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
@@ -12,7 +20,6 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chats_repository_impl.g.dart';
 
-/// Przekształca DTO wiadomości na domenowy model Message.
 Message mapMessageFromDto(MessageDto dto, String currentUserId) {
   return Message(
     id: dto.id,
@@ -24,7 +31,6 @@ Message mapMessageFromDto(MessageDto dto, String currentUserId) {
   );
 }
 
-/// Przekształca DTO konwersacji na domenowy model Conversation.
 Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
   return Conversation(
     id: dto.id,
@@ -50,31 +56,204 @@ Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
   );
 }
 
+List<MessageDto> parseRemoteMessageDtos(dynamic rawMessages) {
+  final messageList = rawMessages as List<dynamic>? ?? const [];
+  return messageList
+      .map((item) => MessageDto.fromJson(item as Map<String, dynamic>))
+      .toList();
+}
+
+int resolveLastKnownMessageVersion(
+  Iterable<MessageDto> remoteMessages,
+  int fallbackVersion,
+) {
+  var maxVersion = fallbackVersion;
+
+  for (final dto in remoteMessages) {
+    if (dto.version > maxVersion) {
+      maxVersion = dto.version;
+    }
+  }
+
+  return maxVersion;
+}
+
+int resolveLastKnownContactVersion(
+  dynamic updatedContacts,
+  int fallbackVersion,
+) {
+  final contactList = updatedContacts as List<dynamic>? ?? const [];
+  var maxVersion = fallbackVersion;
+
+  for (final item in contactList) {
+    final contactMap = item as Map<String, dynamic>?;
+    final version = int.tryParse(
+          (contactMap?['version'] ?? contactMap?['Version'] ?? 0).toString(),
+        ) ??
+        0;
+    if (version > maxVersion) {
+      maxVersion = version;
+    }
+  }
+
+  return maxVersion;
+}
+
 class ChatsRepositoryImpl implements ChatsRepository {
   final ChatsApiClient _apiClient;
+  final AppDatabase _db;
   final StreamController<Message> _incomingMessagesController =
       StreamController.broadcast();
   final AppLogger _logger;
+  final String _currentUserId;
+  final DeviceInfoService _deviceInfoService;
+  final E2eeCryptoService _cryptoService;
 
-  // TODO: Pobieramy z AuthState / UserStorage
-  final String _currentUserId = 'my_user_id';
-
-  // Bufor podręczny dla wiadomości oczekujących na wysłanie (Outbox pattern)
-  final List<Message> _pendingOutbox = [];
-
-  ChatsRepositoryImpl(this._apiClient, this._logger);
+  ChatsRepositoryImpl(
+    this._apiClient,
+    this._db,
+    this._logger,
+    String currentUserId,
+    this._deviceInfoService,
+    this._cryptoService,
+  ) : _currentUserId = currentUserId;
 
   @override
   Stream<Message> get incomingMessagesStream =>
       _incomingMessagesController.stream;
+
+  @override
+  Stream<List<Conversation>> watchConversations() {
+    return _db.chatsDao.watchActiveConversations().asyncMap((entities) async {
+      final list = <Conversation>[];
+      for (final entity in entities) {
+        final messages = await _db.chatsDao.getMessagesForConversation(
+          entity.id,
+          limit: 20,
+        );
+        list.add(
+          Conversation(
+            id: entity.id,
+            type: entity.type,
+            title: entity.title,
+            lastSequence: entity.lastSequence.toInt(),
+            members: const [],
+            messages: messages.map(_messageFromEntity).toList(),
+            updatedAt: entity.updatedAt,
+          ),
+        );
+      }
+      return list;
+    });
+  }
+
+  @override
+  Stream<List<Message>> watchMessagesForConversation(String conversationId) {
+    return _db.chatsDao.watchMessagesForConversation(conversationId).map(
+      (entities) => entities.map(_messageFromEntity).toList(),
+    );
+  }
 
   void handleIncomingMessage(Message message) {
     _incomingMessagesController.add(message);
   }
 
   @override
+  Future<String> ensureConversationForContact(
+    String contactUserId, {
+    String? title,
+  }) async {
+    if (contactUserId.trim().isEmpty) {
+      throw ArgumentError.value(contactUserId, 'contactUserId', 'Nie może być puste');
+    }
+
+    final sortedIds = [
+      _currentUserId,
+      contactUserId,
+    ]..sort();
+    final conversationId = sortedIds.join(':');
+    final currentTime = DateTime.now();
+
+    await _db.chatsDao.upsertConversations([
+      ConversationsCompanion(
+        id: Value(conversationId),
+        type: Value('direct'),
+        title: Value(title ?? 'Kontakt'),
+        lastSequence: Value(BigInt.zero),
+        updatedAt: Value(currentTime),
+        createdAt: Value(currentTime),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    final memberIds = <String>{_currentUserId, contactUserId};
+    await _db.chatsDao.upsertMembers(
+      memberIds
+          .map(
+            (userId) => ConversationMembersCompanion(
+              id: Value('$conversationId:$userId'),
+              conversationId: Value(conversationId),
+              userId: Value(userId),
+              role: Value(userId == _currentUserId ? 'admin' : 'member'),
+              lastReadSequence: Value(BigInt.zero),
+              createdAt: Value(currentTime),
+              updatedAt: Value(currentTime),
+              deletedAt: const Value.absent(),
+            ),
+          )
+          .toList(),
+    );
+
+    await ensureE2eeSessionForContact(contactUserId);
+
+    return conversationId;
+  }
+
+  @override
+  Future<void> ensureE2eeSessionForContact(String contactUserId) async {
+    if (contactUserId.trim().isEmpty) {
+      return;
+    }
+
+    try {
+      await _cryptoService.ensureSessionForPeer(contactUserId);
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Nie udało się zainicjalizować sesji E2EE dla kontaktu $contactUserId',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
+  }
+
+  @override
   Future<List<Conversation>> getConversations() async {
     try {
+      final entities = await _db.chatsDao.watchActiveConversations().first;
+      if (entities.isNotEmpty) {
+        final convs = <Conversation>[];
+        for (final entity in entities) {
+          final messages = await _db.chatsDao.getMessagesForConversation(
+            entity.id,
+            limit: 20,
+          );
+          convs.add(
+            Conversation(
+              id: entity.id,
+              type: entity.type,
+              title: entity.title,
+              lastSequence: entity.lastSequence.toInt(),
+              members: const [],
+              messages: messages.map(_messageFromEntity).toList(),
+              updatedAt: entity.updatedAt,
+            ),
+          );
+        }
+        return convs;
+      }
+
       final dtos = await _apiClient.getConversations();
       return saveConversationsFromRemote(dtos);
     } catch (e, st) {
@@ -95,11 +274,27 @@ class ChatsRepositoryImpl implements ChatsRepository {
     int limit = 50,
   }) async {
     try {
+      final local = await _db.chatsDao.getMessagesForConversation(
+        conversationId,
+        limit: limit,
+      );
+      if (local.isNotEmpty) {
+        return local.map(_messageFromEntity).toList();
+      }
+
       final dtos = await _apiClient.getMessageHistory(
         conversationId,
         beforeId: beforeId,
         limit: limit,
       );
+
+      final newMessages = dtos
+          .map((dto) => _messageDtoToCompanion(dto))
+          .toList();
+      if (newMessages.isNotEmpty) {
+        await _db.chatsDao.upsertMessages(newMessages);
+      }
+
       return dtos.map((dto) => mapMessageFromDto(dto, _currentUserId)).toList();
     } catch (e, st) {
       _logger.e(
@@ -117,25 +312,127 @@ class ChatsRepositoryImpl implements ChatsRepository {
     required String conversationId,
     required String content,
   }) async {
-    final payload = [
-      {
-        'conversation_id': conversationId,
-        'content': content,
-        'created_at': DateTime.now().toIso8601String(),
-      },
-    ];
+    final createdAt = DateTime.now();
+    final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
 
-    await _apiClient.sendOutboxBatch(payload);
+    if (content.trim().isEmpty) {
+      throw const FormatException('Ciphertext wiadomości nie może być pusty');
+    }
+
+    final message = Message(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      conversationId: conversationId,
+      senderId: _currentUserId,
+      content: content,
+      isMine: true,
+      createdAt: createdAt,
+    );
+
+    final outboxEventPayload = buildOutboxEventPayload(message, senderDeviceId);
+
+    await _db.chatsDao.upsertMessages([
+      _messageToCompanion(message, senderDeviceId: senderDeviceId),
+    ]);
+    await _db.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(outboxEventPayload)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        createdAt: Value(createdAt),
+      ),
+    );
+
+    _incomingMessagesController.add(message);
   }
 
   @override
   Future<List<Message>> getPendingOutboxMessages() async {
-    return List.unmodifiable(_pendingOutbox);
+    final events = await _db.outboxDao.getPendingEvents();
+    return events.map((event) {
+      final payload = jsonDecode(event.payload) as Map<String, dynamic>;
+      final nestedPayload = payload['payload'] as Map<String, dynamic>? ?? const {};
+      final createdAtValue = nestedPayload['created_at'] as String? ?? payload['created_at'] as String?;
+      return Message(
+        id: payload['event_id'] as String? ?? event.id,
+        conversationId: payload['conversation_id'] as String? ?? event.conversationId ?? '',
+        senderId: nestedPayload['sender_id'] as String? ?? _currentUserId,
+        content: nestedPayload['content']?.toString() ?? '',
+        isMine: true,
+        createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> syncDeltaFromRemote({
+    int lastKnownContactVersion = 0,
+    int lastKnownMessageVersion = 0,
+  }) async {
+    try {
+      final checkpoint = await _db.syncStateDao.getForUser(_currentUserId);
+      final resolvedLastKnownContactVersion =
+          lastKnownContactVersion == 0
+              ? (checkpoint?.lastKnownContactVersion ?? BigInt.zero).toInt()
+              : lastKnownContactVersion;
+      final resolvedLastKnownMessageVersion =
+          lastKnownMessageVersion == 0
+              ? (checkpoint?.lastKnownMessageVersion ?? BigInt.zero).toInt()
+              : lastKnownMessageVersion;
+
+      final payload = await _apiClient.syncDelta(
+        lastKnownContactVersion: resolvedLastKnownContactVersion,
+        lastKnownMessageVersion: resolvedLastKnownMessageVersion,
+      );
+
+      final updatedContacts = payload['updated_contacts'] as List<dynamic>? ?? const [];
+      final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
+      final remoteMessageDtos = parseRemoteMessageDtos(newMessages);
+
+      if (remoteMessageDtos.isNotEmpty) {
+        await _db.chatsDao.upsertMessages(
+          remoteMessageDtos.map(_messageDtoToCompanion).toList(),
+        );
+      }
+
+      final nextMessageVersion = resolveLastKnownMessageVersion(
+        remoteMessageDtos,
+        resolvedLastKnownMessageVersion,
+      );
+      final nextContactVersion = resolveLastKnownContactVersion(
+        updatedContacts,
+        resolvedLastKnownContactVersion,
+      );
+
+      await _db.syncStateDao.upsertCheckpoint(
+        userId: _currentUserId,
+        lastKnownMessageVersion: BigInt.from(nextMessageVersion),
+        lastKnownContactVersion: BigInt.from(nextContactVersion),
+      );
+
+      return [
+        {
+          'updated_contacts': updatedContacts.length,
+          'new_messages': remoteMessageDtos.length,
+        },
+      ];
+    } catch (e, st) {
+      _logger.e(
+        'Błąd podczas synchronizacji delta',
+        error: e,
+        stackTrace: st,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> clearSentOutboxMessages(List<String> messageIds) async {
-    _pendingOutbox.removeWhere((msg) => messageIds.contains(msg.id));
+    if (messageIds.isEmpty) return;
+    await _db.outboxDao.deleteEvents(messageIds);
     _logger.i(
       'Usunięto ${messageIds.length} wysłanych wiadomości z outboxa',
       module: 'ChatsRepository',
@@ -146,9 +443,51 @@ class ChatsRepositoryImpl implements ChatsRepository {
   Future<List<Conversation>> saveConversationsFromRemote(
     List<ConversationDto> dtos,
   ) async {
-    final conversations = dtos
-        .map((dto) => mapConversationFromDto(dto, _currentUserId))
-        .toList();
+    final conversations = <Conversation>[];
+
+    for (final dto in dtos) {
+      final conv = mapConversationFromDto(dto, _currentUserId);
+      await _db.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: Value(dto.id),
+          type: Value(dto.type),
+          title: Value(dto.title),
+          lastSequence: Value(BigInt.from(dto.lastSequence)),
+          updatedAt: Value(dto.updatedAt ?? DateTime.now()),
+          createdAt: Value(dto.createdAt ?? DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      if (dto.members.isNotEmpty) {
+        await _db.chatsDao.upsertMembers(
+          dto.members
+              .map(
+                (member) => ConversationMembersCompanion(
+                  id: Value(member.id),
+                  conversationId: Value(member.conversationId),
+                  userId: Value(member.userId),
+                  role: Value(member.role),
+                  lastReadSequence: Value(BigInt.from(member.lastReadSequence)),
+                  createdAt: Value(DateTime.now()),
+                  updatedAt: Value(DateTime.now()),
+                  deletedAt: const Value.absent(),
+                ),
+              )
+              .toList(),
+        );
+      }
+
+      final remoteMessages = dto.messages
+          ?.whereType<MessageDto>()
+          .map(_messageDtoToCompanion)
+          .toList();
+      if (remoteMessages != null && remoteMessages.isNotEmpty) {
+        await _db.chatsDao.upsertMessages(remoteMessages);
+      }
+
+      conversations.add(conv);
+    }
 
     _logger.i(
       'Zaktualizowano ${conversations.length} konwersacji',
@@ -156,11 +495,71 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
     return conversations;
   }
+
+  MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
+    return MessagesCompanion(
+      id: Value(dto.id),
+      conversationId: Value(dto.conversationId),
+      senderId: Value(dto.senderId),
+      senderDeviceId: Value(dto.senderDeviceId ?? ''),
+      type: Value(dto.type),
+      sequence: Value(BigInt.from(dto.sequence)),
+      encryptedPayload: Value(utf8.encode(dto.encryptedPayload)),
+      mediaHeader: const Value.absent(),
+      version: Value(BigInt.from(dto.version)),
+      createdAt: Value(dto.createdAt),
+      updatedAt: Value(dto.createdAt),
+      deletedAt: const Value.absent(),
+    );
+  }
+
+  MessagesCompanion _messageToCompanion(
+    Message message, {
+    String? senderDeviceId,
+  }) {
+    return MessagesCompanion(
+      id: Value(message.id),
+      conversationId: Value(message.conversationId),
+      senderId: Value(message.senderId),
+      senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
+      type: const Value('text'),
+      sequence: Value(BigInt.from(DateTime.now().millisecondsSinceEpoch)),
+      encryptedPayload: Value(utf8.encode(message.content)),
+      mediaHeader: const Value.absent(),
+      version: Value(BigInt.one),
+      createdAt: Value(message.createdAt),
+      updatedAt: Value(DateTime.now()),
+      deletedAt: const Value.absent(),
+    );
+  }
+
+  Message _messageFromEntity(MessageEntity entity) {
+    return Message(
+      id: entity.id,
+      conversationId: entity.conversationId,
+      senderId: entity.senderId,
+      content: utf8.decode(entity.encryptedPayload, allowMalformed: true),
+      isMine: entity.senderId == _currentUserId,
+      createdAt: entity.createdAt,
+    );
+  }
 }
 
 @riverpod
 ChatsRepository chatsRepository(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
+  final db = ref.watch(appDatabaseProvider);
   final logger = ref.watch(appLoggerProvider);
-  return ChatsRepositoryImpl(apiClient, logger);
+  final currentUserId = ref.watch(currentUserIdProvider);
+  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
+  final cryptoService = ref.watch(e2eeCryptoServiceProvider);
+
+  return ChatsRepositoryImpl(
+    apiClient,
+    db,
+    logger,
+    currentUserId,
+    deviceInfoService,
+    cryptoService,
+  );
 }

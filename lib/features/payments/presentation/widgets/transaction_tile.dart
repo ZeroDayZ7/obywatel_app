@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/payments/domain/enums/transaction_type.dart';
 import 'package:obywatel_plus/features/payments/domain/models/payment_transaction.dart';
 
@@ -9,7 +10,9 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final theme = context.theme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
     final isExpense = transaction.type == TransactionType.expense;
 
     return ListTile(
@@ -42,7 +45,7 @@ class TransactionTile extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.w900,
           fontSize: 15,
-          color: isExpense ? Colors.red : Colors.green,
+          color: isExpense ? colorScheme.error : statusColors.success,
         ),
       ),
     );

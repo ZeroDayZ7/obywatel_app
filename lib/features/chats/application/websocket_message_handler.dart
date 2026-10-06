@@ -2,21 +2,23 @@ import 'dart:async';
 
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/features/chats/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/chats/data/datasources/chats_ws_client.dart';
-import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
-import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/chats/domain/models/message.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'websocket_message_handler.g.dart';
 
 class WebSocketMessageHandler {
   final ChatsWsClient _wsClient;
-  final ChatsRepositoryImpl _repository;
   final AppLogger _logger;
+  final Future<void> Function() _onSignalReceived;
   StreamSubscription<Map<String, dynamic>>? _subscription;
 
-  WebSocketMessageHandler(this._wsClient, this._repository, this._logger);
+  WebSocketMessageHandler(
+    this._wsClient,
+    this._logger,
+    this._onSignalReceived,
+  );
 
   void init() {
     _subscription = _wsClient.rawMessagesStream.listen(
@@ -37,23 +39,20 @@ class WebSocketMessageHandler {
 
       switch (type) {
         case 'new_message':
-          final dto = MessageDto.fromJson(json['data'] as Map<String, dynamic>);
-          final message = Message(
-            id: dto.id,
-            conversationId: dto.conversationId,
-            senderId: dto.senderId,
-            content: dto.encryptedPayload,
-            isMine: false,
-            createdAt: dto.createdAt,
+        case 'conversation_updated':
+        case 'contact_updated':
+          _logger.i(
+            'Odebrano sygnał WS typu $type. Uruchamianie delta sync.',
+            module: 'WSHandler',
           );
-          _repository.handleIncomingMessage(message);
+          unawaited(_onSignalReceived());
           break;
         default:
           _logger.i('Nieznany typ wiadomości WS: $type', module: 'WSHandler');
       }
     } catch (e, st) {
       _logger.e(
-        'Parsowanie wiadomości WS nie powiodło się',
+        'Obsługa sygnału WS nie powiodła się',
         error: e,
         stackTrace: st,
         module: 'WSHandler',
@@ -69,10 +68,15 @@ class WebSocketMessageHandler {
 @riverpod
 WebSocketMessageHandler webSocketMessageHandler(Ref ref) {
   final wsClient = ref.watch(chatsWsClientProvider);
-  final repo = ref.watch(chatsRepositoryProvider) as ChatsRepositoryImpl;
   final logger = ref.watch(appLoggerProvider);
 
-  final handler = WebSocketMessageHandler(wsClient, repo, logger);
+  final handler = WebSocketMessageHandler(
+    wsClient,
+    logger,
+    () async {
+      await ref.read(chatSyncServiceProvider).syncPendingData();
+    },
+  );
   handler.init();
 
   ref.onDispose(() => handler.dispose());

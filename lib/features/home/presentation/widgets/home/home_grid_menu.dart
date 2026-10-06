@@ -5,9 +5,7 @@ import 'package:obywatel_plus/features/home/config/home_menu_items.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/home/home_grid_item.dart';
 
 class HomeGridMenu extends StatelessWidget {
-  final Map<String, int> badgeCounts;
-
-  const HomeGridMenu({super.key, required this.badgeCounts});
+  const HomeGridMenu({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,13 +24,11 @@ class HomeGridMenu extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = visibleItems[index];
         final label = item.labelKey.tr();
-        final badgeCount = badgeCounts[item.id] ?? 0;
 
         return HomeGridItem(
           icon: item.icon,
           color: item.color,
           label: label,
-          badgeCount: badgeCount,
           isEnabled: item.isEnabled,
           onTap: () {
             if (!item.isEnabled) return;

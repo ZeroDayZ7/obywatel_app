@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart' as repo;
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/sync_batch_model.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notifications_controller.g.dart';
 
@@ -21,91 +23,60 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> markAsRead(String id) async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).markAsRead(id);
-    // 2. Serwer
-    try {
-      await NotificationApi(ref.read(authDioProvider)).markAsRead(id);
-    } catch (e) {
-      ref
-          .read(appLoggerProvider)
-          .e('Błąd oznaczania jako przeczytane w API: $id');
-    }
+    await repo.markAsRead(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
   }
 
   Future<void> markAllAsRead() async {
     final logger = ref.read(appLoggerProvider);
-
-    // 1. Najpierw baza lokalna (Błyskawiczna reakcja UI)
-    await ref.read(notificationsDaoProvider).markAllAsRead();
-
-    // 2. Potem strzał do API
-    try {
-      final dio = ref.read(authDioProvider);
-      await NotificationApi(dio).markAllAsRead();
-      logger.i(
-        '✅ Oznaczono wszystkie powiadomienia jako przeczytane na serwerze',
-      );
-    } catch (e) {
-      logger.e(
-        '❌ Nie udało się zsynchronizować statusu "przeczytane" z serwerem',
-      );
-      // Tutaj opcjonalnie: jeśli API padnie, można by przeładować dane z serwera,
-      // żeby przywrócić stan faktyczny, ale w mObywatelu zazwyczaj zostawia się to do następnej synchro.
-    }
+    await repo.markAllAsRead(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+    );
+    logger.i('Queued mark_all_read in outbox');
   }
 
   Future<void> moveToTrash(String id) async {
-    // 1. Lokalnie
-    await ref
-        .read(notificationsDaoProvider)
-        .updateDeletedAt(id, DateTime.now());
-    // 2. Serwer (Soft Delete)
-    try {
-      await NotificationApi(ref.read(authDioProvider)).moveToTrash(id);
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd przenoszenia do kosza w API: $id');
-    }
+    await repo.moveToTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
   }
 
   Future<void> clearAllTrash() async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).deleteAllTrash();
-    // 2. Serwer (Hard Delete)
-    try {
-      await NotificationApi(ref.read(authDioProvider)).clearTrash();
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd czyszczenia kosza w API');
-    }
+    await repo.clearTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+    );
+    ref.read(appLoggerProvider).i('Queued clear_trash in outbox');
   }
 
   Future<void> restoreFromTrash(String id) async {
-    // 1. Lokalnie (UI reaguje od razu)
-    await ref.read(notificationsDaoProvider).updateDeletedAt(id, null);
-
-    // 2. Serwer
-    try {
-      await NotificationApi(ref.read(authDioProvider)).restoreFromTrash(id);
-      ref
-          .read(appLoggerProvider)
-          .i('✅ Przywrócono powiadomienie na serwerze: $id');
-    } catch (e) {
-      ref.read(appLoggerProvider).e('❌ Błąd przywracania z kosza w API: $id');
-      // Opcjonalnie: jeśli API zwróci błąd, przywracamy deletedAt lokalnie
-      // await ref.read(notificationsDaoProvider).updateDeletedAt(id, DateTime.now());
-    }
+    await repo.restoreFromTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
+    ref.read(appLoggerProvider).i('Queued restore in outbox');
   }
 
   Future<void> deletePermanently(String id) async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).deleteNotification(id);
-
-    // 2. API
-    try {
-      await NotificationApi(ref.read(authDioProvider)).deletePermanently(id);
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd usuwania w API: $id');
-    }
+    await repo.deletePermanently(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
+    ref.read(appLoggerProvider).i('Queued delete in outbox');
   }
 
   Future<void> vacuumOldNotifications() async {
@@ -115,20 +86,42 @@ class NotificationsController extends _$NotificationsController {
 
   Future<void> syncWithBackend() async {
     final logger = ref.read(appLoggerProvider);
+    final api = ref.read(notificationApiProvider);
+
+    // 1) Push: flush outbox
     try {
-      final api = NotificationApi(ref.read(authDioProvider));
-      final remoteNotifications = await api.fetchNotifications();
+      final events = await ref.read(appDatabaseProvider).outboxDao.getPendingEvents();
+      final notificationEvents = events.where((e) => e.eventType.startsWith('notification.')).toList();
 
-      // ZMIANA: Zamiast upsertNotifications, używamy nowej metody sync
-      await ref
-          .read(notificationsDaoProvider)
-          .syncLocalWithRemote(remoteNotifications);
+      if (notificationEvents.isNotEmpty) {
+        // map to DTOs
+        final dtos = notificationEvents.map((e) => SyncEventDto(
+              id: e.id,
+              eventType: e.eventType,
+              payload: (e.payload.isNotEmpty) ? Map<String, dynamic>.from(jsonDecode(e.payload) as Map<String, dynamic>) : {},
+              createdAt: e.createdAt.toUtc().toIso8601String(),
+            )).toList();
 
-      logger.i(
-        '🔄 Synchronizacja zakończona: ${remoteNotifications.length} powiadomień',
-      );
+        final resp = await api.syncBatch(dtos);
+
+        // remove processed ids
+        if (resp.processedEventIds.isNotEmpty) {
+          await ref.read(appDatabaseProvider).outboxDao.deleteEventsByIds(resp.processedEventIds);
+        }
+      }
     } catch (e, st) {
-      logger.e('❌ Błąd synchronizacji powiadomień', error: e, stackTrace: st);
+      logger.e('❌ Błąd wysyłania outboxa', error: e, stackTrace: st);
+      // don't proceed to pull if push failed
+      return;
+    }
+
+    // 2) Pull: fetch latest notifications and apply
+    try {
+      final remoteNotifications = await api.fetchNotifications();
+      await ref.read(notificationsDaoProvider).syncLocalWithRemote(remoteNotifications);
+      logger.i('🔄 Synchronizacja zakończona: ${remoteNotifications.length} powiadomień');
+    } catch (e, st) {
+      logger.e('❌ Błąd pobierania powiadomień', error: e, stackTrace: st);
     }
   }
 }

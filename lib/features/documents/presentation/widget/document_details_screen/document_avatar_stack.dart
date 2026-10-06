@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
+import 'package:obywatel_plus/features/documents/presentation/mappers/document_icon_mapper.dart';
 
 class DocumentAvatarStack extends StatelessWidget {
   final DocumentModel doc;
@@ -10,6 +11,7 @@ class DocumentAvatarStack extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
+    final icon = DocumentIconMapper.getIcon(doc.iconName);
 
     return Stack(
       alignment: Alignment.center,
@@ -27,9 +29,9 @@ class DocumentAvatarStack extends StatelessWidget {
             radius: 50,
             backgroundColor: theme.colorScheme.surfaceContainerHigh,
             child: Icon(
-              Icons.person,
-              size: 50,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              icon,
+              size: 46,
+              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             ),
           ),
         ),
@@ -49,7 +51,7 @@ class DocumentAvatarStack extends StatelessWidget {
               ],
             ),
             child: Icon(
-              Icons.camera_alt,
+              Icons.verified,
               size: 16,
               color: theme.colorScheme.onPrimary,
             ),

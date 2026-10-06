@@ -24,9 +24,10 @@ class ContactsApiClient {
   }
 
   Future<void> sendContactRequest(String targetUserId) async {
+    final payload = {'target_user_id': targetUserId};
     await _apiClient.post(
       '/contacts/request',
-      data: {'target_user_id': targetUserId},
+      data: payload,
     );
   }
 

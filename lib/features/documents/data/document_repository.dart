@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
@@ -18,8 +19,43 @@ DocumentRepository documentRepository(Ref ref) {
   return LocalFirstDocumentRepository(ref, database.userDocumentsDao);
 }
 
+class DocumentSyncManifest {
+  const DocumentSyncManifest._();
+
+  static String compute(Map<String, dynamic> payload) {
+    final normalized = _normalizeMap(payload);
+    final serialized = jsonEncode(normalized);
+    final digest = sha256.convert(utf8.encode(serialized));
+    return digest.toString();
+  }
+
+  static dynamic _normalizeMap(dynamic value) {
+    if (value is Map) {
+      final normalized = <String, dynamic>{};
+      final keys = value.keys.map((key) => key.toString()).toList()..sort();
+
+      for (final key in keys) {
+        final child = value[key];
+        normalized[key] = _normalizeMap(child);
+      }
+
+      return normalized;
+    }
+
+    if (value is List) {
+      return value.map(_normalizeMap).toList();
+    }
+
+    if (value is DateTime) {
+      return value.toUtc().toIso8601String();
+    }
+
+    return value;
+  }
+}
+
 abstract class DocumentRepository {
-  Stream<List<DocumentModel>> watchActiveDocuments();
+  Stream<List<DocumentModel>> watchDocuments();
   Future<DocumentModel?> getDocumentById(String id);
   Future<void> syncDocuments();
 }
@@ -31,8 +67,8 @@ class LocalFirstDocumentRepository implements DocumentRepository {
   LocalFirstDocumentRepository(this._ref, this._dao);
 
   @override
-  Stream<List<DocumentModel>> watchActiveDocuments() {
-    return _dao.watchActiveDocuments().map(
+  Stream<List<DocumentModel>> watchDocuments() {
+    return _dao.watchDocuments().map(
       (dbRows) => dbRows.map(_mapDbToDomain).toList(),
     );
   }
@@ -50,10 +86,12 @@ class LocalFirstDocumentRepository implements DocumentRepository {
     final logger = _ref.read(appLoggerProvider);
 
     try {
-      final maxVersion = await _dao.getMaxVersion();
+      final currentVersion = await _dao.getMaxVersion();
       final response = await apiClient.get(
         ApiEndpoints.documentsMe,
-        queryParams: {'since_version': maxVersion},
+        queryParams: currentVersion > 0
+            ? {'since_version': currentVersion}
+            : null,
       );
 
       if (response.data == null || response.data is! List) return;
@@ -61,52 +99,83 @@ class LocalFirstDocumentRepository implements DocumentRepository {
       final items = response.data as List;
       if (items.isEmpty) return;
 
-      final companions = items.map((item) {
-        final map = Map<String, dynamic>.from(item as Map);
+      final companions = <UserDocumentsCompanion>[];
 
-        final metaJson = _parseMetadata(map['encrypted_meta'] as String?);
+      for (final item in items) {
+        if (item is! Map) continue;
+
+        final map = Map<String, dynamic>.from(item);
+        final id = map['id']?.toString();
+        if (id == null || id.isEmpty) continue;
+
+        final manifestHash = DocumentSyncManifest.compute(map);
+        final existingHash = await _dao.getDocumentManifestHash(id);
+        if (existingHash != null && existingHash == manifestHash) {
+          continue;
+        }
+
+        final metaJson = _extractMetadata(map);
         final rawSignature = map['issuer_signature'] as String? ?? '';
+        final typeCode = (map['type_code'] ?? map['document_type'] ?? map['type'] ?? '').toString();
+        final version = map['version'] is int ? map['version'] as int : 1;
 
-        return UserDocumentsCompanion(
-          id: Value(map['id'] as String),
-          typeCode: Value(map['type_code'] as String? ?? ''),
-          status: Value(map['status'] as String? ?? 'active'),
-          title: Value(metaJson['title'] as String? ?? ''),
-          issuer: Value(metaJson['issuer'] as String? ?? ''),
-          category: Value(metaJson['category'] as String? ?? 'identity'),
-          documentNumber: Value(metaJson['document_number'] as String? ?? ''),
-          issuerSignature: Value(base64.decode(rawSignature)),
-          signingKeyId: Value(map['signing_key_id'] as String? ?? ''),
-          revocationSerial: Value(map['revocation_serial'] as String? ?? ''),
-          version: Value(map['version'] as int? ?? 1),
-          issuedAt: Value(
-            map['issued_at'] != null
-                ? DateTime.parse(map['issued_at'] as String)
-                : null,
+        List<int> signatureBytes;
+        try {
+          signatureBytes = rawSignature.isEmpty
+              ? <int>[]
+              : base64.decode(rawSignature);
+        } catch (_) {
+          signatureBytes = utf8.encode(rawSignature);
+        }
+
+        final issuedAtValue = _parseDate(map['issued_at']);
+        final expiresAtValue = _parseDate(map['expires_at']);
+        final issuerSignatureBlob = Uint8List.fromList(signatureBytes);
+
+        companions.add(
+          UserDocumentsCompanion(
+            id: Value(id),
+            typeCode: Value(typeCode),
+            status: Value((map['status'] ?? 'active').toString()),
+            title: Value(metaJson['title'] as String? ?? ''),
+            issuer: Value(metaJson['issuer'] as String? ?? ''),
+            category: Value(metaJson['category'] as String? ?? 'identity'),
+            documentNumber: Value(metaJson['document_number'] as String? ?? ''),
+            issuerSignature: Value(issuerSignatureBlob),
+            signingKeyId: Value(map['signing_key_id'] as String? ?? ''),
+            revocationSerial: Value(map['revocation_serial'] as String? ?? ''),
+            version: Value(version),
+            issuedAt: Value(issuedAtValue),
+            expiresAt: Value(expiresAtValue),
+            allowedScopesJson: Value(
+              metaJson['allowed_scopes'] != null
+                  ? jsonEncode(metaJson['allowed_scopes'])
+                  : null,
+            ),
+            customAttributesJson: Value(
+              metaJson['custom_attributes'] != null
+                  ? jsonEncode(metaJson['custom_attributes'])
+                  : null,
+            ),
+            updatedAt: Value(DateTime.now().toUtc()),
           ),
-          expiresAt: Value(
-            map['expires_at'] != null
-                ? DateTime.parse(map['expires_at'] as String)
-                : null,
-          ),
-          allowedScopesJson: Value(
-            metaJson['allowed_scopes'] != null
-                ? jsonEncode(metaJson['allowed_scopes'])
-                : null,
-          ),
-          customAttributesJson: Value(
-            metaJson['custom_attributes'] != null
-                ? jsonEncode(metaJson['custom_attributes'])
-                : null,
-          ),
-          updatedAt: Value(DateTime.now().toUtc()),
         );
-      }).toList();
+      }
 
-      await _dao.upsertDocuments(companions);
+      if (companions.isNotEmpty) {
+        await _dao.upsertDocuments(companions);
+      }
     } catch (e, stackTrace) {
       logger.e('Failed to sync documents', error: e, stackTrace: stackTrace);
     }
+  }
+
+  Map<String, dynamic> _extractMetadata(Map<String, dynamic> payload) {
+    final metadata = payload['metadata'];
+    if (metadata is Map) {
+      return Map<String, dynamic>.from(metadata);
+    }
+    return _parseMetadata(payload['encrypted_meta'] as String?);
   }
 
   Map<String, dynamic> _parseMetadata(String? rawMeta) {
@@ -114,9 +183,22 @@ class LocalFirstDocumentRepository implements DocumentRepository {
     try {
       final decodedBytes = base64.decode(rawMeta);
       final decodedString = utf8.decode(decodedBytes);
-      return jsonDecode(decodedString) as Map<String, dynamic>;
+      final dec = jsonDecode(decodedString);
+      if (dec is Map) {
+        return Map<String, dynamic>.from(dec);
+      }
     } catch (_) {
       return {};
+    }
+    return {};
+  }
+
+  DateTime? _parseDate(dynamic rawValue) {
+    if (rawValue == null || rawValue.toString().isEmpty) return null;
+    try {
+      return DateTime.parse(rawValue.toString());
+    } catch (_) {
+      return null;
     }
   }
 

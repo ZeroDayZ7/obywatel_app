@@ -56,6 +56,20 @@ class AuthController extends _$AuthController {
       final hasSession = refreshToken != null && refreshToken.isNotEmpty;
 
       if (!hasSession) {
+        final cachedUser = await _sessionService.getCachedUser();
+
+        if (cachedUser != null) {
+          _log.i(
+            'Brak refresh_token, ale znaleziono zcacheowany profil użytkownika -> AuthState.authenticated(user: cachedUser, isDeviceTrusted: true)',
+            module: _logModule,
+          );
+          state = AuthState.authenticated(
+            user: cachedUser,
+            isDeviceTrusted: true,
+          );
+          return;
+        }
+
         _log.i(
           'Brak zapisanej sesji na urządzeniu -> AuthState.unauthenticated',
           module: _logModule,

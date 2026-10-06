@@ -27,63 +27,98 @@ class _LogoutConfirmDialogState extends State<LogoutConfirmDialog> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    final isDestructiveActive = _removeDeviceAndPin;
+
     return AlertDialog(
       title: Text(LocaleKeys.drawer_logout_title.tr()),
+      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(LocaleKeys.drawer_logout_content.tr()),
-          const SizedBox(height: 16),
-          const Divider(),
-          CheckboxListTile(
-            contentPadding: EdgeInsets.zero,
-            value: _removeDeviceAndPin,
-            activeColor: colorScheme.error,
-            title: Text(
-              LocaleKeys.drawer_remove_device_title.tr(),
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          const SizedBox(height: 20),
+          
+          // --- ODŚWIEŻONY KAFELEK OPCJI ---
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: isDestructiveActive
+                  ? colorScheme.errorContainer.withValues(alpha:0.12)
+                  : colorScheme.surfaceContainerHighest.withValues(alpha:0.4),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: isDestructiveActive
+                    ? colorScheme.error.withValues(alpha:0.4)
+                    : colorScheme.outlineVariant.withValues(alpha:0.5),
+                width: 1,
+              ),
             ),
-            subtitle: Text(
-              LocaleKeys.drawer_remove_device_subtitle.tr(),
-              style: const TextStyle(fontSize: 12),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: CheckboxListTile(
+                // Wewnętrzny padding rozwiązuje problem najechania tekstu na krawędzie
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                value: _removeDeviceAndPin,
+                activeColor: colorScheme.error,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                title: Text(
+                  LocaleKeys.drawer_remove_device_title.tr(),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDestructiveActive
+                        ? colorScheme.error
+                        : colorScheme.onSurface,
+                  ),
+                ),
+                subtitle: Text(
+                  LocaleKeys.drawer_remove_device_subtitle.tr(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _removeDeviceAndPin = value ?? false;
+                  });
+                },
+              ),
             ),
-            onChanged: (value) {
-              setState(() {
-                _removeDeviceAndPin = value ?? false;
-              });
-            },
           ),
         ],
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       actions: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8.0, left: 8.0, right: 8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: LocaleKeys.common_cancel.tr(),
-                  variant: AppButtonVariant.text,
-                  onPressed: () => Navigator.of(context).pop(null),
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: LocaleKeys.common_cancel.tr(),
+                variant: AppButtonVariant.text,
+                onPressed: () => Navigator.of(context).pop(null),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: AppButton(
-                  label: LocaleKeys.drawer_logout.tr(),
-                  variant: AppButtonVariant.danger,
-                  onPressed: () {
-                    final action = _removeDeviceAndPin
-                        ? LogoutAction.unpairAndReset
-                        : LogoutAction.logout;
-                    Navigator.of(context).pop(action);
-                  },
-                ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AppButton(
+                label: LocaleKeys.drawer_logout.tr(),
+                variant: AppButtonVariant.danger,
+                onPressed: () {
+                  final action = _removeDeviceAndPin
+                      ? LogoutAction.unpairAndReset
+                      : LogoutAction.logout;
+                  Navigator.of(context).pop(action);
+                },
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ],
     );
