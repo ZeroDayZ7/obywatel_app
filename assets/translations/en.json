@@ -198,7 +198,7 @@
       "emergency_lock_slider": "Slide to lock",
       "emergency_lock_cancel": "Cancel",
       "change_password": "Change Password",
-      "change_password_description": "Update your account password."
+      "change_password_description": "Update your account password"
     },
     "notifications": "Notifications",
     "notifications_section_general": "General notifications",
