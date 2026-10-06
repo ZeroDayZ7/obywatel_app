@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
 import 'package:obywatel_plus/core/design/widgets/app_avatar.dart';
@@ -11,6 +12,8 @@ class ApplicationsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final statusColors = theme.extension<StatusColorsTheme>() ??
+        StatusColorsTheme.fromColorScheme(colorScheme);
 
     return ListView(
       children: [
@@ -22,9 +25,9 @@ class ApplicationsPage extends StatelessWidget {
           spacing: 12,
           runSpacing: 12,
           children: [
-            _buildStatCard('12', 'Wysłane', Colors.blue),
-            _buildStatCard('3', 'Rozmowy', Colors.green),
-            _buildStatCard('5', 'Oczekujące', Colors.orange),
+            _buildStatCard('12', 'Wysłane', colorScheme.primary),
+            _buildStatCard('3', 'Rozmowy', statusColors.success),
+            _buildStatCard('5', 'Oczekujące', statusColors.warning),
           ],
         ),
 

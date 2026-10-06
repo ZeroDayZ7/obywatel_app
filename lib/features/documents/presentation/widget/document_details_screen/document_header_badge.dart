@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 
 class DocumentHeaderBadge extends StatelessWidget {
@@ -9,10 +10,12 @@ class DocumentHeaderBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final statusColors = theme.extension<StatusColorsTheme>() ??
+        StatusColorsTheme.fromColorScheme(colorScheme);
 
     final badgeColor = switch (doc.normalizedStatus) {
       'ACTIVE' => colorScheme.primary,
-      'PENDING' => Colors.orange.shade700,
+      'PENDING' => statusColors.warning,
       'EXPIRED' || 'REVOKED' => colorScheme.error,
       _ => colorScheme.onSurfaceVariant,
     };

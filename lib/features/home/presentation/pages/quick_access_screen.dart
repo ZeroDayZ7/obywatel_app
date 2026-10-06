@@ -163,7 +163,7 @@ class _QuickAccessCard extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              onTap: () => context.go(item.route),
+              onTap: () => context.push(item.route),
               splashColor: accentColor.withValues(alpha: 0.1),
               highlightColor: accentColor.withValues(alpha: 0.05),
               child: Padding(

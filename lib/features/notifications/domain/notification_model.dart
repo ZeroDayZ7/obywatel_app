@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
 
 part 'notification_model.freezed.dart';
 part 'notification_model.g.dart';
@@ -41,22 +42,28 @@ enum NotificationCategory {
 // Rozszerzenie dla kolorów priorytetów
 extension NotificationPriorityX on NotificationPriority {
   Color color(ColorScheme colors) {
+    final statusColors = colors.brightness == Brightness.dark
+        ? StatusColorsTheme.fromColorScheme(colors)
+        : StatusColorsTheme.fromColorScheme(colors);
+
     return switch (this) {
-      NotificationPriority.info => colors.primary,
-      NotificationPriority.success => Colors.green,
-      NotificationPriority.warning => Colors.orange,
+      NotificationPriority.info => statusColors.info,
+      NotificationPriority.success => statusColors.success,
+      NotificationPriority.warning => statusColors.warning,
       NotificationPriority.error => colors.error,
     };
   }
 
   // Kolor tła karty (bardzo delikatny odcień)
   Color containerColor(ColorScheme colors) {
+    final statusColors = StatusColorsTheme.fromColorScheme(colors);
+
     return switch (this) {
       NotificationPriority.info => colors.primaryContainer.withValues(
         alpha: 0.2,
       ),
-      NotificationPriority.success => Colors.green.withValues(alpha: 0.1),
-      NotificationPriority.warning => Colors.orange.withValues(alpha: 0.1),
+      NotificationPriority.success => statusColors.success.withValues(alpha: 0.12),
+      NotificationPriority.warning => statusColors.warning.withValues(alpha: 0.12),
       NotificationPriority.error => colors.errorContainer.withValues(
         alpha: 0.2,
       ),

@@ -5,6 +5,7 @@ import 'package:obywatel_plus/app/theme/app_bar_theme.dart';
 import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/app/theme/app_text_theme.dart';
 import 'package:obywatel_plus/app/theme/extensions/shadow_theme.dart';
+import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
 import 'package:obywatel_plus/app/theme/extensions/toast_theme.dart';
 import 'package:obywatel_plus/app/theme/input_decoration_theme.dart';
 
@@ -46,6 +47,7 @@ abstract final class AppTheme {
       extensions: [
         ShadowTheme.fromMode(isDark),
         ToastTheme.fromColorScheme(colorScheme),
+        StatusColorsTheme.fromColorScheme(colorScheme),
       ],
     );
   }

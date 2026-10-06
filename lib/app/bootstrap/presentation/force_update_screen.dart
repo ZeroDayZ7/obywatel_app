@@ -1,15 +1,16 @@
-import 'dart:io';
 import 'dart:async';
 import 'dart:io' as io;
+import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/config/update_links.dart';
 import 'package:obywatel_plus/app/bootstrap/force_update_provider.dart';
+import 'package:obywatel_plus/app/config/update_links.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ForceUpdateScreen extends ConsumerWidget {
   const ForceUpdateScreen({super.key});
@@ -26,10 +27,10 @@ class ForceUpdateScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
+              Icon(
                 Icons.system_update_alt,
                 size: 96,
-                color: Colors.orangeAccent,
+                color: theme.extension<StatusColorsTheme>()?.warning ?? theme.colorScheme.tertiary,
               ),
               const SizedBox(height: 32),
               Text(

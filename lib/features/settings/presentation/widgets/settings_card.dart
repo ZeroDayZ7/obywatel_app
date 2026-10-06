@@ -26,10 +26,9 @@ class SettingsCard extends StatelessWidget {
     final theme = Theme.of(context);
     final errorColor = theme.colorScheme.error;
 
-    // Twoje kolory zależne od isDanger
-    final iconColor = isDanger ? errorColor : Colors.blueAccent;
+    final iconColor = isDanger ? errorColor : theme.colorScheme.primary;
     final titleColor = isDanger ? errorColor : null;
-    final subtitleColor = isDanger ? errorColor : Colors.grey;
+    final subtitleColor = isDanger ? errorColor : theme.colorScheme.onSurfaceVariant;
 
     return Card(
       margin: EdgeInsets.only(bottom: 12),
