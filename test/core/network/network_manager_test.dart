@@ -7,7 +7,7 @@ void main() {
   group('NetworkManager', () {
     test('marks backend unavailable and blocks requests during cooldown', () {
       final manager = NetworkManager(
-        connectivity: Connectivity(),
+        connectivity: ConnectivityAdapter(Connectivity()),
         clock: () => DateTime(2024, 1, 1, 12, 0, 0),
       );
 
@@ -19,7 +19,7 @@ void main() {
 
     test('clears backend downtime when connectivity recovers', () {
       final manager = NetworkManager(
-        connectivity: Connectivity(),
+        connectivity: ConnectivityAdapter(Connectivity()),
         clock: () => DateTime(2024, 1, 1, 12, 0, 0),
       );
 
@@ -32,7 +32,7 @@ void main() {
 
     test('offline is distinct from backend unavailable', () {
       final manager = NetworkManager(
-        connectivity: Connectivity(),
+        connectivity: ConnectivityAdapter(Connectivity()),
         clock: () => DateTime(2024, 1, 1, 12, 0, 0),
       );
 

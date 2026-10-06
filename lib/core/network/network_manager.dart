@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum NetworkState {
@@ -10,14 +11,33 @@ enum NetworkState {
   backendUnavailable,
 }
 
-class NetworkManager {
-  NetworkManager({
-    Connectivity? connectivity,
-    DateTime Function()? clock,
-  })  : _connectivity = connectivity ?? Connectivity(),
-        _clock = clock ?? DateTime.now;
+abstract interface class ConnectivityFacade {
+  Stream<List<ConnectivityResult>> get onConnectivityChanged;
+  Future<List<ConnectivityResult>> checkConnectivity();
+}
+
+class ConnectivityAdapter implements ConnectivityFacade {
+  const ConnectivityAdapter(this._connectivity);
 
   final Connectivity _connectivity;
+
+  @override
+  Stream<List<ConnectivityResult>> get onConnectivityChanged =>
+      _connectivity.onConnectivityChanged;
+
+  @override
+  Future<List<ConnectivityResult>> checkConnectivity() =>
+      _connectivity.checkConnectivity();
+}
+
+class NetworkManager {
+  NetworkManager({
+    ConnectivityFacade? connectivity,
+    DateTime Function()? clock,
+  })  : _connectivity = connectivity ?? ConnectivityAdapter(Connectivity()),
+        _clock = clock ?? DateTime.now;
+
+  final ConnectivityFacade _connectivity;
   final DateTime Function() _clock;
   final StreamController<NetworkState> _stateController =
       StreamController<NetworkState>.broadcast();
@@ -130,7 +150,19 @@ class NetworkManager {
 
 final networkManagerProvider = Provider<NetworkManager>((ref) {
   final manager = NetworkManager();
+
+  Future.microtask(() {
+    try {
+      WidgetsBinding.instance;
+    } catch (_) {
+      return;
+    }
+
+    unawaited(manager.start());
+  });
+
   ref.onDispose(manager.dispose);
+
   return manager;
 });
 

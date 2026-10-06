@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/sync/sync_coordinator.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart' as repo;
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
@@ -12,14 +14,40 @@ part 'notifications_controller.g.dart';
 
 @riverpod
 class NotificationsController extends _$NotificationsController {
+  bool _syncInProgress = false;
+
   @override
   Stream<List<NotificationModel>> build() {
     final stream = ref.watch(notificationsDaoProvider).watchAllNotifications();
-    // Automatycznie czyść stary kosz przy inicjalizacji kontrolera (opcjonalnie)
-    // vacuumOldNotifications();
-    Future.microtask(() => syncWithBackend());
+
+    ref.listen(syncCoordinatorProvider, (previous, next) {
+      if (next == SyncReadiness.ready && previous != SyncReadiness.ready) {
+        unawaited(_syncWhenReady());
+      }
+    });
+
+    if (ref.read(syncCoordinatorProvider) == SyncReadiness.ready) {
+      unawaited(_syncWhenReady());
+    }
 
     return stream;
+  }
+
+  Future<void> _syncWhenReady() async {
+    if (_syncInProgress) return;
+
+    _syncInProgress = true;
+
+    try {
+      final readiness = await ref.read(syncCoordinatorProvider.notifier).ensureReady();
+      if (readiness != SyncReadiness.ready) {
+        return;
+      }
+
+      await syncWithBackend();
+    } finally {
+      _syncInProgress = false;
+    }
   }
 
   Future<void> markAsRead(String id) async {
