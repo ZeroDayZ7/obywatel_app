@@ -198,18 +198,11 @@
       "emergency_lock_slider": "Slide to lock",
       "emergency_lock_cancel": "Cancel",
       "change_password": "Change Password",
-      "change_password_description": "Update the password you use to access the app."
+      "change_password_description": "Update your account password."
     },
     "notifications": "Notifications",
     "notifications_section_general": "General notifications",
     "notifications_section_channels": "Notification channels",
-    "privacy_title": "Privacy",
-    "privacy_mode": "Privacy mode",
-    "feature_disabled": "Currently unavailable",
-    "data_sharing": "Data sharing",
-    "appearance_title": "Appearance",
-    "display_mode": "Display mode",
-    "reduced_motion": "Reduced motion",
     "change_password": {
       "current": "Current password",
       "new": "New password",

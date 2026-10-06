@@ -14,11 +14,7 @@ void main() {
       const state = SettingsPreferencesState();
 
       expect(state.appLockTimeout, AppLockTimeout.minute1);
-      expect(state.privacyMode, PrivacyMode.balanced);
-      expect(state.displayMode, DisplayMode.adaptive);
       expect(state.biometricPrompt, isTrue);
-      expect(state.reducedMotion, isFalse);
-      expect(state.dataSharingOptIn, isFalse);
     });
 
     testWidgets('settings config returns typed sections', (tester) async {

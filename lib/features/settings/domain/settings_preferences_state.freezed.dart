@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SettingsPreferencesState {
 
- AppLockTimeout get appLockTimeout; PrivacyMode get privacyMode; DisplayMode get displayMode; bool get biometricPrompt; bool get reducedMotion; bool get dataSharingOptIn;
+ AppLockTimeout get appLockTimeout; bool get biometricPrompt;
 /// Create a copy of SettingsPreferencesState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $SettingsPreferencesStateCopyWith<SettingsPreferencesState> get copyWith => _$Se
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.privacyMode, privacyMode) || other.privacyMode == privacyMode)&&(identical(other.displayMode, displayMode) || other.displayMode == displayMode)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt)&&(identical(other.reducedMotion, reducedMotion) || other.reducedMotion == reducedMotion)&&(identical(other.dataSharingOptIn, dataSharingOptIn) || other.dataSharingOptIn == dataSharingOptIn));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appLockTimeout,privacyMode,displayMode,biometricPrompt,reducedMotion,dataSharingOptIn);
+int get hashCode => Object.hash(runtimeType,appLockTimeout,biometricPrompt);
 
 @override
 String toString() {
-  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, privacyMode: $privacyMode, displayMode: $displayMode, biometricPrompt: $biometricPrompt, reducedMotion: $reducedMotion, dataSharingOptIn: $dataSharingOptIn)';
+  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, biometricPrompt: $biometricPrompt)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $SettingsPreferencesStateCopyWith<$Res>  {
   factory $SettingsPreferencesStateCopyWith(SettingsPreferencesState value, $Res Function(SettingsPreferencesState) _then) = _$SettingsPreferencesStateCopyWithImpl;
 @useResult
 $Res call({
- AppLockTimeout appLockTimeout, PrivacyMode privacyMode, DisplayMode displayMode, bool biometricPrompt, bool reducedMotion, bool dataSharingOptIn
+ AppLockTimeout appLockTimeout, bool biometricPrompt
 });
 
 
@@ -65,14 +65,10 @@ class _$SettingsPreferencesStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsPreferencesState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? appLockTimeout = null,Object? privacyMode = null,Object? displayMode = null,Object? biometricPrompt = null,Object? reducedMotion = null,Object? dataSharingOptIn = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? appLockTimeout = null,Object? biometricPrompt = null,}) {
   return _then(_self.copyWith(
 appLockTimeout: null == appLockTimeout ? _self.appLockTimeout : appLockTimeout // ignore: cast_nullable_to_non_nullable
-as AppLockTimeout,privacyMode: null == privacyMode ? _self.privacyMode : privacyMode // ignore: cast_nullable_to_non_nullable
-as PrivacyMode,displayMode: null == displayMode ? _self.displayMode : displayMode // ignore: cast_nullable_to_non_nullable
-as DisplayMode,biometricPrompt: null == biometricPrompt ? _self.biometricPrompt : biometricPrompt // ignore: cast_nullable_to_non_nullable
-as bool,reducedMotion: null == reducedMotion ? _self.reducedMotion : reducedMotion // ignore: cast_nullable_to_non_nullable
-as bool,dataSharingOptIn: null == dataSharingOptIn ? _self.dataSharingOptIn : dataSharingOptIn // ignore: cast_nullable_to_non_nullable
+as AppLockTimeout,biometricPrompt: null == biometricPrompt ? _self.biometricPrompt : biometricPrompt // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -155,10 +151,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppLockTimeout appLockTimeout,  PrivacyMode privacyMode,  DisplayMode displayMode,  bool biometricPrompt,  bool reducedMotion,  bool dataSharingOptIn)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AppLockTimeout appLockTimeout,  bool biometricPrompt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SettingsPreferencesState() when $default != null:
-return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.biometricPrompt,_that.reducedMotion,_that.dataSharingOptIn);case _:
+return $default(_that.appLockTimeout,_that.biometricPrompt);case _:
   return orElse();
 
 }
@@ -176,10 +172,10 @@ return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppLockTimeout appLockTimeout,  PrivacyMode privacyMode,  DisplayMode displayMode,  bool biometricPrompt,  bool reducedMotion,  bool dataSharingOptIn)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AppLockTimeout appLockTimeout,  bool biometricPrompt)  $default,) {final _that = this;
 switch (_that) {
 case _SettingsPreferencesState():
-return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.biometricPrompt,_that.reducedMotion,_that.dataSharingOptIn);}
+return $default(_that.appLockTimeout,_that.biometricPrompt);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -193,10 +189,10 @@ return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.b
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppLockTimeout appLockTimeout,  PrivacyMode privacyMode,  DisplayMode displayMode,  bool biometricPrompt,  bool reducedMotion,  bool dataSharingOptIn)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AppLockTimeout appLockTimeout,  bool biometricPrompt)?  $default,) {final _that = this;
 switch (_that) {
 case _SettingsPreferencesState() when $default != null:
-return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.biometricPrompt,_that.reducedMotion,_that.dataSharingOptIn);case _:
+return $default(_that.appLockTimeout,_that.biometricPrompt);case _:
   return null;
 
 }
@@ -208,15 +204,11 @@ return $default(_that.appLockTimeout,_that.privacyMode,_that.displayMode,_that.b
 @JsonSerializable()
 
 class _SettingsPreferencesState implements SettingsPreferencesState {
-  const _SettingsPreferencesState({this.appLockTimeout = AppLockTimeout.minute1, this.privacyMode = PrivacyMode.balanced, this.displayMode = DisplayMode.adaptive, this.biometricPrompt = true, this.reducedMotion = false, this.dataSharingOptIn = false});
+  const _SettingsPreferencesState({this.appLockTimeout = AppLockTimeout.minute1, this.biometricPrompt = true});
   factory _SettingsPreferencesState.fromJson(Map<String, dynamic> json) => _$SettingsPreferencesStateFromJson(json);
 
 @override@JsonKey() final  AppLockTimeout appLockTimeout;
-@override@JsonKey() final  PrivacyMode privacyMode;
-@override@JsonKey() final  DisplayMode displayMode;
 @override@JsonKey() final  bool biometricPrompt;
-@override@JsonKey() final  bool reducedMotion;
-@override@JsonKey() final  bool dataSharingOptIn;
 
 /// Create a copy of SettingsPreferencesState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,16 +223,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.privacyMode, privacyMode) || other.privacyMode == privacyMode)&&(identical(other.displayMode, displayMode) || other.displayMode == displayMode)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt)&&(identical(other.reducedMotion, reducedMotion) || other.reducedMotion == reducedMotion)&&(identical(other.dataSharingOptIn, dataSharingOptIn) || other.dataSharingOptIn == dataSharingOptIn));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appLockTimeout,privacyMode,displayMode,biometricPrompt,reducedMotion,dataSharingOptIn);
+int get hashCode => Object.hash(runtimeType,appLockTimeout,biometricPrompt);
 
 @override
 String toString() {
-  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, privacyMode: $privacyMode, displayMode: $displayMode, biometricPrompt: $biometricPrompt, reducedMotion: $reducedMotion, dataSharingOptIn: $dataSharingOptIn)';
+  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, biometricPrompt: $biometricPrompt)';
 }
 
 
@@ -251,7 +243,7 @@ abstract mixin class _$SettingsPreferencesStateCopyWith<$Res> implements $Settin
   factory _$SettingsPreferencesStateCopyWith(_SettingsPreferencesState value, $Res Function(_SettingsPreferencesState) _then) = __$SettingsPreferencesStateCopyWithImpl;
 @override @useResult
 $Res call({
- AppLockTimeout appLockTimeout, PrivacyMode privacyMode, DisplayMode displayMode, bool biometricPrompt, bool reducedMotion, bool dataSharingOptIn
+ AppLockTimeout appLockTimeout, bool biometricPrompt
 });
 
 
@@ -268,14 +260,10 @@ class __$SettingsPreferencesStateCopyWithImpl<$Res>
 
 /// Create a copy of SettingsPreferencesState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? appLockTimeout = null,Object? privacyMode = null,Object? displayMode = null,Object? biometricPrompt = null,Object? reducedMotion = null,Object? dataSharingOptIn = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? appLockTimeout = null,Object? biometricPrompt = null,}) {
   return _then(_SettingsPreferencesState(
 appLockTimeout: null == appLockTimeout ? _self.appLockTimeout : appLockTimeout // ignore: cast_nullable_to_non_nullable
-as AppLockTimeout,privacyMode: null == privacyMode ? _self.privacyMode : privacyMode // ignore: cast_nullable_to_non_nullable
-as PrivacyMode,displayMode: null == displayMode ? _self.displayMode : displayMode // ignore: cast_nullable_to_non_nullable
-as DisplayMode,biometricPrompt: null == biometricPrompt ? _self.biometricPrompt : biometricPrompt // ignore: cast_nullable_to_non_nullable
-as bool,reducedMotion: null == reducedMotion ? _self.reducedMotion : reducedMotion // ignore: cast_nullable_to_non_nullable
-as bool,dataSharingOptIn: null == dataSharingOptIn ? _self.dataSharingOptIn : dataSharingOptIn // ignore: cast_nullable_to_non_nullable
+as AppLockTimeout,biometricPrompt: null == biometricPrompt ? _self.biometricPrompt : biometricPrompt // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

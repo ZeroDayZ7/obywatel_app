@@ -189,13 +189,6 @@ abstract class  LocaleKeys {
   static const settings_notifications = 'settings.notifications';
   static const settings_notifications_section_general = 'settings.notifications_section_general';
   static const settings_notifications_section_channels = 'settings.notifications_section_channels';
-  static const settings_privacy_title = 'settings.privacy_title';
-  static const settings_privacy_mode = 'settings.privacy_mode';
-  static const settings_feature_disabled = 'settings.feature_disabled';
-  static const settings_data_sharing = 'settings.data_sharing';
-  static const settings_appearance_title = 'settings.appearance_title';
-  static const settings_display_mode = 'settings.display_mode';
-  static const settings_reduced_motion = 'settings.reduced_motion';
   static const settings_change_password_current = 'settings.change_password.current';
   static const settings_change_password_new = 'settings.change_password.new';
   static const settings_change_password_confirm = 'settings.change_password.confirm';

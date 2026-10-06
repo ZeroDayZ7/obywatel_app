@@ -198,19 +198,12 @@
       "emergency_lock_slider": "Przesuń, aby zablokować",
       "emergency_lock_cancel": "Anuluj",
       "change_password": "Zmień hasło",
-      "change_password_description": "Zaktualizuj hasło używane do dostępu do aplikacji."
+      "change_password_description": "Zaktualizuj hasło do konta."
     },
 
     "notifications": "Powiadomienia",
     "notifications_section_general": "Powiadomienia ogólne",
     "notifications_section_channels": "Kanały powiadomień",
-    "privacy_title": "Prywatność",
-    "privacy_mode": "Tryb prywatności",
-    "feature_disabled": "Obecnie niedostępne",
-    "data_sharing": "Udostępnianie danych",
-    "appearance_title": "Wygląd",
-    "display_mode": "Tryb wyświetlania",
-    "reduced_motion": "Zmniejszenie ruchu",
     "change_password": {
       "current": "Aktualne hasło",
       "new": "Nowe hasło",

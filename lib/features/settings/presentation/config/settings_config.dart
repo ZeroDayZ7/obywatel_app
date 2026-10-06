@@ -75,46 +75,6 @@ class SettingsConfig {
           ),
         ],
       ),
-      SettingsSection(
-        title: LocaleKeys.settings_privacy_title.tr(),
-        items: [
-          ActionItem(
-            icon: Icons.privacy_tip_outlined,
-            title: LocaleKeys.settings_privacy_mode.tr(),
-            subtitle: LocaleKeys.settings_feature_disabled.tr(),
-            type: ActionType.selection,
-            isEnabled: false,
-          ),
-          ActionItem(
-            icon: Icons.share_outlined,
-            title: LocaleKeys.settings_data_sharing.tr(),
-            subtitle: LocaleKeys.settings_feature_disabled.tr(),
-            type: ActionType.toggle,
-            initialValue: false,
-            isEnabled: false,
-          ),
-        ],
-      ),
-      SettingsSection(
-        title: LocaleKeys.settings_appearance_title.tr(),
-        items: [
-          ActionItem(
-            icon: Icons.contrast,
-            title: LocaleKeys.settings_display_mode.tr(),
-            subtitle: LocaleKeys.settings_feature_disabled.tr(),
-            type: ActionType.selection,
-            isEnabled: false,
-          ),
-          ActionItem(
-            icon: Icons.motion_photos_on_outlined,
-            title: LocaleKeys.settings_reduced_motion.tr(),
-            subtitle: LocaleKeys.settings_feature_disabled.tr(),
-            type: ActionType.toggle,
-            initialValue: false,
-            isEnabled: false,
-          ),
-        ],
-      ),
     ];
   }
 }

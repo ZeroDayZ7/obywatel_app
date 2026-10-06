@@ -43,7 +43,7 @@ final class NotificationSettingsNotifierProvider
 }
 
 String _$notificationSettingsNotifierHash() =>
-    r'763d3b217b3a9c92a2b2a2a58ca391df9fdae84d';
+    r'30e227f4c012af5ff0d8688fed67c477b244a393';
 
 abstract class _$NotificationSettingsNotifier
     extends $Notifier<NotificationSettings> {
