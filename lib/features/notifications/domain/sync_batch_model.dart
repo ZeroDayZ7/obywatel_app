@@ -1,61 +1,35 @@
-// Lightweight DTOs for outbox sync without code generation
-class SyncEventDto {
-  final String id;
-  final String eventType;
-  final Map<String, dynamic> payload;
-  final String createdAt;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  SyncEventDto({
-    required this.id,
-    required this.eventType,
-    required this.payload,
-    required this.createdAt,
-  });
+part 'sync_batch_model.freezed.dart';
+part 'sync_batch_model.g.dart';
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'event_type': eventType,
-        'payload': payload,
-        'created_at': createdAt,
-      };
+@freezed
+abstract class SyncEventDto with _$SyncEventDto {
+  const factory SyncEventDto({
+    required String id,
+    @JsonKey(name: 'event_type') required String eventType,
+    required Map<String, dynamic> payload,
+    @JsonKey(name: 'created_at') required String createdAt,
+  }) = _SyncEventDto;
 
-  factory SyncEventDto.fromJson(Map<String, dynamic> json) => SyncEventDto(
-        id: json['id'] as String,
-        eventType: json['event_type'] as String,
-        payload: Map<String, dynamic>.from(json['payload'] as Map<String, dynamic>),
-        createdAt: json['created_at'] as String,
-      );
+  factory SyncEventDto.fromJson(Map<String, dynamic> json) => _$SyncEventDtoFromJson(json);
 }
 
-class SyncBatchRequestDto {
-  final List<SyncEventDto> events;
+@freezed
+abstract class SyncBatchRequestDto with _$SyncBatchRequestDto {
+  const factory SyncBatchRequestDto({
+    required List<SyncEventDto> events,
+  }) = _SyncBatchRequestDto;
 
-  SyncBatchRequestDto({required this.events});
-
-  Map<String, dynamic> toJson() => {
-        'events': events.map((e) => e.toJson()).toList(),
-      };
-
-  factory SyncBatchRequestDto.fromJson(Map<String, dynamic> json) => SyncBatchRequestDto(
-        events: (json['events'] as List<dynamic>)
-            .map((e) => SyncEventDto.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+  factory SyncBatchRequestDto.fromJson(Map<String, dynamic> json) => _$SyncBatchRequestDtoFromJson(json);
 }
 
-class SyncBatchResponseDto {
-  final List<String> processedEventIds;
-  final List<String>? failedEventIds;
+@freezed
+abstract class SyncBatchResponseDto with _$SyncBatchResponseDto {
+  const factory SyncBatchResponseDto({
+    @JsonKey(name: 'processed_event_ids') required List<String> processedEventIds,
+    @JsonKey(name: 'failed_event_ids') List<String>? failedEventIds,
+  }) = _SyncBatchResponseDto;
 
-  SyncBatchResponseDto({required this.processedEventIds, this.failedEventIds});
-
-  Map<String, dynamic> toJson() => {
-        'processed_event_ids': processedEventIds,
-        'failed_event_ids': failedEventIds,
-      };
-
-  factory SyncBatchResponseDto.fromJson(Map<String, dynamic> json) => SyncBatchResponseDto(
-        processedEventIds: (json['processed_event_ids'] as List<dynamic>).cast<String>(),
-        failedEventIds: json['failed_event_ids'] == null ? null : (json['failed_event_ids'] as List<dynamic>).cast<String>(),
-      );
+  factory SyncBatchResponseDto.fromJson(Map<String, dynamic> json) => _$SyncBatchResponseDtoFromJson(json);
 }
