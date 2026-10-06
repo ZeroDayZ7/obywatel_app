@@ -2,6 +2,7 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/sync_batch_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_api.g.dart';
@@ -41,6 +42,15 @@ class NotificationApi {
 
   Future<void> deletePermanently(String id) async {
     await _apiClient.delete(ApiEndpoints.deleteNotification(id));
+  }
+
+  Future<SyncBatchResponseDto> syncBatch(List<SyncEventDto> events) async {
+    final req = SyncBatchRequestDto(events: events);
+    final response = await _apiClient.post(
+      '${ApiEndpoints.notifications}/sync',
+      data: req.toJson(),
+    );
+    return SyncBatchResponseDto.fromJson(response.data as Map<String, dynamic>);
   }
 }
 

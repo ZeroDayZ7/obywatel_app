@@ -97,6 +97,11 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         .get();
   }
 
+  Future<void> deleteEventsByIds(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await (delete(outboxEvents)..where((t) => t.id.isIn(ids))).go();
+  }
+
   Future<void> markAsSending(List<String> ids) async {
     await (update(outboxEvents)..where((t) => t.id.isIn(ids))).write(
       const OutboxEventsCompanion(status: Value('sending')),
