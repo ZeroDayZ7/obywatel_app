@@ -42,9 +42,7 @@ enum NotificationCategory {
 // Rozszerzenie dla kolorów priorytetów
 extension NotificationPriorityX on NotificationPriority {
   Color color(ColorScheme colors) {
-    final statusColors = colors.brightness == Brightness.dark
-        ? StatusColorsTheme.fromColorScheme(colors)
-        : StatusColorsTheme.fromColorScheme(colors);
+    final statusColors = StatusColorsTheme.fromColorScheme(colors);
 
     return switch (this) {
       NotificationPriority.info => statusColors.info,

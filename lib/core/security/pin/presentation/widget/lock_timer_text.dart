@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/utils/duration_utils.dart';
@@ -13,9 +13,7 @@ class LockTimerText extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(pinVerificationProvider);
-    final color = Theme.of(context).extension<StatusColorsTheme>()?.info ??
-        Theme.of(context).colorScheme.primary;
-
+    final color = context.statusColors.info;
     final remaining = state.maybeWhen(
       locked: (rem) => rem,
       orElse: () => Duration.zero,
@@ -51,7 +49,7 @@ class LockReasonText extends ConsumerWidget {
       ),
       textAlign: TextAlign.center,
       style: TextStyle(
-        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        color: context.colorScheme.onSurface.withValues(alpha: 0.7),
       ),
     );
   }

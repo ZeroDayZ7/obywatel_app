@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class DocumentCard extends StatelessWidget {
   final String title;
@@ -19,8 +19,8 @@ class DocumentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final theme = context.theme;
+    final colorScheme = context.colorScheme;
     final normalizedStatus = (status ?? '').toUpperCase();
     final displayStatus = switch (normalizedStatus) {
       'ACTIVE' => 'Ważny',
@@ -33,8 +33,7 @@ class DocumentCard extends StatelessWidget {
         normalizedStatus == 'EXPIRED' ||
         normalizedStatus == 'REVOKED';
 
-    final statusColors = theme.extension<StatusColorsTheme>() ??
-        StatusColorsTheme.fromColorScheme(colorScheme);
+    final statusColors = context.statusColors;
     final badgeColor = switch (normalizedStatus) {
       'ACTIVE' => colorScheme.primary,
       'PENDING' => statusColors.warning,

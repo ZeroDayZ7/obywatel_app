@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
 import 'package:obywatel_plus/core/design/widgets/app_avatar.dart';
@@ -10,10 +10,9 @@ class ApplicationsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final statusColors = theme.extension<StatusColorsTheme>() ??
-        StatusColorsTheme.fromColorScheme(colorScheme);
+    final theme = context.theme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return ListView(
       children: [

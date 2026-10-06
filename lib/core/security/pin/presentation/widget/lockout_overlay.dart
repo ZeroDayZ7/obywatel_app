@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart'; // Import Twojego enuma
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart'; // Import Twojego ResponsiveContainer
 import 'package:obywatel_plus/core/security/pin/presentation/widget/lock_timer_text.dart';
@@ -11,14 +11,13 @@ class LockoutOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final statusColors = theme.extension<StatusColorsTheme>() ??
-        StatusColorsTheme.fromColorScheme(theme.colorScheme);
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return Container(
       width: double.infinity,
       height: double.infinity,
-      color: theme.colorScheme.surface.withValues(alpha: 0.92),
+      color: colorScheme.surface.withValues(alpha: 0.92),
       child: ResponsiveContainer(
         size: ContainerSize.narrow,
         alignment: Alignment.center,
@@ -27,7 +26,7 @@ class LockoutOverlay extends StatelessWidget {
           children: [
             Icon(
               Icons.timer_off_outlined,
-              color: theme.colorScheme.error,
+              color: colorScheme.error,
               size: 80,
             ),
             const SizedBox(height: 32),
@@ -35,7 +34,7 @@ class LockoutOverlay extends StatelessWidget {
               LocaleKeys.pinVerification_system_locked.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface,
+                color: colorScheme.onSurface,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
@@ -52,7 +51,7 @@ class LockoutOverlay extends StatelessWidget {
             SizedBox(
               width: 180,
               child: LinearProgressIndicator(
-                backgroundColor: theme.colorScheme.onSurface.withValues(alpha: 0.12),
+                backgroundColor: colorScheme.onSurface.withValues(alpha: 0.12),
                 color: statusColors.info,
               ),
             ),

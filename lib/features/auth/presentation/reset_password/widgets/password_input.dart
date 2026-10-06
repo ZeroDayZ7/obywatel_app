@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
@@ -190,8 +190,8 @@ class _PasswordRequirementsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final hintColor = theme.textTheme.bodySmall?.color ?? theme.colorScheme.onSurfaceVariant;
+    final theme = context.theme;
+    final hintColor = theme.textTheme.bodySmall?.color ?? context.colorScheme.onSurfaceVariant;
 
     return Column(
       children: [
@@ -237,8 +237,7 @@ class _PasswordRequirementsList extends StatelessWidget {
             isMet ? Icons.check_circle : Icons.circle_outlined,
             size: 14,
             color: isMet
-                ? Theme.of(context).extension<StatusColorsTheme>()?.success ??
-                    Theme.of(context).colorScheme.primary
+                ? context.statusColors.success
                 : hintColor.withValues(alpha: 0.5),
           ),
           const SizedBox(width: 8),

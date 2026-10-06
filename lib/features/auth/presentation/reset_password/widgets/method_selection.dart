@@ -1,7 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/reset_password/reset_password_notifier.dart';
@@ -35,9 +35,8 @@ class _MethodSelectionWidgetState extends State<MethodSelectionWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final statusColors = theme.extension<StatusColorsTheme>() ??
-        StatusColorsTheme.fromColorScheme(theme.colorScheme);
+    final theme = context.theme;
+    final statusColors = context.statusColors;
     final selectionColor = statusColors.success.withValues(alpha: 0.1);
     final activeColor = statusColors.success;
 

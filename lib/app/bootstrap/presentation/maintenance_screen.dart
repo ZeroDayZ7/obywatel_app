@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/config/generated/assets.gen.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class MaintenanceScreen extends StatelessWidget {
   final String? message;
@@ -16,11 +16,11 @@ class MaintenanceScreen extends StatelessWidget {
         ? DateFormat('HH:mm').format(endTime!)
         : null;
 
-    final theme = Theme.of(context);
-    final statusColors = theme.extension<StatusColorsTheme>() ?? StatusColorsTheme.fromColorScheme(theme.colorScheme);
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: colorScheme.surface,
       body: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -29,8 +29,8 @@ class MaintenanceScreen extends StatelessWidget {
             center: Alignment.center,
             radius: 1.5,
             colors: [
-              theme.colorScheme.primary.withValues(alpha: 0.15),
-              theme.colorScheme.surface,
+              colorScheme.primary.withValues(alpha: 0.15),
+              colorScheme.surface,
             ],
           ),
         ),
@@ -48,7 +48,7 @@ class MaintenanceScreen extends StatelessWidget {
               LocaleKeys.maintenance_title.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface,
+                color: colorScheme.onSurface,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1.2,
@@ -61,7 +61,7 @@ class MaintenanceScreen extends StatelessWidget {
               message ?? LocaleKeys.maintenance_default_msg.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                color: colorScheme.onSurface.withValues(alpha: 0.7),
                 fontSize: 16,
                 height: 1.5,
               ),
@@ -114,8 +114,8 @@ class MaintenanceScreen extends StatelessWidget {
               icon: const Icon(Icons.refresh, size: 20),
               label: Text(LocaleKeys.maintenance_retry.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: theme.colorScheme.onSurface,
-                side: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.3)),
+                foregroundColor: colorScheme.onSurface,
+                side: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.3)),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 32,
                   vertical: 12,
