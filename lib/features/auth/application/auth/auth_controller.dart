@@ -104,8 +104,6 @@ class AuthController extends _$AuthController {
       module: _logModule,
     );
 
-    // ⚡ SCENARIUSZ A: Jesteśmy w trakcie logowania na zaufanym urządzeniu
-    // Klucz prywatny został przed chwilą załadowany do RAM w PinVerificationController.
     if (state.isPartiallyAuthenticated) {
       _log.i(
         '[UNLOCK-SESSION][2-A] Wykryto stan partiallyAuthenticated. Przechodzę do podpisu challenge\'a...',
@@ -122,7 +120,6 @@ class AuthController extends _$AuthController {
       return isAuth;
     }
 
-    // ⚡ SCENARIUSZ B: Standardowe odblokowanie zapisanej sesji po uruchomieniu/zablokowaniu aplikacji
     _log.i(
       '[UNLOCK-SESSION][2-B] Przejście do standardowego odblokowania sesji. Ustawiam stan AuthState.authenticating()',
       module: _logModule,
@@ -130,13 +127,30 @@ class AuthController extends _$AuthController {
     state = const AuthState.authenticating();
 
     try {
-      // 1. Sprawdzenie obecności tokena na dysku
+      final cachedUser = await _sessionService.getCachedUser();
+
+      if (cachedUser != null) {
+        _log.i(
+          '[UNLOCK-SESSION][CACHE] Znaleziono lokalny profil użytkownika. Odblokowanie UI natychmiastowe, bez czekania na /auth/me.',
+          module: _logModule,
+        );
+
+        await ref.read(securityServiceProvider.notifier).unlockApp();
+        state = AuthState.authenticated(
+          user: cachedUser,
+          isDeviceTrusted: true,
+        );
+
+        unawaited(_refreshSessionInBackground());
+        return true;
+      }
+
       _log.i(
-        '[UNLOCK-SESSION][3] Sprawdzanie obecności refresh_token w SecureStorage...',
+        '[UNLOCK-SESSION][3] Brak cache użytkownika. Sprawdzam refresh token i walidację online.',
         module: _logModule,
       );
-      final refreshToken = await _sessionService.getRefreshToken();
 
+      final refreshToken = await _sessionService.getRefreshToken();
       final tokenPresent = refreshToken != null && refreshToken.isNotEmpty;
       _log.d(
         '[UNLOCK-SESSION][3.1] Odczytany refresh_token: ${tokenPresent ? "OBECNY (len: ${refreshToken.length})" : "BRAK/EMPTY"}',
@@ -152,7 +166,6 @@ class AuthController extends _$AuthController {
         return false;
       }
 
-      // 2. Strzał do API po świeże dane profilu
       _log.i(
         '[UNLOCK-SESSION][4] Wykonuję zapytanie do API (/auth/me)...',
         module: _logModule,
@@ -165,7 +178,6 @@ class AuthController extends _$AuthController {
 
       await _sessionService.cacheUser(user);
 
-      // 3. Zdejmij blokadę lokalną
       _log.i(
         '[UNLOCK-SESSION][5] Zdejmowanie blokady lokalnej w SecurityService...',
         module: _logModule,
@@ -176,7 +188,6 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
 
-      // 4. Ustaw stan na authenticated
       _log.i(
         '[UNLOCK-SESSION][6] Ustawianie stanu AuthState.authenticated...',
         module: _logModule,
@@ -328,6 +339,58 @@ class AuthController extends _$AuthController {
       );
 
       return false;
+    }
+  }
+
+  Future<void> _refreshSessionInBackground() async {
+    try {
+      _log.i(
+        '[AUTH][BACKGROUND] Rozpoczynanie odświeżania sesji w tle po lokalnym odblokowaniu.',
+        module: _logModule,
+      );
+
+      final refreshedUser = await _authService.fetchAuthMe();
+      await _sessionService.cacheUser(refreshedUser);
+      state = AuthState.authenticated(
+        user: refreshedUser,
+        isDeviceTrusted: true,
+      );
+
+      _log.i(
+        '[AUTH][BACKGROUND] /auth/me zakończone sukcesem — cache zaktualizowany.',
+        module: _logModule,
+      );
+    } on DioException catch (e, stack) {
+      final appException = e.error is AppException ? e.error as AppException : null;
+      if (appException is NetworkException ||
+          appException is TimeoutException ||
+          appException is UpstreamUnavailableException ||
+          appException is BackendUnavailableException ||
+          e.response?.statusCode == 502 ||
+          e.response?.statusCode == 503 ||
+          e.response?.statusCode == 504) {
+        _log.w(
+          '[AUTH][BACKGROUND] Backend niedostępny w tle — lokalny stan pozostaje aktywny.',
+          error: e,
+          stackTrace: stack,
+          module: _logModule,
+        );
+        return;
+      }
+
+      _log.w(
+        '[AUTH][BACKGROUND] Błąd sesji w tle — nie blokuję lokalnego UI.',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
+    } catch (e, stack) {
+      _log.e(
+        '[AUTH][BACKGROUND] Niespodziewany błąd odświeżania sesji w tle.',
+        error: e,
+        stackTrace: stack,
+        module: _logModule,
+      );
     }
   }
 

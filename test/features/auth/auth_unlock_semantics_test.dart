@@ -103,7 +103,6 @@ void main() {
       expect(result, isTrue);
       expect(container.read(authControllerProvider).isAuthenticated, isTrue);
     });
-
   });
 }
 
