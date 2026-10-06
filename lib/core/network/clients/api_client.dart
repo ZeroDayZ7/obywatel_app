@@ -21,6 +21,12 @@ class ApiClient {
     Options? options,
   }) => dio.post<dynamic>(path, data: data, options: options);
 
+  Future<Response<dynamic>> patch(
+    String path, {
+    dynamic data,
+    Options? options,
+  }) => dio.patch<dynamic>(path, data: data, options: options);
+
   Future<Response<dynamic>> put(
     String path, {
     dynamic data,

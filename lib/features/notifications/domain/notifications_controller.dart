@@ -1,10 +1,8 @@
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notifications_controller.g.dart';
 
@@ -25,7 +23,7 @@ class NotificationsController extends _$NotificationsController {
     await ref.read(notificationsDaoProvider).markAsRead(id);
     // 2. Serwer
     try {
-      await NotificationApi(ref.read(authDioProvider)).markAsRead(id);
+      await ref.read(notificationApiProvider).markAsRead(id);
     } catch (e) {
       ref
           .read(appLoggerProvider)
@@ -41,8 +39,7 @@ class NotificationsController extends _$NotificationsController {
 
     // 2. Potem strzał do API
     try {
-      final dio = ref.read(authDioProvider);
-      await NotificationApi(dio).markAllAsRead();
+      await ref.read(notificationApiProvider).markAllAsRead();
       logger.i(
         '✅ Oznaczono wszystkie powiadomienia jako przeczytane na serwerze',
       );
@@ -62,7 +59,7 @@ class NotificationsController extends _$NotificationsController {
         .updateDeletedAt(id, DateTime.now());
     // 2. Serwer (Soft Delete)
     try {
-      await NotificationApi(ref.read(authDioProvider)).moveToTrash(id);
+      await ref.read(notificationApiProvider).moveToTrash(id);
     } catch (e) {
       ref.read(appLoggerProvider).e('Błąd przenoszenia do kosza w API: $id');
     }
@@ -73,7 +70,7 @@ class NotificationsController extends _$NotificationsController {
     await ref.read(notificationsDaoProvider).deleteAllTrash();
     // 2. Serwer (Hard Delete)
     try {
-      await NotificationApi(ref.read(authDioProvider)).clearTrash();
+      await ref.read(notificationApiProvider).clearTrash();
     } catch (e) {
       ref.read(appLoggerProvider).e('Błąd czyszczenia kosza w API');
     }
@@ -85,7 +82,7 @@ class NotificationsController extends _$NotificationsController {
 
     // 2. Serwer
     try {
-      await NotificationApi(ref.read(authDioProvider)).restoreFromTrash(id);
+      await ref.read(notificationApiProvider).restoreFromTrash(id);
       ref
           .read(appLoggerProvider)
           .i('✅ Przywrócono powiadomienie na serwerze: $id');
@@ -102,7 +99,7 @@ class NotificationsController extends _$NotificationsController {
 
     // 2. API
     try {
-      await NotificationApi(ref.read(authDioProvider)).deletePermanently(id);
+      await ref.read(notificationApiProvider).deletePermanently(id);
     } catch (e) {
       ref.read(appLoggerProvider).e('Błąd usuwania w API: $id');
     }
@@ -116,7 +113,7 @@ class NotificationsController extends _$NotificationsController {
   Future<void> syncWithBackend() async {
     final logger = ref.read(appLoggerProvider);
     try {
-      final api = NotificationApi(ref.read(authDioProvider));
+      final api = ref.read(notificationApiProvider);
       final remoteNotifications = await api.fetchNotifications();
 
       // ZMIANA: Zamiast upsertNotifications, używamy nowej metody sync
