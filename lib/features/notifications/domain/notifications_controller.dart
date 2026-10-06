@@ -1,6 +1,7 @@
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
+import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -19,90 +20,60 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> markAsRead(String id) async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).markAsRead(id);
-    // 2. Serwer
-    try {
-      await ref.read(notificationApiProvider).markAsRead(id);
-    } catch (e) {
-      ref
-          .read(appLoggerProvider)
-          .e('Błąd oznaczania jako przeczytane w API: $id');
-    }
+    await markAsRead(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
   }
 
   Future<void> markAllAsRead() async {
     final logger = ref.read(appLoggerProvider);
-
-    // 1. Najpierw baza lokalna (Błyskawiczna reakcja UI)
-    await ref.read(notificationsDaoProvider).markAllAsRead();
-
-    // 2. Potem strzał do API
-    try {
-      await ref.read(notificationApiProvider).markAllAsRead();
-      logger.i(
-        '✅ Oznaczono wszystkie powiadomienia jako przeczytane na serwerze',
-      );
-    } catch (e) {
-      logger.e(
-        '❌ Nie udało się zsynchronizować statusu "przeczytane" z serwerem',
-      );
-      // Tutaj opcjonalnie: jeśli API padnie, można by przeładować dane z serwera,
-      // żeby przywrócić stan faktyczny, ale w mObywatelu zazwyczaj zostawia się to do następnej synchro.
-    }
+    await markAllAsRead(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+    );
+    logger.i('Queued mark_all_read in outbox');
   }
 
   Future<void> moveToTrash(String id) async {
-    // 1. Lokalnie
-    await ref
-        .read(notificationsDaoProvider)
-        .updateDeletedAt(id, DateTime.now());
-    // 2. Serwer (Soft Delete)
-    try {
-      await ref.read(notificationApiProvider).moveToTrash(id);
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd przenoszenia do kosza w API: $id');
-    }
+    await moveToTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
   }
 
   Future<void> clearAllTrash() async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).deleteAllTrash();
-    // 2. Serwer (Hard Delete)
-    try {
-      await ref.read(notificationApiProvider).clearTrash();
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd czyszczenia kosza w API');
-    }
+    await clearTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+    );
+    ref.read(appLoggerProvider).i('Queued clear_trash in outbox');
   }
 
   Future<void> restoreFromTrash(String id) async {
-    // 1. Lokalnie (UI reaguje od razu)
-    await ref.read(notificationsDaoProvider).updateDeletedAt(id, null);
-
-    // 2. Serwer
-    try {
-      await ref.read(notificationApiProvider).restoreFromTrash(id);
-      ref
-          .read(appLoggerProvider)
-          .i('✅ Przywrócono powiadomienie na serwerze: $id');
-    } catch (e) {
-      ref.read(appLoggerProvider).e('❌ Błąd przywracania z kosza w API: $id');
-      // Opcjonalnie: jeśli API zwróci błąd, przywracamy deletedAt lokalnie
-      // await ref.read(notificationsDaoProvider).updateDeletedAt(id, DateTime.now());
-    }
+    await restoreFromTrash(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
+    ref.read(appLoggerProvider).i('Queued restore in outbox');
   }
 
   Future<void> deletePermanently(String id) async {
-    // 1. Lokalnie
-    await ref.read(notificationsDaoProvider).deleteNotification(id);
-
-    // 2. API
-    try {
-      await ref.read(notificationApiProvider).deletePermanently(id);
-    } catch (e) {
-      ref.read(appLoggerProvider).e('Błąd usuwania w API: $id');
-    }
+    await deletePermanently(
+      ref.read(appDatabaseProvider),
+      ref.read(notificationsDaoProvider),
+      ref.read(outboxDaoProvider),
+      id,
+    );
+    ref.read(appLoggerProvider).i('Queued delete in outbox');
   }
 
   Future<void> vacuumOldNotifications() async {

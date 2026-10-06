@@ -5,6 +5,7 @@ import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
 import 'package:obywatel_plus/core/database/daos/notifications_dao.dart';
+import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/daos/sync_state_dao.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
@@ -64,4 +65,9 @@ ChatsDao chatsDao(Ref ref) {
 @riverpod
 SyncStateDao syncStateDao(Ref ref) {
   return ref.watch(appDatabaseProvider).syncStateDao;
+}
+
+@riverpod
+OutboxDao outboxDao(Ref ref) {
+  return ref.watch(appDatabaseProvider).outboxDao;
 }

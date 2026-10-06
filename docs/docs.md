@@ -15,6 +15,8 @@ flutter run
 
 adb -s 5200d78bfa479449 shell top
 
+flutter run -d 5200d78bfa479449
+
 # Generate app icons
 
 dart run flutter_launcher_icons:main
