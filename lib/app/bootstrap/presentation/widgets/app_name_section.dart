@@ -26,7 +26,7 @@ class AppNameSection extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w900,
               letterSpacing: 2,
-              color: colorScheme.onPrimary,
+              color: colorScheme.primary,
             ),
             textAlign: TextAlign.center,
           ),

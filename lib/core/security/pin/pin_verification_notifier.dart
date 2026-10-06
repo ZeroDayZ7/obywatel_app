@@ -160,17 +160,14 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     if (!sessionValid) {
       _log.w(
-        '[VERIFY-PIN][7.2] Sesja nieprawidłowa po podaniu PIN-u. Przekierowanie do stanu błędu.',
+        '[VERIFY-PIN][7.2] Offline/backend unavailable po poprawnym PIN-ie — nie traktujemy tego jako błędu PIN-u. Zachowujemy lokalne odblokowanie aplikacji.',
       );
-      state = const PinVerificationState.error();
-      _log.d(
-        '[VERIFY-PIN][7.3] Zmieniono stan na PinVerificationState.error() z powodu nieprawidłowej sesji.',
-      );
-    } else {
-      _log.i(
-        '[VERIFY-PIN][8] Cały proces weryfikacji PIN zakończony sukcesem!',
-      );
+      return;
     }
+
+    _log.i(
+      '[VERIFY-PIN][8] Cały proces weryfikacji PIN zakończony sukcesem!',
+    );
   }
 
   Future<void> _handleFailedAttempt() async {

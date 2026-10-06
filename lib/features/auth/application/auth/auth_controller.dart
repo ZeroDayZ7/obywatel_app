@@ -196,25 +196,56 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
 
+      final shouldUseCachedUser = failure.maybeWhen(
+        network: () => true,
+        timeout: () => true,
+        server: (statusCode) => statusCode == null || statusCode >= 500,
+        upstream: (_) => true,
+        orElse: () => false,
+      );
+
       final shouldLogout = failure.maybeWhen(
+        unauthorized: () => true,
+        forbidden: () => true,
         server: (statusCode) => statusCode == 401 || statusCode == 403,
         orElse: () => false,
       );
 
       _log.d(
-        '[UNLOCK-SESSION][ERR-APP.1] Weryfikacja powodu błędu: shouldLogout=$shouldLogout',
+        '[UNLOCK-SESSION][ERR-APP.1] shouldUseCachedUser=$shouldUseCachedUser, shouldLogout=$shouldLogout',
         module: _logModule,
       );
 
+      if (shouldUseCachedUser) {
+        final cachedUser = await _sessionService.getCachedUser();
+
+        if (cachedUser == null) {
+          _log.w(
+            '[UNLOCK-SESSION][ERR-APP.2] Brak cache użytkownika przy błędzie sieci/backend. Ustawiam unauthenticated.',
+            module: _logModule,
+          );
+          state = const AuthState.unauthenticated();
+          return false;
+        }
+
+        _log.w(
+          '[UNLOCK-SESSION][ERR-APP.3] Backend niedostępny; utrzymuję lokalne odblokowanie z cache użytkownika.',
+          module: _logModule,
+        );
+        await ref.read(securityServiceProvider.notifier).unlockApp();
+        state = AuthState.authenticated(user: cachedUser, isDeviceTrusted: true);
+        return true;
+      }
+
       if (shouldLogout) {
         _log.w(
-          '[UNLOCK-SESSION][ERR-APP.2] 🔒 Token unieważniony przez serwer (401/403). Następuje wylogowanie.',
+          '[UNLOCK-SESSION][ERR-APP.4] 🔒 Token unieważniony przez serwer (401/403). Następuje wylogowanie.',
           module: _logModule,
         );
         await logout();
       } else {
         _log.w(
-          '[UNLOCK-SESSION][ERR-APP.3] Błąd po stronie aplikacji/sieci bez wylogowania. Ustawiam AuthState.unauthenticated().',
+          '[UNLOCK-SESSION][ERR-APP.5] Błąd po stronie aplikacji/sieci bez wylogowania. Ustawiam AuthState.unauthenticated().',
           module: _logModule,
         );
         state = const AuthState.unauthenticated();
@@ -235,10 +266,12 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
 
-      // 1. Brak sieci / Timeout / Upstream Unavailable -> Wpuszczamy w tryb offline
+      // 1. Brak sieci / Timeout / Upstream / Backend unavailable -> Wpuszczamy w tryb offline.
+      // POPRAWNY PIN NIE JEST BŁĘDNY, gdy backend jest niedostępny.
       if (appException is NetworkException ||
           appException is TimeoutException ||
-          appException is UpstreamUnavailableException) {
+          appException is UpstreamUnavailableException ||
+          appException is BackendUnavailableException) {
         _log.w(
           '[UNLOCK-SESSION] Brak łączności z serwerem. Zdejmowanie blokady lokalnej PIN i przejście w tryb offline.',
           module: _logModule,
