@@ -24,7 +24,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
       // Try to extract id and action from JSON payload
       try {
         if (payloadJson.isNotEmpty) {
-          final Map<String, dynamic> data = jsonDecode(payloadJson);
+          final Map<String, dynamic> data = jsonDecode(payloadJson) as Map<String, dynamic>;
           targetId = data['id']?.toString();
           action = data['action']?.toString();
         }
@@ -45,7 +45,7 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
 
       final related = pending.where((e) {
         try {
-          final Map<String, dynamic> d = jsonDecode(e.payload);
+          final Map<String, dynamic> d = jsonDecode(e.payload) as Map<String, dynamic>;
           return d['id']?.toString() == targetId;
         } catch (_) {
           return false;

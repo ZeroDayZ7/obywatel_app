@@ -1,7 +1,7 @@
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
-import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart';
+import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart' as repo;
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -20,7 +20,7 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> markAsRead(String id) async {
-    await markAsRead(
+    await repo.markAsRead(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
@@ -30,7 +30,7 @@ class NotificationsController extends _$NotificationsController {
 
   Future<void> markAllAsRead() async {
     final logger = ref.read(appLoggerProvider);
-    await markAllAsRead(
+    await repo.markAllAsRead(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
@@ -39,7 +39,7 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> moveToTrash(String id) async {
-    await moveToTrash(
+    await repo.moveToTrash(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
@@ -48,7 +48,7 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> clearAllTrash() async {
-    await clearTrash(
+    await repo.clearTrash(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
@@ -57,7 +57,7 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> restoreFromTrash(String id) async {
-    await restoreFromTrash(
+    await repo.restoreFromTrash(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
@@ -67,7 +67,7 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> deletePermanently(String id) async {
-    await deletePermanently(
+    await repo.deletePermanently(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),

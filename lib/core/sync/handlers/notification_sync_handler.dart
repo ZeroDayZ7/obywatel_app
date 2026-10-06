@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
+import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 
 /// NotificationSyncHandler is a simple stateless handler used by the SyncEngine
