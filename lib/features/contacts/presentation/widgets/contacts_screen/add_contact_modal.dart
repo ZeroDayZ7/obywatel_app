@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/contacts/application/contacts_service.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
@@ -74,11 +75,12 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
     try {
       await ref.read(contactsServiceProvider).addContact(identifier.normalized);
       if (mounted) {
+        final statusColors = context.statusColors;
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Zaproszenie wysłane pomyślnie!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: const Text('Zaproszenie wysłane pomyślnie!'),
+            backgroundColor: statusColors.success,
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -246,11 +248,11 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
+                                    color: colorScheme.shadow.withValues(alpha: 0.05),
                                     blurRadius: 10,
                                     spreadRadius: 2,
                                   ),

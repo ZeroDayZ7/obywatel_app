@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 
 class AnimatedToastWidget extends StatefulWidget {
@@ -37,7 +38,7 @@ class _AnimatedToastWidgetState extends State<AnimatedToastWidget>
 
   @override
   Widget build(BuildContext context) {
-    final style = _getStyle(widget.notification.type);
+    final style = _getStyle(context, widget.notification.type);
     final theme = Theme.of(context);
 
     return Dismissible(
@@ -48,7 +49,7 @@ class _AnimatedToastWidgetState extends State<AnimatedToastWidget>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: Material(
           elevation: 12,
-          shadowColor: Colors.black.withValues(alpha: 0.4),
+          shadowColor: theme.colorScheme.shadow.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(14),
 
           color: theme.colorScheme.surface,
@@ -119,22 +120,25 @@ class _AnimatedToastWidgetState extends State<AnimatedToastWidget>
     );
   }
 
-  _ToastStyle _getStyle(NotificationType type) {
+  _ToastStyle _getStyle(BuildContext context, NotificationType type) {
+    final statusColors = context.statusColors;
+    final colorScheme = context.colorScheme;
+
     return switch (type) {
       NotificationType.error => _ToastStyle(
-        color: Colors.redAccent,
+        color: colorScheme.error,
         icon: Icons.error_rounded,
       ),
       NotificationType.warning => _ToastStyle(
-        color: Colors.orangeAccent,
+        color: statusColors.warning,
         icon: Icons.warning_rounded,
       ),
       NotificationType.success => _ToastStyle(
-        color: Colors.greenAccent,
+        color: statusColors.success,
         icon: Icons.check_circle_rounded,
       ),
       NotificationType.info => _ToastStyle(
-        color: Colors.blueAccent,
+        color: statusColors.info,
         icon: Icons.info_rounded,
       ),
     };

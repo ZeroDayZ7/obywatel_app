@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -20,6 +21,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Zeskanuj kod QR'),
@@ -64,7 +67,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
               width: 250,
               height: 250,
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.lightBlueAccent, width: 3),
+                border: Border.all(color: colorScheme.primary, width: 3),
                 borderRadius: BorderRadius.circular(16),
               ),
             ),

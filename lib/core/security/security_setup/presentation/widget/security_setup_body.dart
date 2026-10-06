@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/security/security_setup/presentation/widget/pin_setup_dialog.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_notifier.dart';
@@ -149,7 +150,7 @@ class SecuritySetupBody extends ConsumerWidget {
     final pin = await showDialog<String>(
       context: context,
       builder: (_) => const PinSetupDialog(),
-      barrierColor: Colors.black.withValues(alpha: 0.7),
+      barrierColor: context.colorScheme.scrim.withValues(alpha: 0.7),
     );
 
     if (pin == null || pin.isEmpty) return;

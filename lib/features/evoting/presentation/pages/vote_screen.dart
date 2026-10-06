@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/evoting/data/mock/mock_evoting_repository.dart';
@@ -22,7 +23,8 @@ class _VoteScreenState extends State<VoteScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return AppScaffold(
       size: ContainerSize.medium,
@@ -52,7 +54,7 @@ class _VoteScreenState extends State<VoteScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.check_circle_rounded, size: 64, color: Colors.green),
+                    Icon(Icons.check_circle_rounded, size: 64, color: statusColors.success),
                     const SizedBox(height: 16),
                     Text(
                       'Twój głos został zapisany',

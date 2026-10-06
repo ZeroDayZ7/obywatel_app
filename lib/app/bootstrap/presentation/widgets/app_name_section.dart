@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/config/env.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class AppNameSection extends StatelessWidget {
   const AppNameSection({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
+    final textTheme = context.textTheme;
 
     return Column(
       children: [
@@ -25,7 +26,7 @@ class AppNameSection extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.w900,
               letterSpacing: 2,
-              color: Colors.white,
+              color: colorScheme.onPrimary,
             ),
             textAlign: TextAlign.center,
           ),
@@ -50,7 +51,7 @@ class AppNameSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 40),
           child: Text(
             apiConstants.appDescription.toUpperCase(),
-            style: theme.textTheme.titleLarge?.copyWith(
+            style: textTheme.titleLarge?.copyWith(
               fontSize: 14,
               letterSpacing: 2,
               fontWeight: FontWeight.w600,

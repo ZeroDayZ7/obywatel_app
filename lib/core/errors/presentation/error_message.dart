@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class ErrorMessage extends StatelessWidget {
   final String title;
@@ -14,13 +15,19 @@ class ErrorMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.cloud_off_rounded, size: 64, color: Colors.grey),
+            Icon(
+              Icons.cloud_off_rounded,
+              size: 64,
+              color: colorScheme.outline,
+            ),
             const SizedBox(height: 16),
             Text(
               title,
@@ -33,7 +40,7 @@ class ErrorMessage extends StatelessWidget {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Theme.of(context).hintColor),
+              style: TextStyle(color: colorScheme.onSurfaceVariant),
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),

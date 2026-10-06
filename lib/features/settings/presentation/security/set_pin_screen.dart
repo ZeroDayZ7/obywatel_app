@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class SetPinModal extends StatefulWidget {
   const SetPinModal({super.key});
@@ -40,6 +41,8 @@ class _SetPinModalState extends State<SetPinModal> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Padding(
       padding: EdgeInsets.only(
         left: 16,
@@ -61,7 +64,10 @@ class _SetPinModalState extends State<SetPinModal> {
           if (_error != null)
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
-              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+              child: Text(
+                _error!,
+                style: TextStyle(color: colorScheme.error),
+              ),
             ),
           const SizedBox(height: 20),
           SizedBox(

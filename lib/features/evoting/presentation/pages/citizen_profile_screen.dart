@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/evoting/data/mock/mock_evoting_repository.dart';
@@ -13,7 +14,8 @@ class CitizenProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return AppScaffold(
       size: ContainerSize.medium,
@@ -117,10 +119,10 @@ class CitizenProfileScreen extends StatelessWidget {
                                   ? Icons.thumb_down_alt_outlined
                                   : Icons.remove_circle_outline,
                           color: vote.choice == VoteChoice.yes
-                              ? Colors.green
+                              ? statusColors.success
                               : vote.choice == VoteChoice.no
-                                  ? Colors.red
-                                  : Colors.orange,
+                                  ? colorScheme.error
+                                  : statusColors.warning,
                         ),
                         const SizedBox(width: 12),
                         Expanded(

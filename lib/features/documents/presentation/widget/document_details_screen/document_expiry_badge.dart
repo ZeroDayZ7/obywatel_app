@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class DocumentExpiryBadge extends StatelessWidget {
   final String date;
@@ -9,24 +10,25 @@ class DocumentExpiryBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final formattedDate = _formatDisplayDate(date);
+    final statusColors = context.statusColors;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.orange.withAlpha(26),
+        color: statusColors.warning.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.orange.withAlpha(77)),
+        border: Border.all(color: statusColors.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.event_available, size: 18, color: Colors.orange),
+          Icon(Icons.event_available, size: 18, color: statusColors.warning),
           const SizedBox(width: 8),
           Text(
             'Wygasa: $formattedDate',
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: statusColors.warning,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),

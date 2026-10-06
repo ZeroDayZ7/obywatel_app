@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
-import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/contacts/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
@@ -69,8 +69,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
 
       if (!mounted) return;
 
-      final statusColors = Theme.of(context).extension<StatusColorsTheme>() ??
-          StatusColorsTheme.fromColorScheme(Theme.of(context).colorScheme);
+      final statusColors = context.statusColors;
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -101,8 +100,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
     final acceptedContactsAsync = ref.watch(acceptedContactsProvider);
     final pendingContactsAsync = ref.watch(pendingContactsProvider);
 
