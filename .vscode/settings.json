@@ -20,6 +20,7 @@
     "scripts": true,
     ".gitattributes": true,
     // ".gitignore": true,
+    ".github": true,
     "README.md": true,
     "pubspec.lock": true,
     "obywatel_app.code-workspace": true,

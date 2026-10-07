@@ -9,6 +9,7 @@ import 'package:obywatel_plus/core/errors/presentation/global_error_screen.dart'
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/logger/observers/app_provider_observer.dart';
+import 'package:obywatel_plus/core/network/network_manager.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -37,6 +38,9 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
     final sharedService = SharedPreferencesService(prefsInstance, _logger);
     final observer = AppProviderObserver(_logger);
 
+    final networkManager = NetworkManager();
+    await networkManager.start();
+
     runApp(
       EasyLocalization(
         supportedLocales: LangConfig.supportedLocales,
@@ -48,6 +52,7 @@ Future<void> bootstrap(FutureOr<Widget> Function() builder) async {
           overrides: [
             activePrefsProvider.overrideWithValue(sharedService),
             appLoggerProvider.overrideWithValue(_logger),
+            networkManagerProvider.overrideWithValue(networkManager),
           ],
           observers: [observer],
           // observers: kDebugMode ? [observer] : [],

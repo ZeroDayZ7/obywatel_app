@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum NetworkState {
@@ -150,16 +149,6 @@ class NetworkManager {
 
 final networkManagerProvider = Provider<NetworkManager>((ref) {
   final manager = NetworkManager();
-
-  Future.microtask(() {
-    try {
-      WidgetsBinding.instance;
-    } catch (_) {
-      return;
-    }
-
-    unawaited(manager.start());
-  });
 
   ref.onDispose(manager.dispose);
 
