@@ -49,9 +49,11 @@ class GlobalErrorInterceptor extends Interceptor {
 
   AppException mapToException(DioException error) => _mapToException(error);
 
-  bool shouldRetry(DioException error) => _shouldRetry(error, mapToException(error));
+  bool shouldRetry(DioException error) =>
+      _shouldRetry(error, mapToException(error));
 
-  bool isHardBackendUnavailable(DioException error) => _isHardBackendUnavailable(error);
+  bool isHardBackendUnavailable(DioException error) =>
+      _isHardBackendUnavailable(error);
 
   bool shouldOpenCircuitImmediately(DioException error) =>
       _isHardBackendUnavailable(error);
@@ -61,6 +63,10 @@ class GlobalErrorInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+    if (err.response?.statusCode == 304) {
+      return handler.resolve(err.response!);
+    }
+
     final requestOptions = err.requestOptions;
     final appException = mapToException(err);
 
@@ -145,16 +151,20 @@ class GlobalErrorInterceptor extends Interceptor {
   }
 
   Future<Response<dynamic>> _retryRequest(RequestOptions requestOptions) async {
-    final retryDio = Dio(
-      BaseOptions(
-        baseUrl: requestOptions.baseUrl,
-        connectTimeout: requestOptions.connectTimeout,
-        receiveTimeout: requestOptions.receiveTimeout,
-        headers: requestOptions.headers,
-      ),
+    final retryOptions = BaseOptions(
+      baseUrl: requestOptions.baseUrl,
+      connectTimeout: requestOptions.connectTimeout,
+      receiveTimeout: requestOptions.receiveTimeout,
+      headers: requestOptions.headers,
+      validateStatus: (status) {
+        return status != null &&
+            ((status >= 200 && status < 300) || status == 304);
+      },
     );
 
-    return retryDio.request<dynamic>(
+    final retryClient = Dio(retryOptions);
+
+    return retryClient.request<dynamic>(
       requestOptions.path,
       data: requestOptions.data,
       queryParameters: requestOptions.queryParameters,
@@ -202,15 +212,11 @@ class GlobalErrorInterceptor extends Interceptor {
     final socketMessage = socketException?.message.toLowerCase() ?? '';
     final socketErrorCode = socketException?.osError?.errorCode;
 
-    final hardBackendRefusalCodes = {
-      61,
-      111,
-      1225,
-      10061,
-    };
+    final hardBackendRefusalCodes = {61, 111, 1225, 10061};
 
     final isRefusedByPeer =
-        socketErrorCode != null && hardBackendRefusalCodes.contains(socketErrorCode);
+        socketErrorCode != null &&
+        hardBackendRefusalCodes.contains(socketErrorCode);
 
     final isConnectionRefusedText =
         message.contains('connection refused') ||

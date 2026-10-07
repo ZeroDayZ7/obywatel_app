@@ -34,6 +34,10 @@ Dio createDioInstance({
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
       headers: {'Content-Type': 'application/json'},
+      validateStatus: (status) {
+        return status != null &&
+            ((status >= 200 && status < 300) || status == 304);
+      },
     ),
   );
 
@@ -62,10 +66,7 @@ Dio createDioInstance({
 
   dio.interceptors.addAll([
     LoggingInterceptor(logger: logger),
-    GlobalErrorInterceptor(
-      logger: logger,
-      networkManager: networkManager,
-    ),
+    GlobalErrorInterceptor(logger: logger, networkManager: networkManager),
   ]);
 
   if (deviceInfoRef != null) {

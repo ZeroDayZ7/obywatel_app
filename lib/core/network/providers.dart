@@ -71,6 +71,10 @@ Dio authDio(Ref ref) {
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
       headers: {'Content-Type': 'application/json'},
+      validateStatus: (status) {
+        return status != null &&
+            ((status >= 200 && status < 300) || status == 304);
+      },
     ),
   );
 
