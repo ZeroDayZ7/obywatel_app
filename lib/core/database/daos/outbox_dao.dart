@@ -25,8 +25,8 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
       try {
         if (payloadJson.isNotEmpty) {
           final Map<String, dynamic> data = jsonDecode(payloadJson) as Map<String, dynamic>;
-          targetId = data['id']?.toString();
-          action = data['action']?.toString();
+          targetId = data['id']?.toString() ?? data['entity_id']?.toString();
+          action = data['action']?.toString() ?? data['event_type']?.toString();
         }
       } catch (_) {
         // ignore parsing errors; fall back to inserting event
@@ -54,6 +54,11 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
 
       // 1) coalesce multiple mark_read -> keep first pending mark_read only
       if (action == 'mark_read' && related.any((e) => e.eventType == 'notification.mark_read')) {
+        return;
+      }
+
+      if ((action == 'ADD_CONTACT' || action == 'RESPOND_CONTACT') &&
+          related.any((e) => e.eventType == action)) {
         return;
       }
 
@@ -113,10 +118,14 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
       outboxEvents,
     )..where((t) => t.id.equals(id))).getSingleOrNull();
     if (event != null) {
+      final nextRetry = event.retryCount + 1;
+      final nextAttempt = event.attemptCount + 1;
       await (update(outboxEvents)..where((t) => t.id.equals(id))).write(
         OutboxEventsCompanion(
-          retryCount: Value(event.retryCount + 1),
+          retryCount: Value(nextRetry),
+          attemptCount: Value(nextAttempt),
           status: const Value('pending'),
+          updatedAt: Value(DateTime.now()),
         ),
       );
     }

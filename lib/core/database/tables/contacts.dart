@@ -10,6 +10,13 @@ class Contacts extends Table {
   // Status: 'pending', 'accepted', 'blocked'
   TextColumn get status => text().withDefault(const Constant('pending'))();
 
+  // Faza Offline-First: synchronizowane lokalnie, nie nadpisywane przez serwer.
+  TextColumn get syncState => text().withDefault(const Constant('synced'))();
+  TextColumn get direction => text().withDefault(const Constant('incoming'))();
+
+  // Globalny kursor zmian kontaktu w ramach użytkownika.
+  Int64Column get changeSequence => int64().withDefault(Constant(BigInt.from(1)))();
+
   // Główna, lokalna nazwa użytkownika nadana przez osobę dodającą.
   TextColumn get localAlias => text().nullable()();
 

@@ -1,5 +1,10 @@
 // lib/features/contacts/data/repositories/contacts_repository_impl.dart
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
+import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
+import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/features/contacts/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/contacts/data/dtos/contact_dto.dart';
@@ -7,14 +12,16 @@ import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
 import 'package:obywatel_plus/features/contacts/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'contacts_repository_impl.g.dart';
 
 class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
+  final OutboxDao _outboxDao;
 
-  ContactsRepositoryImpl(this._apiClient, this._dao);
+  ContactsRepositoryImpl(this._apiClient, this._dao, this._outboxDao);
 
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
@@ -40,11 +47,52 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Future<void> sendRequest(String targetUserId) async {
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
+    final now = DateTime.now();
+    final eventId = const Uuid().v7();
 
-    await _apiClient.sendContactRequest(normalized);
+    final companion = ContactsCompanion(
+      id: Value(eventId),
+      ownerId: Value('local_user'),
+      contactId: Value(normalized),
+      status: const Value('pending'),
+      syncState: const Value('pending_create'),
+      direction: const Value('outgoing'),
+      changeSequence: Value(BigInt.one),
+      localAlias: const Value.absent(),
+      encryptedAlias: const Value.absent(),
+      version: Value(BigInt.one),
+      createdAt: Value(now),
+      updatedAt: Value(now),
+      deletedAt: const Value.absent(),
+    );
 
-    // Do not set local alias during request flow; alias can be set later
-    await fetchAndSyncContacts();
+    await _dao.db.transaction(() async {
+      await _dao.upsertContacts([companion]);
+      await _outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(eventId),
+          entityType: const Value('CONTACT'),
+          entityId: Value(normalized),
+          eventType: const Value('ADD_CONTACT'),
+          conversationId: const Value.absent(),
+          payload: Value(
+            jsonEncode({
+              'entity_type': 'CONTACT',
+              'entity_id': normalized,
+              'event_type': 'ADD_CONTACT',
+              'action': 'request',
+              'target_user_id': normalized,
+              'created_at': now.toUtc().toIso8601String(),
+            }),
+          ),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    });
   }
 
   @override
@@ -63,11 +111,50 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> respondToRequest(String requestId, bool accept) async {
-    await _apiClient.respondToRequest(requestId, accept);
-    await _dao.updateStatus(
-      id: requestId,
-      status: accept ? 'accepted' : 'blocked',
-    );
+    final now = DateTime.now();
+    final eventId = const Uuid().v7();
+
+    await _dao.db.transaction(() async {
+      await _dao.updateStatus(
+        id: requestId,
+        status: accept ? 'accepted' : 'blocked',
+      );
+
+      await (_dao.update(_dao.contacts)
+            ..where((t) => t.id.equals(requestId)))
+          .write(
+        ContactsCompanion(
+          syncState: Value(accept ? 'pending_update' : 'pending_delete'),
+          direction: const Value('incoming'),
+          updatedAt: Value(now),
+        ),
+      );
+
+      await _outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(eventId),
+          entityType: const Value('CONTACT'),
+          entityId: Value(requestId),
+          eventType: Value(accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT'),
+          conversationId: const Value.absent(),
+          payload: Value(
+            jsonEncode({
+              'entity_type': 'CONTACT',
+              'entity_id': requestId,
+              'event_type': accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT',
+              'action': accept ? 'ACCEPT' : 'REJECT',
+              'accepted': accept,
+              'created_at': now.toUtc().toIso8601String(),
+            }),
+          ),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    });
   }
 }
 
@@ -75,5 +162,5 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
-  return ContactsRepositoryImpl(apiClient, db.contactsDao);
+  return ContactsRepositoryImpl(apiClient, db.contactsDao, db.outboxDao);
 }

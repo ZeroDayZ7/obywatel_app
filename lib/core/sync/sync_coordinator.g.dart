@@ -41,7 +41,7 @@ final class SyncCoordinatorProvider
   }
 }
 
-String _$syncCoordinatorHash() => r'2e1b090c22159127a1b87c08a683a9a3c02d0b52';
+String _$syncCoordinatorHash() => r'98d61a3871161f813d3da913c95e3ae7bd740e1f';
 
 abstract class _$SyncCoordinator extends $Notifier<SyncReadiness> {
   SyncReadiness build();

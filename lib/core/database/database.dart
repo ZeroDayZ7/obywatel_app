@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -88,6 +88,15 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(signalPreKeys);
         await m.createTable(signalSignedPreKeys);
         await m.createTable(signalSessions);
+      }
+      if (from < 7) {
+        await m.addColumn(contacts, contacts.syncState);
+        await m.addColumn(contacts, contacts.direction);
+        await m.addColumn(contacts, contacts.changeSequence);
+        await m.addColumn(outboxEvents, outboxEvents.entityType);
+        await m.addColumn(outboxEvents, outboxEvents.entityId);
+        await m.addColumn(outboxEvents, outboxEvents.attemptCount);
+        await m.addColumn(outboxEvents, outboxEvents.updatedAt);
       }
     },
     beforeOpen: (details) async {
