@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 enum NetworkState {
+  unknown,
   online,
   offline,
   retrying,
@@ -34,7 +35,9 @@ class NetworkManager {
     ConnectivityFacade? connectivity,
     DateTime Function()? clock,
   })  : _connectivity = connectivity ?? ConnectivityAdapter(Connectivity()),
-        _clock = clock ?? DateTime.now;
+        _clock = clock ?? DateTime.now {
+    _stateController.add(_state);
+  }
 
   final ConnectivityFacade _connectivity;
   final DateTime Function() _clock;
@@ -42,13 +45,14 @@ class NetworkManager {
       StreamController<NetworkState>.broadcast();
 
   DateTime? _backendUnavailableUntil;
-  NetworkState _state = NetworkState.online;
+  NetworkState _state = NetworkState.unknown;
   StreamSubscription<List<ConnectivityResult>>? _subscription;
 
   Stream<NetworkState> get stream => _stateController.stream;
   NetworkState get state => _state;
 
   bool get isOffline => _state == NetworkState.offline;
+  bool get isUnknown => _state == NetworkState.unknown;
 
   bool get isBackendUnavailable =>
       _state == NetworkState.backendUnavailable ||
@@ -95,6 +99,10 @@ class NetworkManager {
 
   bool shouldFailFast() {
     final now = _clock();
+
+    if (_state == NetworkState.unknown) {
+      return false;
+    }
 
     if (_state == NetworkState.offline) {
       return true;

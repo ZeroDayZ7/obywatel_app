@@ -31,7 +31,7 @@ class SyncCoordinator extends _$SyncCoordinator {
   @override
   SyncReadiness build() {
     ref.listen(networkStateProvider, (_, next) {
-      final networkState = next.value ?? NetworkState.online;
+      final networkState = next.value ?? NetworkState.unknown;
 
       if (networkState == NetworkState.offline) {
         state = SyncReadiness.offline;
@@ -48,7 +48,7 @@ class SyncCoordinator extends _$SyncCoordinator {
       }
     });
 
-    final networkState = ref.read(networkStateProvider).value ?? NetworkState.online;
+    final networkState = ref.read(networkStateProvider).value ?? NetworkState.unknown;
 
     if (networkState == NetworkState.offline) {
       return SyncReadiness.offline;
