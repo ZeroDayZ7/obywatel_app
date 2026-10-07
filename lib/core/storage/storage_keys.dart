@@ -34,6 +34,8 @@ abstract final class StorageKeys {
 
   static const String securitySecret = 'security_secret';
   static const String securityConfig = 'security_config';
+  static const String documentsEtag = 'documents_etag';
+  static const String documentsStateVersion = 'documents_state_version';
 
   // Headers
   static const String headerFingerPrint = 'X-Device-Fingerprint';

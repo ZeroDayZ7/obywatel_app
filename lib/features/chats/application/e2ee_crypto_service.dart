@@ -164,6 +164,8 @@ class E2eeCryptoService {
     final preKeyId = _readIntValue(json, [
       'preKeyId',
       'pre_key_id',
+      'oneTimePreKeyId',
+      'one_time_pre_key_id',
     ], fallback: 0);
     final signedPreKeyId = _readIntValue(json, [
       'signedPreKeyId',
@@ -177,14 +179,20 @@ class E2eeCryptoService {
     final signedPreKeyPublicBytes = _readBytesValue(json, [
       'signedPreKeyPublic',
       'signed_pre_key_public',
+      'signedPreKey', // <-- DODANE: alias z Go
+      'signed_pre_key', // <-- DODANE: alias z Go
     ]);
     final signedPreKeySignatureBytes = _readBytesValue(json, [
       'signedPreKeySignature',
       'signed_pre_key_signature',
+      'signedPreKeySig', // <-- DODANE: alias z Go
+      'signed_pre_key_sig', // <-- DODANE: alias z Go
     ]);
     final preKeyPublicBytes = _readBytesValue(json, [
       'preKeyPublic',
       'pre_key_public',
+      'oneTimePreKey', // <-- DODANE: alias z Go
+      'one_time_pre_key', // <-- DODANE: alias z Go
     ]);
 
     if (identityKeyBytes == null ||
