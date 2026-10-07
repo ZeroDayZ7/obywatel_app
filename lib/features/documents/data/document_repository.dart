@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
@@ -8,6 +9,8 @@ import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -84,19 +87,57 @@ class LocalFirstDocumentRepository implements DocumentRepository {
   Future<void> syncDocuments() async {
     final apiClient = _ref.read(apiClientProvider);
     final logger = _ref.read(appLoggerProvider);
+    final storage = _ref.read(secureStorageProvider);
 
     try {
-      final currentVersion = await _dao.getMaxVersion();
+      final storedEtag = await storage.read(key: StorageKeys.documentsEtag);
+      final storedStateVersion = await storage.read(
+        key: StorageKeys.documentsStateVersion,
+      );
+      final currentVersion =
+          int.tryParse(storedStateVersion ?? '') ?? await _dao.getMaxVersion();
+      final headers = <String, dynamic>{};
+      if (storedEtag != null && storedEtag.isNotEmpty) {
+        headers['If-None-Match'] = storedEtag;
+      }
+
       final response = await apiClient.get(
         ApiEndpoints.documentsMe,
         queryParams: currentVersion > 0
             ? {'since_version': currentVersion}
             : null,
+        options: Options(headers: headers),
       );
+
+      if (response.statusCode == 304) {
+        logger.i('Skipping document sync: server reports no changes');
+        return;
+      }
 
       if (response.data == null || response.data is! List) return;
 
       final items = response.data as List;
+      final stateVersionHeader = response.headers.value(
+        'x-document-state-version',
+      );
+      final stateVersion =
+          int.tryParse(stateVersionHeader ?? '') ?? currentVersion;
+      final responseEtag =
+          response.headers.value('etag') ?? response.headers.value('ETag');
+
+      if (responseEtag != null && responseEtag.isNotEmpty) {
+        await storage.write(
+          key: StorageKeys.documentsEtag,
+          value: responseEtag,
+        );
+      }
+      if (stateVersion > 0) {
+        await storage.write(
+          key: StorageKeys.documentsStateVersion,
+          value: stateVersion.toString(),
+        );
+      }
+
       if (items.isEmpty) return;
 
       final companions = <UserDocumentsCompanion>[];
@@ -116,7 +157,9 @@ class LocalFirstDocumentRepository implements DocumentRepository {
 
         final metaJson = _extractMetadata(map);
         final rawSignature = map['issuer_signature'] as String? ?? '';
-        final typeCode = (map['type_code'] ?? map['document_type'] ?? map['type'] ?? '').toString();
+        final typeCode =
+            (map['type_code'] ?? map['document_type'] ?? map['type'] ?? '')
+                .toString();
         final version = map['version'] is int ? map['version'] as int : 1;
 
         List<int> signatureBytes;
