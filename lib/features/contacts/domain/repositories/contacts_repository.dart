@@ -1,4 +1,4 @@
-import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
 
 abstract class ContactsRepository {
   Stream<List<Contact>> watchAcceptedContacts();

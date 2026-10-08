@@ -1,6 +1,6 @@
 // lib/features/contacts/presentation/providers/contacts_provider.dart
-import 'package:obywatel_plus/features/contacts/data/repositories/contacts_repository_impl.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'contacts_provider.g.dart';

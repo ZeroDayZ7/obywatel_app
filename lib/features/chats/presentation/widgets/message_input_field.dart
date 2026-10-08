@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/chats/presentation/providers/active_chat_provider.dart';
-import 'package:obywatel_plus/features/chats/presentation/providers/message_input_provider.dart';
 
 class MessageInputField extends ConsumerStatefulWidget {
   final String conversationId;

@@ -1,10 +1,10 @@
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
-import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
-import 'package:obywatel_plus/features/chats/data/dtos/message_dto.dart';
-import 'package:obywatel_plus/features/chats/data/dtos/message_envelope.dart';
-import 'package:obywatel_plus/features/chats/data/dtos/message_record.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/message_envelope.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/message_record.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chats_api_client.g.dart';

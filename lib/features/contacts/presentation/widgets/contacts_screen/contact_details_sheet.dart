@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
 
 class ContactDetailsSheet extends StatelessWidget {
   final Contact contact;

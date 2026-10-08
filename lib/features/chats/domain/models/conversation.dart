@@ -1,7 +1,7 @@
 // lib/features/chats/domain/models/conversation.dart
 
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:obywatel_plus/features/chats/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/domain/models/message.dart';
 
 part 'conversation.freezed.dart';
 

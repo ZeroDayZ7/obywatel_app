@@ -1,6 +1,6 @@
-import 'package:obywatel_plus/features/chats/data/dtos/conversation_dto.dart';
-import 'package:obywatel_plus/features/chats/domain/models/conversation.dart';
-import 'package:obywatel_plus/features/chats/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
+import 'package:obywatel_plus/features/communication/domain/models/conversation.dart';
+import 'package:obywatel_plus/features/communication/domain/models/message.dart';
 
 abstract class ChatsRepository {
   Stream<List<Conversation>> watchConversations();

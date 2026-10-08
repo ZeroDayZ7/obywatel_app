@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-import 'package:obywatel_plus/features/contacts/application/contacts_service.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
-import 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
+import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
+import 'package:obywatel_plus/features/communication/domain/models/contact_identifier.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class AddContactModal extends ConsumerStatefulWidget {

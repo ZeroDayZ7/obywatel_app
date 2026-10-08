@@ -1,1 +1,1 @@
-export 'package:obywatel_plus/features/chats/presentation/widgets/typing_indicator.dart';
+export 'package:obywatel_plus/features/communication/presentation/widgets/typing_indicator.dart';

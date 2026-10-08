@@ -2,10 +2,10 @@
 
 import 'dart:async';
 
-import 'package:obywatel_plus/features/chats/application/chat_sync_service.dart';
-import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/chats/domain/models/conversation.dart';
-import 'package:obywatel_plus/features/chats/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'conversations_provider.g.dart';

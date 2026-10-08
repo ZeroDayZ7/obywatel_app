@@ -1,1 +1,1 @@
-export 'package:obywatel_plus/features/contacts/presentation/providers/contacts_provider.dart';
+export 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';

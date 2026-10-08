@@ -1,7 +1,7 @@
 // lib/features/contacts/data/datasources/contacts_api_client.dart
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
-import 'package:obywatel_plus/features/contacts/data/dtos/contact_dto.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'contacts_api_client.g.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/contacts/presentation/providers/contacts_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 
 class ContactsEmptyState extends ConsumerWidget {
   const ContactsEmptyState({super.key});

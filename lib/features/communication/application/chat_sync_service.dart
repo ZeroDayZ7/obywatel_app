@@ -14,7 +14,7 @@ import 'package:obywatel_plus/features/communication/data/repositories/chats_rep
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
 Map<String, dynamic> messageToOutboxJson(Message message, String deviceId) =>
-  buildOutboxEventPayload(message, deviceId);
+    buildOutboxEventPayload(message, deviceId);
 
 class ChatSyncService {
   final ChatsApiClient _apiClient;

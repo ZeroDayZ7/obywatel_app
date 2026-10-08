@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
-import 'package:obywatel_plus/features/chats/application/e2ee_crypto_service.dart';
-import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/chats/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'active_chat_provider.g.dart';

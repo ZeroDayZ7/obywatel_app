@@ -6,11 +6,11 @@ import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
-import 'package:obywatel_plus/features/contacts/data/datasources/contacts_api_client.dart';
-import 'package:obywatel_plus/features/contacts/data/dtos/contact_dto.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact_identifier.dart';
-import 'package:obywatel_plus/features/contacts/domain/repositories/contacts_repository.dart';
+import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
+import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/models/contact_identifier.dart';
+import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 

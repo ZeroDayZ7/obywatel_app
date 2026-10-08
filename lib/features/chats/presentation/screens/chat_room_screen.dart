@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/chats/application/chat_sync_service.dart';
-import 'package:obywatel_plus/features/chats/application/sync_status.dart';
-import 'package:obywatel_plus/features/chats/presentation/providers/active_chat_provider.dart';
-import 'package:obywatel_plus/features/chats/presentation/widgets/chat_app_bar.dart';
-import 'package:obywatel_plus/features/chats/presentation/widgets/message_input_field.dart';
-import 'package:obywatel_plus/features/chats/presentation/widgets/message_list.dart';
+import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
+import 'package:obywatel_plus/features/communication/application/sync_status.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_field.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
 
 class ChatRoomScreen extends ConsumerWidget {
   final String conversationId;

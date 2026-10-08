@@ -1,1 +1,1 @@
-export 'package:obywatel_plus/features/contacts/presentation/widgets/contacts_screen/contacts_error_view.dart';
+export 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_error_view.dart';
