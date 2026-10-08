@@ -100,10 +100,22 @@ class ChatSyncService {
         .map((message) => messageToOutboxJson(message, deviceId))
         .toList();
 
-    await _apiClient.sendOutboxBatch(payload);
-    await _repository.clearSentOutboxMessages(
-      pendingMessages.map((m) => m.id).toList(),
-    );
+    try {
+      await _apiClient.sendOutboxBatch(payload);
+      await _repository.clearSentOutboxMessages(
+        pendingMessages.map((m) => m.id).toList(),
+      );
+    } catch (e) {
+      for (final message in pendingMessages) {
+        final current = await _repository.db.outboxDao.getRowById(message.id);
+        final retryCount = (current?.retryCount ?? 0) + 1;
+        await _repository.db.outboxDao.scheduleRetry(
+          message.id,
+          retryCount: retryCount,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<void> _fetchDeltaSync() async {

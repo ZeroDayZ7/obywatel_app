@@ -112,6 +112,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final E2eeCryptoService _cryptoService;
   final Map<String, String> _localPlaintextCache = <String, String>{};
 
+  AppDatabase get db => _db;
+
   ChatsRepositoryImpl(
     this._apiClient,
     this._db,
@@ -372,7 +374,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
   @override
   Future<List<Message>> getPendingOutboxMessages() async {
-    final events = await _db.outboxDao.getPendingEvents();
+    final events = await _db.outboxDao.getRetryEligibleEvents();
     return events.map((event) {
       final payload = jsonDecode(event.payload) as Map<String, dynamic>;
       final nestedPayload = payload['payload'] as Map<String, dynamic>? ?? const {};

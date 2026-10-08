@@ -1,8 +1,12 @@
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:uuid/uuid.dart';
 
 String buildOutboxEventIdForMessage(Message message) {
-  final value = message.id;
-  return value.startsWith('evt-') ? value : 'evt-$value';
+  final value = message.id.trim();
+  if (value.isEmpty) {
+    return const Uuid().v7();
+  }
+  return value;
 }
 
 Map<String, dynamic> buildOutboxEventPayload(
