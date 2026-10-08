@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
-import 'package:obywatel_plus/features/chats/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/add_contact_modal.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_contact_card.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_error_view.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_search_delegate.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_settings_sheet.dart';
-import 'package:obywatel_plus/features/contacts/data/repositories/contacts_repository_impl.dart';
-import 'package:obywatel_plus/features/contacts/domain/models/contact.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
 	const ContactsScreen({super.key});
