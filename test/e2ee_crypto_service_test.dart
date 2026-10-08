@@ -11,7 +11,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
-import 'package:obywatel_plus/features/chats/application/e2ee_crypto_service.dart';
+import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
