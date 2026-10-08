@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
@@ -103,7 +102,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     final colorScheme = context.colorScheme;
     final acceptedContactsAsync = ref.watch(acceptedContactsProvider);
     final pendingContactsAsync = ref.watch(pendingContactsProvider);
-
     final isDesktop = MediaQuery.sizeOf(context).width > 800;
 
     ref.listen<AsyncValue<void>>(contactsSyncProvider, (previous, next) {
@@ -127,17 +125,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       orElse: () => <Contact>[],
     );
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openAddContactModal(context),
-        icon: const Icon(Icons.person_add),
-        label: const Text('Dodaj kontakt'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
-      body: SafeArea(
-        child: Center(
+    return Stack(
+      children: [
+        Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 1000),
             child: acceptedContactsAsync.when(
@@ -155,7 +145,18 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             ),
           ),
         ),
-      ),
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: FloatingActionButton.extended(
+            onPressed: () => _openAddContactModal(context),
+            icon: const Icon(Icons.person_add),
+            label: const Text('Dodaj kontakt'),
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+          ),
+        ),
+      ],
     );
   }
 
@@ -179,66 +180,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          SliverAppBar(
-            floating: true,
-            snap: true,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: colorScheme.onSurface),
-              tooltip: 'Powrót do ekranu głównego',
-              // onPressed: () {
-              //   if (context.canPop()) {
-              //     context.pop();
-              //   } else {
-              //     context.go('/home');
-              //   }
-              // },
-              onPressed: () => context.go(AppRoutes.home),
-            ),
-            title: Text(
-              'Kontakty (${contacts.length})',
-              style: theme.textTheme.titleLarge?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            backgroundColor: colorScheme.surface,
-            actions: [
-              IconButton(
-                icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
-                tooltip: 'Ustawienia kontaktów',
-                onPressed: () => _openSettingsSheet(context),
-              ),
-              IconButton(
-                icon: Icon(Icons.search, color: colorScheme.onSurface),
-                tooltip: 'Szukaj kontaktów',
-                onPressed: () {
-                  showSearch(
-                    context: context,
-                    delegate: ContactsSearchDelegate(contacts: contacts),
-                  );
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.refresh, color: colorScheme.onSurface),
-                tooltip: 'Synchronizuj',
-                onPressed: () {
-                  ref.read(contactsSyncProvider.notifier).sync();
-                },
-              ),
-            ],
-          ),
-
           SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-                ),
-              ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Row(
                 children: [
                   Expanded(
@@ -263,11 +207,59 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                       ],
                     ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
+                        tooltip: 'Ustawienia kontaktów',
+                        onPressed: () => _openSettingsSheet(context),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.search, color: colorScheme.onSurface),
+                        tooltip: 'Szukaj kontaktów',
+                        onPressed: () {
+                          showSearch(
+                            context: context,
+                            delegate: ContactsSearchDelegate(contacts: contacts),
+                          );
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.refresh, color: colorScheme.onSurface),
+                        tooltip: 'Synchronizuj',
+                        onPressed: () {
+                          ref.read(contactsSyncProvider.notifier).sync();
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          SliverToBoxAdapter(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Kontakty w sieci i zaproszenia',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(2),
@@ -285,7 +277,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
               ),
             ),
           ),
-
           if (pendingContacts.isNotEmpty) ...[
             SliverToBoxAdapter(
               child: Padding(
@@ -313,18 +304,13 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   final isBusy = _processingRequestIds.contains(contact.id);
 
                   return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
+                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.35,
-                        ),
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.35),
                       ),
                     ),
                     child: Row(
@@ -399,7 +385,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
               ),
             ),
           ],
-
           if (contacts.isEmpty && pendingContacts.isEmpty)
             const SliverFillRemaining(
               hasScrollBody: false,
@@ -424,7 +409,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 ContactsOnlineSection(contacts: onlineContacts),
                 const SliverToBoxAdapter(child: SizedBox(height: 12)),
               ],
-
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
@@ -438,7 +422,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   ),
                 ),
               ),
-
               SliverPadding(
                 padding: EdgeInsets.symmetric(
                   horizontal: isDesktop ? 24.0 : 8.0,

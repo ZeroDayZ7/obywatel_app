@@ -9,24 +9,43 @@ class CommunicationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return DefaultTabController(
       length: 2,
       initialIndex: initialIndex,
       child: Scaffold(
+        backgroundColor: colorScheme.surface,
         appBar: AppBar(
           title: const Text('Komunikacja'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Wiadomości'),
-              Tab(text: 'Kontakty'),
-            ],
+          centerTitle: false,
+          surfaceTintColor: Colors.transparent,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(48),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: TabBar(
+                  isScrollable: true,
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  tabAlignment: TabAlignment.start,
+                  tabs: const [
+                    Tab(text: 'Wiadomości'),
+                    Tab(text: 'Kontakty'),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
-        body: const TabBarView(
-          children: [
-            ConversationsScreen(),
-            ContactsScreen(),
-          ],
+        body: const SafeArea(
+          child: TabBarView(
+            children: [
+              ConversationsScreen(),
+              ContactsScreen(),
+            ],
+          ),
         ),
       ),
     );
