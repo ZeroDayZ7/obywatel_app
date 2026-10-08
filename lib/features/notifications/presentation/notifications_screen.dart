@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
+import 'package:obywatel_plus/features/notifications/domain/notification_sync_settings_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
 import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_card.dart';
 import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_details_sheet.dart';
@@ -54,6 +55,11 @@ class NotificationsScreen extends ConsumerWidget {
           ),
           icon: const Icon(Icons.delete_sweep_outlined),
           tooltip: LocaleKeys.notifications_trash_title.tr(),
+        ),
+        IconButton(
+          onPressed: () => _showSettingsSheet(context, ref),
+          icon: const Icon(Icons.settings_outlined),
+          tooltip: 'Ustawienia powiadomień',
         ),
       ],
       child: notificationsAsync.when(
@@ -141,6 +147,59 @@ class NotificationsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+void _showSettingsSheet(BuildContext context, WidgetRef ref) {
+  final settings = ref.read(notificationSyncSettingsProvider);
+  showModalBottomSheet<void>(
+    context: context,
+    builder: (ctx) {
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Automatyczna synchronizacja'),
+              subtitle: const Text('Synchronizuj powiadomienia w tle co 15 minut'),
+              trailing: Switch(
+                value: settings.autoSyncEnabled,
+                onChanged: (v) => ref
+                    .read(notificationSyncSettingsProvider.notifier)
+                    .setAutoSync(v),
+              ),
+            ),
+            ListTile(
+              title: const Text('Synchronizacja realtime'),
+              subtitle: const Text('Synchronizuj po otrzymaniu powiadomienia push'),
+              trailing: Switch(
+                value: settings.realtimeSyncEnabled,
+                onChanged: (v) => ref
+                    .read(notificationSyncSettingsProvider.notifier)
+                    .setRealtimeSync(v),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Ostatnia synchronizacja'),
+                  Text(
+                    settings.lastSyncTimestamp == null
+                        ? 'Nigdy'
+                        : settings.lastSyncTimestamp!.toLocal().toString(),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    },
+  );
 }
 
 // NotificationsScreen

@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/sync/sync_coordinator.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart' as repo;
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/notification_sync_settings_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/sync_batch_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -49,6 +50,12 @@ Future<void> syncNotificationsWithBackend(Ref ref) async {
   try {
     final remoteNotifications = await api.fetchNotifications();
     await ref.read(notificationsDaoProvider).syncLocalWithRemote(remoteNotifications);
+    // Update last sync timestamp on successful pull
+    try {
+      await ref
+          .read(notificationSyncSettingsProvider.notifier)
+          .setLastSyncTimestamp(DateTime.now().toUtc());
+    } catch (_) {}
     logger.i(
       '[NOTIFICATIONS] Background sync completed: ${remoteNotifications.length} notifications',
     );
@@ -71,6 +78,16 @@ class NotificationsController extends _$NotificationsController {
     }
 
     await syncNotificationsWithBackend(ref);
+  }
+
+  /// Called when a remote notification indicates new content is available.
+  /// Triggers realtime sync if the user enabled realtime sync.
+  Future<void> handleRemoteNotificationTrigger() async {
+    final settings = ref.read(notificationSyncSettingsProvider);
+    if (!settings.realtimeSyncEnabled) return;
+
+    // Fire-and-forget sync
+    unawaited(syncNotificationsWithBackend(ref));
   }
 
   Future<void> markAsRead(String id) async {
@@ -164,6 +181,18 @@ class NotificationsBackgroundSync extends _$NotificationsBackgroundSync {
     if (readiness != SyncReadiness.ready) {
       return;
     }
+
+    // Decide whether to run sync based on settings and cold-start state.
+    final settings = ref.read(notificationSyncSettingsProvider);
+    final now = DateTime.now().toUtc();
+    final last = settings.lastSyncTimestamp;
+
+    // Cold-start: if we've never synced before, always run one sync.
+    final shouldRun = last == null
+        ? true
+        : (settings.autoSyncEnabled && now.difference(last) > const Duration(minutes: 15));
+
+    if (!shouldRun) return;
 
     _syncInProgress = true;
     try {

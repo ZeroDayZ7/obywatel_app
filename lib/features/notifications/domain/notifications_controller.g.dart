@@ -38,7 +38,7 @@ final class NotificationsControllerProvider
 }
 
 String _$notificationsControllerHash() =>
-    r'3cc0b8c45b3f9484ae135131f7c2d893a447a846';
+    r'4937b8853073a81f8a267306c05f7adf4879259f';
 
 abstract class _$NotificationsController
     extends $StreamNotifier<List<NotificationModel>> {
@@ -143,7 +143,7 @@ final class NotificationsBackgroundSyncProvider
 }
 
 String _$notificationsBackgroundSyncHash() =>
-    r'8caca1f2c354e8f2a55b1ee2b18bee1887ae635b';
+    r'afa9fb2ed3bebcd2110cbc6c0cac9a42f9ba8a8e';
 
 abstract class _$NotificationsBackgroundSync extends $Notifier<void> {
   void build();

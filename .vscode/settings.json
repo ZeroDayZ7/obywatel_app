@@ -70,7 +70,8 @@
     "**/*.g.dart": true,
     "**/assets": true,
     "**/docs": true,
-    "**/*.txt": true
+    "**/*.txt": true,
+    "**/combined.txt": true
   },
   "dart.lineLength": 80,
   "editor.codeActionsOnSave": {
