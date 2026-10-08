@@ -1,7 +1,12 @@
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
-Map<String, dynamic> buildOutboxEventPayload(Message message, String deviceId) {
+Map<String, dynamic> buildOutboxEventPayload(
+  Message message,
+  String deviceId, {
+  String? encryptedContent,
+}) {
   final createdAt = message.createdAt.toUtc().toIso8601String();
+  final payloadContent = encryptedContent ?? message.content;
 
   return {
     'event_id': message.id,
@@ -12,7 +17,7 @@ Map<String, dynamic> buildOutboxEventPayload(Message message, String deviceId) {
       'message_id': message.id,
       'conversation_id': message.conversationId,
       'sender_id': message.senderId,
-      'content': message.content,
+      'content': payloadContent,
       'created_at': createdAt,
       'is_encrypted': true,
     },

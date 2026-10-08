@@ -11,6 +11,7 @@ abstract class Message with _$Message {
     required String content,
     required bool isMine,
     required DateTime createdAt,
+    @Default('pending') String status,
     @Default(true) bool isEncrypted,
   }) = _Message;
 }

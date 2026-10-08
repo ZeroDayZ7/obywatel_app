@@ -47,7 +47,7 @@ void main() {
     });
 
     test(
-      'encrypts and decrypts a message with a real Signal session',
+      'encrypts and decrypts multiple messages with a real Signal session',
       () async {
         final logger = AppLogger();
         final aliceStorage = SecureStorageService(
@@ -116,20 +116,124 @@ void main() {
           'peer-user',
           remoteBundle: remoteBundle,
         );
-        final encrypted = await aliceService.encryptOutboundMessage(
+
+        final message1 = await aliceService.encryptOutboundMessage(
           'peer-user',
-          'hello signal',
+          'hello signal 1',
           senderDeviceId: 'device-1',
         );
-        final plaintext = await bobService.decryptInboundMessage(
-          senderUserId: 'peer-user',
-          senderDeviceId: '1',
-          ciphertextBase64: encrypted.ciphertext,
-          type: encrypted.type,
+        final message2 = await aliceService.encryptOutboundMessage(
+          'peer-user',
+          'hello signal 2',
+          senderDeviceId: 'device-1',
         );
 
-        expect(plaintext, 'hello signal');
+        final plaintext1 = await bobService.decryptInboundMessage(
+          senderUserId: 'peer-user',
+          senderDeviceId: '1',
+          ciphertextBase64: message1.ciphertext,
+          type: message1.type,
+        );
+        final plaintext2 = await bobService.decryptInboundMessage(
+          senderUserId: 'peer-user',
+          senderDeviceId: '1',
+          ciphertextBase64: message2.ciphertext,
+          type: message2.type,
+        );
+
+        expect(plaintext1, 'hello signal 1');
+        expect(plaintext2, 'hello signal 2');
       },
     );
+
+    test('rejects tampered Signal ciphertext', () async {
+      final logger = AppLogger();
+      final aliceStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final bobStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final aliceApiClient = ApiClient(
+        dio: Dio(),
+        storage: aliceStorage,
+        logger: logger,
+      );
+      final bobApiClient = ApiClient(
+        dio: Dio(),
+        storage: bobStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+
+      final aliceDb = AppDatabase(NativeDatabase.memory());
+      final bobDb = AppDatabase(NativeDatabase.memory());
+      addTearDown(() async {
+        await aliceDb.close();
+        await bobDb.close();
+      });
+
+      final aliceStore = DriftSignalProtocolStore(aliceDb);
+      final bobStore = DriftSignalProtocolStore(bobDb);
+
+      final aliceService = E2eeCryptoService(
+        aliceStorage,
+        logger,
+        aliceApiClient,
+        deviceInfoService,
+        aliceStore,
+      );
+      final bobService = E2eeCryptoService(
+        bobStorage,
+        logger,
+        bobApiClient,
+        deviceInfoService,
+        bobStore,
+      );
+
+      final bobIdentity = await bobStore.getIdentityKeyPair();
+      final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+      final bobOneTimePreKey = generatePreKeys(1, 1).first;
+      await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+      await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+      final remoteBundle = PreKeyBundle(
+        await bobStore.getLocalRegistrationId(),
+        1,
+        bobOneTimePreKey.id,
+        bobOneTimePreKey.getKeyPair().publicKey,
+        bobSignedPreKey.id,
+        bobSignedPreKey.getKeyPair().publicKey,
+        bobSignedPreKey.signature,
+        bobIdentity.getPublicKey(),
+      );
+
+      await aliceService.initializeSessionForPeer(
+        'peer-user',
+        remoteBundle: remoteBundle,
+      );
+
+      final encrypted = await aliceService.encryptOutboundMessage(
+        'peer-user',
+        'secret message',
+        senderDeviceId: 'device-1',
+      );
+
+      final tampered = base64Encode(
+        base64Decode(encrypted.ciphertext).map((byte) => byte == 0 ? 1 : byte).toList(),
+      );
+
+      await expectLater(
+        bobService.decryptInboundMessage(
+          senderUserId: 'peer-user',
+          senderDeviceId: '1',
+          ciphertextBase64: tampered,
+          type: encrypted.type,
+        ),
+        throwsA(isA<EncryptionFailureException>()),
+      );
+    });
   });
 }

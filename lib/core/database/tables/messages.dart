@@ -22,6 +22,9 @@ class Messages extends Table {
   // Globalny wskaźnik wersji w mikroserwisie do synchronizacji Delta Sync
   Int64Column get version => int64().withDefault(Constant(BigInt.from(1)))();
 
+  // Minimalny status lokalnej wiadomości dla Phase 5: pending/sent
+  TextColumn get status => text().withDefault(const Constant('pending'))();
+
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get deletedAt => dateTime().nullable()();

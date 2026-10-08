@@ -66,6 +66,7 @@ class SignalCiphertextEnvelope {
 
 class DeviceKeyBundle {
   final String deviceId;
+  final int registrationId;
   final String publicKey;
   final String privateKey;
   final String signedPreKey;
@@ -75,6 +76,7 @@ class DeviceKeyBundle {
 
   const DeviceKeyBundle({
     required this.deviceId,
+    required this.registrationId,
     required this.publicKey,
     required this.privateKey,
     required this.signedPreKey,
@@ -241,6 +243,7 @@ class E2eeCryptoService {
 
   Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
+    final registrationId = await _signalStore.getLocalRegistrationId();
 
     final storedPrivate = await _secureStorage.read(
       key: StorageKeys.devicePrivateKey,
@@ -263,6 +266,7 @@ class E2eeCryptoService {
 
       return DeviceKeyBundle(
         deviceId: deviceId,
+        registrationId: registrationId,
         publicKey: storedPublic,
         privateKey: storedPrivate,
         signedPreKey: base64Encode(
@@ -299,6 +303,7 @@ class E2eeCryptoService {
 
     return DeviceKeyBundle(
       deviceId: deviceId,
+      registrationId: registrationId,
       publicKey: publicKey,
       privateKey: privateKey,
       signedPreKey: base64Encode(
@@ -316,6 +321,8 @@ class E2eeCryptoService {
       '/crypto/keys/device',
       data: {
         'device_id': bundle.deviceId,
+        'registration_id': bundle.registrationId,
+        'identity_public_key': bundle.publicKey,
         'public_key': bundle.publicKey,
         'signed_pre_key': bundle.signedPreKey,
         'signed_pre_key_sig': bundle.signedPreKeySignature,

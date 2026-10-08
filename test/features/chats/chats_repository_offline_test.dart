@@ -1,8 +1,12 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
@@ -58,6 +62,212 @@ void main() {
 
   tearDown(() async {
     await database.close();
+  });
+
+  Future<ChatsRepositoryImpl> createRepositoryWithSession({
+    required String userId,
+    required String peerId,
+  }) async {
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final aliceApiClient = ApiClient(
+      dio: Dio(),
+      storage: secureStorage,
+      logger: logger,
+    );
+    final aliceStore = DriftSignalProtocolStore(database);
+    final aliceService = E2eeCryptoService(
+      secureStorage,
+      logger,
+      aliceApiClient,
+      DeviceInfoService(logger),
+      aliceStore,
+    );
+
+    final bobDb = AppDatabase(NativeDatabase.memory());
+    addTearDown(() async => bobDb.close());
+    final bobStore = DriftSignalProtocolStore(bobDb);
+
+    final bobIdentity = await bobStore.getIdentityKeyPair();
+    final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+    final bobOneTimePreKey = generatePreKeys(1, 1).first;
+    await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+    await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+    final remoteBundle = PreKeyBundle(
+      await bobStore.getLocalRegistrationId(),
+      1,
+      bobOneTimePreKey.id,
+      bobOneTimePreKey.getKeyPair().publicKey,
+      bobSignedPreKey.id,
+      bobSignedPreKey.getKeyPair().publicKey,
+      bobSignedPreKey.signature,
+      bobIdentity.getPublicKey(),
+    );
+
+    await aliceService.initializeSessionForPeer(peerId, remoteBundle: remoteBundle);
+
+    return ChatsRepositoryImpl(
+      ChatsApiClient(aliceApiClient),
+      database,
+      logger,
+      userId,
+      DeviceInfoService(logger),
+      aliceService,
+    );
+  }
+
+  test('local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'hello from local first',
+    );
+
+    final persisted = await database.chatsDao.getMessagesForConversation('peer-user');
+    final pendingRows = await database.outboxDao.getPendingEvents();
+    final localView = await repository.watchMessagesForConversation('peer-user').first;
+
+    expect(persisted, isNotEmpty);
+    expect(persisted.single.status, 'pending');
+    expect(utf8.decode(persisted.single.encryptedPayload, allowMalformed: true),
+        isNot('hello from local first'));
+    expect(pendingRows, isNotEmpty);
+    expect(localView.single.content, 'hello from local first');
+  });
+
+  test('offline: pending outbox remains after send and status stays pending', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'offline message',
+    );
+
+    final stored = await database.chatsDao.getMessagesForConversation('peer-user');
+    final pendingRows = await database.outboxDao.getPendingEvents();
+
+    expect(stored.single.status, 'pending');
+    expect(pendingRows.length, 1);
+    expect(pendingRows.single.eventType, 'SEND_MESSAGE');
+  });
+
+  test('restart persistence: pending message survives database reopen', () async {
+    final tempDir = await Directory.systemTemp.createTemp('phase5_restart_');
+    final dbPath = '${tempDir.path}/phase5.sqlite';
+    final initialDb = AppDatabase(NativeDatabase(File(dbPath)));
+    addTearDown(() async {
+      await initialDb.close();
+      await tempDir.delete(recursive: true);
+    });
+
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final aliceApiClient = ApiClient(
+      dio: Dio(),
+      storage: secureStorage,
+      logger: logger,
+    );
+    final aliceStore = DriftSignalProtocolStore(initialDb);
+    final aliceService = E2eeCryptoService(
+      secureStorage,
+      logger,
+      aliceApiClient,
+      DeviceInfoService(logger),
+      aliceStore,
+    );
+
+    final bobDb = AppDatabase(NativeDatabase.memory());
+    final bobStore = DriftSignalProtocolStore(bobDb);
+    final bobIdentity = await bobStore.getIdentityKeyPair();
+    final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+    final bobOneTimePreKey = generatePreKeys(1, 1).first;
+    await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+    await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+    final remoteBundle = PreKeyBundle(
+      await bobStore.getLocalRegistrationId(),
+      1,
+      bobOneTimePreKey.id,
+      bobOneTimePreKey.getKeyPair().publicKey,
+      bobSignedPreKey.id,
+      bobSignedPreKey.getKeyPair().publicKey,
+      bobSignedPreKey.signature,
+      bobIdentity.getPublicKey(),
+    );
+    await aliceService.initializeSessionForPeer('peer-user', remoteBundle: remoteBundle);
+
+    final repository = ChatsRepositoryImpl(
+      ChatsApiClient(aliceApiClient),
+      initialDb,
+      logger,
+      'user-a',
+      DeviceInfoService(logger),
+      aliceService,
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'persist me',
+    );
+
+    await initialDb.close();
+    final reopenedDb = AppDatabase(NativeDatabase(File(dbPath)));
+    addTearDown(() async => reopenedDb.close());
+
+    final reloaded = await reopenedDb.chatsDao.getMessagesForConversation('peer-user');
+    expect(reloaded, isNotEmpty);
+    expect(reloaded.single.status, 'pending');
+  });
+
+  test('successful sync clears outbox and marks message sent without deleting local record', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'sync success',
+    );
+
+    final created = await database.chatsDao.getMessagesForConversation('peer-user');
+    await repository.clearSentOutboxMessages([created.single.id]);
+
+    final updated = await database.chatsDao.getMessagesForConversation('peer-user');
+    final pendingRows = await database.outboxDao.getPendingEvents();
+
+    expect(updated.single.status, 'sent');
+    expect(pendingRows, isEmpty);
+  });
+
+  test('ciphertext is stored in Drift and plaintext is not persisted as outgoing payload', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'secret message',
+    );
+
+    final persisted = await database.chatsDao.getMessagesForConversation('peer-user');
+    final storedText = utf8.decode(persisted.single.encryptedPayload, allowMalformed: true);
+
+    expect(storedText, isNot('secret message'));
+    expect(storedText, isNotEmpty);
   });
 
   test('device identity should stay stable per installation', () async {

@@ -8,7 +8,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(home: QuickAccessScreen()));
 
     expect(find.text('Płynna Demokracja'), findsOneWidget);
-    expect(find.text('Giełda Polityków'), findsOneWidget);
+    expect(find.text('Giełda Zaufania'), findsOneWidget);
   });
 
   testWidgets('EVoting screen no longer advertises the delegation market banner', (tester) async {

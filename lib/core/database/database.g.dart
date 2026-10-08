@@ -3712,6 +3712,16 @@ class $MessagesTable extends Messages
     requiredDuringInsert: false,
     defaultValue: Constant(BigInt.from(1)),
   );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -3758,6 +3768,7 @@ class $MessagesTable extends Messages
     encryptedPayload,
     mediaHeader,
     version,
+    status,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3849,6 +3860,12 @@ class $MessagesTable extends Messages
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
       );
     }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -3912,6 +3929,10 @@ class $MessagesTable extends Messages
         DriftSqlType.bigInt,
         data['${effectivePrefix}version'],
       )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -3943,6 +3964,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
   final Uint8List encryptedPayload;
   final Uint8List? mediaHeader;
   final BigInt version;
+  final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3956,6 +3978,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     required this.encryptedPayload,
     this.mediaHeader,
     required this.version,
+    required this.status,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3974,6 +3997,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       map['media_header'] = Variable<Uint8List>(mediaHeader);
     }
     map['version'] = Variable<BigInt>(version);
+    map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3995,6 +4019,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ? const Value.absent()
           : Value(mediaHeader),
       version: Value(version),
+      status: Value(status),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -4020,6 +4045,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       ),
       mediaHeader: serializer.fromJson<Uint8List?>(json['mediaHeader']),
       version: serializer.fromJson<BigInt>(json['version']),
+      status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -4038,6 +4064,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
       'mediaHeader': serializer.toJson<Uint8List?>(mediaHeader),
       'version': serializer.toJson<BigInt>(version),
+      'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -4054,6 +4081,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     Uint8List? encryptedPayload,
     Value<Uint8List?> mediaHeader = const Value.absent(),
     BigInt? version,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -4067,6 +4095,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     encryptedPayload: encryptedPayload ?? this.encryptedPayload,
     mediaHeader: mediaHeader.present ? mediaHeader.value : this.mediaHeader,
     version: version ?? this.version,
+    status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -4090,6 +4119,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ? data.mediaHeader.value
           : this.mediaHeader,
       version: data.version.present ? data.version.value : this.version,
+      status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -4108,6 +4138,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ..write('encryptedPayload: $encryptedPayload, ')
           ..write('mediaHeader: $mediaHeader, ')
           ..write('version: $version, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -4126,6 +4157,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     $driftBlobEquality.hash(encryptedPayload),
     $driftBlobEquality.hash(mediaHeader),
     version,
+    status,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4146,6 +4178,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ) &&
           $driftBlobEquality.equals(other.mediaHeader, this.mediaHeader) &&
           other.version == this.version &&
+          other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -4161,6 +4194,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
   final Value<Uint8List> encryptedPayload;
   final Value<Uint8List?> mediaHeader;
   final Value<BigInt> version;
+  final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -4175,6 +4209,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     this.encryptedPayload = const Value.absent(),
     this.mediaHeader = const Value.absent(),
     this.version = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -4190,6 +4225,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     required Uint8List encryptedPayload,
     this.mediaHeader = const Value.absent(),
     this.version = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -4210,6 +4246,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Expression<Uint8List>? encryptedPayload,
     Expression<Uint8List>? mediaHeader,
     Expression<BigInt>? version,
+    Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -4225,6 +4262,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       if (encryptedPayload != null) 'encrypted_payload': encryptedPayload,
       if (mediaHeader != null) 'media_header': mediaHeader,
       if (version != null) 'version': version,
+      if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -4242,6 +4280,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Value<Uint8List>? encryptedPayload,
     Value<Uint8List?>? mediaHeader,
     Value<BigInt>? version,
+    Value<String>? status,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -4257,6 +4296,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       encryptedPayload: encryptedPayload ?? this.encryptedPayload,
       mediaHeader: mediaHeader ?? this.mediaHeader,
       version: version ?? this.version,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -4294,6 +4334,9 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     if (version.present) {
       map['version'] = Variable<BigInt>(version.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4321,6 +4364,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
           ..write('encryptedPayload: $encryptedPayload, ')
           ..write('mediaHeader: $mediaHeader, ')
           ..write('version: $version, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -8661,6 +8705,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required Uint8List encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
+      Value<String> status,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8677,6 +8722,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<Uint8List> encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
+      Value<String> status,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8734,6 +8780,11 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<BigInt> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8807,6 +8858,11 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8867,6 +8923,9 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<BigInt> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8917,6 +8976,7 @@ class $$MessagesTableTableManager
                 Value<Uint8List> encryptedPayload = const Value.absent(),
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8931,6 +8991,7 @@ class $$MessagesTableTableManager
                 encryptedPayload: encryptedPayload,
                 mediaHeader: mediaHeader,
                 version: version,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8947,6 +9008,7 @@ class $$MessagesTableTableManager
                 required Uint8List encryptedPayload,
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8961,6 +9023,7 @@ class $$MessagesTableTableManager
                 encryptedPayload: encryptedPayload,
                 mediaHeader: mediaHeader,
                 version: version,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,

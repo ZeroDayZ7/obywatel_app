@@ -28,6 +28,8 @@ Message mapMessageFromDto(MessageDto dto, String currentUserId) {
     content: dto.encryptedPayload,
     isMine: dto.senderId == currentUserId,
     createdAt: dto.createdAt,
+    status: 'sent',
+    isEncrypted: true,
   );
 }
 
@@ -108,6 +110,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final String _currentUserId;
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
+  final Map<String, String> _localPlaintextCache = <String, String>{};
 
   ChatsRepositoryImpl(
     this._apiClient,
@@ -319,6 +322,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
+    final encrypted = await _cryptoService.encryptMessage(conversationId, content);
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: conversationId,
@@ -326,12 +330,24 @@ class ChatsRepositoryImpl implements ChatsRepository {
       content: content,
       isMine: true,
       createdAt: createdAt,
+      status: 'pending',
+      isEncrypted: true,
     );
 
-    final outboxEventPayload = buildOutboxEventPayload(message, senderDeviceId);
+    _localPlaintextCache[message.id] = content;
+
+    final outboxEventPayload = buildOutboxEventPayload(
+      message,
+      senderDeviceId,
+      encryptedContent: encrypted.ciphertextBase64,
+    );
 
     await _db.chatsDao.upsertMessages([
-      _messageToCompanion(message, senderDeviceId: senderDeviceId),
+      _messageToCompanion(
+        message,
+        senderDeviceId: senderDeviceId,
+        encryptedContent: encrypted.ciphertextBase64,
+      ),
     ]);
     await _db.outboxDao.enqueueEvent(
       OutboxEventsCompanion(
@@ -362,6 +378,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
         content: nestedPayload['content']?.toString() ?? '',
         isMine: true,
         createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
+        status: 'pending',
+        isEncrypted: true,
       );
     }).toList();
   }
@@ -432,6 +450,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
   @override
   Future<void> clearSentOutboxMessages(List<String> messageIds) async {
     if (messageIds.isEmpty) return;
+
+    await (_db.update(_db.messages)
+          ..where((tbl) => tbl.id.isIn(messageIds)))
+        .write(
+      MessagesCompanion(
+        status: const Value('sent'),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+
     await _db.outboxDao.deleteEvents(messageIds);
     _logger.i(
       'Usunięto ${messageIds.length} wysłanych wiadomości z outboxa',
@@ -507,6 +535,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       encryptedPayload: Value(utf8.encode(dto.encryptedPayload)),
       mediaHeader: const Value.absent(),
       version: Value(BigInt.from(dto.version)),
+      status: const Value('sent'),
       createdAt: Value(dto.createdAt),
       updatedAt: Value(dto.createdAt),
       deletedAt: const Value.absent(),
@@ -516,7 +545,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
   MessagesCompanion _messageToCompanion(
     Message message, {
     String? senderDeviceId,
+    String? encryptedContent,
   }) {
+    final ciphertext = encryptedContent ?? message.content;
     return MessagesCompanion(
       id: Value(message.id),
       conversationId: Value(message.conversationId),
@@ -524,9 +555,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
       senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
       type: const Value('text'),
       sequence: Value(BigInt.from(DateTime.now().millisecondsSinceEpoch)),
-      encryptedPayload: Value(utf8.encode(message.content)),
+      encryptedPayload: Value(utf8.encode(ciphertext)),
       mediaHeader: const Value.absent(),
       version: Value(BigInt.one),
+      status: Value(message.status),
       createdAt: Value(message.createdAt),
       updatedAt: Value(DateTime.now()),
       deletedAt: const Value.absent(),
@@ -534,13 +566,18 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Message _messageFromEntity(MessageEntity entity) {
+    final ciphertext = utf8.decode(entity.encryptedPayload, allowMalformed: true);
+    final status = entity.status.isEmpty ? 'pending' : entity.status;
+    final localPlaintext = _localPlaintextCache[entity.id];
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
       senderId: entity.senderId,
-      content: utf8.decode(entity.encryptedPayload, allowMalformed: true),
+      content: localPlaintext ?? ciphertext,
       isMine: entity.senderId == _currentUserId,
       createdAt: entity.createdAt,
+      status: status,
+      isEncrypted: true,
     );
   }
 }
