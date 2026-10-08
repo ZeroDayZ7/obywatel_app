@@ -28,13 +28,6 @@ class QuickAccessItem {
 class QuickAccessScreen extends StatelessWidget {
   const QuickAccessScreen({super.key});
 
-  static const _contactsItem = QuickAccessItem(
-    title: 'Kontakty',
-    icon: Icons.badge_outlined,
-    accent: QuickAccessAccent.primary,
-    route: AppRoutes.contacts,
-  );
-
   static const _communicationItem = QuickAccessItem(
     title: 'Komunikacja',
     subtitle: 'Wiadomości i kontakty',
