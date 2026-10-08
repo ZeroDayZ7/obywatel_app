@@ -34,6 +34,16 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
   int _currentPage = 0;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _currentPage == 0) {
+        _pinFocus.requestFocus();
+      }
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     _pinController.dispose();
@@ -81,80 +91,88 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return ResponsiveContainer(
-      size: ContainerSize.narrow,
-      alignment: Alignment.center,
-      child: Material(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: AppRadius.radiusXl,
-        elevation: 12,
-        clipBehavior: Clip.antiAlias,
-        child: Padding(
-          padding: const EdgeInsets.all(Spacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Stała wysokość dla kontenera stron, aby dialog nie "skakał"
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 150),
-                child: SizedBox(
-                  height: 80,
-                  child: PageView(
-                    controller: _pageController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: [
-                      // KROK 1: Ustawienie PIN
-                      _buildStepPage(
-                        formKey: _formKeySetup,
-                        title: LocaleKeys.pin_dialog_set_pin_title.tr(),
-                        controller: _pinController,
-                        focusNode: _pinFocus,
-                        label: LocaleKeys.pin_dialog_enter_4_digits.tr(),
+    final keyboardInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutCubic,
+      padding: EdgeInsets.only(bottom: keyboardInset),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: Spacing.lg),
+          child: ResponsiveContainer(
+            size: ContainerSize.narrow,
+            alignment: Alignment.center,
+            child: Material(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: AppRadius.radiusXl,
+              elevation: 12,
+              clipBehavior: Clip.antiAlias,
+              child: Padding(
+                padding: const EdgeInsets.all(Spacing.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        minHeight: 180,
+                        maxHeight: 260,
                       ),
-                      // KROK 2: Potwierdzenie PIN
-                      _buildStepPage(
-                        formKey: _formKeyConfirm,
-                        title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
-                        controller: _confirmController,
-                        focusNode: _confirmFocus,
-                        label: LocaleKeys.pin_dialog_repeat_4_digits.tr(),
-                        isConfirm: true,
+                      child: PageView(
+                        controller: _pageController,
+                        physics: const NeverScrollableScrollPhysics(),
+                        children: [
+                          _buildStepPage(
+                            formKey: _formKeySetup,
+                            title: LocaleKeys.pin_dialog_set_pin_title.tr(),
+                            controller: _pinController,
+                            focusNode: _pinFocus,
+                            label: LocaleKeys.pin_dialog_enter_4_digits.tr(),
+                          ),
+                          _buildStepPage(
+                            formKey: _formKeyConfirm,
+                            title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
+                            controller: _confirmController,
+                            focusNode: _confirmFocus,
+                            label: LocaleKeys.pin_dialog_repeat_4_digits.tr(),
+                            isConfirm: true,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: Spacing.xl),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            label: LocaleKeys.common_cancel.tr(),
+                            variant: AppButtonVariant.text,
+                            onPressed: () {
+                              if (_currentPage == 1) {
+                                _confirmController.clear();
+                                _goToPage(0);
+                              } else {
+                                context.pop();
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: Spacing.lg),
+                        Expanded(
+                          child: AppButton(
+                            label: _currentPage == 1
+                                ? LocaleKeys.common_save.tr()
+                                : LocaleKeys.common_next.tr(),
+                            variant: AppButtonVariant.primary,
+                            onPressed: _onNext,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: Spacing.xl),
-              // Przyciski akcji
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      label: LocaleKeys.common_cancel.tr(),
-                      variant: AppButtonVariant.text,
-                      onPressed: () {
-                        if (_currentPage == 1) {
-                          _confirmController.clear();
-                          _goToPage(0);
-                        } else {
-                          context.pop();
-                        }
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: Spacing.lg),
-                  Expanded(
-                    child: AppButton(
-                      label: _currentPage == 1
-                          ? LocaleKeys.common_save.tr()
-                          : LocaleKeys.common_next.tr(),
-                      variant: AppButtonVariant.primary,
-                      onPressed: _onNext,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
