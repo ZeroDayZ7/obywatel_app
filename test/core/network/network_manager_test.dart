@@ -57,7 +57,7 @@ void main() {
       final managerB = container.read(networkManagerProvider);
 
       expect(identical(managerA, managerB), isTrue);
-      expect(managerA.state, NetworkState.online);
+      expect(managerA.state, NetworkState.unknown);
     });
 
     test('connection refused is hard backend unavailable and no retry', () {

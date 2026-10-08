@@ -102,6 +102,20 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
         .get();
   }
 
+  Future<List<OutboxEventEntity>> getRetryEligibleEvents({DateTime? referenceTime}) async {
+    final now = referenceTime ?? DateTime.now();
+    final rows = await (select(outboxEvents)
+          ..where((t) => t.status.equals('pending'))
+          ..where((t) => t.nextAttemptAt.isNull() | t.nextAttemptAt.isSmallerOrEqualValue(now))
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
+    return rows;
+  }
+
+  Future<OutboxEventEntity?> getRowById(String id) {
+    return (select(outboxEvents)..where((t) => t.id.equals(id))).getSingleOrNull();
+  }
+
   Future<void> deleteEventsByIds(List<String> ids) async {
     if (ids.isEmpty) return;
     await (delete(outboxEvents)..where((t) => t.id.isIn(ids))).go();
@@ -110,6 +124,16 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
   Future<void> markAsSending(List<String> ids) async {
     await (update(outboxEvents)..where((t) => t.id.isIn(ids))).write(
       const OutboxEventsCompanion(status: Value('sending')),
+    );
+  }
+
+  Future<void> markAsPending(String id, {DateTime? nextAttemptAt}) async {
+    await (update(outboxEvents)..where((t) => t.id.equals(id))).write(
+      OutboxEventsCompanion(
+        status: const Value('pending'),
+        nextAttemptAt: Value(nextAttemptAt),
+        updatedAt: Value(DateTime.now()),
+      ),
     );
   }
 
@@ -131,7 +155,33 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
     }
   }
 
+  Future<void> scheduleRetry(
+    String id, {
+    required int retryCount,
+    DateTime? referenceTime,
+  }) async {
+    final now = referenceTime ?? DateTime.now();
+    final delayMs = _backoffDelayForAttempt(retryCount);
+    final nextAttemptAt = now.add(Duration(milliseconds: delayMs));
+
+    await (update(outboxEvents)..where((t) => t.id.equals(id))).write(
+      OutboxEventsCompanion(
+        retryCount: Value(retryCount),
+        status: const Value('pending'),
+        nextAttemptAt: Value(nextAttemptAt),
+        updatedAt: Value(now),
+      ),
+    );
+  }
+
   Future<void> deleteEvents(List<String> ids) async {
     await (delete(outboxEvents)..where((t) => t.id.isIn(ids))).go();
+  }
+
+  int _backoffDelayForAttempt(int retryCount) {
+    final base = 1000;
+    final cap = 30000;
+    final exponential = base * (1 << (retryCount.clamp(1, 6) - 1));
+    return exponential > cap ? cap : exponential;
   }
 }

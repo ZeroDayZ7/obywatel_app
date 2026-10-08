@@ -4389,6 +4389,17 @@ class $OutboxEventsTable extends OutboxEvents
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _outboxEventIdMeta = const VerificationMeta(
+    'outboxEventId',
+  );
+  @override
+  late final GeneratedColumn<String> outboxEventId = GeneratedColumn<String>(
+    'outbox_event_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _entityTypeMeta = const VerificationMeta(
     'entityType',
   );
@@ -4479,6 +4490,18 @@ class $OutboxEventsTable extends OutboxEvents
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>(
+        'next_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4506,6 +4529,7 @@ class $OutboxEventsTable extends OutboxEvents
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    outboxEventId,
     entityType,
     entityId,
     eventType,
@@ -4514,6 +4538,7 @@ class $OutboxEventsTable extends OutboxEvents
     status,
     retryCount,
     attemptCount,
+    nextAttemptAt,
     createdAt,
     updatedAt,
   ];
@@ -4533,6 +4558,15 @@ class $OutboxEventsTable extends OutboxEvents
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('outbox_event_id')) {
+      context.handle(
+        _outboxEventIdMeta,
+        outboxEventId.isAcceptableOrUnknown(
+          data['outbox_event_id']!,
+          _outboxEventIdMeta,
+        ),
+      );
     }
     if (data.containsKey('entity_type')) {
       context.handle(
@@ -4592,6 +4626,15 @@ class $OutboxEventsTable extends OutboxEvents
         ),
       );
     }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -4617,6 +4660,10 @@ class $OutboxEventsTable extends OutboxEvents
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      outboxEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outbox_event_id'],
+      ),
       entityType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}entity_type'],
@@ -4649,6 +4696,10 @@ class $OutboxEventsTable extends OutboxEvents
         DriftSqlType.int,
         data['${effectivePrefix}attempt_count'],
       )!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -4669,6 +4720,7 @@ class $OutboxEventsTable extends OutboxEvents
 class OutboxEventEntity extends DataClass
     implements Insertable<OutboxEventEntity> {
   final String id;
+  final String? outboxEventId;
   final String entityType;
   final String? entityId;
   final String eventType;
@@ -4677,10 +4729,12 @@ class OutboxEventEntity extends DataClass
   final String status;
   final int retryCount;
   final int attemptCount;
+  final DateTime? nextAttemptAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const OutboxEventEntity({
     required this.id,
+    this.outboxEventId,
     required this.entityType,
     this.entityId,
     required this.eventType,
@@ -4689,6 +4743,7 @@ class OutboxEventEntity extends DataClass
     required this.status,
     required this.retryCount,
     required this.attemptCount,
+    this.nextAttemptAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -4696,6 +4751,9 @@ class OutboxEventEntity extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    if (!nullToAbsent || outboxEventId != null) {
+      map['outbox_event_id'] = Variable<String>(outboxEventId);
+    }
     map['entity_type'] = Variable<String>(entityType);
     if (!nullToAbsent || entityId != null) {
       map['entity_id'] = Variable<String>(entityId);
@@ -4708,6 +4766,9 @@ class OutboxEventEntity extends DataClass
     map['status'] = Variable<String>(status);
     map['retry_count'] = Variable<int>(retryCount);
     map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -4716,6 +4777,9 @@ class OutboxEventEntity extends DataClass
   OutboxEventsCompanion toCompanion(bool nullToAbsent) {
     return OutboxEventsCompanion(
       id: Value(id),
+      outboxEventId: outboxEventId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outboxEventId),
       entityType: Value(entityType),
       entityId: entityId == null && nullToAbsent
           ? const Value.absent()
@@ -4728,6 +4792,9 @@ class OutboxEventEntity extends DataClass
       status: Value(status),
       retryCount: Value(retryCount),
       attemptCount: Value(attemptCount),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -4740,6 +4807,7 @@ class OutboxEventEntity extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxEventEntity(
       id: serializer.fromJson<String>(json['id']),
+      outboxEventId: serializer.fromJson<String?>(json['outboxEventId']),
       entityType: serializer.fromJson<String>(json['entityType']),
       entityId: serializer.fromJson<String?>(json['entityId']),
       eventType: serializer.fromJson<String>(json['eventType']),
@@ -4748,6 +4816,7 @@ class OutboxEventEntity extends DataClass
       status: serializer.fromJson<String>(json['status']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
       attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -4757,6 +4826,7 @@ class OutboxEventEntity extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'outboxEventId': serializer.toJson<String?>(outboxEventId),
       'entityType': serializer.toJson<String>(entityType),
       'entityId': serializer.toJson<String?>(entityId),
       'eventType': serializer.toJson<String>(eventType),
@@ -4765,6 +4835,7 @@ class OutboxEventEntity extends DataClass
       'status': serializer.toJson<String>(status),
       'retryCount': serializer.toJson<int>(retryCount),
       'attemptCount': serializer.toJson<int>(attemptCount),
+      'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -4772,6 +4843,7 @@ class OutboxEventEntity extends DataClass
 
   OutboxEventEntity copyWith({
     String? id,
+    Value<String?> outboxEventId = const Value.absent(),
     String? entityType,
     Value<String?> entityId = const Value.absent(),
     String? eventType,
@@ -4780,10 +4852,14 @@ class OutboxEventEntity extends DataClass
     String? status,
     int? retryCount,
     int? attemptCount,
+    Value<DateTime?> nextAttemptAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => OutboxEventEntity(
     id: id ?? this.id,
+    outboxEventId: outboxEventId.present
+        ? outboxEventId.value
+        : this.outboxEventId,
     entityType: entityType ?? this.entityType,
     entityId: entityId.present ? entityId.value : this.entityId,
     eventType: eventType ?? this.eventType,
@@ -4794,12 +4870,18 @@ class OutboxEventEntity extends DataClass
     status: status ?? this.status,
     retryCount: retryCount ?? this.retryCount,
     attemptCount: attemptCount ?? this.attemptCount,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   OutboxEventEntity copyWithCompanion(OutboxEventsCompanion data) {
     return OutboxEventEntity(
       id: data.id.present ? data.id.value : this.id,
+      outboxEventId: data.outboxEventId.present
+          ? data.outboxEventId.value
+          : this.outboxEventId,
       entityType: data.entityType.present
           ? data.entityType.value
           : this.entityType,
@@ -4816,6 +4898,9 @@ class OutboxEventEntity extends DataClass
       attemptCount: data.attemptCount.present
           ? data.attemptCount.value
           : this.attemptCount,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -4825,6 +4910,7 @@ class OutboxEventEntity extends DataClass
   String toString() {
     return (StringBuffer('OutboxEventEntity(')
           ..write('id: $id, ')
+          ..write('outboxEventId: $outboxEventId, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
           ..write('eventType: $eventType, ')
@@ -4833,6 +4919,7 @@ class OutboxEventEntity extends DataClass
           ..write('status: $status, ')
           ..write('retryCount: $retryCount, ')
           ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -4842,6 +4929,7 @@ class OutboxEventEntity extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
+    outboxEventId,
     entityType,
     entityId,
     eventType,
@@ -4850,6 +4938,7 @@ class OutboxEventEntity extends DataClass
     status,
     retryCount,
     attemptCount,
+    nextAttemptAt,
     createdAt,
     updatedAt,
   );
@@ -4858,6 +4947,7 @@ class OutboxEventEntity extends DataClass
       identical(this, other) ||
       (other is OutboxEventEntity &&
           other.id == this.id &&
+          other.outboxEventId == this.outboxEventId &&
           other.entityType == this.entityType &&
           other.entityId == this.entityId &&
           other.eventType == this.eventType &&
@@ -4866,12 +4956,14 @@ class OutboxEventEntity extends DataClass
           other.status == this.status &&
           other.retryCount == this.retryCount &&
           other.attemptCount == this.attemptCount &&
+          other.nextAttemptAt == this.nextAttemptAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
 
 class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   final Value<String> id;
+  final Value<String?> outboxEventId;
   final Value<String> entityType;
   final Value<String?> entityId;
   final Value<String> eventType;
@@ -4880,11 +4972,13 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   final Value<String> status;
   final Value<int> retryCount;
   final Value<int> attemptCount;
+  final Value<DateTime?> nextAttemptAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const OutboxEventsCompanion({
     this.id = const Value.absent(),
+    this.outboxEventId = const Value.absent(),
     this.entityType = const Value.absent(),
     this.entityId = const Value.absent(),
     this.eventType = const Value.absent(),
@@ -4893,12 +4987,14 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     this.status = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   OutboxEventsCompanion.insert({
     required String id,
+    this.outboxEventId = const Value.absent(),
     this.entityType = const Value.absent(),
     this.entityId = const Value.absent(),
     required String eventType,
@@ -4907,6 +5003,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     this.status = const Value.absent(),
     this.retryCount = const Value.absent(),
     this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -4915,6 +5012,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
        payload = Value(payload);
   static Insertable<OutboxEventEntity> custom({
     Expression<String>? id,
+    Expression<String>? outboxEventId,
     Expression<String>? entityType,
     Expression<String>? entityId,
     Expression<String>? eventType,
@@ -4923,12 +5021,14 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     Expression<String>? status,
     Expression<int>? retryCount,
     Expression<int>? attemptCount,
+    Expression<DateTime>? nextAttemptAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (outboxEventId != null) 'outbox_event_id': outboxEventId,
       if (entityType != null) 'entity_type': entityType,
       if (entityId != null) 'entity_id': entityId,
       if (eventType != null) 'event_type': eventType,
@@ -4937,6 +5037,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
       if (status != null) 'status': status,
       if (retryCount != null) 'retry_count': retryCount,
       if (attemptCount != null) 'attempt_count': attemptCount,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -4945,6 +5046,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
 
   OutboxEventsCompanion copyWith({
     Value<String>? id,
+    Value<String?>? outboxEventId,
     Value<String>? entityType,
     Value<String?>? entityId,
     Value<String>? eventType,
@@ -4953,12 +5055,14 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     Value<String>? status,
     Value<int>? retryCount,
     Value<int>? attemptCount,
+    Value<DateTime?>? nextAttemptAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return OutboxEventsCompanion(
       id: id ?? this.id,
+      outboxEventId: outboxEventId ?? this.outboxEventId,
       entityType: entityType ?? this.entityType,
       entityId: entityId ?? this.entityId,
       eventType: eventType ?? this.eventType,
@@ -4967,6 +5071,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
       status: status ?? this.status,
       retryCount: retryCount ?? this.retryCount,
       attemptCount: attemptCount ?? this.attemptCount,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -4978,6 +5083,9 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (outboxEventId.present) {
+      map['outbox_event_id'] = Variable<String>(outboxEventId.value);
     }
     if (entityType.present) {
       map['entity_type'] = Variable<String>(entityType.value);
@@ -5003,6 +5111,9 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     if (attemptCount.present) {
       map['attempt_count'] = Variable<int>(attemptCount.value);
     }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -5019,6 +5130,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   String toString() {
     return (StringBuffer('OutboxEventsCompanion(')
           ..write('id: $id, ')
+          ..write('outboxEventId: $outboxEventId, ')
           ..write('entityType: $entityType, ')
           ..write('entityId: $entityId, ')
           ..write('eventType: $eventType, ')
@@ -5027,6 +5139,7 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
           ..write('status: $status, ')
           ..write('retryCount: $retryCount, ')
           ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -9057,6 +9170,7 @@ typedef $$MessagesTableProcessedTableManager =
 typedef $$OutboxEventsTableCreateCompanionBuilder =
     OutboxEventsCompanion Function({
       required String id,
+      Value<String?> outboxEventId,
       Value<String> entityType,
       Value<String?> entityId,
       required String eventType,
@@ -9065,6 +9179,7 @@ typedef $$OutboxEventsTableCreateCompanionBuilder =
       Value<String> status,
       Value<int> retryCount,
       Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -9072,6 +9187,7 @@ typedef $$OutboxEventsTableCreateCompanionBuilder =
 typedef $$OutboxEventsTableUpdateCompanionBuilder =
     OutboxEventsCompanion Function({
       Value<String> id,
+      Value<String?> outboxEventId,
       Value<String> entityType,
       Value<String?> entityId,
       Value<String> eventType,
@@ -9080,6 +9196,7 @@ typedef $$OutboxEventsTableUpdateCompanionBuilder =
       Value<String> status,
       Value<int> retryCount,
       Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -9096,6 +9213,11 @@ class $$OutboxEventsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9139,6 +9261,11 @@ class $$OutboxEventsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnFilters(column),
@@ -9161,6 +9288,11 @@ class $$OutboxEventsTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -9204,6 +9336,11 @@ class $$OutboxEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -9226,6 +9363,11 @@ class $$OutboxEventsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get entityType => $composableBuilder(
     column: $table.entityType,
@@ -9256,6 +9398,11 @@ class $$OutboxEventsTableAnnotationComposer
 
   GeneratedColumn<int> get attemptCount => $composableBuilder(
     column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
     builder: (column) => column,
   );
 
@@ -9302,6 +9449,7 @@ class $$OutboxEventsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String?> outboxEventId = const Value.absent(),
                 Value<String> entityType = const Value.absent(),
                 Value<String?> entityId = const Value.absent(),
                 Value<String> eventType = const Value.absent(),
@@ -9310,11 +9458,13 @@ class $$OutboxEventsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxEventsCompanion(
                 id: id,
+                outboxEventId: outboxEventId,
                 entityType: entityType,
                 entityId: entityId,
                 eventType: eventType,
@@ -9323,6 +9473,7 @@ class $$OutboxEventsTableTableManager
                 status: status,
                 retryCount: retryCount,
                 attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -9330,6 +9481,7 @@ class $$OutboxEventsTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<String?> outboxEventId = const Value.absent(),
                 Value<String> entityType = const Value.absent(),
                 Value<String?> entityId = const Value.absent(),
                 required String eventType,
@@ -9338,11 +9490,13 @@ class $$OutboxEventsTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
                 Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxEventsCompanion.insert(
                 id: id,
+                outboxEventId: outboxEventId,
                 entityType: entityType,
                 entityId: entityId,
                 eventType: eventType,
@@ -9351,6 +9505,7 @@ class $$OutboxEventsTableTableManager
                 status: status,
                 retryCount: retryCount,
                 attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

@@ -333,6 +333,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       status: 'pending',
       isEncrypted: true,
     );
+    final outboxEventId = buildOutboxEventIdForMessage(message);
 
     _localPlaintextCache[message.id] = content;
 
@@ -340,6 +341,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       message,
       senderDeviceId,
       encryptedContent: encrypted.ciphertextBase64,
+      outboxEventId: outboxEventId,
     );
 
     await _db.chatsDao.upsertMessages([
@@ -352,12 +354,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
     await _db.outboxDao.enqueueEvent(
       OutboxEventsCompanion(
         id: Value(message.id),
+        outboxEventId: Value(outboxEventId),
         eventType: const Value('SEND_MESSAGE'),
         conversationId: Value(conversationId),
         payload: Value(jsonEncode(outboxEventPayload)),
         status: const Value('pending'),
         retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
         createdAt: Value(createdAt),
+        updatedAt: Value(createdAt),
       ),
     );
 

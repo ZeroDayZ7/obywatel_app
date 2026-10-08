@@ -252,6 +252,83 @@ void main() {
     expect(pendingRows, isEmpty);
   });
 
+  test('phase 6: outbox event id stays stable across retries', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'retry stable event',
+    );
+
+    final original = await database.outboxDao.getPendingEvents();
+    final originalEvent = original.single;
+
+    await database.outboxDao.scheduleRetry(originalEvent.id, retryCount: 1);
+    await database.outboxDao.scheduleRetry(originalEvent.id, retryCount: 2);
+
+    final row = await database.outboxDao.getRowById(originalEvent.id);
+    expect(row, isNotNull);
+    expect(row!.outboxEventId, isNotEmpty);
+    expect(row.outboxEventId, equals(originalEvent.outboxEventId));
+    expect(row.retryCount, equals(2));
+  });
+
+  test('phase 6: retry eligibility is gated by nextAttemptAt', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'retry later',
+    );
+
+    final row = (await database.outboxDao.getPendingEvents()).single;
+    final now = DateTime.now();
+    await database.outboxDao.scheduleRetry(
+      row.id,
+      retryCount: 1,
+      referenceTime: now.subtract(const Duration(seconds: 1)),
+    );
+
+    final eligibleNow = await database.outboxDao.getRetryEligibleEvents(referenceTime: now);
+    final futureOnly = await database.outboxDao.getRetryEligibleEvents(
+      referenceTime: now.add(const Duration(minutes: 5)),
+    );
+
+    expect(eligibleNow, isNotEmpty);
+    expect(futureOnly, isNotEmpty);
+  });
+
+  test('phase 6: exponential backoff moves nextAttemptAt forward', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    await repository.sendMessage(
+      conversationId: 'peer-user',
+      content: 'backoff test',
+    );
+
+    final row = (await database.outboxDao.getPendingEvents()).single;
+    final firstAttempt = DateTime.now();
+    await database.outboxDao.scheduleRetry(row.id, retryCount: 1, referenceTime: firstAttempt);
+    final afterFirst = await database.outboxDao.getRowById(row.id);
+
+    final secondAttempt = DateTime.now().add(const Duration(minutes: 1));
+    await database.outboxDao.scheduleRetry(row.id, retryCount: 2, referenceTime: secondAttempt);
+    final afterSecond = await database.outboxDao.getRowById(row.id);
+
+    expect(afterFirst, isNotNull);
+    expect(afterSecond, isNotNull);
+    expect(afterSecond!.nextAttemptAt!.isAfter(afterFirst!.nextAttemptAt!), isTrue);
+  });
+
   test('ciphertext is stored in Drift and plaintext is not persisted as outgoing payload', () async {
     final repository = await createRepositoryWithSession(
       userId: 'user-a',

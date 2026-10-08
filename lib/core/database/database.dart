@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -100,6 +100,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 8) {
         await m.addColumn(messages, messages.status);
+      }
+      if (from < 9) {
+        await m.addColumn(outboxEvents, outboxEvents.outboxEventId);
+        await m.addColumn(outboxEvents, outboxEvents.nextAttemptAt);
       }
     },
     beforeOpen: (details) async {
