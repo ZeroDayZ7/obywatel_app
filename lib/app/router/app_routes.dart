@@ -66,6 +66,7 @@ abstract final class AppRoutes {
   static const contactsSettings = '/contacts/settings';
 
   static const explore = '/explore';
+  static const communication = '/communication';
   static const payments = '/payments';
   static const store = '/store';
 

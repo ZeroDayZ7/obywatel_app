@@ -35,11 +35,12 @@ class QuickAccessScreen extends StatelessWidget {
     route: AppRoutes.contacts,
   );
 
-  static const _messagesItem = QuickAccessItem(
-    title: 'Wiadomości',
-    icon: Icons.chat_bubble_outline_rounded,
-    accent: QuickAccessAccent.secondary,
-    route: AppRoutes.chats,
+  static const _communicationItem = QuickAccessItem(
+    title: 'Komunikacja',
+    subtitle: 'Wiadomości i kontakty',
+    icon: Icons.forum_outlined,
+    accent: QuickAccessAccent.primary,
+    route: AppRoutes.communication,
   );
 
   static const _liquidDemocracyItem = QuickAccessItem(
@@ -99,9 +100,7 @@ class QuickAccessScreen extends StatelessWidget {
             const SizedBox(height: 24),
             Row(
               children: const [
-                Expanded(child: _QuickAccessCard(item: _contactsItem)),
-                SizedBox(width: 14),
-                Expanded(child: _QuickAccessCard(item: _messagesItem)),
+                Expanded(child: _QuickAccessCard(item: _communicationItem)),
               ],
             ),
             const SizedBox(height: 14),
