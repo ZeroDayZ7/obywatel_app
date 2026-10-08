@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
+import 'package:obywatel_plus/core/utils/date_formatter.dart';
 import 'package:obywatel_plus/features/notifications/domain/notification_sync_settings_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/notifications_controller.dart';
 import 'package:obywatel_plus/features/notifications/presentation/widgets/notification_card.dart';
@@ -161,7 +162,9 @@ void _showSettingsSheet(BuildContext context, WidgetRef ref) {
           children: [
             ListTile(
               title: const Text('Automatyczna synchronizacja'),
-              subtitle: const Text('Synchronizuj powiadomienia w tle co 15 minut'),
+              subtitle: const Text(
+                'Synchronizuj powiadomienia w tle co 15 minut',
+              ),
               trailing: Switch(
                 value: settings.autoSyncEnabled,
                 onChanged: (v) => ref
@@ -171,7 +174,9 @@ void _showSettingsSheet(BuildContext context, WidgetRef ref) {
             ),
             ListTile(
               title: const Text('Synchronizacja realtime'),
-              subtitle: const Text('Synchronizuj po otrzymaniu powiadomienia push'),
+              subtitle: const Text(
+                'Synchronizuj po otrzymaniu powiadomienia push',
+              ),
               trailing: Switch(
                 value: settings.realtimeSyncEnabled,
                 onChanged: (v) => ref
@@ -188,7 +193,9 @@ void _showSettingsSheet(BuildContext context, WidgetRef ref) {
                   Text(
                     settings.lastSyncTimestamp == null
                         ? 'Nigdy'
-                        : settings.lastSyncTimestamp!.toLocal().toString(),
+                        : settings.lastSyncTimestamp!
+                              .toLocal()
+                              .formatRelative(),
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ],
