@@ -35,13 +35,16 @@ class GlobalNotification extends _$GlobalNotification {
     );
   }
 
-  /// Usuwa konkretne powiadomienie ze stanu
+  /// Usuwa konkretne powiadomienie ze stanu.
   void remove(String id) {
     state = [
       for (final n in state)
         if (n.id != id) n,
     ];
   }
+
+  /// Alias pozwalający na natychmiastowe zamknięcie toasta po swipie.
+  void dismiss(String id) => remove(id);
 
   // --- PRYWATNA LOGIKA MAPOWANIA (Wewnątrz klasy!) ---
 
