@@ -42,7 +42,7 @@ final class GlobalNotificationProvider
 }
 
 String _$globalNotificationHash() =>
-    r'1ede6d5d935cc7d458ced5d5ee49a4c417a9facb';
+    r'44e3fc918c29117b721731c8f6f978b2ae409e14';
 
 abstract class _$GlobalNotification extends $Notifier<List<AppNotification>> {
   List<AppNotification> build();

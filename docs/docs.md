@@ -17,6 +17,8 @@ adb -s 5200d78bfa479449 shell top
 
 flutter run -d 5200d78bfa479449
 
+adb -s 5200d78bfa479449 shell pm clear com.example.obywatel_app
+
 # Generate app icons
 
 dart run flutter_launcher_icons:main

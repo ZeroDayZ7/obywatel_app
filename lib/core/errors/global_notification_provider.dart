@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/errors/failures/app_failure.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -46,8 +47,19 @@ class GlobalNotification extends _$GlobalNotification {
 
   AppFailure _mapToFailure(Object e) {
     if (e is AppFailure) return e;
+    if (e is AppException) return _mapAppException(e);
 
     if (e is DioException) {
+      final nested = e.error;
+
+      if (nested is AppFailure) {
+        return nested;
+      }
+
+      if (nested is AppException) {
+        return _mapAppException(nested);
+      }
+
       return switch (e.type) {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.receiveTimeout ||
@@ -59,6 +71,35 @@ class GlobalNotification extends _$GlobalNotification {
     }
 
     return const AppFailure.unknown();
+  }
+
+  AppFailure _mapAppException(AppException e) {
+    switch (e) {
+      case NetworkException():
+        return const AppFailure.network();
+      case TimeoutException():
+        return const AppFailure.timeout();
+      case BackendUnavailableException():
+        return const AppFailure.backendUnavailable();
+      case UpstreamUnavailableException():
+        return const AppFailure.backendUnavailable();
+      case UnauthorizedException():
+        return const AppFailure.unauthorized();
+      case ForbiddenException():
+        return const AppFailure.forbidden();
+      case ValidationException():
+        return AppFailure.validation(
+          messageKey: 'errors.${e.code ?? 'VALIDATION_ERROR'}',
+        );
+      case ServerException():
+        return AppFailure.server(statusCode: e.statusCode);
+      case ParseException():
+        return const AppFailure.parse();
+      case UnknownException():
+        return const AppFailure.unknown();
+      default:
+        return const AppFailure.unknown();
+    }
   }
 
   AppFailure _handleBadResponse(DioException e) {

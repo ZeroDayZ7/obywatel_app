@@ -10,8 +10,11 @@ sealed class AppFailure with _$AppFailure {
   /// Brak internetu / problem z siecią
   const factory AppFailure.network() = _Network;
 
-  /// Timeout
+  /// Timeout połączenia
   const factory AppFailure.timeout() = _Timeout;
+
+  /// Backend jest chwilowo niedostępny
+  const factory AppFailure.backendUnavailable() = _BackendUnavailable;
 
   /// Backend zwrócił błąd 5xx
   const factory AppFailure.server({int? statusCode}) = _Server;
@@ -40,23 +43,15 @@ sealed class AppFailure with _$AppFailure {
 
   String get messageKey => when(
     network: () => LocaleKeys.errors_CONNECTION_ERROR,
-
-    timeout: () => LocaleKeys.errors_CONNECTION_ERROR,
-
+    timeout: () => LocaleKeys.errors_TIMEOUT,
+    backendUnavailable: () => LocaleKeys.errors_BACKEND_UNAVAILABLE,
     server: (_) => LocaleKeys.errors_SERVER_ERROR,
-
-    upstream: (_) => LocaleKeys.errors_SERVER_ERROR,
-
+    upstream: (_) => LocaleKeys.errors_BACKEND_UNAVAILABLE,
     unauthorized: () => LocaleKeys.errors_UNAUTHORIZED,
-
     forbidden: () => LocaleKeys.errors_FORBIDDEN,
-
     validation: (key) => key,
-
     parse: () => LocaleKeys.errors_unexpected_error,
-
     cache: () => LocaleKeys.errors_cache,
-
     unknown: () => LocaleKeys.errors_unexpected_error,
   );
 }

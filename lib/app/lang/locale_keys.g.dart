@@ -96,6 +96,9 @@ abstract class  LocaleKeys {
   static const errors_ACCOUNT_BANNED = 'errors.ACCOUNT_BANNED';
   static const errors_ACCOUNT_PENDING = 'errors.ACCOUNT_PENDING';
   static const errors_CONNECTION_ERROR = 'errors.CONNECTION_ERROR';
+  static const errors_BACKEND_UNAVAILABLE = 'errors.BACKEND_UNAVAILABLE';
+  static const errors_TIMEOUT = 'errors.TIMEOUT';
+  static const errors_RETRYING = 'errors.RETRYING';
   static const errors_SERVER_ERROR = 'errors.SERVER_ERROR';
   static const errors_INVALID_CREDENTIALS = 'errors.INVALID_CREDENTIALS';
   static const errors_INVALID_2FA = 'errors.INVALID_2FA';

@@ -1,8 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/errors/presentation/animated_toast_widget.dart';
+import 'package:obywatel_plus/core/network/network_manager.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 
@@ -26,11 +29,74 @@ class _GlobalNotificationOverlayState
       _handleChanges(prev ?? [], next);
     });
 
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final networkState = ref.watch(networkStateProvider).value ?? NetworkState.unknown;
+    final networkStatusKey = switch (networkState) {
+      NetworkState.offline => LocaleKeys.errors_CONNECTION_ERROR,
+      NetworkState.backendUnavailable => LocaleKeys.errors_BACKEND_UNAVAILABLE,
+      NetworkState.retrying => LocaleKeys.errors_RETRYING,
+      _ => null,
+    };
+    final showNetworkBanner = networkStatusKey != null;
+
     return Stack(
       children: [
         widget.child,
+        if (showNetworkBanner)
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 10,
+            left: 20,
+            right: 20,
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 420),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: switch (networkState) {
+                      NetworkState.offline => colorScheme.errorContainer,
+                      NetworkState.backendUnavailable =>
+                        colorScheme.tertiaryContainer,
+                      NetworkState.retrying => colorScheme.primaryContainer,
+                      _ => colorScheme.surface,
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            context.tr(networkStatusKey),
+                            style: textTheme.labelLarge?.copyWith(
+                              color: switch (networkState) {
+                                NetworkState.offline =>
+                                  colorScheme.onErrorContainer,
+                                NetworkState.backendUnavailable =>
+                                  colorScheme.onTertiaryContainer,
+                                NetworkState.retrying =>
+                                  colorScheme.onPrimaryContainer,
+                                _ => colorScheme.onSurface,
+                              },
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         Positioned(
-          top: MediaQuery.paddingOf(context).top + 10,
+          top: MediaQuery.paddingOf(context).top + (showNetworkBanner ? 70 : 10),
           right: 20,
           left: 20,
           child: ConstrainedBox(

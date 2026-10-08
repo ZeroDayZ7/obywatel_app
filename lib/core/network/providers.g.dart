@@ -94,7 +94,7 @@ final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$authDioHash() => r'366ffc3f4519e395daed4e2c3a14315f9edcbc33';
+String _$authDioHash() => r'3f1f1ad99d2e8238882a993eeee6026fe36c2b17';
 
 @ProviderFor(refreshDio)
 final refreshDioProvider = RefreshDioProvider._();
