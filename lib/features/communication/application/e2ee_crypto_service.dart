@@ -112,6 +112,7 @@ class E2eeCryptoService {
 
   static const String _sessionKeyPrefix = 'e2ee_session_key_';
   bool _deviceIdentityRegistered = false;
+  Future<void>? _deviceIdentityRegistrationTask;
 
   static int _readIntValue(
     Map<String, dynamic> json,
@@ -285,29 +286,41 @@ class E2eeCryptoService {
 
   Future<void> registerDeviceIdentityWithOperation(String? operationId) async {
     if (_deviceIdentityRegistered) return;
-
-    final effectiveOperationId = _resolveOperationId(operationId);
-    final bundle = await ensureDeviceIdentityBundle();
-    final payload = {
-      'device_id': bundle.deviceId,
-      'registration_id': bundle.registrationId,
-      'identity_public_key': bundle.publicKey,
-      'public_key': bundle.publicKey,
-      'signed_pre_key': bundle.signedPreKey,
-      'signed_pre_key_sig': bundle.signedPreKeySignature,
-      'signed_pre_key_id': bundle.signedPreKeyId,
-      'one_time_pre_keys': bundle.oneTimePreKeys,
-    };
-
-    if (payload.containsKey('private_key') ||
-        payload.containsKey('device_private_key') ||
-        payload.containsValue(bundle.privateKey)) {
-      throw StateError('Private E2EE keys must never be sent to the backend');
+    if (_deviceIdentityRegistrationTask != null) {
+      await _deviceIdentityRegistrationTask;
+      return;
     }
 
-    final headers = {'X-Operation-Id': effectiveOperationId};
-    await _apiClient.post('/crypto/keys/device', data: payload, headers: headers);
-    _deviceIdentityRegistered = true;
+    final effectiveOperationId = _resolveOperationId(operationId);
+    _deviceIdentityRegistrationTask = () async {
+      try {
+        final bundle = await ensureDeviceIdentityBundle();
+        final payload = {
+          'device_id': bundle.deviceId,
+          'registration_id': bundle.registrationId,
+          'identity_public_key': bundle.publicKey,
+          'public_key': bundle.publicKey,
+          'signed_pre_key': bundle.signedPreKey,
+          'signed_pre_key_sig': bundle.signedPreKeySignature,
+          'signed_pre_key_id': bundle.signedPreKeyId,
+          'one_time_pre_keys': bundle.oneTimePreKeys,
+        };
+
+        if (payload.containsKey('private_key') ||
+            payload.containsKey('device_private_key') ||
+            payload.containsValue(bundle.privateKey)) {
+          throw StateError('Private E2EE keys must never be sent to the backend');
+        }
+
+        final headers = {'X-Operation-Id': effectiveOperationId};
+        await _apiClient.post('/crypto/keys/device', data: payload, headers: headers);
+        _deviceIdentityRegistered = true;
+      } finally {
+        _deviceIdentityRegistrationTask = null;
+      }
+    }();
+
+    await _deviceIdentityRegistrationTask;
   }
 
   Future<void> storeSessionKey(String conversationId, String base64Key) async {

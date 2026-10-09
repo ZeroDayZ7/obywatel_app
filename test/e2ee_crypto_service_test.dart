@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -14,6 +15,66 @@ import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
+import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+
+class _FakeE2eeCryptoService extends E2eeCryptoService {
+  _FakeE2eeCryptoService()
+      : super(
+          SecureStorageService(const FlutterSecureStorage(), AppLogger()),
+          AppLogger(),
+          ApiClient(dio: Dio(), storage: SecureStorageService(const FlutterSecureStorage(), AppLogger()), logger: AppLogger()),
+          DeviceInfoService(AppLogger()),
+          DriftSignalProtocolStore(AppDatabase(NativeDatabase.memory())),
+        );
+
+  int registerCalls = 0;
+
+  @override
+  Future<void> registerDeviceIdentity() async {
+    registerCalls += 1;
+  }
+}
+
+class _FakeMessagingActivationApiClient extends MessagingActivationApiClient {
+  _FakeMessagingActivationApiClient() : super(ApiClient(dio: Dio(), storage: SecureStorageService(const FlutterSecureStorage(), AppLogger()), logger: AppLogger()));
+
+  @override
+  Future<MessagingActivationDto> getActivationStatus() async {
+    return const MessagingActivationDto(
+      userId: 'user-1',
+      status: 'not_started',
+      consentAccepted: false,
+      requiresTermsAcceptance: true,
+      currentTermsVersion: 'v1',
+    );
+  }
+
+  @override
+  Future<MessagingTermsDto> getCurrentTerms() async {
+    return const MessagingTermsDto(
+      version: 'v1',
+      text: 'Akceptuję regulamin.',
+    );
+  }
+
+  @override
+  Future<MessagingActivationDto> acceptTerms({
+    required String deviceId,
+    required String termsVersion,
+  }) async {
+    return const MessagingActivationDto(
+      userId: 'user-1',
+      status: 'active',
+      consentAccepted: true,
+      termsVersion: 'v1',
+      currentTermsVersion: 'v1',
+      requiresTermsAcceptance: false,
+      deviceId: 'device-1',
+    );
+  }
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -65,6 +126,29 @@ void main() {
         bundle.getIdentityKey().serialize(),
         identity.getPublicKey().serialize(),
       );
+    });
+
+    test('acceptCurrentTerms initializes E2EE device identity after consent', () async {
+      final fakeCrypto = _FakeE2eeCryptoService();
+      final fakeApiClient = _FakeMessagingActivationApiClient();
+      final container = ProviderContainer(
+        overrides: [
+          messagingActivationApiClientProvider.overrideWithValue(fakeApiClient),
+          deviceInfoServiceProvider.overrideWithValue(
+            DeviceInfoService(AppLogger()),
+          ),
+          e2eeCryptoServiceProvider.overrideWithValue(fakeCrypto),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(messagingActivationControllerProvider.notifier);
+      await controller.acceptCurrentTerms();
+
+      expect(fakeCrypto.registerCalls, 1,
+          reason: 'Akceptacja regulaminu powinna uruchamiać inicjalizację E2EE.');
+      final state = container.read(messagingActivationControllerProvider).value;
+      expect(state?.status?.status, 'active');
     });
 
     test('uses Signal-compatible identity key material instead of raw device public key', () async {
