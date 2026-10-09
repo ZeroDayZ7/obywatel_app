@@ -22,7 +22,7 @@ class ApiConstants extends ApiConstantsBase {
       defaultPassword = 'Zaq1@wsx',
       appName = 'Obywatel Plus Dev',
       appDescription = 'Government Operating System Dev',
-      inactivityTimeout = const Duration(minutes: 15),
+      inactivityTimeout = const Duration(minutes: 55),
       super(
         minSplashDuration: const Duration(milliseconds: 3500),
         appVersion: '1.0.0-DEV',

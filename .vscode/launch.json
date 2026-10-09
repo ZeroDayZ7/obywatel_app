@@ -1,6 +1,13 @@
 {
   "version": "0.2.0",
   "configurations": [
+    // {
+    //   "name": "Flutter Attach (Do działającej aplikacji)",
+    //   "request": "attach",
+    //   "type": "dart",
+    //   "deviceId": "5200d78bfa479449",
+    //   "vmServiceUri": "${command:dart.promptForVmServiceUri}"
+    // },
     {
       "name": "Flutter Build & Install",
       "request": "launch",
