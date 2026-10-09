@@ -69,7 +69,10 @@ class ChatsApiClient {
   }
 
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
-    await _apiClient.post(ApiEndpoints.syncOutbox, data: payload);
+    await _apiClient.post(
+      ApiEndpoints.syncOutbox,
+      data: {'messages': payload},
+    );
   }
 
   Future<Map<String, dynamic>> syncDelta({

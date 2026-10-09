@@ -16,7 +16,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   String? outboxEventId,
 }) {
   final createdAt = message.createdAt.toUtc().toIso8601String();
-  final payloadContent = encryptedContent ?? message.content;
+  final ciphertext = encryptedContent ?? message.encryptedPayload;
   final safeOutboxEventId =
       outboxEventId ?? buildOutboxEventIdForMessage(message: message);
 
@@ -26,17 +26,10 @@ Map<String, dynamic> buildOutboxEventPayload(
     'message_id': message.id,
     'event_type': 'SEND_MESSAGE',
     'conversation_id': message.conversationId,
-    'device_id': deviceId,
-    'payload': {
-      'message_id': message.id,
-      'conversation_id': message.conversationId,
-      'sender_id': message.senderId,
-      'content': payloadContent,
-      'created_at': createdAt,
-      'is_encrypted': true,
-      'outbox_event_id': safeOutboxEventId,
-      'idempotency_key': safeOutboxEventId,
-    },
+    'sender_device_id': deviceId,
+    'ciphertext': ciphertext,
+    'type': 1,
+    'content': '',
     'created_at': createdAt,
     'outbox_event_id': safeOutboxEventId,
   };

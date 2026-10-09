@@ -24,6 +24,24 @@ import 'package:uuid/uuid.dart';
 
 part 'chats_repository_impl.g.dart';
 
+String buildDirectConversationId(String userIdA, String userIdB) {
+  final values = [
+    userIdA.trim(),
+    userIdB.trim(),
+  ].where((value) => value.isNotEmpty).toList();
+
+  if (values.length != 2) {
+    throw ArgumentError.value(
+      '$userIdA:$userIdB',
+      'userIds',
+      'Direct conversation requires exactly two user ids',
+    );
+  }
+
+  final sorted = [...values]..sort();
+  return sorted.join(':');
+}
+
 String resolveRemoteUserIdForConversation(
   String conversationId,
   String currentUserId,
@@ -42,6 +60,18 @@ String resolveRemoteUserIdForConversation(
       .map((member) => member.trim())
       .where((member) => member.isNotEmpty)
       .toList();
+
+  if (members.length == 1) {
+    final remoteUserId = members.first;
+    if (remoteUserId == currentUserId) {
+      throw ArgumentError.value(
+        conversationId,
+        'conversationId',
+        'Conversation does not contain a different peer user id',
+      );
+    }
+    return remoteUserId;
+  }
 
   if (members.length != 2) {
     throw ArgumentError.value(
@@ -209,11 +239,132 @@ class ChatsRepositoryImpl implements ChatsRepository {
     });
   }
 
+  Future<String?> _findExistingConversationIdForPeer(String peerUserId) async {
+    final rows =
+        await (_db.select(_db.conversationMembers)..where(
+              (t) =>
+                  t.userId.equals(_currentUserId) | t.userId.equals(peerUserId),
+            ))
+            .get();
+
+    final counts = <String, int>{};
+    for (final row in rows) {
+      counts[row.conversationId] = (counts[row.conversationId] ?? 0) + 1;
+    }
+
+    for (final entry in counts.entries) {
+      if (entry.value >= 2) {
+        return entry.key;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _repointConversationId(
+    String oldConversationId,
+    String newConversationId,
+  ) async {
+    if (oldConversationId == newConversationId) {
+      return;
+    }
+
+    await _db.transaction(() async {
+      final conversationRow = await (_db.select(
+        _db.conversations,
+      )..where((t) => t.id.equals(oldConversationId))).getSingleOrNull();
+
+      if (conversationRow != null) {
+        await (_db.delete(
+          _db.conversations,
+        )..where((t) => t.id.equals(oldConversationId))).go();
+
+        await _db.chatsDao.upsertConversations([
+          ConversationsCompanion(
+            id: Value(newConversationId),
+            type: Value(conversationRow.type),
+            title: Value(conversationRow.title ?? 'Kontakt'),
+            lastSequence: Value(conversationRow.lastSequence),
+            createdAt: Value(conversationRow.createdAt),
+            updatedAt: Value(DateTime.now()),
+            deletedAt: Value(conversationRow.deletedAt),
+          ),
+        ]);
+      }
+
+      await (_db.update(
+        _db.conversationMembers,
+      )..where((t) => t.conversationId.equals(oldConversationId))).write(
+        ConversationMembersCompanion(
+          conversationId: Value(newConversationId),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      await (_db.update(
+        _db.messages,
+      )..where((t) => t.conversationId.equals(oldConversationId))).write(
+        MessagesCompanion(
+          conversationId: Value(newConversationId),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
+      final outboxRows = await (_db.select(
+        _db.outboxEvents,
+      )..where((t) => t.conversationId.equals(oldConversationId))).get();
+
+      for (final row in outboxRows) {
+        final payloadData =
+            jsonDecode(row.payload) as Map<String, dynamic>? ?? {};
+        payloadData['conversation_id'] = newConversationId;
+
+        final nested = payloadData['payload'];
+        if (nested is Map<String, dynamic>) {
+          nested['conversation_id'] = newConversationId;
+        }
+
+        await (_db.update(
+          _db.outboxEvents,
+        )..where((t) => t.id.equals(row.id))).write(
+          OutboxEventsCompanion(
+            conversationId: Value(newConversationId),
+            payload: Value(jsonEncode(payloadData)),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Stream<List<Message>> watchMessagesForConversation(String conversationId) {
+    final requestedConversationId = conversationId.trim();
+
     return _db.chatsDao
-        .watchMessagesForConversation(conversationId)
-        .map((entities) => entities.map(_messageFromEntity).toList());
+        .watchMessagesForConversation(requestedConversationId)
+        .asyncMap((entities) async {
+          final localMessages = entities.map(_messageFromEntity).toList();
+          if (localMessages.isNotEmpty) {
+            return localMessages;
+          }
+
+          final remoteUserId = resolveRemoteUserIdForConversation(
+            requestedConversationId,
+            _currentUserId,
+          );
+          final resolvedConversationId =
+              await _findExistingConversationIdForPeer(remoteUserId) ??
+              requestedConversationId;
+
+          if (resolvedConversationId == requestedConversationId) {
+            return const <Message>[];
+          }
+
+          final relatedMessages = await _db.chatsDao.getMessagesForConversation(
+            resolvedConversationId,
+          );
+          return relatedMessages.map(_messageFromEntity).toList();
+        });
   }
 
   void handleIncomingMessage(Message message) {
@@ -233,8 +384,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    final sortedIds = [_currentUserId, contactUserId]..sort();
-    final conversationId = sortedIds.join(':');
+    final normalizedPeerId = resolveRemoteUserIdForConversation(
+      contactUserId,
+      _currentUserId,
+    );
+    final existingConversationId = await _findExistingConversationIdForPeer(
+      normalizedPeerId,
+    );
+    final conversationId =
+        existingConversationId ??
+        buildDirectConversationId(_currentUserId, normalizedPeerId);
     final currentTime = DateTime.now();
 
     await _db.chatsDao.upsertConversations([
@@ -249,7 +408,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       ),
     ]);
 
-    final memberIds = <String>{_currentUserId, contactUserId};
+    final memberIds = <String>{_currentUserId, normalizedPeerId};
     await _db.chatsDao.upsertMembers(
       memberIds
           .map(
@@ -388,11 +547,22 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId,
       _currentUserId,
     );
+    final canonicalLocalConversationId = buildDirectConversationId(
+      _currentUserId,
+      remoteUserId,
+    );
+    final existingConversationId = await _findExistingConversationIdForPeer(
+      remoteUserId,
+    );
 
     final bool isExistingServerConversation = Uuid.isValidUUID(
       fromString: conversationId,
     );
-    String effectiveConversationId = conversationId;
+    String effectiveConversationId =
+        existingConversationId ??
+        (isExistingServerConversation
+            ? conversationId
+            : canonicalLocalConversationId);
     if (!isExistingServerConversation) {
       _logger.i(
         '[CONVERSATION_CREATE_START] localConversationId=$conversationId remoteUserId=$remoteUserId',
@@ -405,6 +575,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
         title: 'Kontakt',
       );
       effectiveConversationId = createdConversation.id;
+      await _repointConversationId(
+        canonicalLocalConversationId,
+        effectiveConversationId,
+      );
       _logger.i(
         '[CONVERSATION_CREATE_SUCCESS] localConversationId=$conversationId serverConversationId=$effectiveConversationId remoteUserId=$remoteUserId',
         module: 'ChatsRepository',
@@ -546,22 +720,47 @@ class ChatsRepositoryImpl implements ChatsRepository {
   Future<List<Message>> getPendingOutboxMessages() async {
     final events = await _db.outboxDao.getRetryEligibleEvents();
     return events.map((event) {
-      final payload = jsonDecode(event.payload) as Map<String, dynamic>;
+      final payload = jsonDecode(event.payload) as Map<String, dynamic>? ?? {};
       final nestedPayload =
-          payload['payload'] as Map<String, dynamic>? ?? const {};
+          payload['payload'] is Map<String, dynamic>
+              ? payload['payload'] as Map<String, dynamic>
+              : const <String, dynamic>{};
+      final directEnvelope =
+          payload['ciphertext'] != null || payload['conversation_id'] != null
+              ? payload
+              : nestedPayload;
+
       final createdAtValue =
-          nestedPayload['created_at'] as String? ??
-          payload['created_at'] as String?;
+          (directEnvelope['created_at'] as String?) ??
+          (payload['created_at'] as String?) ??
+          (nestedPayload['created_at'] as String?);
+      final conversationId =
+          (directEnvelope['conversation_id'] as String?) ??
+          (payload['conversation_id'] as String?) ??
+          (event.conversationId ?? '');
+      final messageId =
+          (directEnvelope['message_id'] as String?) ??
+          (payload['event_id'] as String?) ??
+          event.id;
+      final ciphertext =
+          (directEnvelope['ciphertext'] as String?) ??
+          (nestedPayload['ciphertext'] as String?) ??
+          '';
+      final content =
+          (directEnvelope['content'] as String?) ??
+          (nestedPayload['content'] as String?) ??
+          ciphertext;
+
       return Message(
-        id: payload['event_id'] as String? ?? event.id,
-        conversationId:
-            payload['conversation_id'] as String? ?? event.conversationId ?? '',
-        senderId: nestedPayload['sender_id'] as String? ?? _currentUserId,
-        content: nestedPayload['content']?.toString() ?? '',
+        id: messageId,
+        conversationId: conversationId,
+        senderId: (directEnvelope['sender_id'] as String?) ?? _currentUserId,
+        content: content,
         isMine: true,
         createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
         status: 'pending',
         isEncrypted: true,
+        encryptedPayload: ciphertext,
       );
     }).toList();
   }
@@ -591,6 +790,23 @@ class ChatsRepositoryImpl implements ChatsRepository {
       final remoteMessageDtos = parseRemoteMessageDtos(newMessages);
 
       if (remoteMessageDtos.isNotEmpty) {
+        for (final dto in remoteMessageDtos) {
+          if (dto.senderId == _currentUserId) {
+            continue;
+          }
+
+          final decrypted = await _decryptInboundMessage(dto);
+          if (decrypted != null) {
+            _localPlaintextCache[dto.id] = decrypted;
+          } else {
+            _logger.w(
+              'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
+              'conversation_id=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
+              module: 'ChatsRepository',
+            );
+          }
+        }
+
         await _db.chatsDao.upsertMessages(
           remoteMessageDtos.map(_messageDtoToCompanion).toList(),
         );
@@ -703,6 +919,64 @@ class ChatsRepositoryImpl implements ChatsRepository {
       module: 'ChatsRepository',
     );
     return conversations;
+  }
+
+  Future<String?> _decryptInboundMessage(MessageDto dto) async {
+    final ciphertext = dto.encryptedPayload.trim();
+    if (ciphertext.isEmpty) {
+      return null;
+    }
+
+    try {
+      final senderDeviceId = dto.senderDeviceId?.trim();
+      final signalType = _signalMessageTypeFromDto(dto.type);
+      final plaintext = await _cryptoService.decryptInboundMessage(
+        senderUserId: dto.senderId,
+        senderDeviceId: senderDeviceId ?? '1',
+        ciphertextBase64: ciphertext,
+        type: signalType,
+      );
+      return plaintext;
+    } on Exception catch (error, stackTrace) {
+      _logger.w(
+        'decryptInboundMessage failed for message ${dto.id}; retrying via decryptMessage',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+    }
+
+    try {
+      return await _cryptoService.decryptMessage(
+        dto.conversationId,
+        ciphertext,
+        '',
+      );
+    } catch (error, stackTrace) {
+      _logger.w(
+        'decryptMessage fallback failed for inbound message ${dto.id}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      return null;
+    }
+  }
+
+  int _signalMessageTypeFromDto(String? rawType) {
+    if (rawType == null || rawType.trim().isEmpty) {
+      return 1;
+    }
+
+    final parsed = int.tryParse(rawType);
+    if (parsed != null) {
+      return parsed;
+    }
+
+    final normalized = rawType.toLowerCase();
+    if (normalized.contains('pre')) return 3;
+    if (normalized.contains('signal') || normalized.contains('cipher')) return 2;
+    return 1;
   }
 
   MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
