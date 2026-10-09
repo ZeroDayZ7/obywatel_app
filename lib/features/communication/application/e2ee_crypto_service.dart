@@ -200,8 +200,9 @@ class E2eeCryptoService {
     );
   }
 
-  Future<PreKeyBundle> fetchRemotePreKeyBundle(String remoteUserId) async {
-    final response = await _apiClient.get('/crypto/keys/prekeys/$remoteUserId');
+  Future<PreKeyBundle> fetchRemotePreKeyBundle(String remoteUserId, {String? operationId}) async {
+    final headers = operationId != null ? {'X-Operation-Id': operationId} : null;
+    final response = await _apiClient.get('/crypto/keys/prekeys/$remoteUserId', headers: headers);
     final payload = response.data;
 
     if (payload is! Map) {
@@ -227,6 +228,7 @@ class E2eeCryptoService {
   Future<void> ensureSessionForPeer(
     String remoteUserId, {
       int deviceId = 1,
+      String? operationId,
     }) async {
     final address = SignalProtocolAddress(remoteUserId, deviceId);
     final sessionExists = await _signalStore.containsSession(address);
@@ -234,8 +236,8 @@ class E2eeCryptoService {
       return;
     }
 
-    await registerDeviceIdentity();
-    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId);
+    await registerDeviceIdentityWithOperation(operationId ?? '');
+    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId, operationId: operationId);
     await initializeSessionForPeer(
       remoteUserId,
       remoteBundle: remoteBundle,
@@ -340,7 +342,31 @@ class E2eeCryptoService {
       throw StateError('Private E2EE keys must never be sent to the backend');
     }
 
+    // Do not include private key material in payload. Attach operation id via headers if provided in Options.
     await _apiClient.post('/crypto/keys/device', data: payload);
+    _deviceIdentityRegistered = true;
+  }
+
+  // New helper to request device registration with diagnostic header
+  Future<void> registerDeviceIdentityWithOperation(String operationId) async {
+    if (_deviceIdentityRegistered) return;
+    final bundle = await ensureDeviceIdentityBundle();
+    final payload = {
+      'device_id': bundle.deviceId,
+      'registration_id': bundle.registrationId,
+      'identity_public_key': bundle.publicKey,
+      'public_key': bundle.publicKey,
+      'signed_pre_key': bundle.signedPreKey,
+      'signed_pre_key_sig': bundle.signedPreKeySignature,
+      'signed_pre_key_id': bundle.signedPreKeyId,
+      'one_time_pre_keys': bundle.oneTimePreKeys,
+    };
+
+    if (payload.containsKey('private_key') || payload.containsKey('device_private_key') || payload.containsValue(bundle.privateKey)) {
+      throw StateError('Private E2EE keys must never be sent to the backend');
+    }
+
+    await _apiClient.post('/crypto/keys/device', data: payload, headers: {'X-Operation-Id': operationId});
     _deviceIdentityRegistered = true;
   }
 
@@ -360,12 +386,13 @@ class E2eeCryptoService {
     String plaintext, {
     int recipientDeviceId = 1,
     String? senderDeviceId,
+    String? operationId,
   }) async {
     try {
       final address = SignalProtocolAddress(recipientUserId, recipientDeviceId);
       if (!await _signalStore.containsSession(address)) {
-        await registerDeviceIdentity();
-        final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId);
+        await registerDeviceIdentityWithOperation(operationId ?? '');
+        final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId, operationId: operationId);
         await initializeSessionForPeer(
           recipientUserId,
           remoteBundle: remoteBundle,
@@ -440,10 +467,11 @@ class E2eeCryptoService {
 
   Future<EncryptedData> encryptMessage(
     String remoteUserId,
-    String plaintext,
-  ) async {
+    String plaintext, {
+    String? operationId,
+  }) async {
     try {
-      final envelope = await encryptOutboundMessage(remoteUserId, plaintext);
+      final envelope = await encryptOutboundMessage(remoteUserId, plaintext, operationId: operationId);
       return EncryptedData(
         ciphertextBase64: envelope.ciphertext,
         nonceBase64: '',

@@ -17,6 +17,7 @@ import 'package:obywatel_plus/features/communication/domain/chats/conversation.d
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'chats_repository_impl.g.dart';
 
@@ -369,6 +370,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
     required String conversationId,
     required String content,
   }) async {
+    final operationId = const Uuid().v4();
+    _logger.i('COMM-DIAG SEND_START operation_id=$operationId conversationId=$conversationId', module: 'ChatsRepository');
     final createdAt = DateTime.now();
     final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
 
@@ -380,7 +383,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId,
       _currentUserId,
     );
-    final encrypted = await _cryptoService.encryptMessage(remoteUserId, content);
+    final encrypted = await _cryptoService.encryptMessage(remoteUserId, content, operationId: operationId);
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: conversationId,

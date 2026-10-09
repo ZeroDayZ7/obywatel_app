@@ -13,13 +13,29 @@ class ApiClient {
     String path, {
     Map<String, dynamic>? queryParams,
     Options? options,
-  }) => dio.get<dynamic>(path, queryParameters: queryParams, options: options);
+    Map<String, String>? headers,
+  }) {
+    final mergedOptions = options ?? Options();
+    if (headers != null && headers.isNotEmpty) {
+      final existing = mergedOptions.headers ?? <String, dynamic>{};
+      mergedOptions.headers = {...existing, ...headers};
+    }
+    return dio.get<dynamic>(path, queryParameters: queryParams, options: mergedOptions);
+  }
 
   Future<Response<dynamic>> post(
     String path, {
     dynamic data,
     Options? options,
-  }) => dio.post<dynamic>(path, data: data, options: options);
+    Map<String, String>? headers,
+  }) {
+    final mergedOptions = options ?? Options();
+    if (headers != null && headers.isNotEmpty) {
+      final existing = mergedOptions.headers ?? <String, dynamic>{};
+      mergedOptions.headers = {...existing, ...headers};
+    }
+    return dio.post<dynamic>(path, data: data, options: mergedOptions);
+  }
 
   Future<Response<dynamic>> patch(
     String path, {

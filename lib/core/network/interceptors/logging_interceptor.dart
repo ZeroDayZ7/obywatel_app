@@ -17,6 +17,17 @@ class LoggingInterceptor extends Interceptor {
     'pesel',
     'email',
     'apiFingerprint',
+    // E2EE key material should never be logged
+    'identity_public_key',
+    'identitypublickey',
+    'public_key',
+    'publickey',
+    'signed_pre_key',
+    'signedprekey',
+    'signed_pre_key_sig',
+    'signedprekeysig',
+    'one_time_pre_keys',
+    'onetimeprekeys',
   };
 
   @override
