@@ -45,6 +45,10 @@ extension ContactPeerUserIdX on Contact {
     if (contactUserId == currentUserId) {
       return ownerId;
     }
-    return contactUserId;
+    throw ArgumentError.value(
+      currentUserId,
+      'currentUserId',
+      'The provided user is not a participant in this contact relation',
+    );
   }
 }

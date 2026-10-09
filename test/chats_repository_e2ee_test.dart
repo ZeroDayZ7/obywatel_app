@@ -213,6 +213,65 @@ void main() {
     );
   });
 
+  test('peerUserIdForCurrentUser throws for non-participant', () {
+    const contact = Contact(
+      id: 'contact-x',
+      ownerId: 'owner-1',
+      contactUserId: 'owner-2',
+      status: 'accepted',
+      direction: 'incoming',
+      displayName: 'Someone',
+    );
+
+    expect(() => contact.peerUserIdForCurrentUser('not-a-participant'), throwsArgumentError);
+  });
+
+  test('ensureConversationForContact produces canonical id identically for both participants', () async {
+    final logger = AppLogger();
+    final db1 = AppDatabase(NativeDatabase.memory());
+    final db2 = AppDatabase(NativeDatabase.memory());
+    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
+    final apiClient = ApiClient(dio: Dio(), storage: secureStorage, logger: logger);
+    final deviceInfoService = DeviceInfoService(logger);
+    final cryptoService1 = ThrowingCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      DriftSignalProtocolStore(db1),
+    );
+    final cryptoService2 = ThrowingCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      DriftSignalProtocolStore(db2),
+    );
+
+    final annaRepo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db1,
+      logger,
+      'anna',
+      deviceInfoService,
+      cryptoService1,
+    );
+    final piotrRepo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db2,
+      logger,
+      'piotr',
+      deviceInfoService,
+      cryptoService2,
+    );
+
+    final idFromAnna = await annaRepo.ensureConversationForContact('piotr');
+    final idFromPiotr = await piotrRepo.ensureConversationForContact('anna');
+
+    expect(idFromAnna, idFromPiotr);
+    expect(idFromAnna.split(':'), hasLength(2));
+  });
+
   test('resolveRemoteUserIdForConversation returns the other participant', () {
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u1'), 'u2');
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u2'), 'u1');
