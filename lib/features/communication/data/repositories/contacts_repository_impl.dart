@@ -2,6 +2,7 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
@@ -47,6 +48,24 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Future<void> sendRequest(String targetUserId) async {
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
+    debugPrint('[ContactsRepository] sendRequest: starting backend request for $normalized');
+
+    try {
+      await _apiClient.sendContactRequest(normalized);
+      debugPrint('[ContactsRepository] sendRequest: backend accepted request for $normalized');
+    } catch (error, stackTrace) {
+      debugPrint('[ContactsRepository] sendRequest: backend request failed for $normalized: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'contacts_repository_impl',
+          context: ErrorDescription('Failed to send contact request to backend'),
+        ),
+      );
+      rethrow;
+    }
+
     final now = DateTime.now();
     final eventId = const Uuid().v7();
 
@@ -111,6 +130,24 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> respondToRequest(String requestId, bool accept) async {
+    debugPrint('[ContactsRepository] respondToRequest: starting backend update for $requestId accept=$accept');
+
+    try {
+      await _apiClient.respondToRequest(requestId, accept);
+      debugPrint('[ContactsRepository] respondToRequest: backend accepted response for $requestId');
+    } catch (error, stackTrace) {
+      debugPrint('[ContactsRepository] respondToRequest: backend response failed for $requestId: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'contacts_repository_impl',
+          context: ErrorDescription('Failed to respond to contact request on backend'),
+        ),
+      );
+      rethrow;
+    }
+
     final now = DateTime.now();
     final eventId = const Uuid().v7();
 

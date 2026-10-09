@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,7 +11,22 @@ class ContactsService {
   ContactsService(this._repository);
 
   Future<void> addContact(String userId) async {
-    await _repository.sendRequest(userId);
+    debugPrint('[ContactsService] addContact: starting request for $userId');
+    try {
+      await _repository.sendRequest(userId);
+      debugPrint('[ContactsService] addContact: request completed for $userId');
+    } catch (error, stackTrace) {
+      debugPrint('[ContactsService] addContact: request failed for $userId: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'contacts_service',
+          context: ErrorDescription('Contact request failed'),
+        ),
+      );
+      rethrow;
+    }
   }
 
   Future<void> updateLocalAlias(String contactId, String localAlias) async {

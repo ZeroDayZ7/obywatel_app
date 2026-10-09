@@ -71,9 +71,11 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
     }
 
     setState(() => _isLoading = true);
+    debugPrint('[ContactsModal] submitRequest click: target=$trimmed normalized=${identifier.normalized}');
 
     try {
       await ref.read(contactsServiceProvider).addContact(identifier.normalized);
+      debugPrint('[ContactsModal] submitRequest: backend request completed for ${identifier.normalized}');
       if (mounted) {
         final statusColors = context.statusColors;
         Navigator.of(context).pop();
