@@ -52,31 +52,29 @@ class ContactsRepositoryImpl implements ContactsRepository {
     _logger.i('[CONTACTS-02] SYNC: rozpoczęto pobieranie kontaktów');
     final dtos = await _apiClient.getContacts();
 
-    final companions = dtos.map((dto) => dto.toCompanion()).toList();
-    await _dao.upsertContacts(companions);
-
     for (final dto in dtos) {
-      if (dto.ownerId == _currentUserId || dto.contactId == _currentUserId) {
-        await _dao.removePlaceholderPendingDuplicates(
-          contactId: dto.contactId,
-          currentUserId: _currentUserId,
-          keepRowId: dto.id,
-        );
-      }
-
-      final shouldResolveAcceptedState =
-          dto.status == 'accepted' || dto.status == 'blocked';
-      if (!shouldResolveAcceptedState) {
-        continue;
-      }
-
-      await _dao.removeStalePendingDuplicates(
+      final placeholder = await _dao.getPendingPlaceholderForRelation(
         contactId: dto.contactId,
+        currentUserId: _currentUserId,
+      );
+
+      final companion = dto.toCompanion();
+      final mergedCompanion = placeholder != null && placeholder.localAlias != null
+          ? companion.copyWith(
+              localAlias: Value(placeholder.localAlias!),
+            )
+          : companion;
+
+      await _dao.upsertContacts([mergedCompanion]);
+
+      await _dao.removePendingDuplicatesForRelation(
+        contactId: dto.contactId,
+        currentUserId: _currentUserId,
         keepRowId: dto.id,
       );
     }
 
-    _logger.i('[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${companions.length}');
+    _logger.i('[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${dtos.length}');
   }
 
   @override

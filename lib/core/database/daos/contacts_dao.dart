@@ -77,22 +77,24 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
     );
   }
 
-  Future<void> removeStalePendingDuplicates({
+  Future<ContactEntity?> getPendingPlaceholderForRelation({
     required String contactId,
-    required String keepRowId,
-  }) async {
-    await (delete(contacts)
+    required String currentUserId,
+  }) {
+    return (select(contacts)
           ..where(
             (t) =>
                 t.contactId.equals(contactId) &
                 t.status.equals('pending') &
                 t.deletedAt.isNull() &
-                t.id.isNotValue(keepRowId),
-          ))
-        .go();
+                ((t.ownerId.equals('local_user')) |
+                    (t.ownerId.equals(currentUserId))),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .getSingleOrNull();
   }
 
-  Future<void> removePlaceholderPendingDuplicates({
+  Future<void> removePendingDuplicatesForRelation({
     required String contactId,
     required String currentUserId,
     required String keepRowId,
@@ -105,7 +107,7 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
                 t.deletedAt.isNull() &
                 t.id.isNotValue(keepRowId) &
                 ((t.ownerId.equals('local_user')) |
-                    (t.ownerId.isNotValue(currentUserId))),
+                    (t.ownerId.equals(currentUserId))),
           ))
         .go();
   }
