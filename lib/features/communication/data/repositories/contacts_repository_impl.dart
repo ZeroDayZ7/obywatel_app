@@ -56,7 +56,8 @@ class ContactsRepositoryImpl implements ContactsRepository {
     if (current.createdAt == null && candidate.createdAt != null) {
       return candidate;
     }
-    if (current.createdAt != null && candidate.createdAt != null &&
+    if (current.createdAt != null &&
+        candidate.createdAt != null &&
         candidate.createdAt!.isAfter(current.createdAt!)) {
       return candidate;
     }

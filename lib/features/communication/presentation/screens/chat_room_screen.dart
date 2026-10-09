@@ -61,6 +61,22 @@ class ChatRoomScreen extends ConsumerWidget {
         subtitle: e2eeSubtitle,
         actions: [
           IconButton(
+            onPressed: () async {
+              await ref.read(chatSyncServiceProvider).syncPendingData();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Zsynchronizowano wiadomości'),
+                    duration: Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Odśwież czat',
+          ),
+          IconButton(
             onPressed: () {},
             icon: const Icon(Icons.shield_outlined),
             tooltip: 'Session status',

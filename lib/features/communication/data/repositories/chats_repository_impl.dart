@@ -389,8 +389,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       _currentUserId,
     );
 
-    final bool isExistingServerConversation =
-        Uuid.isValidUUID(fromString: conversationId);
+    final bool isExistingServerConversation = Uuid.isValidUUID(
+      fromString: conversationId,
+    );
     String effectiveConversationId = conversationId;
     if (!isExistingServerConversation) {
       _logger.i(
