@@ -1,7 +1,7 @@
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:uuid/uuid.dart';
 
-String buildOutboxEventIdForMessage(Message message) {
+String buildOutboxEventIdForMessage({required Message message}) {
   final value = message.id.trim();
   if (value.isEmpty) {
     return const Uuid().v7();
@@ -17,7 +17,8 @@ Map<String, dynamic> buildOutboxEventPayload(
 }) {
   final createdAt = message.createdAt.toUtc().toIso8601String();
   final payloadContent = encryptedContent ?? message.content;
-  final safeOutboxEventId = outboxEventId ?? buildOutboxEventIdForMessage(message);
+  final safeOutboxEventId =
+      outboxEventId ?? buildOutboxEventIdForMessage(message: message);
 
   return {
     'event_id': safeOutboxEventId,

@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
@@ -78,6 +81,7 @@ Message mapMessageFromDto(MessageDto dto, String currentUserId) {
     conversationId: dto.conversationId,
     senderId: dto.senderId,
     content: dto.encryptedPayload,
+    encryptedPayload: dto.encryptedPayload,
     isMine: dto.senderId == currentUserId,
     createdAt: dto.createdAt,
     status: 'sent',
@@ -141,7 +145,8 @@ int resolveLastKnownContactVersion(
 
   for (final item in contactList) {
     final contactMap = item as Map<String, dynamic>?;
-    final version = int.tryParse(
+    final version =
+        int.tryParse(
           (contactMap?['version'] ?? contactMap?['Version'] ?? 0).toString(),
         ) ??
         0;
@@ -206,9 +211,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
   @override
   Stream<List<Message>> watchMessagesForConversation(String conversationId) {
-    return _db.chatsDao.watchMessagesForConversation(conversationId).map(
-      (entities) => entities.map(_messageFromEntity).toList(),
-    );
+    return _db.chatsDao
+        .watchMessagesForConversation(conversationId)
+        .map((entities) => entities.map(_messageFromEntity).toList());
   }
 
   void handleIncomingMessage(Message message) {
@@ -221,13 +226,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String? title,
   }) async {
     if (contactUserId.trim().isEmpty) {
-      throw ArgumentError.value(contactUserId, 'contactUserId', 'Nie może być puste');
+      throw ArgumentError.value(
+        contactUserId,
+        'contactUserId',
+        'Nie może być puste',
+      );
     }
 
-    final sortedIds = [
-      _currentUserId,
-      contactUserId,
-    ]..sort();
+    final sortedIds = [_currentUserId, contactUserId]..sort();
     final conversationId = sortedIds.join(':');
     final currentTime = DateTime.now();
 
@@ -371,7 +377,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     required String content,
   }) async {
     final operationId = const Uuid().v4();
-    _logger.i('COMM-DIAG SEND_START operation_id=$operationId conversationId=$conversationId', module: 'ChatsRepository');
     final createdAt = DateTime.now();
     final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
 
@@ -383,19 +388,66 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId,
       _currentUserId,
     );
-    final encrypted = await _cryptoService.encryptMessage(remoteUserId, content, operationId: operationId);
+
+    final bool isExistingServerConversation =
+        Uuid.isValidUUID(fromString: conversationId);
+    String effectiveConversationId = conversationId;
+    if (!isExistingServerConversation) {
+      _logger.i(
+        '[CONVERSATION_CREATE_START] localConversationId=$conversationId remoteUserId=$remoteUserId',
+        module: 'ChatsRepository',
+      );
+
+      final createdConversation = await _apiClient.createConversation(
+        type: 'direct',
+        recipientIds: [remoteUserId],
+        title: 'Kontakt',
+      );
+      effectiveConversationId = createdConversation.id;
+      _logger.i(
+        '[CONVERSATION_CREATE_SUCCESS] localConversationId=$conversationId serverConversationId=$effectiveConversationId remoteUserId=$remoteUserId',
+        module: 'ChatsRepository',
+      );
+    }
+
+    _logger.i(
+      '[E2EE_ENCRYPT_START] operation_id=$operationId conversation_id=$effectiveConversationId remote_user_id=$remoteUserId',
+      module: 'ChatsRepository',
+    );
+
+    late final EncryptedData encrypted;
+    try {
+      encrypted = await _cryptoService.encryptMessage(
+        remoteUserId,
+        content,
+        operationId: operationId,
+      );
+      _logger.i(
+        '[E2EE_ENCRYPT_SUCCESS] operation_id=$operationId conversation_id=$effectiveConversationId ciphertext_length=${encrypted.ciphertextBase64.length}',
+        module: 'ChatsRepository',
+      );
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[E2EE_ENCRYPT_ERROR] operation_id=$operationId conversation_id=$effectiveConversationId remote_user_id=$remoteUserId',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
+
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
-      conversationId: conversationId,
+      conversationId: effectiveConversationId,
       senderId: _currentUserId,
       content: content,
+      encryptedPayload: encrypted.ciphertextBase64,
       isMine: true,
       createdAt: createdAt,
       status: 'pending',
       isEncrypted: true,
     );
-    final outboxEventId = buildOutboxEventIdForMessage(message);
-
+    final outboxEventId = buildOutboxEventIdForMessage(message: message);
     _localPlaintextCache[message.id] = content;
 
     final outboxEventPayload = buildOutboxEventPayload(
@@ -412,12 +464,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
         encryptedContent: encrypted.ciphertextBase64,
       ),
     ]);
+
     await _db.outboxDao.enqueueEvent(
       OutboxEventsCompanion(
         id: Value(message.id),
         outboxEventId: Value(outboxEventId),
         eventType: const Value('SEND_MESSAGE'),
-        conversationId: Value(conversationId),
+        conversationId: Value(effectiveConversationId),
         payload: Value(jsonEncode(outboxEventPayload)),
         status: const Value('pending'),
         retryCount: const Value(0),
@@ -428,7 +481,63 @@ class ChatsRepositoryImpl implements ChatsRepository {
       ),
     );
 
-    _incomingMessagesController.add(message);
+    final requestPayload = {
+      'conversation_id': effectiveConversationId,
+      'sender_device_id': senderDeviceId,
+      'ciphertext': encrypted.ciphertextBase64,
+      'type': 1,
+      'content': '',
+    };
+    final requestUri = ApiEndpoints.conversationMessages(
+      effectiveConversationId,
+    );
+    _logger.i(
+      '[HTTP_POST_MESSAGE_REQUEST] uri=$requestUri payload=${jsonEncode(requestPayload)} headers={"Content-Type":"application/json"}',
+      module: 'ChatsRepository',
+    );
+
+    Response<dynamic> response;
+    try {
+      response = await _apiClient.post(requestUri, data: requestPayload);
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[HTTP_POST_MESSAGE_ERROR] uri=$requestUri conversation_id=$effectiveConversationId',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      rethrow;
+    }
+
+    _logger.i(
+      '[HTTP_POST_MESSAGE_RESPONSE] uri=$requestUri status_code=${response.statusCode} body=${response.data}',
+      module: 'ChatsRepository',
+    );
+
+    if (response.statusCode == null ||
+        response.statusCode! < 200 ||
+        response.statusCode! >= 300) {
+      throw HttpException(
+        'HTTP ${response.statusCode} while sending message to $requestUri',
+      );
+    }
+
+    await (_db.update(
+      _db.messages,
+    )..where((tbl) => tbl.id.equals(message.id))).write(
+      MessagesCompanion(
+        status: const Value('sent'),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await _db.outboxDao.deleteEvents([message.id]);
+    _logger.i(
+      '[MESSAGE_DB_STATUS_UPDATED] message_id=${message.id} conversation_id=$effectiveConversationId status=sent',
+      module: 'ChatsRepository',
+    );
+
+    final sentMessage = message.copyWith(status: 'sent');
+    _incomingMessagesController.add(sentMessage);
   }
 
   @override
@@ -436,11 +545,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final events = await _db.outboxDao.getRetryEligibleEvents();
     return events.map((event) {
       final payload = jsonDecode(event.payload) as Map<String, dynamic>;
-      final nestedPayload = payload['payload'] as Map<String, dynamic>? ?? const {};
-      final createdAtValue = nestedPayload['created_at'] as String? ?? payload['created_at'] as String?;
+      final nestedPayload =
+          payload['payload'] as Map<String, dynamic>? ?? const {};
+      final createdAtValue =
+          nestedPayload['created_at'] as String? ??
+          payload['created_at'] as String?;
       return Message(
         id: payload['event_id'] as String? ?? event.id,
-        conversationId: payload['conversation_id'] as String? ?? event.conversationId ?? '',
+        conversationId:
+            payload['conversation_id'] as String? ?? event.conversationId ?? '',
         senderId: nestedPayload['sender_id'] as String? ?? _currentUserId,
         content: nestedPayload['content']?.toString() ?? '',
         isMine: true,
@@ -458,21 +571,20 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }) async {
     try {
       final checkpoint = await _db.syncStateDao.getForUser(_currentUserId);
-      final resolvedLastKnownContactVersion =
-          lastKnownContactVersion == 0
-              ? (checkpoint?.lastKnownContactVersion ?? BigInt.zero).toInt()
-              : lastKnownContactVersion;
-      final resolvedLastKnownMessageVersion =
-          lastKnownMessageVersion == 0
-              ? (checkpoint?.lastKnownMessageVersion ?? BigInt.zero).toInt()
-              : lastKnownMessageVersion;
+      final resolvedLastKnownContactVersion = lastKnownContactVersion == 0
+          ? (checkpoint?.lastKnownContactVersion ?? BigInt.zero).toInt()
+          : lastKnownContactVersion;
+      final resolvedLastKnownMessageVersion = lastKnownMessageVersion == 0
+          ? (checkpoint?.lastKnownMessageVersion ?? BigInt.zero).toInt()
+          : lastKnownMessageVersion;
 
       final payload = await _apiClient.syncDelta(
         lastKnownContactVersion: resolvedLastKnownContactVersion,
         lastKnownMessageVersion: resolvedLastKnownMessageVersion,
       );
 
-      final updatedContacts = payload['updated_contacts'] as List<dynamic>? ?? const [];
+      final updatedContacts =
+          payload['updated_contacts'] as List<dynamic>? ?? const [];
       final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
       final remoteMessageDtos = parseRemoteMessageDtos(newMessages);
 
@@ -518,9 +630,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
   Future<void> clearSentOutboxMessages(List<String> messageIds) async {
     if (messageIds.isEmpty) return;
 
-    await (_db.update(_db.messages)
-          ..where((tbl) => tbl.id.isIn(messageIds)))
-        .write(
+    await (_db.update(
+      _db.messages,
+    )..where((tbl) => tbl.id.isIn(messageIds))).write(
       MessagesCompanion(
         status: const Value('sent'),
         updatedAt: Value(DateTime.now()),
@@ -633,14 +745,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Message _messageFromEntity(MessageEntity entity) {
-    final ciphertext = utf8.decode(entity.encryptedPayload, allowMalformed: true);
+    final ciphertext = utf8.decode(
+      entity.encryptedPayload,
+      allowMalformed: true,
+    );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
     final localPlaintext = _localPlaintextCache[entity.id];
+    final resolvedContent = localPlaintext ?? ciphertext;
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
       senderId: entity.senderId,
-      content: localPlaintext ?? ciphertext,
+      content: resolvedContent,
+      encryptedPayload: ciphertext,
       isMine: entity.senderId == _currentUserId,
       createdAt: entity.createdAt,
       status: status,

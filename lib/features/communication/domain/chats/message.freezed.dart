@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Message {
 
- String get id; String get conversationId; String get senderId; String get content; bool get isMine; DateTime get createdAt; String get status; bool get isEncrypted;
+ String get id; String get conversationId; String get senderId; String get content; bool get isMine; DateTime get createdAt; String get status; bool get isEncrypted; String get encryptedPayload;
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $MessageCopyWith<Message> get copyWith => _$MessageCopyWithImpl<Message>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.content, content) || other.content == content)&&(identical(other.isMine, isMine) || other.isMine == isMine)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.isEncrypted, isEncrypted) || other.isEncrypted == isEncrypted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.content, content) || other.content == content)&&(identical(other.isMine, isMine) || other.isMine == isMine)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.isEncrypted, isEncrypted) || other.isEncrypted == isEncrypted)&&(identical(other.encryptedPayload, encryptedPayload) || other.encryptedPayload == encryptedPayload));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,content,isMine,createdAt,status,isEncrypted);
+int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,content,isMine,createdAt,status,isEncrypted,encryptedPayload);
 
 @override
 String toString() {
-  return 'Message(id: $id, conversationId: $conversationId, senderId: $senderId, content: $content, isMine: $isMine, createdAt: $createdAt, status: $status, isEncrypted: $isEncrypted)';
+  return 'Message(id: $id, conversationId: $conversationId, senderId: $senderId, content: $content, isMine: $isMine, createdAt: $createdAt, status: $status, isEncrypted: $isEncrypted, encryptedPayload: $encryptedPayload)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $MessageCopyWith<$Res>  {
   factory $MessageCopyWith(Message value, $Res Function(Message) _then) = _$MessageCopyWithImpl;
 @useResult
 $Res call({
- String id, String conversationId, String senderId, String content, bool isMine, DateTime createdAt, String status, bool isEncrypted
+ String id, String conversationId, String senderId, String content, bool isMine, DateTime createdAt, String status, bool isEncrypted, String encryptedPayload
 });
 
 
@@ -62,7 +62,7 @@ class _$MessageCopyWithImpl<$Res>
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? senderId = null,Object? content = null,Object? isMine = null,Object? createdAt = null,Object? status = null,Object? isEncrypted = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? senderId = null,Object? content = null,Object? isMine = null,Object? createdAt = null,Object? status = null,Object? isEncrypted = null,Object? encryptedPayload = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -72,7 +72,8 @@ as String,isMine: null == isMine ? _self.isMine : isMine // ignore: cast_nullabl
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,isEncrypted: null == isEncrypted ? _self.isEncrypted : isEncrypted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,encryptedPayload: null == encryptedPayload ? _self.encryptedPayload : encryptedPayload // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 
@@ -157,10 +158,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted,  String encryptedPayload)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Message() when $default != null:
-return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted);case _:
+return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted,_that.encryptedPayload);case _:
   return orElse();
 
 }
@@ -178,10 +179,10 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted,  String encryptedPayload)  $default,) {final _that = this;
 switch (_that) {
 case _Message():
-return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted);case _:
+return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted,_that.encryptedPayload);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -198,10 +199,10 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String conversationId,  String senderId,  String content,  bool isMine,  DateTime createdAt,  String status,  bool isEncrypted,  String encryptedPayload)?  $default,) {final _that = this;
 switch (_that) {
 case _Message() when $default != null:
-return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted);case _:
+return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that.isMine,_that.createdAt,_that.status,_that.isEncrypted,_that.encryptedPayload);case _:
   return null;
 
 }
@@ -213,7 +214,7 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.content,_that
 
 
 class _Message implements Message {
-  const _Message({required this.id, required this.conversationId, required this.senderId, required this.content, required this.isMine, required this.createdAt, this.status = 'pending', this.isEncrypted = true});
+  const _Message({required this.id, required this.conversationId, required this.senderId, required this.content, required this.isMine, required this.createdAt, this.status = 'pending', this.isEncrypted = true, this.encryptedPayload = ''});
   
 
 @override final  String id;
@@ -224,6 +225,7 @@ class _Message implements Message {
 @override final  DateTime createdAt;
 @override@JsonKey() final  String status;
 @override@JsonKey() final  bool isEncrypted;
+@override@JsonKey() final  String encryptedPayload;
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
@@ -235,16 +237,16 @@ _$MessageCopyWith<_Message> get copyWith => __$MessageCopyWithImpl<_Message>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.content, content) || other.content == content)&&(identical(other.isMine, isMine) || other.isMine == isMine)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.isEncrypted, isEncrypted) || other.isEncrypted == isEncrypted));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Message&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.content, content) || other.content == content)&&(identical(other.isMine, isMine) || other.isMine == isMine)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.isEncrypted, isEncrypted) || other.isEncrypted == isEncrypted)&&(identical(other.encryptedPayload, encryptedPayload) || other.encryptedPayload == encryptedPayload));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,content,isMine,createdAt,status,isEncrypted);
+int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,content,isMine,createdAt,status,isEncrypted,encryptedPayload);
 
 @override
 String toString() {
-  return 'Message(id: $id, conversationId: $conversationId, senderId: $senderId, content: $content, isMine: $isMine, createdAt: $createdAt, status: $status, isEncrypted: $isEncrypted)';
+  return 'Message(id: $id, conversationId: $conversationId, senderId: $senderId, content: $content, isMine: $isMine, createdAt: $createdAt, status: $status, isEncrypted: $isEncrypted, encryptedPayload: $encryptedPayload)';
 }
 
 
@@ -255,7 +257,7 @@ abstract mixin class _$MessageCopyWith<$Res> implements $MessageCopyWith<$Res> {
   factory _$MessageCopyWith(_Message value, $Res Function(_Message) _then) = __$MessageCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String conversationId, String senderId, String content, bool isMine, DateTime createdAt, String status, bool isEncrypted
+ String id, String conversationId, String senderId, String content, bool isMine, DateTime createdAt, String status, bool isEncrypted, String encryptedPayload
 });
 
 
@@ -272,7 +274,7 @@ class __$MessageCopyWithImpl<$Res>
 
 /// Create a copy of Message
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? conversationId = null,Object? senderId = null,Object? content = null,Object? isMine = null,Object? createdAt = null,Object? status = null,Object? isEncrypted = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? conversationId = null,Object? senderId = null,Object? content = null,Object? isMine = null,Object? createdAt = null,Object? status = null,Object? isEncrypted = null,Object? encryptedPayload = null,}) {
   return _then(_Message(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -282,7 +284,8 @@ as String,isMine: null == isMine ? _self.isMine : isMine // ignore: cast_nullabl
 as bool,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,isEncrypted: null == isEncrypted ? _self.isEncrypted : isEncrypted // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,encryptedPayload: null == encryptedPayload ? _self.encryptedPayload : encryptedPayload // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

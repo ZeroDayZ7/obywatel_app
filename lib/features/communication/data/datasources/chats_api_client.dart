@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
@@ -43,6 +44,28 @@ class ChatsApiClient {
     return data
         .map((json) => MessageDto.fromJson(json as Map<String, dynamic>))
         .toList();
+  }
+
+  Future<ConversationDto> createConversation({
+    required String type,
+    required List<String> recipientIds,
+    String? title,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.conversations,
+      data: {
+        'type': type,
+        'title': title ?? 'Kontakt',
+        'recipient_ids': recipientIds,
+      },
+    );
+
+    final data = response.data as Map<String, dynamic>? ?? const {};
+    return ConversationDto.fromJson(data);
+  }
+
+  Future<Response<dynamic>> post(String path, {dynamic data}) {
+    return _apiClient.post(path, data: data);
   }
 
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
@@ -91,8 +114,10 @@ class ChatsApiClient {
 
     final data = response.data as List<dynamic>? ?? const <dynamic>[];
     return data
-        .map((json) =>
-            MessageRecord.fromJson(Map<String, dynamic>.from(json as Map)))
+        .map(
+          (json) =>
+              MessageRecord.fromJson(Map<String, dynamic>.from(json as Map)),
+        )
         .toList();
   }
 
