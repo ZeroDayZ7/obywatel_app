@@ -22,6 +22,7 @@ Map<String, dynamic> buildOutboxEventPayload(
 
   return {
     'event_id': safeOutboxEventId,
+    'idempotency_key': safeOutboxEventId,
     'message_id': message.id,
     'event_type': 'SEND_MESSAGE',
     'conversation_id': message.conversationId,
@@ -34,6 +35,7 @@ Map<String, dynamic> buildOutboxEventPayload(
       'created_at': createdAt,
       'is_encrypted': true,
       'outbox_event_id': safeOutboxEventId,
+      'idempotency_key': safeOutboxEventId,
     },
     'created_at': createdAt,
     'outbox_event_id': safeOutboxEventId,

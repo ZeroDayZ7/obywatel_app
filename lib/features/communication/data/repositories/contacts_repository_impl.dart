@@ -36,18 +36,54 @@ class ContactsRepositoryImpl implements ContactsRepository {
   bool get _hasCurrentUserId =>
       _currentUserId != null && _currentUserId.trim().isNotEmpty;
 
+  List<Contact> _dedupeContactsByPeer(List<Contact> contacts) {
+    final byPeer = <String, Contact>{};
+    for (final contact in contacts) {
+      final peerUserId = contact.peerUserIdForCurrentUser(_currentUserId ?? '');
+      final existing = byPeer[peerUserId];
+      if (existing == null) {
+        byPeer[peerUserId] = contact;
+        continue;
+      }
+
+      final candidate = _preferCanonicalContact(existing, contact);
+      byPeer[peerUserId] = candidate;
+    }
+    return byPeer.values.toList();
+  }
+
+  Contact _preferCanonicalContact(Contact current, Contact candidate) {
+    if (current.createdAt == null && candidate.createdAt != null) {
+      return candidate;
+    }
+    if (current.createdAt != null && candidate.createdAt != null &&
+        candidate.createdAt!.isAfter(current.createdAt!)) {
+      return candidate;
+    }
+    if (current.status == 'pending' && candidate.status != 'pending') {
+      return candidate;
+    }
+    return current;
+  }
+
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
-    return _dao.watchAcceptedContacts().map(
-      (entities) => entities.map(Contact.fromEntity).toList(),
-    );
+    return _dao.watchAcceptedContacts().map((entities) {
+      final contacts = entities.map(Contact.fromEntity).toList();
+      return _currentUserId == null || _currentUserId.trim().isEmpty
+          ? contacts
+          : _dedupeContactsByPeer(contacts);
+    });
   }
 
   @override
   Stream<List<Contact>> watchPendingContacts() {
-    return _dao.watchPendingContacts().map(
-      (entities) => entities.map(Contact.fromEntity).toList(),
-    );
+    return _dao.watchPendingContacts().map((entities) {
+      final contacts = entities.map(Contact.fromEntity).toList();
+      return _currentUserId == null || _currentUserId.trim().isEmpty
+          ? contacts
+          : _dedupeContactsByPeer(contacts);
+    });
   }
 
   @override

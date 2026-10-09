@@ -487,6 +487,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'ciphertext': encrypted.ciphertextBase64,
       'type': 1,
       'content': '',
+      'idempotency_key': message.id,
     };
     final requestUri = ApiEndpoints.conversationMessages(
       effectiveConversationId,
