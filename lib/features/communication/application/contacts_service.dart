@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -7,16 +8,17 @@ part 'contacts_service.g.dart';
 
 class ContactsService {
   final ContactsRepository _repository;
+  final AppLogger _logger = AppLogger();
 
   ContactsService(this._repository);
 
   Future<void> addContact(String userId) async {
-    debugPrint('[ContactsService] addContact: starting request for $userId');
+    _logger.i('[CONTACTS-INVITE-01] UI: wysyłanie zaproszenia do userId=$userId');
     try {
       await _repository.sendRequest(userId);
-      debugPrint('[ContactsService] addContact: request completed for $userId');
+      _logger.i('[CONTACTS-INVITE-06] UI: zaproszenie wysłane userId=$userId');
     } catch (error, stackTrace) {
-      debugPrint('[ContactsService] addContact: request failed for $userId: $error');
+      _logger.e('[CONTACTS-INVITE-99] UI: błąd wysyłki zaproszenia userId=$userId', error: error, stackTrace: stackTrace);
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,

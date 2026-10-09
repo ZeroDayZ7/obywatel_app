@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
@@ -21,6 +22,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
+  final AppLogger _logger = AppLogger();
 
   ContactsRepositoryImpl(this._apiClient, this._dao, this._outboxDao);
 
@@ -40,21 +42,23 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> fetchAndSyncContacts() async {
+    _logger.i('[CONTACTS-02] SYNC: rozpoczęto pobieranie kontaktów');
     final dtos = await _apiClient.getContacts();
     final companions = dtos.map((dto) => dto.toCompanion()).toList();
     await _dao.upsertContacts(companions);
+    _logger.i('[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${companions.length}');
   }
 
   @override
   Future<void> sendRequest(String targetUserId) async {
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
-    debugPrint('[ContactsRepository] sendRequest: starting backend request for $normalized');
+    _logger.i('[CONTACTS-INVITE-02] REPOSITORY: wysyłka zaproszenia do $normalized');
 
     try {
       await _apiClient.sendContactRequest(normalized);
-      debugPrint('[ContactsRepository] sendRequest: backend accepted request for $normalized');
+      _logger.i('[CONTACTS-INVITE-03] REPOSITORY: backend przyjął zaproszenie dla $normalized');
     } catch (error, stackTrace) {
-      debugPrint('[ContactsRepository] sendRequest: backend request failed for $normalized: $error');
+      _logger.e('[CONTACTS-INVITE-99] REPOSITORY: błąd wysyłki zaproszenia dla $normalized', error: error, stackTrace: stackTrace);
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
@@ -130,13 +134,13 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> respondToRequest(String requestId, bool accept) async {
-    debugPrint('[ContactsRepository] respondToRequest: starting backend update for $requestId accept=$accept');
+    _logger.i('[CONTACTS-RESPOND-02] REPOSITORY: rozpoczęto odpowiedź dla $requestId accept=$accept');
 
     try {
       await _apiClient.respondToRequest(requestId, accept);
-      debugPrint('[ContactsRepository] respondToRequest: backend accepted response for $requestId');
+      _logger.i('[CONTACTS-RESPOND-03] REPOSITORY: backend zaakceptował odpowiedź dla $requestId');
     } catch (error, stackTrace) {
-      debugPrint('[ContactsRepository] respondToRequest: backend response failed for $requestId: $error');
+      _logger.e('[CONTACTS-RESPOND-99] REPOSITORY: błąd odpowiedzi dla $requestId', error: error, stackTrace: stackTrace);
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,

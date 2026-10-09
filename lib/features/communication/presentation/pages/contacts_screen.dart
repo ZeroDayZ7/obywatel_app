@@ -302,6 +302,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final contact = pendingContacts[index];
                   final isBusy = _processingRequestIds.contains(contact.id);
+                  final isIncoming = contact.direction == 'incoming';
 
                   return Container(
                     margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -349,7 +350,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                contact.status,
+                                isIncoming
+                                    ? 'Zaproszenie oczekujące'
+                                    : 'Wysłano zaproszenie',
                                 style: theme.textTheme.bodySmall?.copyWith(
                                   color: colorScheme.onSurfaceVariant,
                                 ),
@@ -357,27 +360,43 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                             ],
                           ),
                         ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              onPressed: isBusy
-                                  ? null
-                                  : () => _respondToRequest(contact, true),
-                              tooltip: 'Akceptuj',
-                              color: colorScheme.primary,
-                              icon: const Icon(Icons.check_rounded),
+                        if (isIncoming)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                onPressed: isBusy
+                                    ? null
+                                    : () => _respondToRequest(contact, true),
+                                tooltip: 'Akceptuj',
+                                color: colorScheme.primary,
+                                icon: const Icon(Icons.check_rounded),
+                              ),
+                              IconButton(
+                                onPressed: isBusy
+                                    ? null
+                                    : () => _respondToRequest(contact, false),
+                                tooltip: 'Odrzuć',
+                                color: colorScheme.error,
+                                icon: const Icon(Icons.close_rounded),
+                              ),
+                            ],
+                          )
+                        else
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(999),
                             ),
-                            IconButton(
-                              onPressed: isBusy
-                                  ? null
-                                  : () => _respondToRequest(contact, false),
-                              tooltip: 'Odrzuć',
-                              color: colorScheme.error,
-                              icon: const Icon(Icons.close_rounded),
+                            child: Text(
+                              'Wysłano',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: colorScheme.onPrimaryContainer,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ],
-                        ),
+                          ),
                       ],
                     ),
                   );
