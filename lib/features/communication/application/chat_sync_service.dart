@@ -89,24 +89,48 @@ class ChatSyncService {
     final pendingMessages = await _repository.getPendingOutboxMessages();
     if (pendingMessages.isEmpty) return;
 
+    final validMessages = pendingMessages.where((message) {
+      final hasConversationId = message.conversationId.trim().isNotEmpty;
+      final hasCiphertext =
+          message.encryptedPayload.trim().isNotEmpty ||
+          message.content.trim().isNotEmpty;
+
+      if (!hasConversationId || !hasCiphertext) {
+        _logger.w(
+          'Pomijam niepoprawne zdarzenie outbox: message_id=${message.id} '
+          'conversation_id=${message.conversationId} ciphertext_present=$hasCiphertext',
+          module: 'ChatSync',
+        );
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (validMessages.isEmpty) {
+      await _repository.clearSentOutboxMessages(
+        pendingMessages.map((m) => m.id).toList(),
+      );
+      return;
+    }
+
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
 
     _logger.i(
-      'Wysyłanie ${pendingMessages.length} zaległych wiadomości z outboxa',
+      'Wysyłanie ${validMessages.length} zaległych wiadomości z outboxa',
       module: 'ChatSync',
     );
 
-    final payload = pendingMessages
+    final payload = validMessages
         .map((message) => messageToOutboxJson(message, deviceId))
         .toList();
 
     try {
       await _apiClient.sendOutboxBatch(payload);
       await _repository.clearSentOutboxMessages(
-        pendingMessages.map((m) => m.id).toList(),
+        validMessages.map((m) => m.id).toList(),
       );
     } catch (e) {
-      for (final message in pendingMessages) {
+      for (final message in validMessages) {
         final current = await _repository.db.outboxDao.getRowById(message.id);
         final retryCount = (current?.retryCount ?? 0) + 1;
         await _repository.db.outboxDao.scheduleRetry(

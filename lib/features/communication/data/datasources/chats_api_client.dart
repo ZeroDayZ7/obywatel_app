@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
@@ -69,9 +72,15 @@ class ChatsApiClient {
   }
 
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
+    final requestBody = {'messages': payload};
+
+    debugPrint('=== OUTBOX PAYLOAD DEBUG ===');
+    debugPrint(jsonEncode(requestBody));
+    debugPrint('============================');
+
     await _apiClient.post(
       ApiEndpoints.syncOutbox,
-      data: {'messages': payload},
+      data: requestBody,
     );
   }
 

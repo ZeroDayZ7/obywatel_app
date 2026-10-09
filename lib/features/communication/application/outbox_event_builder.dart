@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:uuid/uuid.dart';
 
@@ -20,7 +23,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   final safeOutboxEventId =
       outboxEventId ?? buildOutboxEventIdForMessage(message: message);
 
-  return {
+  final payload = {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
     'message_id': message.id,
@@ -33,4 +36,10 @@ Map<String, dynamic> buildOutboxEventPayload(
     'created_at': createdAt,
     'outbox_event_id': safeOutboxEventId,
   };
+
+  debugPrint('=== OUTBOX EVENT DEBUG ===');
+  debugPrint(jsonEncode(payload));
+  debugPrint('========================');
+
+  return payload;
 }
