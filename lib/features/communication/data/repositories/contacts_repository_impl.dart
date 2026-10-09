@@ -44,8 +44,23 @@ class ContactsRepositoryImpl implements ContactsRepository {
   Future<void> fetchAndSyncContacts() async {
     _logger.i('[CONTACTS-02] SYNC: rozpoczęto pobieranie kontaktów');
     final dtos = await _apiClient.getContacts();
+
     final companions = dtos.map((dto) => dto.toCompanion()).toList();
     await _dao.upsertContacts(companions);
+
+    for (final dto in dtos) {
+      final shouldResolveAcceptedState =
+          dto.status == 'accepted' || dto.status == 'blocked';
+      if (!shouldResolveAcceptedState) {
+        continue;
+      }
+
+      await _dao.removeStalePendingDuplicates(
+        contactId: dto.contactId,
+        keepRowId: dto.id,
+      );
+    }
+
     _logger.i('[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${companions.length}');
   }
 

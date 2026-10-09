@@ -76,4 +76,19 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
+  Future<void> removeStalePendingDuplicates({
+    required String contactId,
+    required String keepRowId,
+  }) async {
+    await (delete(contacts)
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.status.equals('pending') &
+                t.deletedAt.isNull() &
+                t.id.isNotValue(keepRowId),
+          ))
+        .go();
+  }
 }
