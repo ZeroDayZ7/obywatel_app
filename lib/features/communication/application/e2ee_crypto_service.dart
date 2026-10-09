@@ -426,11 +426,11 @@ class E2eeCryptoService {
   }
 
   Future<EncryptedData> encryptMessage(
-    String conversationId,
+    String remoteUserId,
     String plaintext,
   ) async {
     try {
-      final envelope = await encryptOutboundMessage(conversationId, plaintext);
+      final envelope = await encryptOutboundMessage(remoteUserId, plaintext);
       return EncryptedData(
         ciphertextBase64: envelope.ciphertext,
         nonceBase64: '',
@@ -447,7 +447,7 @@ class E2eeCryptoService {
         module: 'E2eeCrypto',
       );
       throw EncryptionFailureException(
-        'Nie można zaszyfrować wiadomości dla konwersacji $conversationId',
+        'Nie można zaszyfrować wiadomości dla użytkownika $remoteUserId',
       );
     }
   }

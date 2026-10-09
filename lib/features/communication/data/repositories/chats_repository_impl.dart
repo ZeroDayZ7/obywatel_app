@@ -20,6 +20,49 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chats_repository_impl.g.dart';
 
+String resolveRemoteUserIdForConversation(
+  String conversationId,
+  String currentUserId,
+) {
+  final trimmedConversationId = conversationId.trim();
+  if (trimmedConversationId.isEmpty) {
+    throw ArgumentError.value(
+      conversationId,
+      'conversationId',
+      'Conversation ID cannot be empty',
+    );
+  }
+
+  final members = trimmedConversationId
+      .split(':')
+      .map((member) => member.trim())
+      .where((member) => member.isNotEmpty)
+      .toList();
+
+  if (members.length != 2) {
+    throw ArgumentError.value(
+      conversationId,
+      'conversationId',
+      'Conversation must contain exactly two members for direct peer messaging',
+    );
+  }
+
+  final remoteUserId = members.firstWhere(
+    (member) => member != currentUserId,
+    orElse: () => '',
+  );
+
+  if (remoteUserId.isEmpty) {
+    throw ArgumentError.value(
+      conversationId,
+      'conversationId',
+      'Conversation does not contain a different peer user id',
+    );
+  }
+
+  return remoteUserId;
+}
+
 Message mapMessageFromDto(MessageDto dto, String currentUserId) {
   return Message(
     id: dto.id,
@@ -209,8 +252,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
           .toList(),
     );
 
-    await ensureE2eeSessionForContact(contactUserId);
-
+    // E2EE bootstrap is intentionally handled when the chat is actually opened
+    // or when a message is sent, not during contact acceptance.
     return conversationId;
   }
 
@@ -324,7 +367,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
-    final encrypted = await _cryptoService.encryptMessage(conversationId, content);
+    final remoteUserId = resolveRemoteUserIdForConversation(
+      conversationId,
+      _currentUserId,
+    );
+    final encrypted = await _cryptoService.encryptMessage(remoteUserId, content);
     final message = Message(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       conversationId: conversationId,

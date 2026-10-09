@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
-import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,18 +17,16 @@ final chatE2eeSessionStatusProvider = FutureProvider.family<
     String
 >((ref, conversationId) async {
   final currentUserId = ref.watch(currentUserIdProvider);
-  final remoteUserId = conversationId
-      .split(':')
-      .where((id) => id.trim().isNotEmpty && id != currentUserId)
-      .firstOrNull ?? '';
-
-  if (remoteUserId.isEmpty) {
-    return E2eeSessionUiStatus.ready;
-  }
 
   try {
+    final remoteUserId = resolveRemoteUserIdForConversation(
+      conversationId,
+      currentUserId,
+    );
     final repository = ref.read(chatsRepositoryProvider);
     await repository.ensureE2eeSessionForContact(remoteUserId);
+    return E2eeSessionUiStatus.ready;
+  } on ArgumentError {
     return E2eeSessionUiStatus.ready;
   } catch (_) {
     return E2eeSessionUiStatus.failed;
@@ -47,14 +44,11 @@ class ActiveChat extends _$ActiveChat {
   Future<void> sendMessage(String text) async {
     if (text.trim().isEmpty) return;
 
-    final cryptoService = ref.read(e2eeCryptoServiceProvider);
     final repository = ref.read(chatsRepositoryProvider);
-
-    final encrypted = await cryptoService.encryptMessage(conversationId, text);
 
     await repository.sendMessage(
       conversationId: conversationId,
-      content: encrypted.ciphertextBase64,
+      content: text,
     );
   }
 }
