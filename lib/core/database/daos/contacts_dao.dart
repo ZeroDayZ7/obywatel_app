@@ -91,4 +91,22 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
           ))
         .go();
   }
+
+  Future<void> removePlaceholderPendingDuplicates({
+    required String contactId,
+    required String currentUserId,
+    required String keepRowId,
+  }) async {
+    await (delete(contacts)
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.status.equals('pending') &
+                t.deletedAt.isNull() &
+                t.id.isNotValue(keepRowId) &
+                ((t.ownerId.equals('local_user')) |
+                    (t.ownerId.isNotValue(currentUserId))),
+          ))
+        .go();
+  }
 }

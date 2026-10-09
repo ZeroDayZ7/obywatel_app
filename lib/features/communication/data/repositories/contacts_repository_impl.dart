@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
@@ -22,9 +23,15 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
+  final String _currentUserId;
   final AppLogger _logger = AppLogger();
 
-  ContactsRepositoryImpl(this._apiClient, this._dao, this._outboxDao);
+  ContactsRepositoryImpl(
+    this._apiClient,
+    this._dao,
+    this._outboxDao,
+    this._currentUserId,
+  );
 
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
@@ -49,6 +56,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
     await _dao.upsertContacts(companions);
 
     for (final dto in dtos) {
+      if (dto.ownerId == _currentUserId || dto.contactId == _currentUserId) {
+        await _dao.removePlaceholderPendingDuplicates(
+          contactId: dto.contactId,
+          currentUserId: _currentUserId,
+          keepRowId: dto.id,
+        );
+      }
+
       final shouldResolveAcceptedState =
           dto.status == 'accepted' || dto.status == 'blocked';
       if (!shouldResolveAcceptedState) {
@@ -90,7 +105,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
     final companion = ContactsCompanion(
       id: Value(eventId),
-      ownerId: Value('local_user'),
+      ownerId: Value(_currentUserId),
       contactId: Value(normalized),
       status: const Value('pending'),
       syncState: const Value('pending_create'),
@@ -218,5 +233,11 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
-  return ContactsRepositoryImpl(apiClient, db.contactsDao, db.outboxDao);
+  final currentUserId = ref.watch(currentUserIdProvider);
+  return ContactsRepositoryImpl(
+    apiClient,
+    db.contactsDao,
+    db.outboxDao,
+    currentUserId,
+  );
 }
