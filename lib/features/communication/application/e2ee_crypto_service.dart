@@ -111,6 +111,7 @@ class E2eeCryptoService {
   final DriftSignalProtocolStore _signalStore;
 
   static const String _sessionKeyPrefix = 'e2ee_session_key_';
+  bool _deviceIdentityRegistered = false;
 
   static int _readIntValue(
     Map<String, dynamic> json,
@@ -225,14 +226,15 @@ class E2eeCryptoService {
 
   Future<void> ensureSessionForPeer(
     String remoteUserId, {
-    int deviceId = 1,
-  }) async {
+      int deviceId = 1,
+    }) async {
     final address = SignalProtocolAddress(remoteUserId, deviceId);
     final sessionExists = await _signalStore.containsSession(address);
     if (sessionExists) {
       return;
     }
 
+    await registerDeviceIdentity();
     final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId);
     await initializeSessionForPeer(
       remoteUserId,
@@ -316,20 +318,30 @@ class E2eeCryptoService {
   }
 
   Future<void> registerDeviceIdentity() async {
+    if (_deviceIdentityRegistered) {
+      return;
+    }
+
     final bundle = await ensureDeviceIdentityBundle();
-    await _apiClient.post(
-      '/crypto/keys/device',
-      data: {
-        'device_id': bundle.deviceId,
-        'registration_id': bundle.registrationId,
-        'identity_public_key': bundle.publicKey,
-        'public_key': bundle.publicKey,
-        'signed_pre_key': bundle.signedPreKey,
-        'signed_pre_key_sig': bundle.signedPreKeySignature,
-        'signed_pre_key_id': bundle.signedPreKeyId,
-        'one_time_pre_keys': bundle.oneTimePreKeys,
-      },
-    );
+    final payload = {
+      'device_id': bundle.deviceId,
+      'registration_id': bundle.registrationId,
+      'identity_public_key': bundle.publicKey,
+      'public_key': bundle.publicKey,
+      'signed_pre_key': bundle.signedPreKey,
+      'signed_pre_key_sig': bundle.signedPreKeySignature,
+      'signed_pre_key_id': bundle.signedPreKeyId,
+      'one_time_pre_keys': bundle.oneTimePreKeys,
+    };
+
+    if (payload.containsKey('private_key') ||
+        payload.containsKey('device_private_key') ||
+        payload.containsValue(bundle.privateKey)) {
+      throw StateError('Private E2EE keys must never be sent to the backend');
+    }
+
+    await _apiClient.post('/crypto/keys/device', data: payload);
+    _deviceIdentityRegistered = true;
   }
 
   Future<void> storeSessionKey(String conversationId, String base64Key) async {
@@ -352,6 +364,7 @@ class E2eeCryptoService {
     try {
       final address = SignalProtocolAddress(recipientUserId, recipientDeviceId);
       if (!await _signalStore.containsSession(address)) {
+        await registerDeviceIdentity();
         final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId);
         await initializeSessionForPeer(
           recipientUserId,

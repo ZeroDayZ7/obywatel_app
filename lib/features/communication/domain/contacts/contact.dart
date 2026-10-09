@@ -36,3 +36,15 @@ abstract class Contact with _$Contact {
     );
   }
 }
+
+extension ContactPeerUserIdX on Contact {
+  String peerUserIdForCurrentUser(String currentUserId) {
+    if (ownerId == currentUserId) {
+      return contactUserId;
+    }
+    if (contactUserId == currentUserId) {
+      return ownerId;
+    }
+    return contactUserId;
+  }
+}

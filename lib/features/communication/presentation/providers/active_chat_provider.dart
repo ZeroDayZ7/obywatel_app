@@ -27,7 +27,7 @@ final chatE2eeSessionStatusProvider = FutureProvider.family<
     await repository.ensureE2eeSessionForContact(remoteUserId);
     return E2eeSessionUiStatus.ready;
   } on ArgumentError {
-    return E2eeSessionUiStatus.ready;
+    return E2eeSessionUiStatus.failed;
   } catch (_) {
     return E2eeSessionUiStatus.failed;
   }

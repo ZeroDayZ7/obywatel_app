@@ -47,12 +47,20 @@ String resolveRemoteUserIdForConversation(
     );
   }
 
+  if (!members.contains(currentUserId)) {
+    throw ArgumentError.value(
+      conversationId,
+      'conversationId',
+      'Current user is not part of this conversation',
+    );
+  }
+
   final remoteUserId = members.firstWhere(
     (member) => member != currentUserId,
     orElse: () => '',
   );
 
-  if (remoteUserId.isEmpty) {
+  if (remoteUserId.isEmpty || remoteUserId == currentUserId) {
     throw ArgumentError.value(
       conversationId,
       'conversationId',
@@ -264,6 +272,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     try {
+      await _cryptoService.registerDeviceIdentity();
       await _cryptoService.ensureSessionForPeer(contactUserId);
     } catch (error, stackTrace) {
       _logger.w(

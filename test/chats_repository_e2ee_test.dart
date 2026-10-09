@@ -12,6 +12,7 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 
 class ThrowingCryptoService extends E2eeCryptoService {
   ThrowingCryptoService(
@@ -73,6 +74,31 @@ class FailingCryptoService extends E2eeCryptoService {
     String plaintext,
   ) async {
     throw StateError('Encryption failed before any plaintext could be sent');
+  }
+}
+
+class RecordingApiClient extends ApiClient {
+  RecordingApiClient({
+    required super.storage,
+    required super.logger,
+  }) : super(dio: Dio());
+
+  final List<String> requests = <String>[];
+  final List<Map<String, dynamic>> payloads = <Map<String, dynamic>>[];
+
+  @override
+  Future<Response<dynamic>> post(
+    String path, {
+    dynamic data,
+    Options? options,
+  }) async {
+    requests.add(path);
+    payloads.add(Map<String, dynamic>.from(data as Map<String, dynamic>));
+    return Response<dynamic>(
+      data: {'ok': true},
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
   }
 }
 
@@ -159,6 +185,34 @@ void main() {
     expect(conversations, isNotEmpty);
   });
 
+  test('Contact resolves peer user id for both owners and incoming/outgoing relations', () {
+    const annaContact = Contact(
+      id: 'contact-1',
+      ownerId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
+      contactUserId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
+      status: 'accepted',
+      direction: 'outgoing',
+      displayName: 'Piotr',
+    );
+    const piotrContact = Contact(
+      id: 'contact-2',
+      ownerId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
+      contactUserId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
+      status: 'accepted',
+      direction: 'incoming',
+      displayName: 'Anna',
+    );
+
+    expect(
+      annaContact.peerUserIdForCurrentUser('a2f6b8c9-1122-4a55-8822-b98765432101'),
+      'c3d4e5f6-3344-5b66-9933-a12345678902',
+    );
+    expect(
+      piotrContact.peerUserIdForCurrentUser('c3d4e5f6-3344-5b66-9933-a12345678902'),
+      'a2f6b8c9-1122-4a55-8822-b98765432101',
+    );
+  });
+
   test('resolveRemoteUserIdForConversation returns the other participant', () {
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u1'), 'u2');
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u2'), 'u1');
@@ -177,6 +231,41 @@ void main() {
       () => resolveRemoteUserIdForConversation('u1:u2:u3', 'u1'),
       throwsArgumentError,
     );
+    expect(
+      () => resolveRemoteUserIdForConversation('u1:u1', 'u1'),
+      throwsArgumentError,
+    );
+    expect(
+      () => resolveRemoteUserIdForConversation('u2:u3', 'u1'),
+      throwsArgumentError,
+    );
+  });
+
+  test('registerDeviceIdentity is idempotent and posts only public key material', () async {
+    final logger = AppLogger();
+    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
+    final apiClient = RecordingApiClient(storage: secureStorage, logger: logger);
+    final deviceInfoService = DeviceInfoService(logger);
+    final db = AppDatabase(NativeDatabase.memory());
+    final cryptoService = E2eeCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      DriftSignalProtocolStore(db),
+    );
+
+    await cryptoService.registerDeviceIdentity();
+    await cryptoService.registerDeviceIdentity();
+
+    expect(apiClient.requests, ['/crypto/keys/device']);
+    final payload = apiClient.payloads.single;
+    expect(payload.containsKey('identity_public_key'), isTrue);
+    expect(payload.containsKey('public_key'), isTrue);
+    expect(payload.containsKey('private_key'), isFalse);
+    expect(payload.containsKey('device_private_key'), isFalse);
+    expect(payload['identity_public_key'], isNotNull);
+    expect(payload['public_key'], isNotNull);
   });
 
   test('sendMessage encrypts for remote user id, not conversation id', () async {

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
-import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
@@ -48,23 +46,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     try {
       final repository = ref.read(contactsRepositoryProvider);
       await repository.respondToRequest(contact.id, accept);
-
-      if (accept) {
-        final chatsRepository = ref.read(chatsRepositoryProvider);
-        final title = contact.localAlias?.trim().isNotEmpty == true
-            ? contact.localAlias!
-            : contact.displayName;
-
-        final conversationId = await chatsRepository
-            .ensureConversationForContact(contact.contactUserId, title: title);
-
-        if (!mounted) return;
-
-        context.push(
-          '/chats/${Uri.encodeComponent(conversationId)}',
-          extra: title,
-        );
-      }
 
       if (!mounted) return;
 
