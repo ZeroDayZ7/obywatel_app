@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -10,11 +11,31 @@ import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+    secureStorageChannel,
+    (MethodCall methodCall) async {
+      switch (methodCall.method) {
+        case 'write':
+        case 'delete':
+        case 'deleteAll':
+          return null;
+        case 'read':
+          return null;
+        case 'readAll':
+          return <String, String>{};
+        default:
+          return null;
+      }
+    },
+  );
 
   group('E2eeCryptoService', () {
     test('parses a Signal pre-key bundle from backend JSON', () {
@@ -44,6 +65,39 @@ void main() {
         bundle.getIdentityKey().serialize(),
         identity.getPublicKey().serialize(),
       );
+    });
+
+    test('uses Signal-compatible identity key material instead of raw device public key', () async {
+      final logger = AppLogger();
+      final storage = SecureStorageService(const FlutterSecureStorage(), logger);
+      final apiClient = ApiClient(dio: Dio(), storage: storage, logger: logger);
+      final deviceInfoService = DeviceInfoService(logger);
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(() async => db.close());
+
+      final signalStore = DriftSignalProtocolStore(db);
+      final service = E2eeCryptoService(
+        storage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        signalStore,
+      );
+
+      await storage.write(
+        key: StorageKeys.devicePublicKey,
+        value: base64Encode(List<int>.filled(32, 0x11)),
+      );
+
+      final bundle = await service.ensureDeviceIdentityBundle();
+      final decodedPublicKey = base64Decode(bundle.publicKey);
+
+      expect(decodedPublicKey.length, 33,
+          reason: 'identity_public_key must be a valid Signal EC public key (33-byte compressed or 65-byte uncompressed).');
+      expect(bundle.signedPreKey.length, greaterThan(0));
+      expect(bundle.oneTimePreKeys.length, greaterThan(0));
+      expect(base64Decode(bundle.oneTimePreKeys.first).length, 33,
+          reason: 'one_time_pre_keys must also use Signal EC public key format.');
     });
 
     test(

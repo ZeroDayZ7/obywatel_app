@@ -9,9 +9,9 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
-import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:uuid/uuid.dart';
 
 part 'e2ee_crypto_service.g.dart';
 
@@ -236,8 +236,9 @@ class E2eeCryptoService {
       return;
     }
 
-    await registerDeviceIdentityWithOperation(operationId ?? '');
-    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId, operationId: operationId);
+    final effectiveOperationId = _resolveOperationId(operationId);
+    await registerDeviceIdentityWithOperation(effectiveOperationId);
+    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId, operationId: effectiveOperationId);
     await initializeSessionForPeer(
       remoteUserId,
       remoteBundle: remoteBundle,
@@ -245,71 +246,30 @@ class E2eeCryptoService {
     );
   }
 
+  String _resolveOperationId(String? operationId) {
+    final value = operationId?.trim();
+    if (value != null && value.isNotEmpty) {
+      return value;
+    }
+    return const Uuid().v4();
+  }
+
   Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final registrationId = await _signalStore.getLocalRegistrationId();
-
-    final storedPrivate = await _secureStorage.read(
-      key: StorageKeys.devicePrivateKey,
-    );
-    final storedPublic = await _secureStorage.read(
-      key: StorageKeys.devicePublicKey,
-    );
-
-    if (storedPrivate != null &&
-        storedPrivate.isNotEmpty &&
-        storedPublic != null &&
-        storedPublic.isNotEmpty) {
-      final identityKeyPair = await _signalStore.getIdentityKeyPair();
-      final signedPreKey = generateSignedPreKey(identityKeyPair, 1);
-      final oneTimePreKeys = generatePreKeys(1, 10)
-          .map(
-            (record) => base64Encode(record.getKeyPair().publicKey.serialize()),
-          )
-          .toList();
-
-      return DeviceKeyBundle(
-        deviceId: deviceId,
-        registrationId: registrationId,
-        publicKey: storedPublic,
-        privateKey: storedPrivate,
-        signedPreKey: base64Encode(
-          signedPreKey.getKeyPair().publicKey.serialize(),
-        ),
-        signedPreKeySignature: base64Encode(signedPreKey.signature),
-        signedPreKeyId: signedPreKey.id,
-        oneTimePreKeys: oneTimePreKeys,
-      );
-    }
-
-    final privateIdentityKey = generateIdentityKeyPair();
-    final signedPreKey = generateSignedPreKey(privateIdentityKey, 1);
+    final identityKeyPair = await _signalStore.getIdentityKeyPair();
+    final signedPreKey = generateSignedPreKey(identityKeyPair, 1);
     final oneTimePreKeys = generatePreKeys(1, 10)
         .map(
           (record) => base64Encode(record.getKeyPair().publicKey.serialize()),
         )
         .toList();
-    final privateKey = base64Encode(
-      privateIdentityKey.getPrivateKey().serialize(),
-    );
-    final publicKey = base64Encode(
-      privateIdentityKey.getPublicKey().serialize(),
-    );
-
-    await _secureStorage.write(
-      key: StorageKeys.devicePrivateKey,
-      value: privateKey,
-    );
-    await _secureStorage.write(
-      key: StorageKeys.devicePublicKey,
-      value: publicKey,
-    );
 
     return DeviceKeyBundle(
       deviceId: deviceId,
       registrationId: registrationId,
-      publicKey: publicKey,
-      privateKey: privateKey,
+      publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
+      privateKey: base64Encode(identityKeyPair.getPrivateKey().serialize()),
       signedPreKey: base64Encode(
         signedPreKey.getKeyPair().publicKey.serialize(),
       ),
@@ -320,10 +280,13 @@ class E2eeCryptoService {
   }
 
   Future<void> registerDeviceIdentity() async {
-    if (_deviceIdentityRegistered) {
-      return;
-    }
+    await registerDeviceIdentityWithOperation(null);
+  }
 
+  Future<void> registerDeviceIdentityWithOperation(String? operationId) async {
+    if (_deviceIdentityRegistered) return;
+
+    final effectiveOperationId = _resolveOperationId(operationId);
     final bundle = await ensureDeviceIdentityBundle();
     final payload = {
       'device_id': bundle.deviceId,
@@ -342,31 +305,8 @@ class E2eeCryptoService {
       throw StateError('Private E2EE keys must never be sent to the backend');
     }
 
-    // Do not include private key material in payload. Attach operation id via headers if provided in Options.
-    await _apiClient.post('/crypto/keys/device', data: payload);
-    _deviceIdentityRegistered = true;
-  }
-
-  // New helper to request device registration with diagnostic header
-  Future<void> registerDeviceIdentityWithOperation(String operationId) async {
-    if (_deviceIdentityRegistered) return;
-    final bundle = await ensureDeviceIdentityBundle();
-    final payload = {
-      'device_id': bundle.deviceId,
-      'registration_id': bundle.registrationId,
-      'identity_public_key': bundle.publicKey,
-      'public_key': bundle.publicKey,
-      'signed_pre_key': bundle.signedPreKey,
-      'signed_pre_key_sig': bundle.signedPreKeySignature,
-      'signed_pre_key_id': bundle.signedPreKeyId,
-      'one_time_pre_keys': bundle.oneTimePreKeys,
-    };
-
-    if (payload.containsKey('private_key') || payload.containsKey('device_private_key') || payload.containsValue(bundle.privateKey)) {
-      throw StateError('Private E2EE keys must never be sent to the backend');
-    }
-
-    await _apiClient.post('/crypto/keys/device', data: payload, headers: {'X-Operation-Id': operationId});
+    final headers = {'X-Operation-Id': effectiveOperationId};
+    await _apiClient.post('/crypto/keys/device', data: payload, headers: headers);
     _deviceIdentityRegistered = true;
   }
 
@@ -391,8 +331,9 @@ class E2eeCryptoService {
     try {
       final address = SignalProtocolAddress(recipientUserId, recipientDeviceId);
       if (!await _signalStore.containsSession(address)) {
-        await registerDeviceIdentityWithOperation(operationId ?? '');
-        final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId, operationId: operationId);
+        final effectiveOperationId = _resolveOperationId(operationId);
+        await registerDeviceIdentityWithOperation(effectiveOperationId);
+        final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId, operationId: effectiveOperationId);
         await initializeSessionForPeer(
           recipientUserId,
           remoteBundle: remoteBundle,

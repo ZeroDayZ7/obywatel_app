@@ -24,11 +24,7 @@ class ThrowingCryptoService extends E2eeCryptoService {
   );
 
   @override
-  Future<void> ensureSessionForPeer(
-    String remoteUserId, {
-    int deviceId = 1,
-    String? operationId,
-  }) async {
+  Future<void> ensureSessionForPeer(String remoteUserId, {int deviceId = 1, String? operationId}) async {
     throw StateError('E2EE bootstrap should not run while accepting a contact');
   }
 }
@@ -46,11 +42,7 @@ class CapturingCryptoService extends E2eeCryptoService {
   String? lastPlaintext;
 
   @override
-  Future<EncryptedData> encryptMessage(
-    String remoteUserId,
-    String plaintext,
-    {String? operationId},
-  ) async {
+  Future<EncryptedData> encryptMessage(String remoteUserId, String plaintext, {String? operationId}) async {
     lastPeerUserId = remoteUserId;
     lastPlaintext = plaintext;
 
@@ -71,11 +63,7 @@ class FailingCryptoService extends E2eeCryptoService {
   );
 
   @override
-  Future<EncryptedData> encryptMessage(
-    String remoteUserId,
-    String plaintext,
-    {String? operationId},
-  ) async {
+  Future<EncryptedData> encryptMessage(String remoteUserId, String plaintext, {String? operationId}) async {
     throw StateError('Encryption failed before any plaintext could be sent');
   }
 }
