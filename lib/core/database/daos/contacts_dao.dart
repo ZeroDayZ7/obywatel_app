@@ -58,11 +58,11 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
     await (update(contacts)
           ..where((t) => t.contactId.equals(contactId) & t.deletedAt.isNull()))
         .write(
-      ContactsCompanion(
-        localAlias: Value(normalized),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+          ContactsCompanion(
+            localAlias: Value(normalized),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   Future<void> updateStatus({
@@ -80,6 +80,7 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
   Future<ContactEntity?> getPendingPlaceholderForRelation({
     required String contactId,
     required String currentUserId,
+    required String relationOwnerId,
   }) {
     return (select(contacts)
           ..where(
@@ -88,7 +89,8 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
                 t.status.equals('pending') &
                 t.deletedAt.isNull() &
                 ((t.ownerId.equals('local_user')) |
-                    (t.ownerId.equals(currentUserId))),
+                    (t.ownerId.equals(currentUserId)) |
+                    (t.ownerId.equals(relationOwnerId))),
           )
           ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
         .getSingleOrNull();
@@ -97,18 +99,19 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
   Future<void> removePendingDuplicatesForRelation({
     required String contactId,
     required String currentUserId,
+    required String relationOwnerId,
     required String keepRowId,
   }) async {
-    await (delete(contacts)
-          ..where(
-            (t) =>
-                t.contactId.equals(contactId) &
-                t.status.equals('pending') &
-                t.deletedAt.isNull() &
-                t.id.isNotValue(keepRowId) &
-                ((t.ownerId.equals('local_user')) |
-                    (t.ownerId.equals(currentUserId))),
-          ))
+    await (delete(contacts)..where(
+          (t) =>
+              t.contactId.equals(contactId) &
+              t.status.equals('pending') &
+              t.deletedAt.isNull() &
+              t.id.isNotValue(keepRowId) &
+              ((t.ownerId.equals('local_user')) |
+                  (t.ownerId.equals(currentUserId)) |
+                  (t.ownerId.equals(relationOwnerId))),
+        ))
         .go();
   }
 }

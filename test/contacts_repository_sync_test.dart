@@ -13,16 +13,16 @@ import 'package:obywatel_plus/features/communication/data/repositories/contacts_
 
 class _FakeContactsApiClient extends ContactsApiClient {
   _FakeContactsApiClient(this._contacts)
-      : super(
-          ApiClient(
-            dio: Dio(),
-            storage: SecureStorageService(
-              const FlutterSecureStorage(),
-              AppLogger(),
-            ),
-            logger: AppLogger(),
+    : super(
+        ApiClient(
+          dio: Dio(),
+          storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            AppLogger(),
           ),
-        );
+          logger: AppLogger(),
+        ),
+      );
 
   final List<ContactDto> _contacts;
 
@@ -46,12 +46,47 @@ Future<ContactsRepositoryImpl> _buildRepo(
 }
 
 void main() {
-  test('A sends invite to B and B sees exactly one incoming pending row', () async {
-    final db = _buildDb();
-    addTearDown(db.close);
+  test(
+    'A sends invite to B and B sees exactly one incoming pending row',
+    () async {
+      final db = _buildDb();
+      addTearDown(db.close);
 
-    final repo = await _buildRepo(db, currentUserId: 'user-b', contacts: [
-      ContactDto(
+      final repo = await _buildRepo(
+        db,
+        currentUserId: 'user-b',
+        contacts: [
+          ContactDto(
+            id: 'server-1',
+            ownerId: 'user-a',
+            contactId: 'user-b',
+            status: 'pending',
+            direction: 'outgoing',
+            version: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ],
+      );
+
+      await repo.fetchAndSyncContacts();
+
+      final rows = await db.select(db.contacts).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.ownerId, 'user-a');
+      expect(rows.single.contactId, 'user-b');
+      expect(rows.single.status, 'pending');
+      expect(rows.single.direction, 'outgoing');
+    },
+  );
+
+  test(
+    'Repeated fetch is idempotent and does not create duplicate outgoing rows',
+    () async {
+      final db = _buildDb();
+      addTearDown(db.close);
+
+      final dto = ContactDto(
         id: 'server-1',
         ownerId: 'user-a',
         contactId: 'user-b',
@@ -60,126 +95,121 @@ void main() {
         version: 1,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
-      ),
-    ]);
+      );
 
-    await repo.fetchAndSyncContacts();
+      final repo = await _buildRepo(
+        db,
+        currentUserId: 'user-a',
+        contacts: [dto],
+      );
 
-    final rows = await db.select(db.contacts).get();
-    expect(rows, hasLength(1));
-    expect(rows.single.ownerId, 'user-a');
-    expect(rows.single.contactId, 'user-b');
-    expect(rows.single.status, 'pending');
-    expect(rows.single.direction, 'outgoing');
-  });
+      await repo.fetchAndSyncContacts();
+      await repo.fetchAndSyncContacts();
 
-  test('Repeated fetch is idempotent and does not create duplicate outgoing rows', () async {
-    final db = _buildDb();
-    addTearDown(db.close);
+      final rows = await db.select(db.contacts).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.id, 'server-1');
+    },
+  );
 
-    final dto = ContactDto(
-      id: 'server-1',
-      ownerId: 'user-a',
-      contactId: 'user-b',
-      status: 'pending',
-      direction: 'outgoing',
-      version: 1,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+  test(
+    'Local placeholder merges with server record without duplicate',
+    () async {
+      final db = _buildDb();
+      addTearDown(db.close);
 
-    final repo = await _buildRepo(db, currentUserId: 'user-a', contacts: [dto]);
+      final now = DateTime.now();
+      await db
+          .into(db.contacts)
+          .insert(
+            ContactsCompanion(
+              id: const Value('local-placeholder'),
+              ownerId: const Value('local_user'),
+              contactId: const Value('user-b'),
+              status: const Value('pending'),
+              syncState: const Value('pending_create'),
+              direction: const Value('outgoing'),
+              changeSequence: Value(BigInt.one),
+              localAlias: const Value('Alias lokalny'),
+              encryptedAlias: const Value.absent(),
+              version: Value(BigInt.one),
+              createdAt: Value(now),
+              updatedAt: Value(now),
+              deletedAt: const Value.absent(),
+            ),
+          );
 
-    await repo.fetchAndSyncContacts();
-    await repo.fetchAndSyncContacts();
+      final repo = await _buildRepo(
+        db,
+        currentUserId: 'user-a',
+        contacts: [
+          ContactDto(
+            id: 'server-1',
+            ownerId: 'user-a',
+            contactId: 'user-b',
+            status: 'pending',
+            direction: 'outgoing',
+            version: 1,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        ],
+      );
 
-    final rows = await db.select(db.contacts).get();
-    expect(rows, hasLength(1));
-    expect(rows.single.id, 'server-1');
-  });
+      await repo.fetchAndSyncContacts();
 
-  test('Local placeholder merges with server record without duplicate', () async {
-    final db = _buildDb();
-    addTearDown(db.close);
+      final rows = await db.select(db.contacts).get();
+      expect(rows, hasLength(1));
+      expect(rows.single.id, 'server-1');
+      expect(rows.single.ownerId, 'user-a');
+      expect(rows.single.contactId, 'user-b');
+      expect(rows.single.localAlias, 'Alias lokalny');
+    },
+  );
 
-    final now = DateTime.now();
-    await db.into(db.contacts).insert(
-      ContactsCompanion(
-        id: const Value('local-placeholder'),
-        ownerId: const Value('local_user'),
-        contactId: const Value('user-b'),
-        status: const Value('pending'),
-        syncState: const Value('pending_create'),
-        direction: const Value('outgoing'),
-        changeSequence: Value(BigInt.one),
-        localAlias: const Value('Alias lokalny'),
-        encryptedAlias: const Value.absent(),
-        version: Value(BigInt.one),
-        createdAt: Value(now),
-        updatedAt: Value(now),
-        deletedAt: const Value.absent(),
-      ),
-    );
+  test(
+    'Two independent senders to the same recipient stay visible as two rows',
+    () async {
+      final db = _buildDb();
+      addTearDown(db.close);
 
-    final repo = await _buildRepo(db, currentUserId: 'user-a', contacts: [
-      ContactDto(
-        id: 'server-1',
-        ownerId: 'user-a',
-        contactId: 'user-b',
-        status: 'pending',
-        direction: 'outgoing',
-        version: 1,
-        createdAt: now,
-        updatedAt: now,
-      ),
-    ]);
+      final repo = await _buildRepo(
+        db,
+        currentUserId: 'user-b',
+        contacts: [
+          ContactDto(
+            id: 'server-a',
+            ownerId: 'user-a',
+            contactId: 'user-b',
+            status: 'pending',
+            direction: 'outgoing',
+            version: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+          ContactDto(
+            id: 'server-c',
+            ownerId: 'user-c',
+            contactId: 'user-b',
+            status: 'pending',
+            direction: 'outgoing',
+            version: 1,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ],
+      );
 
-    await repo.fetchAndSyncContacts();
+      await repo.fetchAndSyncContacts();
 
-    final rows = await db.select(db.contacts).get();
-    expect(rows, hasLength(1));
-    expect(rows.single.id, 'server-1');
-    expect(rows.single.ownerId, 'user-a');
-    expect(rows.single.contactId, 'user-b');
-    expect(rows.single.localAlias, 'Alias lokalny');
-  });
-
-  test('Two independent senders to the same recipient stay visible as two rows', () async {
-    final db = _buildDb();
-    addTearDown(db.close);
-
-    final repo = await _buildRepo(db, currentUserId: 'user-b', contacts: [
-      ContactDto(
-        id: 'server-a',
-        ownerId: 'user-a',
-        contactId: 'user-b',
-        status: 'pending',
-        direction: 'outgoing',
-        version: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-      ContactDto(
-        id: 'server-c',
-        ownerId: 'user-c',
-        contactId: 'user-b',
-        status: 'pending',
-        direction: 'outgoing',
-        version: 1,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
-    ]);
-
-    await repo.fetchAndSyncContacts();
-
-    final rows = await db.select(db.contacts).get();
-    expect(rows, hasLength(2));
-    expect(
-      rows.map((r) => '${r.ownerId}:${r.contactId}').toSet(),
-      {'user-a:user-b', 'user-c:user-b'},
-    );
-  });
+      final rows = await db.select(db.contacts).get();
+      expect(rows, hasLength(2));
+      expect(rows.map((r) => '${r.ownerId}:${r.contactId}').toSet(), {
+        'user-a:user-b',
+        'user-c:user-b',
+      });
+    },
+  );
 
   test('Accepting a request does not duplicate the relation', () async {
     final db = _buildDb();

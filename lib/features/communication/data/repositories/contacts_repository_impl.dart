@@ -8,7 +8,7 @@ import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
@@ -23,15 +23,18 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
-  final String _currentUserId;
+  final String? _currentUserId;
   final AppLogger _logger = AppLogger();
 
   ContactsRepositoryImpl(
     this._apiClient,
     this._dao,
-    this._outboxDao,
+    this._outboxDao, [
     this._currentUserId,
-  );
+  ]);
+
+  bool get _hasCurrentUserId =>
+      _currentUserId != null && _currentUserId.trim().isNotEmpty;
 
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
@@ -49,50 +52,78 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> fetchAndSyncContacts() async {
+    if (!_hasCurrentUserId) {
+      _logger.w(
+        '[CONTACTS-02] SYNC: pominięto pobieranie kontaktów — brak zalogowanego użytkownika.',
+      );
+      return;
+    }
+
+    final currentUserId = _currentUserId!;
     _logger.i('[CONTACTS-02] SYNC: rozpoczęto pobieranie kontaktów');
     final dtos = await _apiClient.getContacts();
 
     for (final dto in dtos) {
       final placeholder = await _dao.getPendingPlaceholderForRelation(
         contactId: dto.contactId,
-        currentUserId: _currentUserId,
+        currentUserId: currentUserId,
+        relationOwnerId: dto.ownerId,
       );
 
       final companion = dto.toCompanion();
-      final mergedCompanion = placeholder != null && placeholder.localAlias != null
-          ? companion.copyWith(
-              localAlias: Value(placeholder.localAlias!),
-            )
+      final mergedCompanion =
+          placeholder != null && placeholder.localAlias != null
+          ? companion.copyWith(localAlias: Value(placeholder.localAlias!))
           : companion;
 
       await _dao.upsertContacts([mergedCompanion]);
 
       await _dao.removePendingDuplicatesForRelation(
         contactId: dto.contactId,
-        currentUserId: _currentUserId,
+        currentUserId: currentUserId,
+        relationOwnerId: dto.ownerId,
         keepRowId: dto.id,
       );
     }
 
-    _logger.i('[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${dtos.length}');
+    _logger.i(
+      '[CONTACTS-10] UI: stan kontaktów zaktualizowany count=${dtos.length}',
+    );
   }
 
   @override
   Future<void> sendRequest(String targetUserId) async {
+    if (!_hasCurrentUserId) {
+      _logger.w(
+        '[CONTACTS-INVITE-01] REPOSITORY: pominięto wysyłkę zaproszenia — brak zalogowanego użytkownika.',
+      );
+      return;
+    }
+
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
-    _logger.i('[CONTACTS-INVITE-02] REPOSITORY: wysyłka zaproszenia do $normalized');
+    _logger.i(
+      '[CONTACTS-INVITE-02] REPOSITORY: wysyłka zaproszenia do $normalized',
+    );
 
     try {
       await _apiClient.sendContactRequest(normalized);
-      _logger.i('[CONTACTS-INVITE-03] REPOSITORY: backend przyjął zaproszenie dla $normalized');
+      _logger.i(
+        '[CONTACTS-INVITE-03] REPOSITORY: backend przyjął zaproszenie dla $normalized',
+      );
     } catch (error, stackTrace) {
-      _logger.e('[CONTACTS-INVITE-99] REPOSITORY: błąd wysyłki zaproszenia dla $normalized', error: error, stackTrace: stackTrace);
+      _logger.e(
+        '[CONTACTS-INVITE-99] REPOSITORY: błąd wysyłki zaproszenia dla $normalized',
+        error: error,
+        stackTrace: stackTrace,
+      );
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
           stack: stackTrace,
           library: 'contacts_repository_impl',
-          context: ErrorDescription('Failed to send contact request to backend'),
+          context: ErrorDescription(
+            'Failed to send contact request to backend',
+          ),
         ),
       );
       rethrow;
@@ -103,7 +134,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
     final companion = ContactsCompanion(
       id: Value(eventId),
-      ownerId: Value(_currentUserId),
+      ownerId: Value(_currentUserId!),
       contactId: Value(normalized),
       status: const Value('pending'),
       syncState: const Value('pending_create'),
@@ -162,19 +193,36 @@ class ContactsRepositoryImpl implements ContactsRepository {
 
   @override
   Future<void> respondToRequest(String requestId, bool accept) async {
-    _logger.i('[CONTACTS-RESPOND-02] REPOSITORY: rozpoczęto odpowiedź dla $requestId accept=$accept');
+    if (!_hasCurrentUserId) {
+      _logger.w(
+        '[CONTACTS-RESPOND-01] REPOSITORY: pominięto odpowiedź na zaproszenie — brak zalogowanego użytkownika.',
+      );
+      return;
+    }
+
+    _logger.i(
+      '[CONTACTS-RESPOND-02] REPOSITORY: rozpoczęto odpowiedź dla $requestId accept=$accept',
+    );
 
     try {
       await _apiClient.respondToRequest(requestId, accept);
-      _logger.i('[CONTACTS-RESPOND-03] REPOSITORY: backend zaakceptował odpowiedź dla $requestId');
+      _logger.i(
+        '[CONTACTS-RESPOND-03] REPOSITORY: backend zaakceptował odpowiedź dla $requestId',
+      );
     } catch (error, stackTrace) {
-      _logger.e('[CONTACTS-RESPOND-99] REPOSITORY: błąd odpowiedzi dla $requestId', error: error, stackTrace: stackTrace);
+      _logger.e(
+        '[CONTACTS-RESPOND-99] REPOSITORY: błąd odpowiedzi dla $requestId',
+        error: error,
+        stackTrace: stackTrace,
+      );
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
           stack: stackTrace,
           library: 'contacts_repository_impl',
-          context: ErrorDescription('Failed to respond to contact request on backend'),
+          context: ErrorDescription(
+            'Failed to respond to contact request on backend',
+          ),
         ),
       );
       rethrow;
@@ -189,9 +237,9 @@ class ContactsRepositoryImpl implements ContactsRepository {
         status: accept ? 'accepted' : 'blocked',
       );
 
-      await (_dao.update(_dao.contacts)
-            ..where((t) => t.id.equals(requestId)))
-          .write(
+      await (_dao.update(
+        _dao.contacts,
+      )..where((t) => t.id.equals(requestId))).write(
         ContactsCompanion(
           syncState: Value(accept ? 'pending_update' : 'pending_delete'),
           direction: const Value('incoming'),
@@ -231,7 +279,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
-  final currentUserId = ref.watch(currentUserIdProvider);
+  final currentUserId = ref.watch(authControllerProvider).userId;
   return ContactsRepositoryImpl(
     apiClient,
     db.contactsDao,

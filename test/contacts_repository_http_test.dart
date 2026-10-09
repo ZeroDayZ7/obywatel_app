@@ -13,14 +13,14 @@ import 'package:obywatel_plus/features/communication/data/repositories/contacts_
 
 class _FakeApiClient extends ApiClient {
   _FakeApiClient()
-      : super(
-          dio: Dio(),
-          storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            AppLogger(),
-          ),
-          logger: AppLogger(),
-        );
+    : super(
+        dio: Dio(),
+        storage: SecureStorageService(
+          const FlutterSecureStorage(),
+          AppLogger(),
+        ),
+        logger: AppLogger(),
+      );
 }
 
 class FakeContactsApiClient extends ContactsApiClient {
@@ -52,81 +52,144 @@ class FakeContactsApiClient extends ContactsApiClient {
 
 void main() {
   group('ContactsRepositoryImpl', () {
-    test('sendRequest calls backend endpoint before local pending write', () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
+    test(
+      'sendRequest calls backend endpoint before local pending write',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
 
-      final apiClient = FakeContactsApiClient();
-      final repo = ContactsRepositoryImpl(apiClient, db.contactsDao, db.outboxDao);
+        final apiClient = FakeContactsApiClient();
+        final repo = ContactsRepositoryImpl(
+          apiClient,
+          db.contactsDao,
+          db.outboxDao,
+          'user-123',
+        );
 
-      const targetUserId = '123e4567-e89b-12d3-a456-426614174000';
+        const targetUserId = '123e4567-e89b-12d3-a456-426614174000';
 
-      await repo.sendRequest(targetUserId);
+        await repo.sendRequest(targetUserId);
 
-      expect(apiClient.sendRequestCalled, isTrue);
-      expect(apiClient.sentTargetUserId, targetUserId);
-    });
+        expect(apiClient.sendRequestCalled, isTrue);
+        expect(apiClient.sentTargetUserId, targetUserId);
+      },
+    );
 
-    test('respondToRequest calls backend endpoint before local status change', () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
+    test(
+      'respondToRequest calls backend endpoint before local status change',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
 
-      final apiClient = FakeContactsApiClient();
-      final repo = ContactsRepositoryImpl(apiClient, db.contactsDao, db.outboxDao);
+        final apiClient = FakeContactsApiClient();
+        final repo = ContactsRepositoryImpl(
+          apiClient,
+          db.contactsDao,
+          db.outboxDao,
+          'user-123',
+        );
 
-      const requestId = '123e4567-e89b-12d3-a456-426614174001';
+        const requestId = '123e4567-e89b-12d3-a456-426614174001';
 
-      await repo.respondToRequest(requestId, true);
+        await repo.respondToRequest(requestId, true);
 
-      expect(apiClient.respondCalled, isTrue);
-      expect(apiClient.respondedRequestId, requestId);
-      expect(apiClient.respondedAccept, isTrue);
-    });
+        expect(apiClient.respondCalled, isTrue);
+        expect(apiClient.respondedRequestId, requestId);
+        expect(apiClient.respondedAccept, isTrue);
+      },
+    );
 
-    test('fetchAndSyncContacts removes stale pending duplicate after accepted response', () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(db.close);
+    test(
+      'fetchAndSyncContacts removes stale pending duplicate after accepted response',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
 
-      final apiClient = FakeContactsApiClient();
-      apiClient.contactDtos = [
-        ContactDto(
-          id: 'accepted-row-id',
-          ownerId: 'owner-1',
-          contactId: 'user-2',
-          status: 'accepted',
-          direction: 'incoming',
-          version: 2,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
+        final apiClient = FakeContactsApiClient();
+        apiClient.contactDtos = [
+          ContactDto(
+            id: 'accepted-row-id',
+            ownerId: 'owner-1',
+            contactId: 'user-2',
+            status: 'accepted',
+            direction: 'incoming',
+            version: 2,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ];
 
-      final stalePending = ContactsCompanion(
-        id: const Value('pending-row-id'),
-        ownerId: const Value('owner-1'),
-        contactId: const Value('user-2'),
-        status: const Value('pending'),
-        syncState: const Value('synced'),
-        direction: const Value('incoming'),
-        changeSequence: Value(BigInt.one),
-        localAlias: const Value.absent(),
-        encryptedAlias: const Value.absent(),
-        version: Value(BigInt.one),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: const Value.absent(),
-      );
+        final stalePending = ContactsCompanion(
+          id: const Value('pending-row-id'),
+          ownerId: const Value('owner-1'),
+          contactId: const Value('user-2'),
+          status: const Value('pending'),
+          syncState: const Value('synced'),
+          direction: const Value('incoming'),
+          changeSequence: Value(BigInt.one),
+          localAlias: const Value.absent(),
+          encryptedAlias: const Value.absent(),
+          version: Value(BigInt.one),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        );
 
-      await db.contactsDao.upsertContacts([stalePending]);
+        await db.contactsDao.upsertContacts([stalePending]);
 
-      final repo = ContactsRepositoryImpl(apiClient, db.contactsDao, db.outboxDao);
-      await repo.fetchAndSyncContacts();
+        final repo = ContactsRepositoryImpl(
+          apiClient,
+          db.contactsDao,
+          db.outboxDao,
+          'user-2',
+        );
+        await repo.fetchAndSyncContacts();
 
-      final pendingRows = await (db.select(db.contacts)
-            ..where((t) => t.contactId.equals('user-2') & t.status.equals('pending') & t.deletedAt.isNull()))
-          .get();
+        final pendingRows =
+            await (db.select(db.contacts)..where(
+                  (t) =>
+                      t.contactId.equals('user-2') &
+                      t.status.equals('pending') &
+                      t.deletedAt.isNull(),
+                ))
+                .get();
 
-      expect(pendingRows, isEmpty);
-    });
+        expect(pendingRows, isEmpty);
+      },
+    );
+
+    test(
+      'fetchAndSyncContacts handles missing current user without throwing',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(db.close);
+
+        final apiClient = FakeContactsApiClient();
+        apiClient.contactDtos = [
+          ContactDto(
+            id: 'accepted-row-id',
+            ownerId: 'owner-1',
+            contactId: 'user-2',
+            status: 'accepted',
+            direction: 'incoming',
+            version: 2,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
+        ];
+
+        final repo = ContactsRepositoryImpl(
+          apiClient,
+          db.contactsDao,
+          db.outboxDao,
+          null,
+        );
+
+        await repo.fetchAndSyncContacts();
+
+        final rows = await db.select(db.contacts).get();
+        expect(rows, isEmpty);
+      },
+    );
   });
 }
