@@ -267,6 +267,10 @@ class E2eeCryptoService {
   }) async {
     final address = SignalProtocolAddress(remoteUserId, deviceId);
     final sessionExists = await _signalStore.containsSession(address);
+    _logger.i(
+      '[E2EE-FLOW-1] ensureSessionForPeer remoteUserId=$remoteUserId deviceId=$deviceId sessionExists=$sessionExists',
+      module: 'E2eeCrypto',
+    );
     if (sessionExists) {
       return;
     }
@@ -277,10 +281,18 @@ class E2eeCryptoService {
       remoteUserId,
       operationId: effectiveOperationId,
     );
+    _logger.i(
+      '[E2EE-FLOW-1.1] remote pre-key bundle fetched remoteUserId=$remoteUserId deviceId=$deviceId',
+      module: 'E2eeCrypto',
+    );
     await initializeSessionForPeer(
       remoteUserId,
       remoteBundle: remoteBundle,
       deviceId: deviceId,
+    );
+    _logger.i(
+      '[E2EE-FLOW-1.2] Signal session initialized remoteUserId=$remoteUserId deviceId=$deviceId',
+      module: 'E2eeCrypto',
     );
   }
 
@@ -322,8 +334,22 @@ class E2eeCryptoService {
   }
 
   Future<void> registerDeviceIdentityWithOperation(String? operationId) async {
-    if (_deviceIdentityRegistered) return;
+    _logger.i(
+      '[E2EE-FLOW-2] registerDeviceIdentityWithOperation start operationId=${operationId ?? "auto"}',
+      module: 'E2eeCrypto',
+    );
+    if (_deviceIdentityRegistered) {
+      _logger.i(
+        '[E2EE-FLOW-2.1] device identity already registered; skipping',
+        module: 'E2eeCrypto',
+      );
+      return;
+    }
     if (_deviceIdentityRegistrationTask != null) {
+      _logger.i(
+        '[E2EE-FLOW-2.2] device identity registration already in progress; waiting',
+        module: 'E2eeCrypto',
+      );
       await _deviceIdentityRegistrationTask;
       return;
     }
@@ -358,6 +384,10 @@ class E2eeCryptoService {
           headers: headers,
         );
         _deviceIdentityRegistered = true;
+        _logger.i(
+          '[E2EE-FLOW-2.3] device identity uploaded to backend operationId=$effectiveOperationId',
+          module: 'E2eeCrypto',
+        );
       } finally {
         _deviceIdentityRegistrationTask = null;
       }
@@ -384,6 +414,10 @@ class E2eeCryptoService {
     String? senderDeviceId,
     String? operationId,
   }) async {
+    _logger.i(
+      '[E2EE-FLOW-3] encryptOutboundMessage start recipientUserId=$recipientUserId deviceId=$recipientDeviceId plaintext_length=${plaintext.length}',
+      module: 'E2eeCrypto',
+    );
     try {
       final address = SignalProtocolAddress(recipientUserId, recipientDeviceId);
       if (!await _signalStore.containsSession(address)) {
@@ -405,7 +439,7 @@ class E2eeCryptoService {
         Uint8List.fromList(utf8.encode(plaintext)),
       );
 
-      return SignalCiphertextEnvelope(
+      final envelope = SignalCiphertextEnvelope(
         type: cipherText.getType(),
         ciphertext: base64Encode(cipherText.serialize()),
         senderDeviceId:
@@ -413,6 +447,11 @@ class E2eeCryptoService {
         recipientUserId: recipientUserId,
         recipientDeviceId: recipientDeviceId.toString(),
       );
+      _logger.i(
+        '[E2EE-FLOW-3.1] encryptOutboundMessage success recipientUserId=$recipientUserId signal_type=${envelope.type} ciphertext_len=${envelope.ciphertext.length}',
+        module: 'E2eeCrypto',
+      );
+      return envelope;
     } catch (e, st) {
       _logger.e(
         'Błąd szyfrowania wiadomości Signal outbound',
@@ -432,6 +471,10 @@ class E2eeCryptoService {
     required String ciphertextBase64,
     required int type,
   }) async {
+    _logger.i(
+      '[E2EE-FLOW-4] decryptInboundMessage start senderUserId=$senderUserId senderDeviceId=$senderDeviceId signal_type=$type ciphertext_len=${ciphertextBase64.length}',
+      module: 'E2eeCrypto',
+    );
     try {
       final address = SignalProtocolAddress(
         senderUserId,
@@ -451,7 +494,12 @@ class E2eeCryptoService {
         );
       }
 
-      return utf8.decode(plaintext);
+      final decoded = utf8.decode(plaintext);
+      _logger.i(
+        '[E2EE-FLOW-4.1] decryptInboundMessage success senderUserId=$senderUserId plaintext_length=${decoded.length}',
+        module: 'E2eeCrypto',
+      );
+      return decoded;
     } catch (e, st) {
       _logger.e(
         'Błąd odszyfrowywania wiadomości Signal inbound',

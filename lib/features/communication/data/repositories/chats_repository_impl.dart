@@ -245,13 +245,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return null;
     }
 
-    final rows = await (_db.select(_db.conversationMembers)..where(
-      (t) => t.userId.equals(_currentUserId) | t.userId.equals(normalizedPeerId),
-    )).get();
+    final rows =
+        await (_db.select(_db.conversationMembers)..where(
+              (t) =>
+                  t.userId.equals(_currentUserId) |
+                  t.userId.equals(normalizedPeerId),
+            ))
+            .get();
 
     final byConversation = <String, Set<String>>{};
     for (final row in rows) {
-      byConversation.putIfAbsent(row.conversationId, () => <String>{}).add(row.userId);
+      byConversation
+          .putIfAbsent(row.conversationId, () => <String>{})
+          .add(row.userId);
     }
 
     final exactMatches = <String>[];
@@ -273,82 +279,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     return exactMatches.isEmpty ? null : exactMatches.single;
-  }
-
-  Future<void> _repointConversationId(
-    String oldConversationId,
-    String newConversationId,
-  ) async {
-    if (oldConversationId == newConversationId) {
-      return;
-    }
-
-    await _db.transaction(() async {
-      final conversationRow = await (_db.select(
-        _db.conversations,
-      )..where((t) => t.id.equals(oldConversationId))).getSingleOrNull();
-
-      if (conversationRow != null) {
-        await (_db.delete(
-          _db.conversations,
-        )..where((t) => t.id.equals(oldConversationId))).go();
-
-        await _db.chatsDao.upsertConversations([
-          ConversationsCompanion(
-            id: Value(newConversationId),
-            type: Value(conversationRow.type),
-            title: Value(conversationRow.title ?? 'Kontakt'),
-            lastSequence: Value(conversationRow.lastSequence),
-            createdAt: Value(conversationRow.createdAt),
-            updatedAt: Value(DateTime.now()),
-            deletedAt: Value(conversationRow.deletedAt),
-          ),
-        ]);
-      }
-
-      await (_db.update(
-        _db.conversationMembers,
-      )..where((t) => t.conversationId.equals(oldConversationId))).write(
-        ConversationMembersCompanion(
-          conversationId: Value(newConversationId),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-
-      await (_db.update(
-        _db.messages,
-      )..where((t) => t.conversationId.equals(oldConversationId))).write(
-        MessagesCompanion(
-          conversationId: Value(newConversationId),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-
-      final outboxRows = await (_db.select(
-        _db.outboxEvents,
-      )..where((t) => t.conversationId.equals(oldConversationId))).get();
-
-      for (final row in outboxRows) {
-        final payloadData =
-            jsonDecode(row.payload) as Map<String, dynamic>? ?? {};
-        payloadData['conversation_id'] = newConversationId;
-
-        final nested = payloadData['payload'];
-        if (nested is Map<String, dynamic>) {
-          nested['conversation_id'] = newConversationId;
-        }
-
-        await (_db.update(
-          _db.outboxEvents,
-        )..where((t) => t.id.equals(row.id))).write(
-          OutboxEventsCompanion(
-            conversationId: Value(newConversationId),
-            payload: Value(jsonEncode(payloadData)),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      }
-    });
   }
 
   @override
@@ -387,11 +317,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     if (!trimmedConversationId.contains(':')) {
-      throw ArgumentError.value(
-        conversationId,
-        'conversationId',
-        'Conversation must be either a remote UUID or a direct 1:1 user pair',
-      );
+      if (trimmedConversationId == _currentUserId) {
+        throw ArgumentError.value(
+          conversationId,
+          'conversationId',
+          'Conversation does not contain a different peer user id',
+        );
+      }
+      return trimmedConversationId;
     }
 
     return resolveRemoteUserIdForConversation(
@@ -496,13 +429,29 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
   @override
   Future<void> ensureE2eeSessionForContact(String contactUserId) async {
+    _logger.i(
+      '[CHAT-FLOW-1] ensureE2eeSessionForContact start contactUserId=$contactUserId',
+      module: 'ChatsRepository',
+    );
     if (contactUserId.trim().isEmpty) {
       return;
     }
 
     try {
+      _logger.i(
+        '[CHAT-FLOW-1.1] registering device identity before peer session bootstrap',
+        module: 'ChatsRepository',
+      );
       await _cryptoService.registerDeviceIdentity();
+      _logger.i(
+        '[CHAT-FLOW-1.2] creating/confirming Signal session for peer $contactUserId',
+        module: 'ChatsRepository',
+      );
       await _cryptoService.ensureSessionForPeer(contactUserId);
+      _logger.i(
+        '[CHAT-FLOW-1.3] E2EE session ready for contact $contactUserId',
+        module: 'ChatsRepository',
+      );
     } catch (error, stackTrace) {
       _logger.w(
         'Nie udało się zainicjalizować sesji E2EE dla kontaktu $contactUserId',
@@ -559,12 +508,20 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String? beforeId,
     int limit = 50,
   }) async {
+    _logger.i(
+      '[CHAT-FLOW-2] getMessageHistory start conversationId=$conversationId limit=$limit',
+      module: 'ChatsRepository',
+    );
     try {
       final local = await _db.chatsDao.getMessagesForConversation(
         conversationId,
         limit: limit,
       );
       if (local.isNotEmpty) {
+        _logger.i(
+          '[CHAT-FLOW-2.1] local history returned for conversationId=$conversationId count=${local.length}',
+          module: 'ChatsRepository',
+        );
         return local.map(_messageFromEntity).toList();
       }
 
@@ -578,9 +535,17 @@ class ChatsRepositoryImpl implements ChatsRepository {
           .map((dto) => _messageDtoToCompanion(dto))
           .toList();
       if (newMessages.isNotEmpty) {
+        _logger.i(
+          '[CHAT-FLOW-2.2] storing remote history snapshot conversationId=$conversationId count=${newMessages.length}',
+          module: 'ChatsRepository',
+        );
         await _db.chatsDao.upsertMessages(newMessages);
       }
 
+      _logger.i(
+        '[CHAT-FLOW-2.3] history loaded from backend conversationId=$conversationId count=${dtos.length}',
+        module: 'ChatsRepository',
+      );
       return dtos.map((dto) => mapMessageFromDto(dto, _currentUserId)).toList();
     } catch (e, st) {
       _logger.e(
@@ -601,16 +566,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final operationId = const Uuid().v4();
     final createdAt = DateTime.now();
     final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
+    _logger.i(
+      '[CHAT-FLOW-3] sendMessage start conversationId=$conversationId content_length=${content.length} sender_device_id=$senderDeviceId',
+      module: 'ChatsRepository',
+    );
 
     if (content.trim().isEmpty) {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
     final remoteUserId = await resolvePeerUserIdForConversation(conversationId);
-    final canonicalLocalConversationId = buildDirectConversationId(
-      _currentUserId,
-      remoteUserId,
-    );
     final existingConversationId = await _findExistingConversationIdForPeer(
       remoteUserId,
     );
@@ -620,27 +585,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
     String effectiveConversationId =
         existingConversationId ??
-        (isExistingServerConversation
-            ? conversationId
-            : canonicalLocalConversationId);
+        (isExistingServerConversation ? conversationId : conversationId);
+
     if (!isExistingServerConversation) {
       _logger.i(
-        '[CONVERSATION_CREATE_START] localConversationId=$conversationId remoteUserId=$remoteUserId',
-        module: 'ChatsRepository',
-      );
-
-      final createdConversation = await _apiClient.createConversation(
-        type: 'direct',
-        recipientIds: [remoteUserId],
-        title: 'Kontakt',
-      );
-      effectiveConversationId = createdConversation.id;
-      await _repointConversationId(
-        canonicalLocalConversationId,
-        effectiveConversationId,
-      );
-      _logger.i(
-        '[CONVERSATION_CREATE_SUCCESS] localConversationId=$conversationId serverConversationId=$effectiveConversationId remoteUserId=$remoteUserId',
+        '[LOCAL_ONLY_CONVERSATION] localConversationId=$conversationId remoteUserId=$remoteUserId using=$effectiveConversationId',
         module: 'ChatsRepository',
       );
     }
@@ -717,6 +666,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
         updatedAt: Value(createdAt),
       ),
     );
+
+    final isServerBackedConversation = Uuid.isValidUUID(
+      fromString: effectiveConversationId,
+    );
+    if (!isServerBackedConversation) {
+      _logger.i(
+        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversation_id=$effectiveConversationId status=pending',
+        module: 'ChatsRepository',
+      );
+      final localOnlyMessage = message.copyWith(status: 'pending');
+      _incomingMessagesController.add(localOnlyMessage);
+      return;
+    }
 
     final requestPayload = {
       'conversation_id': effectiveConversationId,
@@ -859,6 +821,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
           final decrypted = await _decryptInboundMessage(dto);
           if (decrypted != null) {
             _localPlaintextCache[dto.id] = decrypted;
+            _logger.i(
+              '[CHAT-FLOW-4.1] inbound delta message decrypted conversation_id=${dto.conversationId} message_id=${dto.id}',
+              module: 'ChatsRepository',
+            );
           } else {
             _logger.w(
               'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
@@ -886,6 +852,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
         userId: _currentUserId,
         lastKnownMessageVersion: BigInt.from(nextMessageVersion),
         lastKnownContactVersion: BigInt.from(nextContactVersion),
+      );
+
+      _logger.i(
+        '[CHAT-FLOW-4] syncDeltaFromRemote complete remote_messages=${remoteMessageDtos.length} updated_contacts=${updatedContacts.length}',
+        module: 'ChatsRepository',
       );
 
       return [
@@ -1104,14 +1075,45 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
     final localPlaintext = _localPlaintextCache[entity.id];
+    final normalizedType = entity.type.trim().toLowerCase();
+    final isPlainTextMessage =
+        normalizedType == 'text' || normalizedType == 'plain';
+
+    if (localPlaintext != null) {
+      return Message(
+        id: entity.id,
+        conversationId: entity.conversationId,
+        senderId: entity.senderId,
+        content: localPlaintext,
+        encryptedPayload: ciphertext,
+        isMine: entity.senderId == _currentUserId,
+        createdAt: entity.createdAt,
+        status: status,
+        isEncrypted: !isPlainTextMessage,
+      );
+    }
+
+    if (isPlainTextMessage) {
+      return Message(
+        id: entity.id,
+        conversationId: entity.conversationId,
+        senderId: entity.senderId,
+        content: ciphertext,
+        encryptedPayload: ciphertext,
+        isMine: entity.senderId == _currentUserId,
+        createdAt: entity.createdAt,
+        status: status,
+        isEncrypted: false,
+      );
+    }
+
     const encryptedPlaceholder =
         'Wiadomość zaszyfrowana – oczekiwanie na klucz sesji';
-    final resolvedContent = localPlaintext ?? encryptedPlaceholder;
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
       senderId: entity.senderId,
-      content: resolvedContent,
+      content: encryptedPlaceholder,
       encryptedPayload: ciphertext,
       isMine: entity.senderId == _currentUserId,
       createdAt: entity.createdAt,
