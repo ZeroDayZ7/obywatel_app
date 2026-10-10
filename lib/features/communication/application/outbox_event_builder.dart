@@ -23,11 +23,18 @@ String? _normalizeConversationIdForServer(String conversationId) {
 
 Map<String, dynamic> buildOutboxEventPayload(
   Message message,
-  String deviceId, {
+  String appDeviceId, {
   String? encryptedContent,
   String? outboxEventId,
   int signalType = 1,
 }) {
+  final sanitizedAppDeviceId = appDeviceId.trim();
+  if (sanitizedAppDeviceId.isEmpty) {
+    throw StateError(
+      'App device UUID is required for SEND_MESSAGE outbox payload; never pass a numeric Signal device ID here',
+    );
+  }
+
   final createdAt = message.createdAt.toUtc().toIso8601String();
   final ciphertext = (encryptedContent ?? message.encryptedPayload).trim();
   final safeMessageId = _normalizeUuidString(
@@ -48,8 +55,8 @@ Map<String, dynamic> buildOutboxEventPayload(
     'message_id': safeMessageId,
     'event_type': 'SEND_MESSAGE',
     'conversation_id': normalizedConversationId,
-    'sender_device_id': deviceId,
-    'device_id': deviceId,
+    'sender_device_id': sanitizedAppDeviceId,
+    'device_id': sanitizedAppDeviceId,
     'ciphertext': ciphertext,
     'type': signalType,
     'created_at': createdAt,
@@ -62,8 +69,8 @@ Map<String, dynamic> buildOutboxEventPayload(
     'message_id': safeMessageId,
     'event_type': 'SEND_MESSAGE',
     'conversation_id': normalizedConversationId,
-    'sender_device_id': deviceId,
-    'device_id': deviceId,
+    'sender_device_id': sanitizedAppDeviceId,
+    'device_id': sanitizedAppDeviceId,
     'payload': nestedPayload,
     'type': signalType,
     'created_at': createdAt,

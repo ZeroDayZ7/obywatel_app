@@ -222,8 +222,9 @@ void main() {
         );
         expect(bundle.signedPreKey.length, greaterThan(0));
         expect(bundle.oneTimePreKeys.length, greaterThan(0));
+        expect(bundle.oneTimePreKeys.first.keyId, greaterThan(0));
         expect(
-          base64Decode(bundle.oneTimePreKeys.first).length,
+          base64Decode(bundle.oneTimePreKeys.first.publicKey).length,
           33,
           reason:
               'one_time_pre_keys must also use Signal EC public key format.',

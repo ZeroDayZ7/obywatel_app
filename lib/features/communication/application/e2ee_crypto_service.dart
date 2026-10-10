@@ -16,6 +16,9 @@ import 'package:uuid/uuid.dart';
 
 part 'e2ee_crypto_service.g.dart';
 
+typedef AppDeviceUuid = String;
+typedef SignalDeviceId = int;
+
 class EncryptedData {
   final String ciphertextBase64;
   final String nonceBase64;
@@ -70,6 +73,21 @@ class SignalCiphertextEnvelope {
   }
 }
 
+class OneTimePreKeyRegistration {
+  final int keyId;
+  final String publicKey;
+
+  const OneTimePreKeyRegistration({
+    required this.keyId,
+    required this.publicKey,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'key_id': keyId,
+    'public_key': publicKey,
+  };
+}
+
 class DeviceKeyBundle {
   final String deviceId;
   final int registrationId;
@@ -78,7 +96,7 @@ class DeviceKeyBundle {
   final String signedPreKey;
   final String signedPreKeySignature;
   final int signedPreKeyId;
-  final List<String> oneTimePreKeys;
+  final List<OneTimePreKeyRegistration> oneTimePreKeys;
 
   const DeviceKeyBundle({
     required this.deviceId,
@@ -123,15 +141,37 @@ class E2eeCryptoService {
   static String _signalAddressName(SignalProtocolAddress address) =>
       '${address.getName()}@${address.getDeviceId()}';
 
-  static int resolveSignalDeviceId(String? rawDeviceId, {int? fallback}) {
+  static AppDeviceUuid requireAppDeviceUuid(
+    String? rawAppDeviceId, {
+    String context = 'app_device_id',
+  }) {
+    final normalized = (rawAppDeviceId ?? '').trim();
+    if (normalized.isEmpty) {
+      throw FormatException('Missing $context; raw app device UUID is required');
+    }
+    return normalized;
+  }
+
+  static SignalDeviceId resolveSignalDeviceId(
+    String? rawDeviceId, {
+    SignalDeviceId? fallback,
+  }) {
     final trimmed = (rawDeviceId ?? '').trim();
     if (trimmed.isEmpty) {
       if (fallback != null) return fallback;
-      throw const FormatException('Signal device id is missing');
+      throw const FormatException(
+        'Signal device id is missing; never pass an empty app UUID into Signal session routing',
+      );
     }
 
     final numeric = int.tryParse(trimmed);
     if (numeric != null) {
+      if (numeric <= 0) {
+        if (fallback != null) return fallback;
+        throw const FormatException(
+          'Signal device id must be > 0; zero or negative IDs are invalid for Signal addresses',
+        );
+      }
       return numeric;
     }
 
@@ -144,9 +184,19 @@ class E2eeCryptoService {
       return fallback;
     }
     if (normalized == 0) {
-      throw const FormatException('Signal device id resolved to zero');
+      throw const FormatException(
+        'Signal device id resolved to zero after hashing; this indicates an invalid app device UUID was provided to Signal',
+      );
     }
     return normalized;
+  }
+
+  static SignalDeviceId resolveSignalDeviceIdFromAppUuid(
+    AppDeviceUuid? rawAppDeviceUuid, {
+    SignalDeviceId? fallback,
+  }) {
+    final appDeviceUuid = requireAppDeviceUuid(rawAppDeviceUuid, context: 'app_device_id');
+    return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
   }
 
   static String fingerprintIdentityKey(IdentityKey? identityKey) {
@@ -448,9 +498,14 @@ class E2eeCryptoService {
     for (final record in oneTimePreKeys) {
       await _signalStore.storePreKey(record.id, record);
     }
-    final oneTimePreKeyPublics = oneTimePreKeys
+    final oneTimePreKeyRegistrations = oneTimePreKeys
         .map(
-          (record) => base64Encode(record.getKeyPair().publicKey.serialize()),
+          (record) => OneTimePreKeyRegistration(
+            keyId: record.id,
+            publicKey: base64Encode(
+              record.getKeyPair().publicKey.serialize(),
+            ),
+          ),
         )
         .toList();
 
@@ -464,7 +519,7 @@ class E2eeCryptoService {
       ),
       signedPreKeySignature: base64Encode(signedPreKey.signature),
       signedPreKeyId: signedPreKey.id,
-      oneTimePreKeys: oneTimePreKeyPublics,
+      oneTimePreKeys: oneTimePreKeyRegistrations,
     );
   }
 
@@ -526,7 +581,9 @@ class E2eeCryptoService {
           'signed_pre_key': bundle.signedPreKey,
           'signed_pre_key_sig': bundle.signedPreKeySignature,
           'signed_pre_key_id': bundle.signedPreKeyId,
-          'one_time_pre_keys': bundle.oneTimePreKeys,
+          'one_time_pre_keys': bundle.oneTimePreKeys
+              .map((preKey) => preKey.toJson())
+              .toList(),
         };
 
         if (payload.containsKey('private_key') ||
@@ -679,19 +736,17 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    if (senderDeviceId.trim().isEmpty) {
-      throw const FormatException('Missing sender device id for Signal decrypt');
-    }
-    final signalDeviceId = resolveSignalDeviceId(senderDeviceId);
+    final senderAppDeviceId = requireAppDeviceUuid(
+      senderDeviceId,
+      context: 'sender_device_id',
+    );
+    final signalDeviceId = resolveSignalDeviceIdFromAppUuid(senderAppDeviceId);
     final address = SignalProtocolAddress(senderUserId, signalDeviceId);
     _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_device_id=$senderDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
+      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_app_device_id=$senderAppDeviceId signal_device_id=$signalDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
       module: 'E2eeCrypto',
     );
     try {
-      if (senderDeviceId.trim().isEmpty) {
-        throw const FormatException('Missing sender device id for Signal decrypt');
-      }
       final trustedIdentity = await _signalStore.getIdentity(address);
       _logger.i(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_identity_loaded event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} trusted_identity_fingerprint=${fingerprintIdentityKey(trustedIdentity)}',

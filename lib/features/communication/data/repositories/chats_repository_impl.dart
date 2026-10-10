@@ -565,9 +565,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }) async {
     final operationId = const Uuid().v4();
     final createdAt = DateTime.now();
-    final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
+    final senderAppDeviceId = await _deviceInfoService.getOrCreateDeviceId();
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversation_id=$conversationId local_user_id=$_currentUserId app_device_id=$senderDeviceId content_length=${content.length}',
+      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversation_id=$conversationId local_user_id=$_currentUserId app_device_id=$senderAppDeviceId content_length=${content.length}',
       module: 'ChatsRepository',
     );
 
@@ -663,7 +663,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(
         message,
-        senderDeviceId: senderDeviceId,
+        senderDeviceId: senderAppDeviceId,
         encryptedContent: encrypted.ciphertextBase64,
         signalType: encrypted.type,
       ),
@@ -681,7 +681,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final outboxEventPayload = buildOutboxEventPayload(
       message,
-      senderDeviceId,
+      senderAppDeviceId,
       encryptedContent: encrypted.ciphertextBase64,
       outboxEventId: outboxEventId,
       signalType: encrypted.type,
@@ -705,7 +705,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final requestPayload = {
       'conversation_id': effectiveConversationId,
-      'sender_device_id': senderDeviceId,
+      'sender_device_id': senderAppDeviceId,
       'ciphertext': encrypted.ciphertextBase64,
       'type': encrypted.type,
       'idempotency_key': message.id,
@@ -714,7 +714,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       effectiveConversationId,
     );
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversation_id=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
+      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversation_id=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderAppDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
       module: 'ChatsRepository',
     );
 
