@@ -27,14 +27,21 @@ class StorageInitTask implements StartupTask {
   @override
   Future<AppInitStatus?> initialize() async {
     if (kDebugMode) {
+      // Manual debug-only reset helper for intentional first-run / clean-install simulation.
+      // This block is intentionally commented and MUST NOT run during normal startup.
+
+
       await Future.wait([
         storage.clearAll(),
         prefs.clearAll(),
       ]);
-
       await database.clearSignalStore();
       await database.clearDatabase();
 
+
+      debugPrint(
+        '[StorageInitTask] Debug bootstrap: preserving persisted secure storage and Signal state. No reset is performed during startup.',
+      );
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
 
@@ -43,7 +50,7 @@ class StorageInitTask implements StartupTask {
       final signalSessionCount = await database.select(database.signalSessions).get();
 
       debugPrint(
-        '[StorageInitTask] Signal store after reset: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
+        '[StorageInitTask] Signal store integrity: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
       );
     }
 

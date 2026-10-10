@@ -19,6 +19,26 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
       final action = payloadMap?['action']?.toString() ??
           payloadMap?['event_type']?.toString();
 
+      final isMessageEvent =
+          (event.eventType.value == 'SEND_MESSAGE') ||
+          (action == 'SEND_MESSAGE');
+      final conversationId =
+          payloadMap?['conversation_id']?.toString() ?? event.conversationId.value;
+      final payloadMapValue = payloadMap?['payload'];
+      final ciphertext = payloadMap?['ciphertext']?.toString() ??
+          (payloadMapValue is Map
+              ? (payloadMapValue)['ciphertext']?.toString()
+              : null);
+
+      if (isMessageEvent &&
+          (conversationId == null || conversationId.trim().isEmpty ||
+              (ciphertext == null || ciphertext.trim().isEmpty))) {
+        print(
+          '[OUTBOX-DAO-REJECTED] refusing to enqueue invalid SEND_MESSAGE event without conversation_id or ciphertext. event_id=${event.id.value} payload_event_type=${action ?? event.eventType.value}',
+        );
+        return;
+      }
+
       if (targetId == null) {
         await into(outboxEvents).insert(event);
         return;

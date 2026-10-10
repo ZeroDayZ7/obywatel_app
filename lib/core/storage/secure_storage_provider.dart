@@ -9,7 +9,9 @@ part 'secure_storage_provider.g.dart';
 SecureStorageService secureStorage(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
 
-  const androidOptions = AndroidOptions(resetOnError: true);
+  const androidOptions = AndroidOptions(
+    resetOnError: false,
+  );
 
   const storage = FlutterSecureStorage(aOptions: androidOptions);
 

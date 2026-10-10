@@ -481,10 +481,50 @@ class E2eeCryptoService {
     return const Uuid().v4();
   }
 
+  Future<bool> _hasPersistedDeviceIdentityMaterial() async {
+    final hasSignedPreKey = await _signalStore.containsSignedPreKey(1);
+    final preKeyChecks = await Future.wait(
+      List<int>.generate(10, (index) => index + 1)
+          .map((preKeyId) => _signalStore.containsPreKey(preKeyId)),
+    );
+    final hasOneTimePreKeys = preKeyChecks.every((exists) => exists);
+    return hasSignedPreKey && hasOneTimePreKeys;
+  }
+
   Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final registrationId = await _signalStore.getLocalRegistrationId();
     final identityKeyPair = await _signalStore.getIdentityKeyPair();
+    final hasPersistedState = await _hasPersistedDeviceIdentityMaterial();
+
+    if (hasPersistedState) {
+      final signedPreKey = await _signalStore.loadSignedPreKey(1);
+      final oneTimePreKeys = await Future.wait(
+        List<int>.generate(10, (index) => index + 1).map((preKeyId) async {
+          final record = await _signalStore.loadPreKey(preKeyId);
+          return OneTimePreKeyRegistration(
+            keyId: preKeyId,
+            publicKey: base64Encode(
+              record.getKeyPair().publicKey.serialize(),
+            ),
+          );
+        }),
+      );
+
+      return DeviceKeyBundle(
+        deviceId: deviceId,
+        registrationId: registrationId,
+        publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
+        privateKey: base64Encode(identityKeyPair.getPrivateKey().serialize()),
+        signedPreKey: base64Encode(
+          signedPreKey.getKeyPair().publicKey.serialize(),
+        ),
+        signedPreKeySignature: base64Encode(signedPreKey.signature),
+        signedPreKeyId: signedPreKey.id,
+        oneTimePreKeys: oneTimePreKeys,
+      );
+    }
+
     final signedPreKey = generateSignedPreKey(identityKeyPair, 1);
     await _signalStore.storeSignedPreKey(signedPreKey.id, signedPreKey);
 
@@ -545,6 +585,9 @@ class E2eeCryptoService {
 
     _deviceIdentityRegistrationTask = () async {
       try {
+        final persistedMarker = await _secureStorage.read(
+          key: 'e2ee_device_registration_marker',
+        );
         final bundle = await ensureDeviceIdentityBundle();
         final marker = {
           'device_id': bundle.deviceId,
@@ -555,16 +598,19 @@ class E2eeCryptoService {
           'signed_pre_key_id': bundle.signedPreKeyId,
         }.toString();
 
-        final persistedMarker = await _secureStorage.read(
-          key: 'e2ee_device_registration_marker',
-        );
-        if (persistedMarker != null && persistedMarker == marker) {
-          _deviceIdentityRegistered = true;
-          _logger.i(
-            '[E2EE-FLOW-2.3] device identity already published for this installation; skipping duplicate registration',
-            module: 'E2eeCrypto',
+        if (persistedMarker != null) {
+          if (persistedMarker == marker) {
+            _deviceIdentityRegistered = true;
+            _logger.i(
+              '[E2EE-FLOW-2.3] device identity already published for this installation; skipping duplicate registration',
+              module: 'E2eeCrypto',
+            );
+            return;
+          }
+
+          throw StateError(
+            'Persisted device registration marker exists but does not match the current local Signal identity material. Explicit re-registration is required; no silent regeneration or trust reset is allowed.',
           );
-          return;
         }
 
         final payload = {

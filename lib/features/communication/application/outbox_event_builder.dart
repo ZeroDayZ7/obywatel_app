@@ -49,6 +49,18 @@ Map<String, dynamic> buildOutboxEventPayload(
     message.conversationId,
   );
 
+  if (normalizedConversationId == null || normalizedConversationId.isEmpty) {
+    throw StateError(
+      'SEND_MESSAGE outbox payload requires a valid conversation UUID and ciphertext. Refusing to create an invalid outbox record.',
+    );
+  }
+
+  if (ciphertext.isEmpty) {
+    throw StateError(
+      'SEND_MESSAGE outbox payload requires a non-empty ciphertext. Refusing to create an invalid outbox record.',
+    );
+  }
+
   final nestedPayload = {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
