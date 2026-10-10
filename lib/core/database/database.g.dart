@@ -3672,9 +3672,9 @@ class $MessagesTable extends Messages
   late final GeneratedColumn<BigInt> sequence = GeneratedColumn<BigInt>(
     'sequence',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.bigInt,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _encryptedPayloadMeta = const VerificationMeta(
     'encryptedPayload',
@@ -3831,8 +3831,6 @@ class $MessagesTable extends Messages
         _sequenceMeta,
         sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sequenceMeta);
     }
     if (data.containsKey('encrypted_payload')) {
       context.handle(
@@ -3916,7 +3914,7 @@ class $MessagesTable extends Messages
       sequence: attachedDatabase.typeMapping.read(
         DriftSqlType.bigInt,
         data['${effectivePrefix}sequence'],
-      )!,
+      ),
       encryptedPayload: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}encrypted_payload'],
@@ -3960,7 +3958,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
   final String senderId;
   final String senderDeviceId;
   final String type;
-  final BigInt sequence;
+  final BigInt? sequence;
   final Uint8List encryptedPayload;
   final Uint8List? mediaHeader;
   final BigInt version;
@@ -3974,7 +3972,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     required this.senderId,
     required this.senderDeviceId,
     required this.type,
-    required this.sequence,
+    this.sequence,
     required this.encryptedPayload,
     this.mediaHeader,
     required this.version,
@@ -3991,7 +3989,9 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     map['sender_id'] = Variable<String>(senderId);
     map['sender_device_id'] = Variable<String>(senderDeviceId);
     map['type'] = Variable<String>(type);
-    map['sequence'] = Variable<BigInt>(sequence);
+    if (!nullToAbsent || sequence != null) {
+      map['sequence'] = Variable<BigInt>(sequence);
+    }
     map['encrypted_payload'] = Variable<Uint8List>(encryptedPayload);
     if (!nullToAbsent || mediaHeader != null) {
       map['media_header'] = Variable<Uint8List>(mediaHeader);
@@ -4013,7 +4013,9 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderId: Value(senderId),
       senderDeviceId: Value(senderDeviceId),
       type: Value(type),
-      sequence: Value(sequence),
+      sequence: sequence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sequence),
       encryptedPayload: Value(encryptedPayload),
       mediaHeader: mediaHeader == null && nullToAbsent
           ? const Value.absent()
@@ -4039,7 +4041,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderId: serializer.fromJson<String>(json['senderId']),
       senderDeviceId: serializer.fromJson<String>(json['senderDeviceId']),
       type: serializer.fromJson<String>(json['type']),
-      sequence: serializer.fromJson<BigInt>(json['sequence']),
+      sequence: serializer.fromJson<BigInt?>(json['sequence']),
       encryptedPayload: serializer.fromJson<Uint8List>(
         json['encryptedPayload'],
       ),
@@ -4060,7 +4062,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       'senderId': serializer.toJson<String>(senderId),
       'senderDeviceId': serializer.toJson<String>(senderDeviceId),
       'type': serializer.toJson<String>(type),
-      'sequence': serializer.toJson<BigInt>(sequence),
+      'sequence': serializer.toJson<BigInt?>(sequence),
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
       'mediaHeader': serializer.toJson<Uint8List?>(mediaHeader),
       'version': serializer.toJson<BigInt>(version),
@@ -4077,7 +4079,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     String? senderId,
     String? senderDeviceId,
     String? type,
-    BigInt? sequence,
+    Value<BigInt?> sequence = const Value.absent(),
     Uint8List? encryptedPayload,
     Value<Uint8List?> mediaHeader = const Value.absent(),
     BigInt? version,
@@ -4091,7 +4093,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     senderId: senderId ?? this.senderId,
     senderDeviceId: senderDeviceId ?? this.senderDeviceId,
     type: type ?? this.type,
-    sequence: sequence ?? this.sequence,
+    sequence: sequence.present ? sequence.value : this.sequence,
     encryptedPayload: encryptedPayload ?? this.encryptedPayload,
     mediaHeader: mediaHeader.present ? mediaHeader.value : this.mediaHeader,
     version: version ?? this.version,
@@ -4190,7 +4192,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
   final Value<String> senderId;
   final Value<String> senderDeviceId;
   final Value<String> type;
-  final Value<BigInt> sequence;
+  final Value<BigInt?> sequence;
   final Value<Uint8List> encryptedPayload;
   final Value<Uint8List?> mediaHeader;
   final Value<BigInt> version;
@@ -4221,7 +4223,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     required String senderId,
     required String senderDeviceId,
     this.type = const Value.absent(),
-    required BigInt sequence,
+    this.sequence = const Value.absent(),
     required Uint8List encryptedPayload,
     this.mediaHeader = const Value.absent(),
     this.version = const Value.absent(),
@@ -4234,7 +4236,6 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
        conversationId = Value(conversationId),
        senderId = Value(senderId),
        senderDeviceId = Value(senderDeviceId),
-       sequence = Value(sequence),
        encryptedPayload = Value(encryptedPayload);
   static Insertable<MessageEntity> custom({
     Expression<String>? id,
@@ -4276,7 +4277,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Value<String>? senderId,
     Value<String>? senderDeviceId,
     Value<String>? type,
-    Value<BigInt>? sequence,
+    Value<BigInt?>? sequence,
     Value<Uint8List>? encryptedPayload,
     Value<Uint8List?>? mediaHeader,
     Value<BigInt>? version,
@@ -8814,7 +8815,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required String senderId,
       required String senderDeviceId,
       Value<String> type,
-      required BigInt sequence,
+      Value<BigInt?> sequence,
       required Uint8List encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
@@ -8831,7 +8832,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String> senderId,
       Value<String> senderDeviceId,
       Value<String> type,
-      Value<BigInt> sequence,
+      Value<BigInt?> sequence,
       Value<Uint8List> encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
@@ -9085,7 +9086,7 @@ class $$MessagesTableTableManager
                 Value<String> senderId = const Value.absent(),
                 Value<String> senderDeviceId = const Value.absent(),
                 Value<String> type = const Value.absent(),
-                Value<BigInt> sequence = const Value.absent(),
+                Value<BigInt?> sequence = const Value.absent(),
                 Value<Uint8List> encryptedPayload = const Value.absent(),
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
@@ -9117,7 +9118,7 @@ class $$MessagesTableTableManager
                 required String senderId,
                 required String senderDeviceId,
                 Value<String> type = const Value.absent(),
-                required BigInt sequence,
+                Value<BigInt?> sequence = const Value.absent(),
                 required Uint8List encryptedPayload,
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),

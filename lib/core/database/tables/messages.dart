@@ -10,8 +10,10 @@ class Messages extends Table {
   // Typ wiadomości: 'text', 'media', 'system'
   TextColumn get type => text().withDefault(const Constant('text'))();
   
-  // Monotoniczny numer sekwencyjny w danej konwersacji
-  Int64Column get sequence => int64()();
+  // Monotoniczny numer sekwencyjny w danej konwersacji.
+  // Lokalnie tworzone wiadomości oczekujące na synchronizację mają sequence null,
+  // ponieważ sekwencję nadaje wyłącznie serwer po zsyncowaniu delta.
+  Int64Column get sequence => int64().nullable()();
   
   // Zaszyfrowany ładunek wiadomości (AES-GCM / Signal Protocol)
   BlobColumn get encryptedPayload => blob()();

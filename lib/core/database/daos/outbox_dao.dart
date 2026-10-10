@@ -11,87 +11,91 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
   OutboxDao(super.db);
 
   Future<void> enqueueEvent(OutboxEventsCompanion event) async {
-    // Compaction rules: we keep OutboxEvents table schema unchanged and
-    // rely on JSON `payload` to identify the target notification id and action.
-    // If there are existing pending events for the same notification that are
-    // redundant or cancel each other out, we update/delete them instead of
-    // inserting a new row.
     try {
       final payloadJson = event.payload.value;
-      String? targetId;
-      String? action;
-
-      // Try to extract id and action from JSON payload
-      try {
-        if (payloadJson.isNotEmpty) {
-          final Map<String, dynamic> data = jsonDecode(payloadJson) as Map<String, dynamic>;
-          targetId = data['id']?.toString() ?? data['entity_id']?.toString();
-          action = data['action']?.toString() ?? data['event_type']?.toString();
-        }
-      } catch (_) {
-        // ignore parsing errors; fall back to inserting event
-      }
+      final payloadMap = _readPayloadMap(payloadJson);
+      final targetId = payloadMap?['id']?.toString() ??
+          payloadMap?['entity_id']?.toString();
+      final action = payloadMap?['action']?.toString() ??
+          payloadMap?['event_type']?.toString();
 
       if (targetId == null) {
         await into(outboxEvents).insert(event);
         return;
       }
 
-      // Fetch pending events and filter those that reference same id
       final pending = await (select(outboxEvents)
             ..where((t) => t.status.equals('pending'))
             ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
           .get();
 
-      final related = pending.where((e) {
-        try {
-          final Map<String, dynamic> d = jsonDecode(e.payload) as Map<String, dynamic>;
-          return d['id']?.toString() == targetId;
-        } catch (_) {
-          return false;
-        }
+      final related = pending.where((row) {
+        final next = _readPayloadMap(row.payload);
+        return next?['id']?.toString() == targetId ||
+            next?['entity_id']?.toString() == targetId;
       }).toList();
 
-      // 1) coalesce multiple mark_read -> keep first pending mark_read only
-      if (action == 'mark_read' && related.any((e) => e.eventType == 'notification.mark_read')) {
+      if (action == 'mark_read' &&
+          related.any((row) => row.eventType == 'notification.mark_read')) {
         return;
       }
 
       if ((action == 'ADD_CONTACT' || action == 'RESPOND_CONTACT') &&
-          related.any((e) => e.eventType == action)) {
+          related.any((row) => row.eventType == action)) {
         return;
       }
 
-      // 2) move_to_trash then restore -> cancel both
-      if (action == 'restore' && related.any((e) => e.eventType == 'notification.move_to_trash')) {
+      if (action == 'restore' &&
+          related.any((row) => row.eventType == 'notification.move_to_trash')) {
         final idsToDelete = related
-            .where((e) => e.eventType == 'notification.move_to_trash')
-            .map((e) => e.id)
+            .where((row) => row.eventType == 'notification.move_to_trash')
+            .map((row) => row.id)
             .toList();
         if (idsToDelete.isNotEmpty) {
-          await (delete(outboxEvents)..where((t) => t.id.isIn(idsToDelete))).go();
+          await (delete(outboxEvents)
+                ..where((t) => t.id.isIn(idsToDelete)))
+              .go();
           return;
         }
       }
 
-      // 3) delete after move_to_trash -> remove move_to_trash, insert delete
-      if (action == 'delete' && related.any((e) => e.eventType == 'notification.move_to_trash')) {
+      if (action == 'delete' &&
+          related.any((row) => row.eventType == 'notification.move_to_trash')) {
         final idsToDelete = related
-            .where((e) => e.eventType == 'notification.move_to_trash')
-            .map((e) => e.id)
+            .where((row) => row.eventType == 'notification.move_to_trash')
+            .map((row) => row.id)
             .toList();
         if (idsToDelete.isNotEmpty) {
-          await (delete(outboxEvents)..where((t) => t.id.isIn(idsToDelete))).go();
+          await (delete(outboxEvents)
+                ..where((t) => t.id.isIn(idsToDelete)))
+              .go();
         }
         await into(outboxEvents).insert(event);
         return;
       }
 
-      // Default: insert event
       await into(outboxEvents).insert(event);
-    } catch (e) {
-      // Fallback: ensure event is persisted if compaction logic fails
+    } catch (_) {
       await into(outboxEvents).insert(event);
+    }
+  }
+
+  Map<String, dynamic>? _readPayloadMap(String rawJson) {
+    if (rawJson.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(rawJson);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 

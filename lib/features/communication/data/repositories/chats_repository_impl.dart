@@ -188,6 +188,22 @@ int resolveLastKnownContactVersion(
   return maxVersion;
 }
 
+int normalizeSignalType(String? rawType, {int fallback = 1}) {
+  if (rawType == null || rawType.trim().isEmpty) {
+    return fallback;
+  }
+
+  final parsed = int.tryParse(rawType.trim());
+  if (parsed != null) {
+    return parsed;
+  }
+
+  final normalized = rawType.trim().toLowerCase();
+  if (normalized.contains('pre')) return 3;
+  if (normalized.contains('signal') || normalized.contains('cipher')) return 2;
+  return fallback;
+}
+
 class ChatsRepositoryImpl implements ChatsRepository {
   final ChatsApiClient _apiClient;
   final AppDatabase _db;
@@ -621,7 +637,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final message = Message(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: const Uuid().v4(),
       conversationId: effectiveConversationId,
       senderId: _currentUserId,
       content: content,
@@ -631,16 +647,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
       status: 'pending',
       isEncrypted: true,
     );
+    final isServerBackedConversation = Uuid.isValidUUID(
+      fromString: effectiveConversationId,
+    );
     final outboxEventId = buildOutboxEventIdForMessage(message: message);
     _localPlaintextCache[message.id] = content;
-
-    final outboxEventPayload = buildOutboxEventPayload(
-      message,
-      senderDeviceId,
-      encryptedContent: encrypted.ciphertextBase64,
-      outboxEventId: outboxEventId,
-      signalType: encrypted.type,
-    );
 
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(
@@ -650,6 +661,24 @@ class ChatsRepositoryImpl implements ChatsRepository {
         signalType: encrypted.type,
       ),
     ]);
+
+    if (!isServerBackedConversation) {
+      _logger.i(
+        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversation_id=$effectiveConversationId status=pending',
+        module: 'ChatsRepository',
+      );
+      final localOnlyMessage = message.copyWith(status: 'pending');
+      _incomingMessagesController.add(localOnlyMessage);
+      return;
+    }
+
+    final outboxEventPayload = buildOutboxEventPayload(
+      message,
+      senderDeviceId,
+      encryptedContent: encrypted.ciphertextBase64,
+      outboxEventId: outboxEventId,
+      signalType: encrypted.type,
+    );
 
     await _db.outboxDao.enqueueEvent(
       OutboxEventsCompanion(
@@ -666,19 +695,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         updatedAt: Value(createdAt),
       ),
     );
-
-    final isServerBackedConversation = Uuid.isValidUUID(
-      fromString: effectiveConversationId,
-    );
-    if (!isServerBackedConversation) {
-      _logger.i(
-        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversation_id=$effectiveConversationId status=pending',
-        module: 'ChatsRepository',
-      );
-      final localOnlyMessage = message.copyWith(status: 'pending');
-      _incomingMessagesController.add(localOnlyMessage);
-      return;
-    }
 
     final requestPayload = {
       'conversation_id': effectiveConversationId,
@@ -955,75 +971,49 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
   Future<String?> _decryptInboundMessage(MessageDto dto) async {
     final ciphertext = dto.encryptedPayload.trim();
+    final senderDeviceId = dto.senderDeviceId?.trim();
+    final signalType = normalizeSignalType(dto.type);
+
     if (ciphertext.isEmpty) {
+      _logger.w(
+        'Odrzucam wiadomość wejściową bez ciphertext: message_id=${dto.id} conversation_id=${dto.conversationId}',
+        module: 'ChatsRepository',
+      );
       return null;
     }
 
-    final candidates = <String>{
-      dto.senderDeviceId?.trim() ?? '1',
-      '1',
-      '2',
-      '3',
-      '4',
-    };
-    final signalTypes = <int>{_signalMessageTypeFromDto(dto.type), 3, 2, 1};
+    if (senderDeviceId == null || senderDeviceId.isEmpty) {
+      _logger.w(
+        'Odrzucam wiadomość wejściową bez senderDeviceId: message_id=${dto.id} conversation_id=${dto.conversationId}',
+        module: 'ChatsRepository',
+      );
+      return null;
+    }
 
-    for (final senderDeviceId in candidates) {
-      for (final signalType in signalTypes) {
-        try {
-          final plaintext = await _cryptoService.decryptInboundMessage(
-            senderUserId: dto.senderId,
-            senderDeviceId: senderDeviceId,
-            ciphertextBase64: ciphertext,
-            type: signalType,
-          );
-          return plaintext;
-        } on Exception catch (error, stackTrace) {
-          _logger.w(
-            'decryptInboundMessage failed for message ${dto.id}; device_id=$senderDeviceId type=$signalType',
-            error: error,
-            stackTrace: stackTrace,
-            module: 'ChatsRepository',
-          );
-        }
-      }
+    if (signalType <= 0) {
+      _logger.w(
+        'Odrzucam wiadomość wejściową z niepoprawnym wiadomoType: message_id=${dto.id} type=${dto.type}',
+        module: 'ChatsRepository',
+      );
+      return null;
     }
 
     try {
-      return await _cryptoService.decryptMessage(
-        dto.conversationId,
-        ciphertext,
-        '',
+      return await _cryptoService.decryptInboundMessage(
+        senderUserId: dto.senderId,
+        senderDeviceId: senderDeviceId,
+        ciphertextBase64: ciphertext,
+        type: signalType,
       );
     } catch (error, stackTrace) {
       _logger.w(
-        'decryptMessage fallback failed for inbound message ${dto.id}',
+        'Inbound decrypt rejected for message ${dto.id}; device_id=$senderDeviceId type=$signalType',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
       );
       return null;
     }
-  }
-
-  int _signalMessageTypeFromDto(String? rawType) {
-    if (rawType == null || rawType.trim().isEmpty) {
-      return 1;
-    }
-
-    final parsed = int.tryParse(rawType);
-    if (parsed != null) {
-      return parsed;
-    }
-
-    final normalized = rawType.toLowerCase();
-    if (normalized.contains('pre')) {
-      return 3;
-    }
-    if (normalized.contains('signal') || normalized.contains('cipher')) {
-      return 2;
-    }
-    return 1;
   }
 
   MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
@@ -1057,7 +1047,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       senderId: Value(message.senderId),
       senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
       type: Value(signalType?.toString() ?? 'text'),
-      sequence: Value(BigInt.from(DateTime.now().millisecondsSinceEpoch)),
+      sequence: const Value.absent(),
       encryptedPayload: Value(utf8.encode(ciphertext)),
       mediaHeader: const Value.absent(),
       version: Value(BigInt.one),

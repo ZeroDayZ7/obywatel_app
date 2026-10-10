@@ -12,6 +12,7 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_api_
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:uuid/uuid.dart';
 
 Map<String, dynamic> messageToOutboxJson(
   Message message,
@@ -97,11 +98,19 @@ class ChatSyncService {
       final hasCiphertext =
           message.encryptedPayload.trim().isNotEmpty ||
           message.content.trim().isNotEmpty;
+      final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
+      final hasValidServerConversationId = Uuid.isValidUUID(
+        fromString: message.conversationId,
+      );
 
-      if (!hasConversationId || !hasCiphertext) {
+      if (!hasConversationId ||
+          !hasCiphertext ||
+          !hasValidMessageUuid ||
+          !hasValidServerConversationId) {
         _logger.w(
           'Pomijam niepoprawne zdarzenie outbox: message_id=${message.id} '
-          'conversation_id=${message.conversationId} ciphertext_present=$hasCiphertext',
+          'conversation_id=${message.conversationId} ciphertext_present=$hasCiphertext '
+          'message_uuid=$hasValidMessageUuid server_conversation_uuid=$hasValidServerConversationId',
           module: 'ChatSync',
         );
         return false;

@@ -4,12 +4,24 @@ import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:uuid/uuid.dart';
 
-String buildOutboxEventIdForMessage({required Message message}) {
-  final value = message.id.trim();
-  if (value.isEmpty) {
-    return const Uuid().v7();
+String _normalizeUuidString(String value, {String? fallback}) {
+  final trimmed = value.trim();
+  if (trimmed.isNotEmpty && Uuid.isValidUUID(fromString: trimmed)) {
+    return trimmed;
   }
-  return value;
+  return fallback ?? const Uuid().v4();
+}
+
+String buildOutboxEventIdForMessage({required Message message}) {
+  return _normalizeUuidString(message.id, fallback: const Uuid().v4());
+}
+
+String? _normalizeConversationIdForServer(String conversationId) {
+  final trimmed = conversationId.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+  return Uuid.isValidUUID(fromString: trimmed) ? trimmed : null;
 }
 
 Map<String, dynamic> buildOutboxEventPayload(
@@ -24,15 +36,24 @@ Map<String, dynamic> buildOutboxEventPayload(
   final payloadContent = message.content.trim().isNotEmpty
       ? message.content
       : ciphertext;
-  final safeOutboxEventId =
-      outboxEventId ?? buildOutboxEventIdForMessage(message: message);
+  final safeMessageId = _normalizeUuidString(
+    message.id,
+    fallback: const Uuid().v4(),
+  );
+  final safeOutboxEventId = _normalizeUuidString(
+    outboxEventId ?? message.id,
+    fallback: const Uuid().v4(),
+  );
+  final normalizedConversationId = _normalizeConversationIdForServer(
+    message.conversationId,
+  );
 
   final nestedPayload = {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
-    'message_id': message.id,
+    'message_id': safeMessageId,
     'event_type': 'SEND_MESSAGE',
-    'conversation_id': message.conversationId,
+    'conversation_id': normalizedConversationId,
     'sender_device_id': deviceId,
     'device_id': deviceId,
     'ciphertext': ciphertext,
@@ -45,9 +66,9 @@ Map<String, dynamic> buildOutboxEventPayload(
   final event = {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
-    'message_id': message.id,
+    'message_id': safeMessageId,
     'event_type': 'SEND_MESSAGE',
-    'conversation_id': message.conversationId,
+    'conversation_id': normalizedConversationId,
     'sender_device_id': deviceId,
     'device_id': deviceId,
     'payload': nestedPayload,

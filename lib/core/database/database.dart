@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 9;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -104,6 +104,16 @@ class AppDatabase extends _$AppDatabase {
       if (from < 9) {
         await m.addColumn(outboxEvents, outboxEvents.outboxEventId);
         await m.addColumn(outboxEvents, outboxEvents.nextAttemptAt);
+      }
+      if (from < 10) {
+        await customStatement('ALTER TABLE messages RENAME TO messages_old;');
+        await m.createTable(messages);
+        await customStatement(
+          'INSERT INTO messages (id, conversation_id, sender_id, sender_device_id, type, sequence, encrypted_payload, media_header, version, status, created_at, updated_at, deleted_at) '
+          'SELECT id, conversation_id, sender_id, sender_device_id, type, sequence, encrypted_payload, media_header, version, status, created_at, updated_at, deleted_at '
+          'FROM messages_old;',
+        );
+        await customStatement('DROP TABLE messages_old;');
       }
     },
     beforeOpen: (details) async {
