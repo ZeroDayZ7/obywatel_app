@@ -95,9 +95,7 @@ class ChatSyncService {
 
     final validMessages = pendingMessages.where((message) {
       final hasConversationId = message.conversationId.trim().isNotEmpty;
-      final hasCiphertext =
-          message.encryptedPayload.trim().isNotEmpty ||
-          message.content.trim().isNotEmpty;
+      final hasCiphertext = message.encryptedPayload.trim().isNotEmpty;
       final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
       final hasValidServerConversationId = Uuid.isValidUUID(
         fromString: message.conversationId,
@@ -108,9 +106,10 @@ class ChatSyncService {
           !hasValidMessageUuid ||
           !hasValidServerConversationId) {
         _logger.w(
-          'Pomijam niepoprawne zdarzenie outbox: message_id=${message.id} '
-          'conversation_id=${message.conversationId} ciphertext_present=$hasCiphertext '
-          'message_uuid=$hasValidMessageUuid server_conversation_uuid=$hasValidServerConversationId',
+          '[OUTBOX-FLOW-3] skipping invalid pending event without clearing it: '
+          'message_id=${message.id} conversation_id=${message.conversationId} '
+          'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
+          'server_conversation_uuid=$hasValidServerConversationId',
           module: 'ChatSync',
         );
         return false;
@@ -119,8 +118,9 @@ class ChatSyncService {
     }).toList();
 
     if (validMessages.isEmpty) {
-      await _repository.clearSentOutboxMessages(
-        pendingMessages.map((m) => m.id).toList(),
+      _logger.w(
+        '[OUTBOX-FLOW-3.1] no valid pending outbox entries to flush; leaving invalid records intact',
+        module: 'ChatSync',
       );
       return;
     }

@@ -142,6 +142,26 @@ void main() {
     },
   );
 
+  test('outbox payload keeps only ciphertext and omits plaintext content', () {
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: const Uuid().v4(),
+      senderId: const Uuid().v4(),
+      content: 'visible plaintext',
+      encryptedPayload: 'ciphertext-base64',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+
+    final payload = buildOutboxEventPayload(message, 'device-1');
+
+    expect(payload['content'], equals(null));
+    expect(payload['payload']['content'], equals(null));
+    expect(payload['payload']['ciphertext'], 'ciphertext-base64');
+  });
+
   tearDown(() async {
     await database.close();
   });
@@ -740,6 +760,7 @@ void main() {
         conversationId: 'conv-123',
         senderId: 'user-123',
         content: 'ciphertext-payload',
+        encryptedPayload: 'ciphertext-payload',
         isMine: true,
         createdAt: DateTime.utc(2024, 1, 1, 10, 0),
       );
@@ -769,28 +790,32 @@ void main() {
         isTrue,
       );
       expect(event['event_type'], 'SEND_MESSAGE');
-      expect(payload['content'], 'ciphertext-payload');
+      expect(payload['content'], equals(null));
+      expect(payload['ciphertext'], 'ciphertext-payload');
       expect(event['device_id'], 'device-abc');
     },
   );
 
-  test('outbox builder strips local composite conversation ids before server sync', () {
-    final message = Message(
-      id: const Uuid().v4(),
-      conversationId:
-          'a2f6b8c9-1122-4a55-8822-b98765432101:c3d4e5f6-3344-5b66-9933-a12345678902',
-      senderId: 'user-123',
-      content: 'siema',
-      isMine: true,
-      createdAt: DateTime.utc(2024, 1, 1, 10, 0),
-    );
+  test(
+    'outbox builder strips local composite conversation ids before server sync',
+    () {
+      final message = Message(
+        id: const Uuid().v4(),
+        conversationId:
+            'a2f6b8c9-1122-4a55-8822-b98765432101:c3d4e5f6-3344-5b66-9933-a12345678902',
+        senderId: 'user-123',
+        content: 'siema',
+        isMine: true,
+        createdAt: DateTime.utc(2024, 1, 1, 10, 0),
+      );
 
-    final event = buildOutboxEventPayload(message, 'device-abc');
-    final payload = event['payload'] as Map<String, dynamic>;
+      final event = buildOutboxEventPayload(message, 'device-abc');
+      final payload = event['payload'] as Map<String, dynamic>;
 
-    expect(event['conversation_id'], null);
-    expect(payload['conversation_id'], null);
-  });
+      expect(event['conversation_id'], null);
+      expect(payload['conversation_id'], null);
+    },
+  );
 
   test('encryption should fail hard when no session key exists', () async {
     final secureStorage = SecureStorageService(

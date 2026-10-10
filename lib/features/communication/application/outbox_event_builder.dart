@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:uuid/uuid.dart';
 
@@ -33,9 +30,6 @@ Map<String, dynamic> buildOutboxEventPayload(
 }) {
   final createdAt = message.createdAt.toUtc().toIso8601String();
   final ciphertext = encryptedContent ?? message.encryptedPayload;
-  final payloadContent = message.content.trim().isNotEmpty
-      ? message.content
-      : ciphertext;
   final safeMessageId = _normalizeUuidString(
     message.id,
     fallback: const Uuid().v4(),
@@ -58,12 +52,11 @@ Map<String, dynamic> buildOutboxEventPayload(
     'device_id': deviceId,
     'ciphertext': ciphertext,
     'type': signalType,
-    'content': payloadContent,
     'created_at': createdAt,
     'outbox_event_id': safeOutboxEventId,
   };
 
-  final event = {
+  return {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
     'message_id': safeMessageId,
@@ -76,14 +69,4 @@ Map<String, dynamic> buildOutboxEventPayload(
     'created_at': createdAt,
     'outbox_event_id': safeOutboxEventId,
   };
-
-  debugPrint('[OUTBOX-FLOW-1] buildOutboxEventPayload start');
-  debugPrint(
-    '[OUTBOX-FLOW-1.1] conversation_id=${message.conversationId} signal_type=$signalType ciphertext_len=${ciphertext.length}',
-  );
-  debugPrint('=== OUTBOX EVENT DEBUG ===');
-  debugPrint(jsonEncode(event));
-  debugPrint('========================');
-
-  return event;
 }

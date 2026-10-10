@@ -1,0 +1,35 @@
+00:00 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:01 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:02 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:03 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:04 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:05 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:06 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:07 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:08 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:09 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:10 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:11 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:11 +0: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload                                                                                                             00:12 +0: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload                                                                                                             00:12 +0: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload                                                                                                             
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:701:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=14 sender_device_id=b03cb449-acd2-451c-a062-f5b190d5f298[0m
+00:13 +0 -1: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload [E]                                                                                                      
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
+TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
+will actually be made. Any test expecting a real network connection and status code will fail.
+To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
+test, so that your test can consistently provide a testable response to the code under test.
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "ciphertext is stored in Drift and plaintext is not persisted as outgoing payload"
+00:13 +0 -1: Some tests failed.                                                                                                                                                                        

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
@@ -581,15 +580,25 @@ class ChatsRepositoryImpl implements ChatsRepository {
       fromString: normalizedConversationId,
     );
 
-    final String effectiveConversationId = isExistingServerConversation
-        ? normalizedConversationId
-        : await ensureConversationForContact(normalizedConversationId);
-
     final remoteUserId = await resolvePeerUserIdForConversation(
-      effectiveConversationId,
+      normalizedConversationId,
     );
 
+    String? existingServerConversationId;
     if (!isExistingServerConversation) {
+      existingServerConversationId = await _findExistingConversationIdForPeer(
+        remoteUserId,
+      );
+    }
+
+    final bool shouldPersistLocallyOnly =
+        !isExistingServerConversation && existingServerConversationId == null;
+
+    final String effectiveConversationId = isExistingServerConversation
+        ? normalizedConversationId
+        : (existingServerConversationId ?? normalizedConversationId);
+
+    if (!isExistingServerConversation && existingServerConversationId != null) {
       _logger.i(
         '[SERVER_CONVERSATION_RESOLVED] localConversationId=$conversationId remoteUserId=$remoteUserId using=$effectiveConversationId',
         module: 'ChatsRepository',
@@ -648,7 +657,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       ),
     ]);
 
-    if (!isServerBackedConversation) {
+    if (shouldPersistLocallyOnly || !isServerBackedConversation) {
       _logger.i(
         '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversation_id=$effectiveConversationId status=pending',
         module: 'ChatsRepository',
@@ -687,7 +696,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'sender_device_id': senderDeviceId,
       'ciphertext': encrypted.ciphertextBase64,
       'type': encrypted.type,
-      'content': '',
       'idempotency_key': message.id,
     };
     final requestUri = ApiEndpoints.conversationMessages(
@@ -702,13 +710,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
     try {
       response = await _apiClient.post(requestUri, data: requestPayload);
     } catch (error, stackTrace) {
-      _logger.e(
-        '[HTTP_POST_MESSAGE_ERROR] uri=$requestUri conversation_id=$effectiveConversationId',
+      _logger.w(
+        '[HTTP_POST_MESSAGE_ERROR] uri=$requestUri conversation_id=$effectiveConversationId keeping_message_pending',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
       );
-      rethrow;
+      return;
     }
 
     _logger.i(
@@ -719,9 +727,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     if (response.statusCode == null ||
         response.statusCode! < 200 ||
         response.statusCode! >= 300) {
-      throw HttpException(
-        'HTTP ${response.statusCode} while sending message to $requestUri',
+      _logger.w(
+        '[HTTP_POST_MESSAGE_REJECTED] uri=$requestUri conversation_id=$effectiveConversationId status_code=${response.statusCode} keeping_message_pending',
+        module: 'ChatsRepository',
       );
+      return;
     }
 
     await (_db.update(
@@ -771,16 +781,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
           (directEnvelope['ciphertext'] as String?) ??
           (nestedPayload['ciphertext'] as String?) ??
           '';
-      final content =
-          (directEnvelope['content'] as String?) ??
-          (nestedPayload['content'] as String?) ??
-          ciphertext;
 
       return Message(
         id: messageId,
         conversationId: conversationId,
         senderId: (directEnvelope['sender_id'] as String?) ?? _currentUserId,
-        content: content,
+        content: ciphertext,
         isMine: true,
         createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
         status: 'pending',
