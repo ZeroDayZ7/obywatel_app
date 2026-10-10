@@ -567,7 +567,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final createdAt = DateTime.now();
     final senderDeviceId = await _deviceInfoService.getOrCreateDeviceId();
     _logger.i(
-      '[CHAT-FLOW-3] sendMessage start conversationId=$conversationId content_length=${content.length} sender_device_id=$senderDeviceId',
+      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversation_id=$conversationId local_user_id=$_currentUserId app_device_id=$senderDeviceId content_length=${content.length}',
       module: 'ChatsRepository',
     );
 
@@ -618,12 +618,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
         operationId: operationId,
       );
       _logger.i(
-        '[E2EE_ENCRYPT_SUCCESS] operation_id=$operationId conversation_id=$effectiveConversationId ciphertext_length=${encrypted.ciphertextBase64.length}',
+        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_success event=success conversation_id=$effectiveConversationId remote_user_id=$remoteUserId ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
         module: 'ChatsRepository',
       );
     } catch (error, stackTrace) {
       _logger.e(
-        '[E2EE_ENCRYPT_ERROR] operation_id=$operationId conversation_id=$effectiveConversationId remote_user_id=$remoteUserId',
+        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_error event=error conversation_id=$effectiveConversationId remote_user_id=$remoteUserId error_type=${error.runtimeType} error_message=${error.toString()}',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
@@ -702,7 +702,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       effectiveConversationId,
     );
     _logger.i(
-      '[HTTP_POST_MESSAGE_REQUEST] uri=$requestUri payload=${jsonEncode(requestPayload)} headers={"Content-Type":"application/json"}',
+      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversation_id=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
       module: 'ChatsRepository',
     );
 
@@ -720,7 +720,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     _logger.i(
-      '[HTTP_POST_MESSAGE_RESPONSE] uri=$requestUri status_code=${response.statusCode} body=${response.data}',
+      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_response event=success conversation_id=$effectiveConversationId remote_user_id=$remoteUserId uri=$requestUri status_code=${response.statusCode}',
       module: 'ChatsRepository',
     );
 
@@ -749,6 +749,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
 
     final sentMessage = message.copyWith(status: 'sent');
+    _logger.i(
+      '[E2EE_TRACE] operation_id=$operationId stage=message_persist_success event=success conversation_id=$effectiveConversationId message_id=${message.id} status=sent',
+      module: 'ChatsRepository',
+    );
     _incomingMessagesController.add(sentMessage);
   }
 

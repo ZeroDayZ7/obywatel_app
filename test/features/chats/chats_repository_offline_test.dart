@@ -721,6 +721,17 @@ void main() {
     },
   );
 
+  test('signal device id is stable for UUID device ids and does not collapse to 1', () {
+    const uuidDeviceId = '8e681e7c-6ccc-4854-8fc6-b6dd5074f39e';
+
+    final first = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+    final second = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+
+    expect(first, isNot(1));
+    expect(second, equals(first));
+    expect(first, isPositive);
+  });
+
   test('device identity should stay stable per installation', () async {
     const secureStorage = FlutterSecureStorage();
     await secureStorage.deleteAll();
