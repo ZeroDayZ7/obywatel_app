@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
@@ -146,6 +148,121 @@ void main() {
     secureStorageStore.clear();
   });
 
+  test('own message plaintext survives repository restart via secure storage', () async {
+    final logger = AppLogger();
+    final db = AppDatabase(NativeDatabase.memory());
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final apiClient = RecordingApiClient(
+      storage: secureStorage,
+      logger: logger,
+    );
+    final deviceInfoService = DeviceInfoService(logger);
+    final signalStore = DriftSignalProtocolStore(db);
+    final cryptoService = CapturingCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      signalStore,
+    );
+
+    final repo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db,
+      logger,
+      'user-1',
+      deviceInfoService,
+      cryptoService,
+      secureStorage,
+    );
+
+    final conversationId = 'user-1:user-2';
+    await repo.sendMessage(
+      conversationId: conversationId,
+      content: 'hello from user-1',
+    );
+
+    final restartedRepo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db,
+      logger,
+      'user-1',
+      deviceInfoService,
+      cryptoService,
+      secureStorage,
+    );
+
+    final history = await restartedRepo.getMessageHistory(conversationId);
+
+    expect(history, isNotEmpty);
+    expect(history.first.content, 'hello from user-1');
+    expect(
+      history.first.content,
+      isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
+    );
+  });
+
+  test('message without plaintext is not rendered as the E2EE placeholder', () async {
+    final logger = AppLogger();
+    final db = AppDatabase(NativeDatabase.memory());
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final apiClient = RecordingApiClient(
+      storage: secureStorage,
+      logger: logger,
+    );
+    final deviceInfoService = DeviceInfoService(logger);
+    final signalStore = DriftSignalProtocolStore(db);
+    final cryptoService = CapturingCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      signalStore,
+    );
+
+    final repo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db,
+      logger,
+      'user-1',
+      deviceInfoService,
+      cryptoService,
+      secureStorage,
+    );
+
+    await db.chatsDao.upsertMessages([
+      MessagesCompanion(
+        id: const Value('message-no-plaintext'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-2'),
+        senderDeviceId: const Value('device-42'),
+        type: const Value('signal'),
+        sequence: Value(BigInt.one),
+        encryptedPayload: Value(utf8.encode('ciphertext-only')),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    final history = await repo.getMessageHistory('user-1:user-2');
+
+    expect(history, isNotEmpty);
+    expect(history.first.content, isEmpty);
+    expect(
+      history.first.content,
+      isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
+    );
+  });
+
   test(
     'ensureConversationForContact does not bootstrap E2EE session',
     () async {
@@ -178,6 +295,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        secureStorage,
       );
 
       final conversationId = await repository.ensureConversationForContact(
@@ -280,6 +398,7 @@ void main() {
         'anna',
         deviceInfoService,
         cryptoService1,
+        secureStorage,
       );
       final piotrRepo = ChatsRepositoryImpl(
         ChatsApiClient(apiClient),
@@ -288,6 +407,7 @@ void main() {
         'piotr',
         deviceInfoService,
         cryptoService2,
+        secureStorage,
       );
 
       final idFromAnna = await annaRepo.ensureConversationForContact('piotr');
@@ -357,6 +477,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
       await db.chatsDao.upsertConversations([
@@ -456,6 +577,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
       final now = DateTime.now();
@@ -558,6 +680,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
       final now = DateTime.now();
@@ -676,6 +799,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        secureStorage,
       );
 
       await repository.sendMessage(conversationId: 'u1:u2', content: 'secret');
@@ -711,6 +835,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        secureStorage,
       );
 
       expect(

@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
@@ -212,6 +213,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final String _currentUserId;
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
+  final SecureStorageService _secureStorage;
   final Map<String, String> _localPlaintextCache = <String, String>{};
 
   AppDatabase get db => _db;
@@ -223,7 +225,58 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String currentUserId,
     this._deviceInfoService,
     this._cryptoService,
+    this._secureStorage,
   ) : _currentUserId = currentUserId;
+
+  String _plaintextStorageKey(String messageId) {
+    return 'chat_plaintext_$messageId';
+  }
+
+  Future<void> _persistPlaintextForMessage(
+    String messageId,
+    String plaintext,
+  ) async {
+    final normalized = plaintext.trim();
+    if (normalized.isEmpty) {
+      return;
+    }
+
+    _localPlaintextCache[messageId] = normalized;
+
+    try {
+      await _secureStorage.write(
+        key: _plaintextStorageKey(messageId),
+        value: normalized,
+      );
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Unable to persist plaintext for message $messageId in secure storage; keeping in-memory fallback only',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+    }
+  }
+
+  Future<void> _hydratePlaintextCacheForIds(Iterable<String> messageIds) async {
+    final ids = messageIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    for (final messageId in ids) {
+      if (_localPlaintextCache.containsKey(messageId)) {
+        continue;
+      }
+
+      final persisted = await _secureStorage.read(
+        key: _plaintextStorageKey(messageId),
+      );
+      if (persisted != null && persisted.trim().isNotEmpty) {
+        _localPlaintextCache[messageId] = persisted.trim();
+      }
+    }
+  }
 
   @override
   Stream<Message> get incomingMessagesStream =>
@@ -237,6 +290,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
         final messages = await _db.chatsDao.getMessagesForConversation(
           entity.id,
           limit: 20,
+        );
+        await _hydratePlaintextCacheForIds(
+          messages.map((message) => message.id),
         );
         list.add(
           Conversation(
@@ -360,6 +416,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return _db.chatsDao
         .watchMessagesForConversation(requestedConversationId)
         .asyncMap((entities) async {
+          await _hydratePlaintextCacheForIds(
+            entities.map((entity) => entity.id),
+          );
           final localMessages = entities.map(_messageFromEntity).toList();
           if (localMessages.isNotEmpty) {
             return localMessages;
@@ -377,6 +436,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
           final relatedMessages = await _db.chatsDao.getMessagesForConversation(
             resolvedConversationId,
+          );
+          await _hydratePlaintextCacheForIds(
+            relatedMessages.map((message) => message.id),
           );
           return relatedMessages.map(_messageFromEntity).toList();
         });
@@ -518,6 +580,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
         limit: limit,
       );
       if (local.isNotEmpty) {
+        await _hydratePlaintextCacheForIds(
+          local.map((message) => message.id),
+        );
         _logger.i(
           '[CHAT-FLOW-2.1] local history returned for conversationId=$conversationId count=${local.length}',
           module: 'ChatsRepository',
@@ -658,7 +723,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final outboxEventId = buildOutboxEventIdForMessage(message: message);
-    _localPlaintextCache[message.id] = content;
+    await _persistPlaintextForMessage(message.id, content);
 
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(
@@ -844,7 +909,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
           final decrypted = await _decryptInboundMessage(dto);
           if (decrypted != null) {
-            _localPlaintextCache[dto.id] = decrypted;
+            await _persistPlaintextForMessage(dto.id, decrypted);
             _logger.i(
               '[CHAT-FLOW-4.1] inbound delta message decrypted conversation_id=${dto.conversationId} message_id=${dto.id}',
               module: 'ChatsRepository',
@@ -1105,13 +1170,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    const encryptedPlaceholder =
-        'Wiadomość zaszyfrowana – oczekiwanie na klucz sesji';
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
       senderId: entity.senderId,
-      content: encryptedPlaceholder,
+      content: '',
       encryptedPayload: ciphertext,
       isMine: entity.senderId == _currentUserId,
       createdAt: entity.createdAt,
@@ -1129,6 +1192,7 @@ ChatsRepository chatsRepository(Ref ref) {
   final currentUserId = ref.watch(currentUserIdProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final cryptoService = ref.watch(e2eeCryptoServiceProvider);
+  final secureStorage = ref.watch(secureStorageProvider);
 
   return ChatsRepositoryImpl(
     apiClient,
@@ -1137,5 +1201,6 @@ ChatsRepository chatsRepository(Ref ref) {
     currentUserId,
     deviceInfoService,
     cryptoService,
+    secureStorage,
   );
 }
