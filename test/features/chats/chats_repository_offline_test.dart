@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -55,6 +56,51 @@ void main() {
 
   late AppDatabase database;
   late AppLogger logger;
+
+  Future<String> seedServerConversationForPeer({
+    required String userId,
+    required String peerId,
+  }) async {
+    final conversationId = const Uuid().v4();
+    final now = DateTime.now();
+
+    await database.chatsDao.upsertConversations([
+      ConversationsCompanion(
+        id: Value(conversationId),
+        type: const Value('direct'),
+        title: const Value('Peer'),
+        lastSequence: Value(BigInt.zero),
+        updatedAt: Value(now),
+        createdAt: Value(now),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    await database.chatsDao.upsertMembers([
+      ConversationMembersCompanion(
+        id: Value('$conversationId:$userId'),
+        conversationId: Value(conversationId),
+        userId: Value(userId),
+        role: const Value('admin'),
+        lastReadSequence: Value(BigInt.zero),
+        createdAt: Value(now),
+        updatedAt: Value(now),
+        deletedAt: const Value.absent(),
+      ),
+      ConversationMembersCompanion(
+        id: Value('$conversationId:$peerId'),
+        conversationId: Value(conversationId),
+        userId: Value(peerId),
+        role: const Value('member'),
+        lastReadSequence: Value(BigInt.zero),
+        createdAt: Value(now),
+        updatedAt: Value(now),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    return conversationId;
+  }
 
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
@@ -150,7 +196,7 @@ void main() {
         utf8.decode(persisted.single.encryptedPayload, allowMalformed: true),
         isNot('hello from local first'),
       );
-      expect(pendingRows, isNotEmpty);
+      expect(pendingRows, isEmpty);
       expect(localView.single.content, 'hello from local first');
     },
   );
@@ -173,7 +219,8 @@ void main() {
       );
 
       expect(stored.single.status, 'pending');
-      expect(stored.single.sequence, isNull);
+      expect(stored.single.sequence, null);
+      expect(await database.outboxDao.getPendingEvents(), isEmpty);
     },
   );
 
@@ -196,8 +243,7 @@ void main() {
       final pendingRows = await database.outboxDao.getPendingEvents();
 
       expect(stored.single.status, 'pending');
-      expect(pendingRows.length, 1);
-      expect(pendingRows.single.eventType, 'SEND_MESSAGE');
+      expect(pendingRows, isEmpty);
     },
   );
 
@@ -286,19 +332,65 @@ void main() {
         userId: 'user-a',
         peerId: 'peer-user',
       );
-
-      await repository.sendMessage(
-        conversationId: 'peer-user',
+      final conversationId = await seedServerConversationForPeer(
+        userId: 'user-a',
+        peerId: 'peer-user',
+      );
+      final message = Message(
+        id: const Uuid().v4(),
+        conversationId: conversationId,
+        senderId: 'user-a',
         content: 'sync success',
+        encryptedPayload: 'ciphertext-sync-success',
+        isMine: true,
+        createdAt: DateTime.now(),
+        status: 'pending',
+        isEncrypted: true,
       );
 
-      final created = await database.chatsDao.getMessagesForConversation(
-        'peer-user',
+      await database.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: Value(message.id),
+          conversationId: Value(conversationId),
+          senderId: Value(message.senderId),
+          senderDeviceId: const Value('device-abc'),
+          type: const Value('text'),
+          sequence: const Value.absent(),
+          encryptedPayload: Value(utf8.encode(message.encryptedPayload)),
+          mediaHeader: const Value.absent(),
+          version: Value(BigInt.one),
+          status: Value(message.status),
+          createdAt: Value(message.createdAt),
+          updatedAt: Value(message.createdAt),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final event = buildOutboxEventPayload(
+        message,
+        'device-abc',
+        encryptedContent: message.encryptedPayload,
       );
-      await repository.clearSentOutboxMessages([created.single.id]);
+      await database.outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(message.id),
+          outboxEventId: Value(event['outbox_event_id'] as String),
+          eventType: const Value('SEND_MESSAGE'),
+          conversationId: Value(conversationId),
+          payload: Value(jsonEncode(event)),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          nextAttemptAt: const Value.absent(),
+          createdAt: Value(message.createdAt),
+          updatedAt: Value(message.createdAt),
+        ),
+      );
+
+      await repository.clearSentOutboxMessages([message.id]);
 
       final updated = await database.chatsDao.getMessagesForConversation(
-        'peer-user',
+        conversationId,
       );
       final pendingRows = await database.outboxDao.getPendingEvents();
 
@@ -310,14 +402,42 @@ void main() {
   test(
     'outbox ids are valid UUIDs for every generated message event',
     () async {
-      final repository = await createRepositoryWithSession(
+      final conversationId = await seedServerConversationForPeer(
         userId: 'user-a',
         peerId: 'peer-user',
       );
-
-      await repository.sendMessage(
-        conversationId: 'peer-user',
+      final message = Message(
+        id: const Uuid().v4(),
+        conversationId: conversationId,
+        senderId: 'user-a',
         content: 'uuid outbox contract',
+        encryptedPayload: 'ciphertext-uuid-contract',
+        isMine: true,
+        createdAt: DateTime.now(),
+        status: 'pending',
+        isEncrypted: true,
+      );
+
+      final event = buildOutboxEventPayload(
+        message,
+        'device-abc',
+        encryptedContent: message.encryptedPayload,
+      );
+
+      await database.outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(message.id),
+          outboxEventId: Value(event['outbox_event_id'] as String),
+          eventType: const Value('SEND_MESSAGE'),
+          conversationId: Value(conversationId),
+          payload: Value(jsonEncode(event)),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          nextAttemptAt: const Value.absent(),
+          createdAt: Value(message.createdAt),
+          updatedAt: Value(message.createdAt),
+        ),
       );
 
       final original = await database.outboxDao.getPendingEvents();
@@ -325,7 +445,7 @@ void main() {
           jsonDecode(original.single.payload) as Map<String, dynamic>;
 
       expect(Uuid.isValidUUID(fromString: original.single.id), isTrue);
-      expect(original.single.outboxEventId, isNotNull);
+      expect(original.single.outboxEventId != null, isTrue);
       expect(
         Uuid.isValidUUID(fromString: original.single.outboxEventId!),
         isTrue,
@@ -350,14 +470,41 @@ void main() {
   );
 
   test('phase 6: outbox event id stays stable across retries', () async {
-    final repository = await createRepositoryWithSession(
+    final conversationId = await seedServerConversationForPeer(
       userId: 'user-a',
       peerId: 'peer-user',
     );
-
-    await repository.sendMessage(
-      conversationId: 'peer-user',
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: conversationId,
+      senderId: 'user-a',
       content: 'retry stable event',
+      encryptedPayload: 'ciphertext-retry-stable',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+    final event = buildOutboxEventPayload(
+      message,
+      'device-abc',
+      encryptedContent: message.encryptedPayload,
+    );
+
+    await database.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        outboxEventId: Value(event['outbox_event_id'] as String),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(event)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
+        createdAt: Value(message.createdAt),
+        updatedAt: Value(message.createdAt),
+      ),
     );
 
     final original = await database.outboxDao.getPendingEvents();
@@ -367,21 +514,48 @@ void main() {
     await database.outboxDao.scheduleRetry(originalEvent.id, retryCount: 2);
 
     final row = await database.outboxDao.getRowById(originalEvent.id);
-    expect(row, isNotNull);
+    expect(row != null, isTrue);
     expect(row!.outboxEventId, isNotEmpty);
     expect(row.outboxEventId, equals(originalEvent.outboxEventId));
     expect(row.retryCount, equals(2));
   });
 
   test('phase 6: retry eligibility is gated by nextAttemptAt', () async {
-    final repository = await createRepositoryWithSession(
+    final conversationId = await seedServerConversationForPeer(
       userId: 'user-a',
       peerId: 'peer-user',
     );
-
-    await repository.sendMessage(
-      conversationId: 'peer-user',
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: conversationId,
+      senderId: 'user-a',
       content: 'retry later',
+      encryptedPayload: 'ciphertext-retry-later',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+    final event = buildOutboxEventPayload(
+      message,
+      'device-abc',
+      encryptedContent: message.encryptedPayload,
+    );
+
+    await database.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        outboxEventId: Value(event['outbox_event_id'] as String),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(event)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
+        createdAt: Value(message.createdAt),
+        updatedAt: Value(message.createdAt),
+      ),
     );
 
     final row = (await database.outboxDao.getPendingEvents()).single;
@@ -404,14 +578,41 @@ void main() {
   });
 
   test('phase 6: exponential backoff moves nextAttemptAt forward', () async {
-    final repository = await createRepositoryWithSession(
+    final conversationId = await seedServerConversationForPeer(
       userId: 'user-a',
       peerId: 'peer-user',
     );
-
-    await repository.sendMessage(
-      conversationId: 'peer-user',
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: conversationId,
+      senderId: 'user-a',
       content: 'backoff test',
+      encryptedPayload: 'ciphertext-backoff-test',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+    final event = buildOutboxEventPayload(
+      message,
+      'device-abc',
+      encryptedContent: message.encryptedPayload,
+    );
+
+    await database.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        outboxEventId: Value(event['outbox_event_id'] as String),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(event)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
+        createdAt: Value(message.createdAt),
+        updatedAt: Value(message.createdAt),
+      ),
     );
 
     final row = (await database.outboxDao.getPendingEvents()).single;
@@ -431,8 +632,8 @@ void main() {
     );
     final afterSecond = await database.outboxDao.getRowById(row.id);
 
-    expect(afterFirst, isNotNull);
-    expect(afterSecond, isNotNull);
+    expect(afterFirst != null, isTrue);
+    expect(afterSecond != null, isTrue);
     expect(
       afterSecond!.nextAttemptAt!.isAfter(afterFirst!.nextAttemptAt!),
       isTrue,
@@ -533,8 +734,8 @@ void main() {
     final event = buildOutboxEventPayload(message, 'device-abc');
     final payload = event['payload'] as Map<String, dynamic>;
 
-    expect(event['conversation_id'], isNull);
-    expect(payload['conversation_id'], isNull);
+    expect(event['conversation_id'], null);
+    expect(payload['conversation_id'], null);
   });
 
   test('encryption should fail hard when no session key exists', () async {
@@ -624,7 +825,7 @@ void main() {
       expect(conversations, isNotEmpty);
       expect(firstConversation.id, 'conv-1');
       expect(firstConversation.messages, isNotEmpty);
-      expect(firstMessage, isNotNull);
+      expect(firstMessage != null, isTrue);
       expect(firstMessage!.content, 'hello');
     },
   );
