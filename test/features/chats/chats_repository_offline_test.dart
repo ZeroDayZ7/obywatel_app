@@ -107,6 +107,41 @@ void main() {
     logger = AppLogger();
   });
 
+  test(
+    'device bundle persists generated signed and one-time prekeys in Drift before session setup',
+    () async {
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = ApiClient(
+        dio: Dio(),
+        storage: secureStorage,
+        logger: logger,
+      );
+      final store = DriftSignalProtocolStore(database);
+      final service = E2eeCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        DeviceInfoService(logger),
+        store,
+      );
+
+      final bundle = await service.ensureDeviceIdentityBundle();
+
+      expect(bundle.signedPreKeyId, 1);
+      expect(await store.containsSignedPreKey(bundle.signedPreKeyId), isTrue);
+      expect(await store.containsPreKey(1), isTrue);
+
+      final loadedSigned = await store.loadSignedPreKey(bundle.signedPreKeyId);
+      final loadedPreKey = await store.loadPreKey(1);
+
+      expect(loadedSigned.id, bundle.signedPreKeyId);
+      expect(loadedPreKey.id, 1);
+    },
+  );
+
   tearDown(() async {
     await database.close();
   });

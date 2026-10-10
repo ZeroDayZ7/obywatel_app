@@ -309,7 +309,13 @@ class E2eeCryptoService {
     final registrationId = await _signalStore.getLocalRegistrationId();
     final identityKeyPair = await _signalStore.getIdentityKeyPair();
     final signedPreKey = generateSignedPreKey(identityKeyPair, 1);
-    final oneTimePreKeys = generatePreKeys(1, 10)
+    await _signalStore.storeSignedPreKey(signedPreKey.id, signedPreKey);
+
+    final oneTimePreKeys = generatePreKeys(1, 10);
+    for (final record in oneTimePreKeys) {
+      await _signalStore.storePreKey(record.id, record);
+    }
+    final oneTimePreKeyPublics = oneTimePreKeys
         .map(
           (record) => base64Encode(record.getKeyPair().publicKey.serialize()),
         )
@@ -325,7 +331,7 @@ class E2eeCryptoService {
       ),
       signedPreKeySignature: base64Encode(signedPreKey.signature),
       signedPreKeyId: signedPreKey.id,
-      oneTimePreKeys: oneTimePreKeys,
+      oneTimePreKeys: oneTimePreKeyPublics,
     );
   }
 
