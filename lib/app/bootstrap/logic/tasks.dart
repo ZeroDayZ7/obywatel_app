@@ -30,15 +30,21 @@ class StorageInitTask implements StartupTask {
       await Future.wait([
         storage.clearAll(),
         prefs.clearAll(),
-        database.clearDatabase(),
       ]);
 
-      // await storage.clearAll();
-      // await Future.delayed(const Duration(seconds: 2));
-      // await storage.debugPrintAll();
+      await database.clearSignalStore();
+      await database.clearDatabase();
 
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
+
+      final signalIdentityCount = await database.select(database.signalIdentityKeys).get();
+      final signalPreKeyCount = await database.select(database.signalPreKeys).get();
+      final signalSessionCount = await database.select(database.signalSessions).get();
+
+      debugPrint(
+        '[StorageInitTask] Signal store after reset: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
+      );
     }
 
     return null;

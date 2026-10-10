@@ -349,10 +349,7 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
           ..where((entry) => entry.name.equals(name) & entry.deviceId.isNotNull()))
         .get();
 
-    return rows
-        .where((row) => row.deviceId != 1)
-        .map((row) => row.deviceId)
-        .toList();
+    return rows.map((row) => row.deviceId).toList();
   }
 
   @override

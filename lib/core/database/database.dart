@@ -121,6 +121,16 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
+  Future<void> clearSignalStore() async {
+    await transaction(() async {
+      await delete(signalLocalIdentity).go();
+      await delete(signalIdentityKeys).go();
+      await delete(signalPreKeys).go();
+      await delete(signalSignedPreKeys).go();
+      await delete(signalSessions).go();
+    });
+  }
+
   Future<void> clearDatabase() async {
     await transaction(() async {
       for (final table in allTables) {
