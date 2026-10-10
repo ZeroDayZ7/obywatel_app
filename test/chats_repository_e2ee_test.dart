@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:drift/drift.dart' hide isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -323,6 +324,290 @@ void main() {
       );
       expect(
         () => resolveRemoteUserIdForConversation('u2:u3', 'u1'),
+        throwsArgumentError,
+      );
+    },
+  );
+
+  test(
+    'ensureConversationForContact prefers the exact A-B direct conversation over unrelated A-C records',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+        ),
+        db,
+        logger,
+        'user-a',
+        DeviceInfoService(logger),
+        ThrowingCryptoService(
+          SecureStorageService(const FlutterSecureStorage(), logger),
+          logger,
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db),
+        ),
+      );
+
+      await db.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('conv-ab'),
+          type: const Value('direct'),
+          title: const Value('B'),
+          lastSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationsCompanion(
+          id: const Value('conv-ac'),
+          type: const Value('direct'),
+          title: const Value('C'),
+          lastSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      await db.chatsDao.upsertMembers([
+        ConversationMembersCompanion(
+          id: const Value('conv-ab:user-a'),
+          conversationId: const Value('conv-ab'),
+          userId: const Value('user-a'),
+          role: const Value('admin'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ab:user-b'),
+          conversationId: const Value('conv-ab'),
+          userId: const Value('user-b'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ac:user-a'),
+          conversationId: const Value('conv-ac'),
+          userId: const Value('user-a'),
+          role: const Value('admin'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ac:user-c'),
+          conversationId: const Value('conv-ac'),
+          userId: const Value('user-c'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final result = await repo.ensureConversationForContact('user-b');
+      expect(result, 'conv-ab');
+    },
+  );
+
+  test(
+    'ensureConversationForContact rejects ambiguous duplicate direct conversations for the same peer',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+        ),
+        db,
+        logger,
+        'user-a',
+        DeviceInfoService(logger),
+        ThrowingCryptoService(
+          SecureStorageService(const FlutterSecureStorage(), logger),
+          logger,
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db),
+        ),
+      );
+
+      final now = DateTime.now();
+      await db.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('conv-ab-1'),
+          type: const Value('direct'),
+          title: const Value('B'),
+          lastSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationsCompanion(
+          id: const Value('conv-ab-2'),
+          type: const Value('direct'),
+          title: const Value('B2'),
+          lastSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      await db.chatsDao.upsertMembers([
+        ConversationMembersCompanion(
+          id: const Value('conv-ab-1:user-a'),
+          conversationId: const Value('conv-ab-1'),
+          userId: const Value('user-a'),
+          role: const Value('admin'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ab-1:user-b'),
+          conversationId: const Value('conv-ab-1'),
+          userId: const Value('user-b'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ab-2:user-a'),
+          conversationId: const Value('conv-ab-2'),
+          userId: const Value('user-a'),
+          role: const Value('admin'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('conv-ab-2:user-b'),
+          conversationId: const Value('conv-ab-2'),
+          userId: const Value('user-b'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      expect(
+        () => repo.ensureConversationForContact('user-b'),
+        throwsStateError,
+      );
+    },
+  );
+
+  test(
+    'resolvePeerUserIdForConversation rejects non-direct multi-participant conversations',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      addTearDown(db.close);
+
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+        ),
+        db,
+        logger,
+        'user-a',
+        DeviceInfoService(logger),
+        ThrowingCryptoService(
+          SecureStorageService(const FlutterSecureStorage(), logger),
+          logger,
+          ApiClient(dio: Dio(), storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            logger,
+          ), logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db),
+        ),
+      );
+
+      final now = DateTime.now();
+      await db.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('group-1'),
+          type: const Value('group'),
+          title: const Value('Grupa'),
+          lastSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      await db.chatsDao.upsertMembers([
+        ConversationMembersCompanion(
+          id: const Value('group-1:user-a'),
+          conversationId: const Value('group-1'),
+          userId: const Value('user-a'),
+          role: const Value('admin'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('group-1:user-b'),
+          conversationId: const Value('group-1'),
+          userId: const Value('user-b'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+        ConversationMembersCompanion(
+          id: const Value('group-1:user-c'),
+          conversationId: const Value('group-1'),
+          userId: const Value('user-c'),
+          role: const Value('member'),
+          lastReadSequence: Value(BigInt.zero),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      expect(
+        () => repo.resolvePeerUserIdForConversation('group-1'),
         throwsArgumentError,
       );
     },

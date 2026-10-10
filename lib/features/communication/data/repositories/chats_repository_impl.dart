@@ -240,24 +240,39 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Future<String?> _findExistingConversationIdForPeer(String peerUserId) async {
-    final rows =
-        await (_db.select(_db.conversationMembers)..where(
-              (t) =>
-                  t.userId.equals(_currentUserId) | t.userId.equals(peerUserId),
-            ))
-            .get();
-
-    final counts = <String, int>{};
-    for (final row in rows) {
-      counts[row.conversationId] = (counts[row.conversationId] ?? 0) + 1;
+    final normalizedPeerId = peerUserId.trim();
+    if (normalizedPeerId.isEmpty || normalizedPeerId == _currentUserId) {
+      return null;
     }
 
-    for (final entry in counts.entries) {
-      if (entry.value >= 2) {
-        return entry.key;
+    final rows = await (_db.select(_db.conversationMembers)..where(
+      (t) => t.userId.equals(_currentUserId) | t.userId.equals(normalizedPeerId),
+    )).get();
+
+    final byConversation = <String, Set<String>>{};
+    for (final row in rows) {
+      byConversation.putIfAbsent(row.conversationId, () => <String>{}).add(row.userId);
+    }
+
+    final exactMatches = <String>[];
+    for (final entry in byConversation.entries) {
+      final members = entry.value;
+      final hasCurrentUser = members.contains(_currentUserId);
+      final hasPeerUser = members.contains(normalizedPeerId);
+      final isDirectOneToOne = members.length == 2;
+
+      if (hasCurrentUser && hasPeerUser && isDirectOneToOne) {
+        exactMatches.add(entry.key);
       }
     }
-    return null;
+
+    if (exactMatches.length > 1) {
+      throw StateError(
+        'Multiple direct conversations found for currentUserId=$_currentUserId and peerUserId=$normalizedPeerId: ${exactMatches.join(', ')}',
+      );
+    }
+
+    return exactMatches.isEmpty ? null : exactMatches.single;
   }
 
   Future<void> _repointConversationId(
@@ -352,11 +367,31 @@ class ChatsRepositoryImpl implements ChatsRepository {
         _db.conversationMembers,
       )..where((t) => t.conversationId.equals(trimmedConversationId))).get();
 
-      for (final member in members) {
-        if (member.userId != _currentUserId) {
-          return member.userId;
+      final peerUserIds = members
+          .map((member) => member.userId)
+          .where((userId) => userId != _currentUserId)
+          .toSet();
+
+      if (peerUserIds.length == 1) {
+        final peerUserId = peerUserIds.single;
+        if (members.length == 2) {
+          return peerUserId;
         }
       }
+
+      throw ArgumentError.value(
+        conversationId,
+        'conversationId',
+        'Conversation must be a direct 1:1 chat with exactly one peer user',
+      );
+    }
+
+    if (!trimmedConversationId.contains(':')) {
+      throw ArgumentError.value(
+        conversationId,
+        'conversationId',
+        'Conversation must be either a remote UUID or a direct 1:1 user pair',
+      );
     }
 
     return resolveRemoteUserIdForConversation(
