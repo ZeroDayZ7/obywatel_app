@@ -271,8 +271,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final byConversation = <String, Set<String>>{};
     for (final row in rows) {
+      final conversationId = row.conversationId.trim();
+      if (!Uuid.isValidUUID(fromString: conversationId)) {
+        continue;
+      }
+
       byConversation
-          .putIfAbsent(row.conversationId, () => <String>{})
+          .putIfAbsent(conversationId, () => <String>{})
           .add(row.userId);
     }
 
@@ -365,10 +370,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
             requestedConversationId,
           );
           final resolvedConversationId =
-              await _findExistingConversationIdForPeer(remoteUserId) ??
-              requestedConversationId;
+              await _findExistingConversationIdForPeer(remoteUserId);
 
-          if (resolvedConversationId == requestedConversationId) {
+          if (resolvedConversationId == null) {
             return const <Message>[];
           }
 
@@ -403,44 +407,25 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final existingConversationId = await _findExistingConversationIdForPeer(
       normalizedPeerId,
     );
-    final conversationId =
-        existingConversationId ??
-        buildDirectConversationId(_currentUserId, normalizedPeerId);
-    final currentTime = DateTime.now();
+    if (existingConversationId != null) {
+      return existingConversationId;
+    }
 
-    await _db.chatsDao.upsertConversations([
-      ConversationsCompanion(
-        id: Value(conversationId),
-        type: Value('direct'),
-        title: Value(title ?? 'Kontakt'),
-        lastSequence: Value(BigInt.zero),
-        updatedAt: Value(currentTime),
-        createdAt: Value(currentTime),
-        deletedAt: const Value.absent(),
-      ),
-    ]);
-
-    final memberIds = <String>{_currentUserId, normalizedPeerId};
-    await _db.chatsDao.upsertMembers(
-      memberIds
-          .map(
-            (userId) => ConversationMembersCompanion(
-              id: Value('$conversationId:$userId'),
-              conversationId: Value(conversationId),
-              userId: Value(userId),
-              role: Value(userId == _currentUserId ? 'admin' : 'member'),
-              lastReadSequence: Value(BigInt.zero),
-              createdAt: Value(currentTime),
-              updatedAt: Value(currentTime),
-              deletedAt: const Value.absent(),
-            ),
-          )
-          .toList(),
+    final createdConversation = await _apiClient.createConversation(
+      type: 'direct',
+      recipientIds: [normalizedPeerId],
+      title: title ?? 'Kontakt',
     );
 
-    // E2EE bootstrap is intentionally handled when the chat is actually opened
-    // or when a message is sent, not during contact acceptance.
-    return conversationId;
+    final serverConversationId = createdConversation.id.trim();
+    if (!Uuid.isValidUUID(fromString: serverConversationId)) {
+      throw StateError(
+        'Backend returned invalid conversation UUID for contact $normalizedPeerId: $serverConversationId',
+      );
+    }
+
+    await saveConversationsFromRemote([createdConversation]);
+    return serverConversationId;
   }
 
   @override
@@ -591,21 +576,22 @@ class ChatsRepositoryImpl implements ChatsRepository {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
-    final remoteUserId = await resolvePeerUserIdForConversation(conversationId);
-    final existingConversationId = await _findExistingConversationIdForPeer(
-      remoteUserId,
+    final normalizedConversationId = conversationId.trim();
+    final bool isExistingServerConversation = Uuid.isValidUUID(
+      fromString: normalizedConversationId,
     );
 
-    final bool isExistingServerConversation = Uuid.isValidUUID(
-      fromString: conversationId,
+    final String effectiveConversationId = isExistingServerConversation
+        ? normalizedConversationId
+        : await ensureConversationForContact(normalizedConversationId);
+
+    final remoteUserId = await resolvePeerUserIdForConversation(
+      effectiveConversationId,
     );
-    String effectiveConversationId =
-        existingConversationId ??
-        (isExistingServerConversation ? conversationId : conversationId);
 
     if (!isExistingServerConversation) {
       _logger.i(
-        '[LOCAL_ONLY_CONVERSATION] localConversationId=$conversationId remoteUserId=$remoteUserId using=$effectiveConversationId',
+        '[SERVER_CONVERSATION_RESOLVED] localConversationId=$conversationId remoteUserId=$remoteUserId using=$effectiveConversationId',
         module: 'ChatsRepository',
       );
     }
