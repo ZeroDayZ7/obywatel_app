@@ -9,38 +9,38 @@ part of 'conversation_dto.dart';
 _ConversationMemberDto _$ConversationMemberDtoFromJson(
   Map<String, dynamic> json,
 ) => _ConversationMemberDto(
-  id: json['ID'] as String,
-  conversationId: json['ConversationID'] as String,
-  userId: json['UserID'] as String,
-  role: json['Role'] as String,
-  lastReadSequence: (json['LastReadSequence'] as num?)?.toInt() ?? 0,
+  id: json['id'] as String,
+  conversationId: json['conversation_id'] as String,
+  userId: json['user_id'] as String,
+  role: json['role'] as String,
+  lastReadSequence: (json['last_read_sequence'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$ConversationMemberDtoToJson(
   _ConversationMemberDto instance,
 ) => <String, dynamic>{
-  'ID': instance.id,
-  'ConversationID': instance.conversationId,
-  'UserID': instance.userId,
-  'Role': instance.role,
-  'LastReadSequence': instance.lastReadSequence,
+  'id': instance.id,
+  'conversation_id': instance.conversationId,
+  'user_id': instance.userId,
+  'role': instance.role,
+  'last_read_sequence': instance.lastReadSequence,
 };
 
 _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
     _ConversationDto(
-      id: json['ID'] as String,
-      type: json['Type'] as String,
-      title: json['Title'] as String?,
-      lastSequence: (json['LastSequence'] as num?)?.toInt() ?? 0,
+      id: json['id'] as String,
+      type: json['type'] as String,
+      title: json['title'] as String?,
+      lastSequence: (json['last_sequence'] as num?)?.toInt() ?? 0,
       members:
-          (json['Members'] as List<dynamic>?)
+          (json['members'] as List<dynamic>?)
               ?.map(
                 (e) =>
                     ConversationMemberDto.fromJson(e as Map<String, dynamic>),
               )
               .toList() ??
           const [],
-      messages: (json['Messages'] as List<dynamic>?)
+      messages: (json['messages'] as List<dynamic>?)
           ?.map(
             (e) => e == null
                 ? null
@@ -57,12 +57,12 @@ _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ConversationDtoToJson(_ConversationDto instance) =>
     <String, dynamic>{
-      'ID': instance.id,
-      'Type': instance.type,
-      'Title': instance.title,
-      'LastSequence': instance.lastSequence,
-      'Members': instance.members,
-      'Messages': instance.messages,
+      'id': instance.id,
+      'type': instance.type,
+      'title': instance.title,
+      'last_sequence': instance.lastSequence,
+      'members': instance.members,
+      'messages': instance.messages,
       'created_at': instance.createdAt?.toIso8601String(),
       'updated_at': instance.updatedAt?.toIso8601String(),
     };

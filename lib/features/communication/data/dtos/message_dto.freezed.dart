@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessageDto {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'ConversationID') String get conversationId;@JsonKey(name: 'SenderID') String get senderId;@JsonKey(name: 'SenderDeviceID') String? get senderDeviceId;@JsonKey(name: 'Type') String get type;@JsonKey(name: 'Sequence') int get sequence;@JsonKey(name: 'Version') int get version;@JsonKey(name: 'EncryptedPayload') String get encryptedPayload;@JsonKey(name: 'Nonce') String? get nonce;@JsonKey(name: 'created_at') DateTime get createdAt;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversation_id') String get conversationId;@JsonKey(name: 'sender_id') String get senderId;@JsonKey(name: 'sender_device_id') String? get senderDeviceId;@JsonKey(name: 'type') String get type;@JsonKey(name: 'sequence') int get sequence;@JsonKey(name: 'version') int get version;@JsonKey(name: 'encrypted_payload') String get encryptedPayload;@JsonKey(name: 'nonce') String? get nonce;@JsonKey(name: 'created_at') DateTime get createdAt;
 /// Create a copy of MessageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $MessageDtoCopyWith<$Res>  {
   factory $MessageDtoCopyWith(MessageDto value, $Res Function(MessageDto) _then) = _$MessageDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ConversationID') String conversationId,@JsonKey(name: 'SenderID') String senderId,@JsonKey(name: 'SenderDeviceID') String? senderDeviceId,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Sequence') int sequence,@JsonKey(name: 'Version') int version,@JsonKey(name: 'EncryptedPayload') String encryptedPayload,@JsonKey(name: 'Nonce') String? nonce,@JsonKey(name: 'created_at') DateTime createdAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'conversation_id') String conversationId,@JsonKey(name: 'sender_id') String senderId,@JsonKey(name: 'sender_device_id') String? senderDeviceId,@JsonKey(name: 'type') String type,@JsonKey(name: 'sequence') int sequence,@JsonKey(name: 'version') int version,@JsonKey(name: 'encrypted_payload') String encryptedPayload,@JsonKey(name: 'nonce') String? nonce,@JsonKey(name: 'created_at') DateTime createdAt
 });
 
 
@@ -162,7 +162,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'SenderID')  String senderId, @JsonKey(name: 'SenderDeviceID')  String? senderDeviceId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Sequence')  int sequence, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'EncryptedPayload')  String encryptedPayload, @JsonKey(name: 'Nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'sender_id')  String senderId, @JsonKey(name: 'sender_device_id')  String? senderDeviceId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'sequence')  int sequence, @JsonKey(name: 'version')  int version, @JsonKey(name: 'encrypted_payload')  String encryptedPayload, @JsonKey(name: 'nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessageDto() when $default != null:
 return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceId,_that.type,_that.sequence,_that.version,_that.encryptedPayload,_that.nonce,_that.createdAt);case _:
@@ -183,7 +183,7 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceI
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'SenderID')  String senderId, @JsonKey(name: 'SenderDeviceID')  String? senderDeviceId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Sequence')  int sequence, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'EncryptedPayload')  String encryptedPayload, @JsonKey(name: 'Nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'sender_id')  String senderId, @JsonKey(name: 'sender_device_id')  String? senderDeviceId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'sequence')  int sequence, @JsonKey(name: 'version')  int version, @JsonKey(name: 'encrypted_payload')  String encryptedPayload, @JsonKey(name: 'nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _MessageDto():
 return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceId,_that.type,_that.sequence,_that.version,_that.encryptedPayload,_that.nonce,_that.createdAt);case _:
@@ -203,7 +203,7 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceI
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'SenderID')  String senderId, @JsonKey(name: 'SenderDeviceID')  String? senderDeviceId, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Sequence')  int sequence, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'EncryptedPayload')  String encryptedPayload, @JsonKey(name: 'Nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'sender_id')  String senderId, @JsonKey(name: 'sender_device_id')  String? senderDeviceId, @JsonKey(name: 'type')  String type, @JsonKey(name: 'sequence')  int sequence, @JsonKey(name: 'version')  int version, @JsonKey(name: 'encrypted_payload')  String encryptedPayload, @JsonKey(name: 'nonce')  String? nonce, @JsonKey(name: 'created_at')  DateTime createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MessageDto() when $default != null:
 return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceId,_that.type,_that.sequence,_that.version,_that.encryptedPayload,_that.nonce,_that.createdAt);case _:
@@ -218,18 +218,18 @@ return $default(_that.id,_that.conversationId,_that.senderId,_that.senderDeviceI
 @JsonSerializable()
 
 class _MessageDto implements MessageDto {
-  const _MessageDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'ConversationID') required this.conversationId, @JsonKey(name: 'SenderID') required this.senderId, @JsonKey(name: 'SenderDeviceID') this.senderDeviceId, @JsonKey(name: 'Type') required this.type, @JsonKey(name: 'Sequence') this.sequence = 0, @JsonKey(name: 'Version') this.version = 1, @JsonKey(name: 'EncryptedPayload') this.encryptedPayload = '', @JsonKey(name: 'Nonce') this.nonce, @JsonKey(name: 'created_at') required this.createdAt});
+  const _MessageDto({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'conversation_id') required this.conversationId, @JsonKey(name: 'sender_id') required this.senderId, @JsonKey(name: 'sender_device_id') this.senderDeviceId, @JsonKey(name: 'type') required this.type, @JsonKey(name: 'sequence') this.sequence = 0, @JsonKey(name: 'version') this.version = 1, @JsonKey(name: 'encrypted_payload') this.encryptedPayload = '', @JsonKey(name: 'nonce') this.nonce, @JsonKey(name: 'created_at') required this.createdAt});
   factory _MessageDto.fromJson(Map<String, dynamic> json) => _$MessageDtoFromJson(json);
 
-@override@JsonKey(name: 'ID') final  String id;
-@override@JsonKey(name: 'ConversationID') final  String conversationId;
-@override@JsonKey(name: 'SenderID') final  String senderId;
-@override@JsonKey(name: 'SenderDeviceID') final  String? senderDeviceId;
-@override@JsonKey(name: 'Type') final  String type;
-@override@JsonKey(name: 'Sequence') final  int sequence;
-@override@JsonKey(name: 'Version') final  int version;
-@override@JsonKey(name: 'EncryptedPayload') final  String encryptedPayload;
-@override@JsonKey(name: 'Nonce') final  String? nonce;
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'conversation_id') final  String conversationId;
+@override@JsonKey(name: 'sender_id') final  String senderId;
+@override@JsonKey(name: 'sender_device_id') final  String? senderDeviceId;
+@override@JsonKey(name: 'type') final  String type;
+@override@JsonKey(name: 'sequence') final  int sequence;
+@override@JsonKey(name: 'version') final  int version;
+@override@JsonKey(name: 'encrypted_payload') final  String encryptedPayload;
+@override@JsonKey(name: 'nonce') final  String? nonce;
 @override@JsonKey(name: 'created_at') final  DateTime createdAt;
 
 /// Create a copy of MessageDto
@@ -265,7 +265,7 @@ abstract mixin class _$MessageDtoCopyWith<$Res> implements $MessageDtoCopyWith<$
   factory _$MessageDtoCopyWith(_MessageDto value, $Res Function(_MessageDto) _then) = __$MessageDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ConversationID') String conversationId,@JsonKey(name: 'SenderID') String senderId,@JsonKey(name: 'SenderDeviceID') String? senderDeviceId,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Sequence') int sequence,@JsonKey(name: 'Version') int version,@JsonKey(name: 'EncryptedPayload') String encryptedPayload,@JsonKey(name: 'Nonce') String? nonce,@JsonKey(name: 'created_at') DateTime createdAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'conversation_id') String conversationId,@JsonKey(name: 'sender_id') String senderId,@JsonKey(name: 'sender_device_id') String? senderDeviceId,@JsonKey(name: 'type') String type,@JsonKey(name: 'sequence') int sequence,@JsonKey(name: 'version') int version,@JsonKey(name: 'encrypted_payload') String encryptedPayload,@JsonKey(name: 'nonce') String? nonce,@JsonKey(name: 'created_at') DateTime createdAt
 });
 
 

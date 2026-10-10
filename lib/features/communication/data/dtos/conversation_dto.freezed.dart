@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ConversationMemberDto {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'ConversationID') String get conversationId;@JsonKey(name: 'UserID') String get userId;@JsonKey(name: 'Role') String get role;@JsonKey(name: 'LastReadSequence') int get lastReadSequence;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversation_id') String get conversationId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'role') String get role;@JsonKey(name: 'last_read_sequence') int get lastReadSequence;
 /// Create a copy of ConversationMemberDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $ConversationMemberDtoCopyWith<$Res>  {
   factory $ConversationMemberDtoCopyWith(ConversationMemberDto value, $Res Function(ConversationMemberDto) _then) = _$ConversationMemberDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ConversationID') String conversationId,@JsonKey(name: 'UserID') String userId,@JsonKey(name: 'Role') String role,@JsonKey(name: 'LastReadSequence') int lastReadSequence
+@JsonKey(name: 'id') String id,@JsonKey(name: 'conversation_id') String conversationId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'role') String role,@JsonKey(name: 'last_read_sequence') int lastReadSequence
 });
 
 
@@ -157,7 +157,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'UserID')  String userId, @JsonKey(name: 'Role')  String role, @JsonKey(name: 'LastReadSequence')  int lastReadSequence)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'role')  String role, @JsonKey(name: 'last_read_sequence')  int lastReadSequence)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ConversationMemberDto() when $default != null:
 return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.lastReadSequence);case _:
@@ -178,7 +178,7 @@ return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.last
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'UserID')  String userId, @JsonKey(name: 'Role')  String role, @JsonKey(name: 'LastReadSequence')  int lastReadSequence)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'role')  String role, @JsonKey(name: 'last_read_sequence')  int lastReadSequence)  $default,) {final _that = this;
 switch (_that) {
 case _ConversationMemberDto():
 return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.lastReadSequence);case _:
@@ -198,7 +198,7 @@ return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.last
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'ConversationID')  String conversationId, @JsonKey(name: 'UserID')  String userId, @JsonKey(name: 'Role')  String role, @JsonKey(name: 'LastReadSequence')  int lastReadSequence)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'conversation_id')  String conversationId, @JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'role')  String role, @JsonKey(name: 'last_read_sequence')  int lastReadSequence)?  $default,) {final _that = this;
 switch (_that) {
 case _ConversationMemberDto() when $default != null:
 return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.lastReadSequence);case _:
@@ -213,14 +213,14 @@ return $default(_that.id,_that.conversationId,_that.userId,_that.role,_that.last
 @JsonSerializable()
 
 class _ConversationMemberDto implements ConversationMemberDto {
-  const _ConversationMemberDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'ConversationID') required this.conversationId, @JsonKey(name: 'UserID') required this.userId, @JsonKey(name: 'Role') required this.role, @JsonKey(name: 'LastReadSequence') this.lastReadSequence = 0});
+  const _ConversationMemberDto({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'conversation_id') required this.conversationId, @JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'role') required this.role, @JsonKey(name: 'last_read_sequence') this.lastReadSequence = 0});
   factory _ConversationMemberDto.fromJson(Map<String, dynamic> json) => _$ConversationMemberDtoFromJson(json);
 
-@override@JsonKey(name: 'ID') final  String id;
-@override@JsonKey(name: 'ConversationID') final  String conversationId;
-@override@JsonKey(name: 'UserID') final  String userId;
-@override@JsonKey(name: 'Role') final  String role;
-@override@JsonKey(name: 'LastReadSequence') final  int lastReadSequence;
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'conversation_id') final  String conversationId;
+@override@JsonKey(name: 'user_id') final  String userId;
+@override@JsonKey(name: 'role') final  String role;
+@override@JsonKey(name: 'last_read_sequence') final  int lastReadSequence;
 
 /// Create a copy of ConversationMemberDto
 /// with the given fields replaced by the non-null parameter values.
@@ -255,7 +255,7 @@ abstract mixin class _$ConversationMemberDtoCopyWith<$Res> implements $Conversat
   factory _$ConversationMemberDtoCopyWith(_ConversationMemberDto value, $Res Function(_ConversationMemberDto) _then) = __$ConversationMemberDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'ConversationID') String conversationId,@JsonKey(name: 'UserID') String userId,@JsonKey(name: 'Role') String role,@JsonKey(name: 'LastReadSequence') int lastReadSequence
+@JsonKey(name: 'id') String id,@JsonKey(name: 'conversation_id') String conversationId,@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'role') String role,@JsonKey(name: 'last_read_sequence') int lastReadSequence
 });
 
 
@@ -290,7 +290,7 @@ as int,
 /// @nodoc
 mixin _$ConversationDto {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'Type') String get type;@JsonKey(name: 'Title') String? get title;@JsonKey(name: 'LastSequence') int get lastSequence;@JsonKey(name: 'Members') List<ConversationMemberDto> get members;@JsonKey(name: 'Messages') List<MessageDto?>? get messages;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'type') String get type;@JsonKey(name: 'title') String? get title;@JsonKey(name: 'last_sequence') int get lastSequence;@JsonKey(name: 'members') List<ConversationMemberDto> get members;@JsonKey(name: 'messages') List<MessageDto?>? get messages;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
 /// Create a copy of ConversationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -323,7 +323,7 @@ abstract mixin class $ConversationDtoCopyWith<$Res>  {
   factory $ConversationDtoCopyWith(ConversationDto value, $Res Function(ConversationDto) _then) = _$ConversationDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Title') String? title,@JsonKey(name: 'LastSequence') int lastSequence,@JsonKey(name: 'Members') List<ConversationMemberDto> members,@JsonKey(name: 'Messages') List<MessageDto?>? messages,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'type') String type,@JsonKey(name: 'title') String? title,@JsonKey(name: 'last_sequence') int lastSequence,@JsonKey(name: 'members') List<ConversationMemberDto> members,@JsonKey(name: 'messages') List<MessageDto?>? messages,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 
@@ -435,7 +435,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Title')  String? title, @JsonKey(name: 'LastSequence')  int lastSequence, @JsonKey(name: 'Members')  List<ConversationMemberDto> members, @JsonKey(name: 'Messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'type')  String type, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'last_sequence')  int lastSequence, @JsonKey(name: 'members')  List<ConversationMemberDto> members, @JsonKey(name: 'messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ConversationDto() when $default != null:
 return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members,_that.messages,_that.createdAt,_that.updatedAt);case _:
@@ -456,7 +456,7 @@ return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Title')  String? title, @JsonKey(name: 'LastSequence')  int lastSequence, @JsonKey(name: 'Members')  List<ConversationMemberDto> members, @JsonKey(name: 'Messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'type')  String type, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'last_sequence')  int lastSequence, @JsonKey(name: 'members')  List<ConversationMemberDto> members, @JsonKey(name: 'messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ConversationDto():
 return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members,_that.messages,_that.createdAt,_that.updatedAt);case _:
@@ -476,7 +476,7 @@ return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'Type')  String type, @JsonKey(name: 'Title')  String? title, @JsonKey(name: 'LastSequence')  int lastSequence, @JsonKey(name: 'Members')  List<ConversationMemberDto> members, @JsonKey(name: 'Messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'id')  String id, @JsonKey(name: 'type')  String type, @JsonKey(name: 'title')  String? title, @JsonKey(name: 'last_sequence')  int lastSequence, @JsonKey(name: 'members')  List<ConversationMemberDto> members, @JsonKey(name: 'messages')  List<MessageDto?>? messages, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ConversationDto() when $default != null:
 return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members,_that.messages,_that.createdAt,_that.updatedAt);case _:
@@ -491,22 +491,22 @@ return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.members
 @JsonSerializable()
 
 class _ConversationDto implements ConversationDto {
-  const _ConversationDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'Type') required this.type, @JsonKey(name: 'Title') this.title, @JsonKey(name: 'LastSequence') this.lastSequence = 0, @JsonKey(name: 'Members') final  List<ConversationMemberDto> members = const [], @JsonKey(name: 'Messages') final  List<MessageDto?>? messages, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt}): _members = members,_messages = messages;
+  const _ConversationDto({@JsonKey(name: 'id') required this.id, @JsonKey(name: 'type') required this.type, @JsonKey(name: 'title') this.title, @JsonKey(name: 'last_sequence') this.lastSequence = 0, @JsonKey(name: 'members') final  List<ConversationMemberDto> members = const [], @JsonKey(name: 'messages') final  List<MessageDto?>? messages, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt}): _members = members,_messages = messages;
   factory _ConversationDto.fromJson(Map<String, dynamic> json) => _$ConversationDtoFromJson(json);
 
-@override@JsonKey(name: 'ID') final  String id;
-@override@JsonKey(name: 'Type') final  String type;
-@override@JsonKey(name: 'Title') final  String? title;
-@override@JsonKey(name: 'LastSequence') final  int lastSequence;
+@override@JsonKey(name: 'id') final  String id;
+@override@JsonKey(name: 'type') final  String type;
+@override@JsonKey(name: 'title') final  String? title;
+@override@JsonKey(name: 'last_sequence') final  int lastSequence;
  final  List<ConversationMemberDto> _members;
-@override@JsonKey(name: 'Members') List<ConversationMemberDto> get members {
+@override@JsonKey(name: 'members') List<ConversationMemberDto> get members {
   if (_members is EqualUnmodifiableListView) return _members;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_members);
 }
 
  final  List<MessageDto?>? _messages;
-@override@JsonKey(name: 'Messages') List<MessageDto?>? get messages {
+@override@JsonKey(name: 'messages') List<MessageDto?>? get messages {
   final value = _messages;
   if (value == null) return null;
   if (_messages is EqualUnmodifiableListView) return _messages;
@@ -550,7 +550,7 @@ abstract mixin class _$ConversationDtoCopyWith<$Res> implements $ConversationDto
   factory _$ConversationDtoCopyWith(_ConversationDto value, $Res Function(_ConversationDto) _then) = __$ConversationDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'Type') String type,@JsonKey(name: 'Title') String? title,@JsonKey(name: 'LastSequence') int lastSequence,@JsonKey(name: 'Members') List<ConversationMemberDto> members,@JsonKey(name: 'Messages') List<MessageDto?>? messages,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'id') String id,@JsonKey(name: 'type') String type,@JsonKey(name: 'title') String? title,@JsonKey(name: 'last_sequence') int lastSequence,@JsonKey(name: 'members') List<ConversationMemberDto> members,@JsonKey(name: 'messages') List<MessageDto?>? messages,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
 });
 
 

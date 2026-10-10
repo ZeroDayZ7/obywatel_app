@@ -678,6 +678,25 @@ void main() {
     expect(secondDeviceId, equals(firstDeviceId));
   });
 
+  test('message dto accepts backend snake_case encrypted payload fields', () {
+    final dto = MessageDto.fromJson({
+      'id': 'msg-1',
+      'conversation_id': 'conv-123',
+      'sender_id': 'user-a',
+      'sender_device_id': 'device-abc',
+      'type': 'text',
+      'sequence': 7,
+      'version': 3,
+      'encrypted_payload': 'ciphertext-from-server',
+      'created_at': '2024-01-01T10:00:00.000Z',
+    });
+
+    expect(dto.id, 'msg-1');
+    expect(dto.conversationId, 'conv-123');
+    expect(dto.senderId, 'user-a');
+    expect(dto.encryptedPayload, 'ciphertext-from-server');
+  });
+
   test(
     'outbox event payload should match backend contract and keep ciphertext nested',
     () {
