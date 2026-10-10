@@ -21,13 +21,20 @@ import 'package:obywatel_plus/features/communication/data/dtos/messaging_activat
 
 class _FakeE2eeCryptoService extends E2eeCryptoService {
   _FakeE2eeCryptoService()
-      : super(
-          SecureStorageService(const FlutterSecureStorage(), AppLogger()),
-          AppLogger(),
-          ApiClient(dio: Dio(), storage: SecureStorageService(const FlutterSecureStorage(), AppLogger()), logger: AppLogger()),
-          DeviceInfoService(AppLogger()),
-          DriftSignalProtocolStore(AppDatabase(NativeDatabase.memory())),
-        );
+    : super(
+        SecureStorageService(const FlutterSecureStorage(), AppLogger()),
+        AppLogger(),
+        ApiClient(
+          dio: Dio(),
+          storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            AppLogger(),
+          ),
+          logger: AppLogger(),
+        ),
+        DeviceInfoService(AppLogger()),
+        DriftSignalProtocolStore(AppDatabase(NativeDatabase.memory())),
+      );
 
   int registerCalls = 0;
 
@@ -38,7 +45,17 @@ class _FakeE2eeCryptoService extends E2eeCryptoService {
 }
 
 class _FakeMessagingActivationApiClient extends MessagingActivationApiClient {
-  _FakeMessagingActivationApiClient() : super(ApiClient(dio: Dio(), storage: SecureStorageService(const FlutterSecureStorage(), AppLogger()), logger: AppLogger()));
+  _FakeMessagingActivationApiClient()
+    : super(
+        ApiClient(
+          dio: Dio(),
+          storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            AppLogger(),
+          ),
+          logger: AppLogger(),
+        ),
+      );
 
   @override
   Future<MessagingActivationDto> getActivationStatus() async {
@@ -53,10 +70,7 @@ class _FakeMessagingActivationApiClient extends MessagingActivationApiClient {
 
   @override
   Future<MessagingTermsDto> getCurrentTerms() async {
-    return const MessagingTermsDto(
-      version: 'v1',
-      text: 'Akceptuję regulamin.',
-    );
+    return const MessagingTermsDto(version: 'v1', text: 'Akceptuję regulamin.');
   }
 
   @override
@@ -79,24 +93,26 @@ class _FakeMessagingActivationApiClient extends MessagingActivationApiClient {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  const secureStorageChannel = MethodChannel('plugins.it_nomads.com/flutter_secure_storage');
-  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
-    secureStorageChannel,
-    (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'write':
-        case 'delete':
-        case 'deleteAll':
-          return null;
-        case 'read':
-          return null;
-        case 'readAll':
-          return <String, String>{};
-        default:
-          return null;
-      }
-    },
+  const secureStorageChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
   );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(secureStorageChannel, (
+        MethodCall methodCall,
+      ) async {
+        switch (methodCall.method) {
+          case 'write':
+          case 'delete':
+          case 'deleteAll':
+            return null;
+          case 'read':
+            return null;
+          case 'readAll':
+            return <String, String>{};
+          default:
+            return null;
+        }
+      });
 
   group('E2eeCryptoService', () {
     test('parses a Signal pre-key bundle from backend JSON', () {
@@ -128,61 +144,154 @@ void main() {
       );
     });
 
-    test('acceptCurrentTerms initializes E2EE device identity after consent', () async {
-      final fakeCrypto = _FakeE2eeCryptoService();
-      final fakeApiClient = _FakeMessagingActivationApiClient();
-      final container = ProviderContainer(
-        overrides: [
-          messagingActivationApiClientProvider.overrideWithValue(fakeApiClient),
-          deviceInfoServiceProvider.overrideWithValue(
-            DeviceInfoService(AppLogger()),
-          ),
-          e2eeCryptoServiceProvider.overrideWithValue(fakeCrypto),
-        ],
-      );
-      addTearDown(container.dispose);
+    test(
+      'acceptCurrentTerms initializes E2EE device identity after consent',
+      () async {
+        final fakeCrypto = _FakeE2eeCryptoService();
+        final fakeApiClient = _FakeMessagingActivationApiClient();
+        final container = ProviderContainer(
+          overrides: [
+            messagingActivationApiClientProvider.overrideWithValue(
+              fakeApiClient,
+            ),
+            deviceInfoServiceProvider.overrideWithValue(
+              DeviceInfoService(AppLogger()),
+            ),
+            e2eeCryptoServiceProvider.overrideWithValue(fakeCrypto),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final controller = container.read(messagingActivationControllerProvider.notifier);
-      await controller.acceptCurrentTerms();
+        final controller = container.read(
+          messagingActivationControllerProvider.notifier,
+        );
+        await controller.acceptCurrentTerms();
 
-      expect(fakeCrypto.registerCalls, 1,
-          reason: 'Akceptacja regulaminu powinna uruchamiać inicjalizację E2EE.');
-      final state = container.read(messagingActivationControllerProvider).value;
-      expect(state?.status?.status, 'active');
-    });
+        expect(
+          fakeCrypto.registerCalls,
+          1,
+          reason:
+              'Akceptacja regulaminu powinna uruchamiać inicjalizację E2EE.',
+        );
+        final state = container
+            .read(messagingActivationControllerProvider)
+            .value;
+        expect(state?.status?.status, 'active');
+      },
+    );
 
-    test('uses Signal-compatible identity key material instead of raw device public key', () async {
-      final logger = AppLogger();
-      final storage = SecureStorageService(const FlutterSecureStorage(), logger);
-      final apiClient = ApiClient(dio: Dio(), storage: storage, logger: logger);
-      final deviceInfoService = DeviceInfoService(logger);
-      final db = AppDatabase(NativeDatabase.memory());
-      addTearDown(() async => db.close());
+    test(
+      'uses Signal-compatible identity key material instead of raw device public key',
+      () async {
+        final logger = AppLogger();
+        final storage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final apiClient = ApiClient(
+          dio: Dio(),
+          storage: storage,
+          logger: logger,
+        );
+        final deviceInfoService = DeviceInfoService(logger);
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(() async => db.close());
 
-      final signalStore = DriftSignalProtocolStore(db);
-      final service = E2eeCryptoService(
-        storage,
-        logger,
-        apiClient,
-        deviceInfoService,
-        signalStore,
-      );
+        final signalStore = DriftSignalProtocolStore(db);
+        final service = E2eeCryptoService(
+          storage,
+          logger,
+          apiClient,
+          deviceInfoService,
+          signalStore,
+        );
 
-      await storage.write(
-        key: StorageKeys.devicePublicKey,
-        value: base64Encode(List<int>.filled(32, 0x11)),
-      );
+        await storage.write(
+          key: StorageKeys.devicePublicKey,
+          value: base64Encode(List<int>.filled(32, 0x11)),
+        );
 
-      final bundle = await service.ensureDeviceIdentityBundle();
-      final decodedPublicKey = base64Decode(bundle.publicKey);
+        final bundle = await service.ensureDeviceIdentityBundle();
+        final decodedPublicKey = base64Decode(bundle.publicKey);
 
-      expect(decodedPublicKey.length, 33,
-          reason: 'identity_public_key must be a valid Signal EC public key (33-byte compressed or 65-byte uncompressed).');
-      expect(bundle.signedPreKey.length, greaterThan(0));
-      expect(bundle.oneTimePreKeys.length, greaterThan(0));
-      expect(base64Decode(bundle.oneTimePreKeys.first).length, 33,
-          reason: 'one_time_pre_keys must also use Signal EC public key format.');
-    });
+        expect(
+          decodedPublicKey.length,
+          33,
+          reason:
+              'identity_public_key must be a valid Signal EC public key (33-byte compressed or 65-byte uncompressed).',
+        );
+        expect(bundle.signedPreKey.length, greaterThan(0));
+        expect(bundle.oneTimePreKeys.length, greaterThan(0));
+        expect(
+          base64Decode(bundle.oneTimePreKeys.first).length,
+          33,
+          reason:
+              'one_time_pre_keys must also use Signal EC public key format.',
+        );
+      },
+    );
+
+    test(
+      'encryptMessage preserves Signal message type for outbound requests',
+      () async {
+        final logger = AppLogger();
+        final aliceStorage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final aliceApiClient = ApiClient(
+          dio: Dio(),
+          storage: aliceStorage,
+          logger: logger,
+        );
+        final deviceInfoService = DeviceInfoService(logger);
+        final aliceDb = AppDatabase(NativeDatabase.memory());
+        addTearDown(() async => aliceDb.close());
+
+        final aliceStore = DriftSignalProtocolStore(aliceDb);
+        final aliceService = E2eeCryptoService(
+          aliceStorage,
+          logger,
+          aliceApiClient,
+          deviceInfoService,
+          aliceStore,
+        );
+
+        final bobIdentity = await aliceStore.getIdentityKeyPair();
+        final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+        final bobOneTimePreKey = generatePreKeys(1, 1).first;
+        await aliceStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+        await aliceStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+        final remoteBundle = PreKeyBundle(
+          await aliceStore.getLocalRegistrationId(),
+          1,
+          bobOneTimePreKey.id,
+          bobOneTimePreKey.getKeyPair().publicKey,
+          bobSignedPreKey.id,
+          bobSignedPreKey.getKeyPair().publicKey,
+          bobSignedPreKey.signature,
+          bobIdentity.getPublicKey(),
+        );
+
+        await aliceService.initializeSessionForPeer(
+          'peer-user',
+          remoteBundle: remoteBundle,
+        );
+
+        final encrypted = await aliceService.encryptMessage(
+          'peer-user',
+          'hello type preservation',
+        );
+
+        expect(encrypted.ciphertextBase64.isNotEmpty, isTrue);
+        expect(encrypted.type, isNotNull);
+        expect([
+          CiphertextMessage.prekeyType,
+          CiphertextMessage.whisperType,
+        ], contains(encrypted.type));
+      },
+    );
 
     test(
       'encrypts and decrypts multiple messages with a real Signal session',
@@ -360,7 +469,9 @@ void main() {
       );
 
       final tampered = base64Encode(
-        base64Decode(encrypted.ciphertext).map((byte) => byte == 0 ? 1 : byte).toList(),
+        base64Decode(
+          encrypted.ciphertext,
+        ).map((byte) => byte == 0 ? 1 : byte).toList(),
       );
 
       await expectLater(

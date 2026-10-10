@@ -13,8 +13,11 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_c
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
-Map<String, dynamic> messageToOutboxJson(Message message, String deviceId) =>
-    buildOutboxEventPayload(message, deviceId);
+Map<String, dynamic> messageToOutboxJson(
+  Message message,
+  String deviceId, {
+  int signalType = 1,
+}) => buildOutboxEventPayload(message, deviceId, signalType: signalType);
 
 class ChatSyncService {
   final ChatsApiClient _apiClient;
@@ -177,8 +180,8 @@ class ChatSyncStatusController extends Notifier<SyncStatus> {
 
 final chatSyncStatusControllerProvider =
     NotifierProvider<ChatSyncStatusController, SyncStatus>(
-  ChatSyncStatusController.new,
-);
+      ChatSyncStatusController.new,
+    );
 
 final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
   final apiClient = ref.watch(chatsApiClientProvider);

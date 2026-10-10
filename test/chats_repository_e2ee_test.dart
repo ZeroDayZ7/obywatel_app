@@ -24,7 +24,11 @@ class ThrowingCryptoService extends E2eeCryptoService {
   );
 
   @override
-  Future<void> ensureSessionForPeer(String remoteUserId, {int deviceId = 1, String? operationId}) async {
+  Future<void> ensureSessionForPeer(
+    String remoteUserId, {
+    int deviceId = 1,
+    String? operationId,
+  }) async {
     throw StateError('E2EE bootstrap should not run while accepting a contact');
   }
 }
@@ -42,13 +46,18 @@ class CapturingCryptoService extends E2eeCryptoService {
   String? lastPlaintext;
 
   @override
-  Future<EncryptedData> encryptMessage(String remoteUserId, String plaintext, {String? operationId}) async {
+  Future<EncryptedData> encryptMessage(
+    String remoteUserId,
+    String plaintext, {
+    String? operationId,
+  }) async {
     lastPeerUserId = remoteUserId;
     lastPlaintext = plaintext;
 
     return const EncryptedData(
       ciphertextBase64: 'ciphertext-from-peer',
       nonceBase64: 'nonce',
+      type: 3,
     );
   }
 }
@@ -63,16 +72,18 @@ class FailingCryptoService extends E2eeCryptoService {
   );
 
   @override
-  Future<EncryptedData> encryptMessage(String remoteUserId, String plaintext, {String? operationId}) async {
+  Future<EncryptedData> encryptMessage(
+    String remoteUserId,
+    String plaintext, {
+    String? operationId,
+  }) async {
     throw StateError('Encryption failed before any plaintext could be sent');
   }
 }
 
 class RecordingApiClient extends ApiClient {
-  RecordingApiClient({
-    required super.storage,
-    required super.logger,
-  }) : super(dio: Dio());
+  RecordingApiClient({required super.storage, required super.logger})
+    : super(dio: Dio());
 
   final List<String> requests = <String>[];
   final List<Map<String, dynamic>> payloads = <Map<String, dynamic>>[];
@@ -100,110 +111,119 @@ void main() {
   final secureStorageStore = <String, String>{};
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(
-    const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
-    (MethodCall methodCall) async {
-      switch (methodCall.method) {
-        case 'read':
-          final key = methodCall.arguments['key'] as String?;
-          return secureStorageStore[key];
-        case 'write':
-          final key = methodCall.arguments['key'] as String?;
-          final value = methodCall.arguments['value'] as String?;
-          if (key != null && value != null) {
-            secureStorageStore[key] = value;
+        const MethodChannel('plugins.it_nomads.com/flutter_secure_storage'),
+        (MethodCall methodCall) async {
+          switch (methodCall.method) {
+            case 'read':
+              final key = methodCall.arguments['key'] as String?;
+              return secureStorageStore[key];
+            case 'write':
+              final key = methodCall.arguments['key'] as String?;
+              final value = methodCall.arguments['value'] as String?;
+              if (key != null && value != null) {
+                secureStorageStore[key] = value;
+              }
+              return null;
+            case 'delete':
+              final key = methodCall.arguments['key'] as String?;
+              if (key != null) {
+                secureStorageStore.remove(key);
+              }
+              return null;
+            case 'readAll':
+              return Map<String, String>.from(secureStorageStore);
+            case 'deleteAll':
+              secureStorageStore.clear();
+              return null;
+            default:
+              return null;
           }
-          return null;
-        case 'delete':
-          final key = methodCall.arguments['key'] as String?;
-          if (key != null) {
-            secureStorageStore.remove(key);
-          }
-          return null;
-        case 'readAll':
-          return Map<String, String>.from(secureStorageStore);
-        case 'deleteAll':
-          secureStorageStore.clear();
-          return null;
-        default:
-          return null;
-      }
-    },
-  );
+        },
+      );
 
   setUp(() {
     secureStorageStore.clear();
   });
 
-  test('ensureConversationForContact does not bootstrap E2EE session', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
-    final apiClient = ApiClient(
-      dio: Dio(),
-      storage: secureStorage,
-      logger: logger,
-    );
-    final deviceInfoService = DeviceInfoService(logger);
-    final signalStore = DriftSignalProtocolStore(db);
-    final cryptoService = ThrowingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      signalStore,
-    );
-    final repository = ChatsRepositoryImpl(
-      ChatsApiClient(
-        ApiClient(
-          dio: Dio(),
-          storage: secureStorage,
-          logger: logger,
+  test(
+    'ensureConversationForContact does not bootstrap E2EE session',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = ApiClient(
+        dio: Dio(),
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final signalStore = DriftSignalProtocolStore(db);
+      final cryptoService = ThrowingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        signalStore,
+      );
+      final repository = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
         ),
-      ),
-      db,
-      logger,
-      'user-1',
-      deviceInfoService,
-      cryptoService,
-    );
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+      );
 
-    final conversationId = await repository.ensureConversationForContact(
-      'user-2',
-      title: 'Piotr',
-    );
+      final conversationId = await repository.ensureConversationForContact(
+        'user-2',
+        title: 'Piotr',
+      );
 
-    expect(conversationId, 'user-1:user-2');
-    final conversations = await db.chatsDao.watchActiveConversations().first;
-    expect(conversations, isNotEmpty);
-  });
+      expect(conversationId, 'user-1:user-2');
+      final conversations = await db.chatsDao.watchActiveConversations().first;
+      expect(conversations, isNotEmpty);
+    },
+  );
 
-  test('Contact resolves peer user id for both owners and incoming/outgoing relations', () {
-    const annaContact = Contact(
-      id: 'contact-1',
-      ownerId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
-      contactUserId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
-      status: 'accepted',
-      direction: 'outgoing',
-      displayName: 'Piotr',
-    );
-    const piotrContact = Contact(
-      id: 'contact-2',
-      ownerId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
-      contactUserId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
-      status: 'accepted',
-      direction: 'incoming',
-      displayName: 'Anna',
-    );
+  test(
+    'Contact resolves peer user id for both owners and incoming/outgoing relations',
+    () {
+      const annaContact = Contact(
+        id: 'contact-1',
+        ownerId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
+        contactUserId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
+        status: 'accepted',
+        direction: 'outgoing',
+        displayName: 'Piotr',
+      );
+      const piotrContact = Contact(
+        id: 'contact-2',
+        ownerId: 'c3d4e5f6-3344-5b66-9933-a12345678902',
+        contactUserId: 'a2f6b8c9-1122-4a55-8822-b98765432101',
+        status: 'accepted',
+        direction: 'incoming',
+        displayName: 'Anna',
+      );
 
-    expect(
-      annaContact.peerUserIdForCurrentUser('a2f6b8c9-1122-4a55-8822-b98765432101'),
-      'c3d4e5f6-3344-5b66-9933-a12345678902',
-    );
-    expect(
-      piotrContact.peerUserIdForCurrentUser('c3d4e5f6-3344-5b66-9933-a12345678902'),
-      'a2f6b8c9-1122-4a55-8822-b98765432101',
-    );
-  });
+      expect(
+        annaContact.peerUserIdForCurrentUser(
+          'a2f6b8c9-1122-4a55-8822-b98765432101',
+        ),
+        'c3d4e5f6-3344-5b66-9933-a12345678902',
+      );
+      expect(
+        piotrContact.peerUserIdForCurrentUser(
+          'c3d4e5f6-3344-5b66-9933-a12345678902',
+        ),
+        'a2f6b8c9-1122-4a55-8822-b98765432101',
+      );
+    },
+  );
 
   test('peerUserIdForCurrentUser throws for non-participant', () {
     const contact = Contact(
@@ -215,191 +235,207 @@ void main() {
       displayName: 'Someone',
     );
 
-    expect(() => contact.peerUserIdForCurrentUser('not-a-participant'), throwsArgumentError);
+    expect(
+      () => contact.peerUserIdForCurrentUser('not-a-participant'),
+      throwsArgumentError,
+    );
   });
 
-  test('ensureConversationForContact produces canonical id identically for both participants', () async {
-    final logger = AppLogger();
-    final db1 = AppDatabase(NativeDatabase.memory());
-    final db2 = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
-    final apiClient = ApiClient(dio: Dio(), storage: secureStorage, logger: logger);
-    final deviceInfoService = DeviceInfoService(logger);
-    final cryptoService1 = ThrowingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      DriftSignalProtocolStore(db1),
-    );
-    final cryptoService2 = ThrowingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      DriftSignalProtocolStore(db2),
-    );
+  test(
+    'ensureConversationForContact produces canonical id identically for both participants',
+    () async {
+      final logger = AppLogger();
+      final db1 = AppDatabase(NativeDatabase.memory());
+      final db2 = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = ApiClient(
+        dio: Dio(),
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final cryptoService1 = ThrowingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        DriftSignalProtocolStore(db1),
+      );
+      final cryptoService2 = ThrowingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        DriftSignalProtocolStore(db2),
+      );
 
-    final annaRepo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db1,
-      logger,
-      'anna',
-      deviceInfoService,
-      cryptoService1,
-    );
-    final piotrRepo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db2,
-      logger,
-      'piotr',
-      deviceInfoService,
-      cryptoService2,
-    );
+      final annaRepo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db1,
+        logger,
+        'anna',
+        deviceInfoService,
+        cryptoService1,
+      );
+      final piotrRepo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db2,
+        logger,
+        'piotr',
+        deviceInfoService,
+        cryptoService2,
+      );
 
-    final idFromAnna = await annaRepo.ensureConversationForContact('piotr');
-    final idFromPiotr = await piotrRepo.ensureConversationForContact('anna');
+      final idFromAnna = await annaRepo.ensureConversationForContact('piotr');
+      final idFromPiotr = await piotrRepo.ensureConversationForContact('anna');
 
-    expect(idFromAnna, idFromPiotr);
-    expect(idFromAnna.split(':'), hasLength(2));
-  });
+      expect(idFromAnna, idFromPiotr);
+      expect(idFromAnna.split(':'), hasLength(2));
+    },
+  );
 
   test('resolveRemoteUserIdForConversation returns the other participant', () {
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u1'), 'u2');
     expect(resolveRemoteUserIdForConversation('u1:u2', 'u2'), 'u1');
   });
 
-  test('resolveRemoteUserIdForConversation rejects invalid conversation ids', () {
-    expect(
-      () => resolveRemoteUserIdForConversation('', 'u1'),
-      throwsArgumentError,
-    );
-    expect(
-      () => resolveRemoteUserIdForConversation('u1', 'u1'),
-      throwsArgumentError,
-    );
-    expect(
-      () => resolveRemoteUserIdForConversation('u1:u2:u3', 'u1'),
-      throwsArgumentError,
-    );
-    expect(
-      () => resolveRemoteUserIdForConversation('u1:u1', 'u1'),
-      throwsArgumentError,
-    );
-    expect(
-      () => resolveRemoteUserIdForConversation('u2:u3', 'u1'),
-      throwsArgumentError,
-    );
-  });
+  test(
+    'resolveRemoteUserIdForConversation rejects invalid conversation ids',
+    () {
+      expect(
+        () => resolveRemoteUserIdForConversation('', 'u1'),
+        throwsArgumentError,
+      );
+      expect(
+        () => resolveRemoteUserIdForConversation('u1', 'u1'),
+        throwsArgumentError,
+      );
+      expect(
+        () => resolveRemoteUserIdForConversation('u1:u2:u3', 'u1'),
+        throwsArgumentError,
+      );
+      expect(
+        () => resolveRemoteUserIdForConversation('u1:u1', 'u1'),
+        throwsArgumentError,
+      );
+      expect(
+        () => resolveRemoteUserIdForConversation('u2:u3', 'u1'),
+        throwsArgumentError,
+      );
+    },
+  );
 
-  test('registerDeviceIdentity is idempotent and posts only public key material', () async {
-    final logger = AppLogger();
-    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
-    final apiClient = RecordingApiClient(storage: secureStorage, logger: logger);
-    final deviceInfoService = DeviceInfoService(logger);
-    final db = AppDatabase(NativeDatabase.memory());
-    final cryptoService = E2eeCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      DriftSignalProtocolStore(db),
-    );
-
-    await cryptoService.registerDeviceIdentity();
-    await cryptoService.registerDeviceIdentity();
-
-    expect(apiClient.requests, ['/crypto/keys/device']);
-    final payload = apiClient.payloads.single;
-    expect(payload.containsKey('identity_public_key'), isTrue);
-    expect(payload.containsKey('public_key'), isTrue);
-    expect(payload.containsKey('private_key'), isFalse);
-    expect(payload.containsKey('device_private_key'), isFalse);
-    expect(payload['identity_public_key'], isNotNull);
-    expect(payload['public_key'], isNotNull);
-  });
-
-  test('sendMessage encrypts for remote user id, not conversation id', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
-    final deviceInfoService = DeviceInfoService(logger);
-    final signalStore = DriftSignalProtocolStore(db);
-    final cryptoService = CapturingCryptoService(
-      secureStorage,
-      logger,
-      ApiClient(
-        dio: Dio(),
+  test(
+    'registerDeviceIdentity is idempotent and posts only public key material',
+    () async {
+      final logger = AppLogger();
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = RecordingApiClient(
         storage: secureStorage,
         logger: logger,
-      ),
-      deviceInfoService,
-      signalStore,
-    );
-    final repository = ChatsRepositoryImpl(
-      ChatsApiClient(
-        ApiClient(
-          dio: Dio(),
-          storage: secureStorage,
-          logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final db = AppDatabase(NativeDatabase.memory());
+      final cryptoService = E2eeCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        DriftSignalProtocolStore(db),
+      );
+
+      await cryptoService.registerDeviceIdentity();
+      await cryptoService.registerDeviceIdentity();
+
+      expect(apiClient.requests, ['/crypto/keys/device']);
+      final payload = apiClient.payloads.single;
+      expect(payload.containsKey('identity_public_key'), isTrue);
+      expect(payload.containsKey('public_key'), isTrue);
+      expect(payload.containsKey('private_key'), isFalse);
+      expect(payload.containsKey('device_private_key'), isFalse);
+      expect(payload['identity_public_key'], isNotNull);
+      expect(payload['public_key'], isNotNull);
+    },
+  );
+
+  test(
+    'sendMessage encrypts for remote user id, not conversation id',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final signalStore = DriftSignalProtocolStore(db);
+      final cryptoService = CapturingCryptoService(
+        secureStorage,
+        logger,
+        ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
+        deviceInfoService,
+        signalStore,
+      );
+      final repository = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
         ),
-      ),
-      db,
-      logger,
-      'u1',
-      deviceInfoService,
-      cryptoService,
-    );
+        db,
+        logger,
+        'u1',
+        deviceInfoService,
+        cryptoService,
+      );
 
-    await repository.sendMessage(
-      conversationId: 'u1:u2',
-      content: 'secret',
-    );
+      await repository.sendMessage(conversationId: 'u1:u2', content: 'secret');
 
-    expect(cryptoService.lastPeerUserId, 'u2');
-    expect(cryptoService.lastPlaintext, 'secret');
-  });
+      expect(cryptoService.lastPeerUserId, 'u2');
+      expect(cryptoService.lastPlaintext, 'secret');
+    },
+  );
 
-  test('sendMessage aborts without storing plaintext when encryption fails', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(const FlutterSecureStorage(), logger);
-    final deviceInfoService = DeviceInfoService(logger);
-    final cryptoService = FailingCryptoService(
-      secureStorage,
-      logger,
-      ApiClient(
-        dio: Dio(),
-        storage: secureStorage,
-        logger: logger,
-      ),
-      deviceInfoService,
-      DriftSignalProtocolStore(db),
-    );
-    final repository = ChatsRepositoryImpl(
-      ChatsApiClient(
-        ApiClient(
-          dio: Dio(),
-          storage: secureStorage,
-          logger: logger,
+  test(
+    'sendMessage aborts without storing plaintext when encryption fails',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final cryptoService = FailingCryptoService(
+        secureStorage,
+        logger,
+        ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
+        deviceInfoService,
+        DriftSignalProtocolStore(db),
+      );
+      final repository = ChatsRepositoryImpl(
+        ChatsApiClient(
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
         ),
-      ),
-      db,
-      logger,
-      'u1',
-      deviceInfoService,
-      cryptoService,
-    );
+        db,
+        logger,
+        'u1',
+        deviceInfoService,
+        cryptoService,
+      );
 
-    expect(
-      () => repository.sendMessage(
-        conversationId: 'u1:u2',
-        content: 'secret',
-      ),
-      throwsStateError,
-    );
+      expect(
+        () =>
+            repository.sendMessage(conversationId: 'u1:u2', content: 'secret'),
+        throwsStateError,
+      );
 
-    final storedMessages = await db.select(db.messages).get();
-    expect(storedMessages, isEmpty);
-  });
+      final storedMessages = await db.select(db.messages).get();
+      expect(storedMessages, isEmpty);
+    },
+  );
 }

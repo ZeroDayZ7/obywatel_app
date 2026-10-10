@@ -7,6 +7,7 @@ abstract class ChatsRepository {
   Stream<List<Message>> watchMessagesForConversation(String conversationId);
 
   Future<List<Conversation>> getConversations();
+  Future<String> resolvePeerUserIdForConversation(String conversationId);
   Future<String> ensureConversationForContact(
     String contactUserId, {
     String? title,

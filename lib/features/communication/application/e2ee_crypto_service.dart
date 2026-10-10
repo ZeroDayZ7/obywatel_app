@@ -18,10 +18,12 @@ part 'e2ee_crypto_service.g.dart';
 class EncryptedData {
   final String ciphertextBase64;
   final String nonceBase64;
+  final int type;
 
   const EncryptedData({
     required this.ciphertextBase64,
     required this.nonceBase64,
+    required this.type,
   });
 }
 
@@ -51,12 +53,15 @@ class SignalCiphertextEnvelope {
   factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
     final typeValue = json['type'] ?? json['signal_message_type'] ?? 1;
     return SignalCiphertextEnvelope(
-      type: typeValue is int ? typeValue : int.tryParse(typeValue.toString()) ?? 1,
+      type: typeValue is int
+          ? typeValue
+          : int.tryParse(typeValue.toString()) ?? 1,
       ciphertext: (json['ciphertext'] ?? '').toString(),
       senderDeviceId: (json['senderDeviceId'] ?? json['sender_device_id'] ?? '')
           .toString(),
       recipientUserId:
-          (json['recipientUserId'] ?? json['recipient_user_id'] ?? '').toString(),
+          (json['recipientUserId'] ?? json['recipient_user_id'] ?? '')
+              .toString(),
       recipientDeviceId:
           (json['recipientDeviceId'] ?? json['recipient_device_id'] ?? '1')
               .toString(),
@@ -154,33 +159,54 @@ class E2eeCryptoService {
   }
 
   static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) {
-    final registrationId = _readIntValue(json, ['registrationId', 'registration_id'], fallback: 0);
-    final deviceId = _readIntValue(json, ['deviceId', 'device_id'], fallback: 1);
-    final preKeyId = _readIntValue(
-      json,
-      ['preKeyId', 'pre_key_id', 'oneTimePreKeyId', 'one_time_pre_key_id'],
-      fallback: 0,
-    );
-    final signedPreKeyId = _readIntValue(json, ['signedPreKeyId', 'signed_pre_key_id'], fallback: 1);
+    final registrationId = _readIntValue(json, [
+      'registrationId',
+      'registration_id',
+    ], fallback: 0);
+    final deviceId = _readIntValue(json, [
+      'deviceId',
+      'device_id',
+    ], fallback: 1);
+    final preKeyId = _readIntValue(json, [
+      'preKeyId',
+      'pre_key_id',
+      'oneTimePreKeyId',
+      'one_time_pre_key_id',
+    ], fallback: 0);
+    final signedPreKeyId = _readIntValue(json, [
+      'signedPreKeyId',
+      'signed_pre_key_id',
+    ], fallback: 1);
 
-    final identityKeyBytes = _readBytesValue(json, ['identityKey', 'identity_key']);
-    final signedPreKeyPublicBytes = _readBytesValue(
-      json,
-      ['signedPreKeyPublic', 'signed_pre_key_public', 'signedPreKey', 'signed_pre_key'],
-    );
-    final signedPreKeySignatureBytes = _readBytesValue(
-      json,
-      ['signedPreKeySignature', 'signed_pre_key_signature', 'signedPreKeySig', 'signed_pre_key_sig'],
-    );
-    final preKeyPublicBytes = _readBytesValue(
-      json,
-      ['preKeyPublic', 'pre_key_public', 'oneTimePreKey', 'one_time_pre_key'],
-    );
+    final identityKeyBytes = _readBytesValue(json, [
+      'identityKey',
+      'identity_key',
+    ]);
+    final signedPreKeyPublicBytes = _readBytesValue(json, [
+      'signedPreKeyPublic',
+      'signed_pre_key_public',
+      'signedPreKey',
+      'signed_pre_key',
+    ]);
+    final signedPreKeySignatureBytes = _readBytesValue(json, [
+      'signedPreKeySignature',
+      'signed_pre_key_signature',
+      'signedPreKeySig',
+      'signed_pre_key_sig',
+    ]);
+    final preKeyPublicBytes = _readBytesValue(json, [
+      'preKeyPublic',
+      'pre_key_public',
+      'oneTimePreKey',
+      'one_time_pre_key',
+    ]);
 
     if (identityKeyBytes == null ||
         signedPreKeyPublicBytes == null ||
         signedPreKeySignatureBytes == null) {
-      throw const FormatException('Missing required Signal pre-key bundle fields');
+      throw const FormatException(
+        'Missing required Signal pre-key bundle fields',
+      );
     }
 
     final identityKey = IdentityKey.fromBytes(identityKeyBytes, 0);
@@ -201,9 +227,17 @@ class E2eeCryptoService {
     );
   }
 
-  Future<PreKeyBundle> fetchRemotePreKeyBundle(String remoteUserId, {String? operationId}) async {
-    final headers = operationId != null ? {'X-Operation-Id': operationId} : null;
-    final response = await _apiClient.get('/crypto/keys/prekeys/$remoteUserId', headers: headers);
+  Future<PreKeyBundle> fetchRemotePreKeyBundle(
+    String remoteUserId, {
+    String? operationId,
+  }) async {
+    final headers = operationId != null
+        ? {'X-Operation-Id': operationId}
+        : null;
+    final response = await _apiClient.get(
+      '/crypto/keys/prekeys/$remoteUserId',
+      headers: headers,
+    );
     final payload = response.data;
 
     if (payload is! Map) {
@@ -228,9 +262,9 @@ class E2eeCryptoService {
 
   Future<void> ensureSessionForPeer(
     String remoteUserId, {
-      int deviceId = 1,
-      String? operationId,
-    }) async {
+    int deviceId = 1,
+    String? operationId,
+  }) async {
     final address = SignalProtocolAddress(remoteUserId, deviceId);
     final sessionExists = await _signalStore.containsSession(address);
     if (sessionExists) {
@@ -239,7 +273,10 @@ class E2eeCryptoService {
 
     final effectiveOperationId = _resolveOperationId(operationId);
     await registerDeviceIdentityWithOperation(effectiveOperationId);
-    final remoteBundle = await fetchRemotePreKeyBundle(remoteUserId, operationId: effectiveOperationId);
+    final remoteBundle = await fetchRemotePreKeyBundle(
+      remoteUserId,
+      operationId: effectiveOperationId,
+    );
     await initializeSessionForPeer(
       remoteUserId,
       remoteBundle: remoteBundle,
@@ -309,11 +346,17 @@ class E2eeCryptoService {
         if (payload.containsKey('private_key') ||
             payload.containsKey('device_private_key') ||
             payload.containsValue(bundle.privateKey)) {
-          throw StateError('Private E2EE keys must never be sent to the backend');
+          throw StateError(
+            'Private E2EE keys must never be sent to the backend',
+          );
         }
 
         final headers = {'X-Operation-Id': effectiveOperationId};
-        await _apiClient.post('/crypto/keys/device', data: payload, headers: headers);
+        await _apiClient.post(
+          '/crypto/keys/device',
+          data: payload,
+          headers: headers,
+        );
         _deviceIdentityRegistered = true;
       } finally {
         _deviceIdentityRegistrationTask = null;
@@ -346,7 +389,10 @@ class E2eeCryptoService {
       if (!await _signalStore.containsSession(address)) {
         final effectiveOperationId = _resolveOperationId(operationId);
         await registerDeviceIdentityWithOperation(effectiveOperationId);
-        final remoteBundle = await fetchRemotePreKeyBundle(recipientUserId, operationId: effectiveOperationId);
+        final remoteBundle = await fetchRemotePreKeyBundle(
+          recipientUserId,
+          operationId: effectiveOperationId,
+        );
         await initializeSessionForPeer(
           recipientUserId,
           remoteBundle: remoteBundle,
@@ -425,10 +471,15 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     try {
-      final envelope = await encryptOutboundMessage(remoteUserId, plaintext, operationId: operationId);
+      final envelope = await encryptOutboundMessage(
+        remoteUserId,
+        plaintext,
+        operationId: operationId,
+      );
       return EncryptedData(
         ciphertextBase64: envelope.ciphertext,
         nonceBase64: '',
+        type: envelope.type,
       );
     } catch (e, st) {
       if (e is EncryptionFailureException) {

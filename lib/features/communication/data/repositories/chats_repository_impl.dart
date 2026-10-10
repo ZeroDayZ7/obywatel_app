@@ -337,6 +337,35 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   @override
+  Future<String> resolvePeerUserIdForConversation(String conversationId) async {
+    final trimmedConversationId = conversationId.trim();
+    if (trimmedConversationId.isEmpty) {
+      throw ArgumentError.value(
+        conversationId,
+        'conversationId',
+        'Conversation ID cannot be empty',
+      );
+    }
+
+    if (Uuid.isValidUUID(fromString: trimmedConversationId)) {
+      final members = await (_db.select(
+        _db.conversationMembers,
+      )..where((t) => t.conversationId.equals(trimmedConversationId))).get();
+
+      for (final member in members) {
+        if (member.userId != _currentUserId) {
+          return member.userId;
+        }
+      }
+    }
+
+    return resolveRemoteUserIdForConversation(
+      trimmedConversationId,
+      _currentUserId,
+    );
+  }
+
+  @override
   Stream<List<Message>> watchMessagesForConversation(String conversationId) {
     final requestedConversationId = conversationId.trim();
 
@@ -348,9 +377,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
             return localMessages;
           }
 
-          final remoteUserId = resolveRemoteUserIdForConversation(
+          final remoteUserId = await resolvePeerUserIdForConversation(
             requestedConversationId,
-            _currentUserId,
           );
           final resolvedConversationId =
               await _findExistingConversationIdForPeer(remoteUserId) ??
@@ -543,10 +571,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
-    final remoteUserId = resolveRemoteUserIdForConversation(
-      conversationId,
-      _currentUserId,
-    );
+    final remoteUserId = await resolvePeerUserIdForConversation(conversationId);
     final canonicalLocalConversationId = buildDirectConversationId(
       _currentUserId,
       remoteUserId,
@@ -630,6 +655,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       senderDeviceId,
       encryptedContent: encrypted.ciphertextBase64,
       outboxEventId: outboxEventId,
+      signalType: encrypted.type,
     );
 
     await _db.chatsDao.upsertMessages([
@@ -637,6 +663,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         message,
         senderDeviceId: senderDeviceId,
         encryptedContent: encrypted.ciphertextBase64,
+        signalType: encrypted.type,
       ),
     ]);
 
@@ -660,7 +687,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'conversation_id': effectiveConversationId,
       'sender_device_id': senderDeviceId,
       'ciphertext': encrypted.ciphertextBase64,
-      'type': 1,
+      'type': encrypted.type,
       'content': '',
       'idempotency_key': message.id,
     };
@@ -721,14 +748,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final events = await _db.outboxDao.getRetryEligibleEvents();
     return events.map((event) {
       final payload = jsonDecode(event.payload) as Map<String, dynamic>? ?? {};
-      final nestedPayload =
-          payload['payload'] is Map<String, dynamic>
-              ? payload['payload'] as Map<String, dynamic>
-              : const <String, dynamic>{};
+      final nestedPayload = payload['payload'] is Map<String, dynamic>
+          ? payload['payload'] as Map<String, dynamic>
+          : const <String, dynamic>{};
       final directEnvelope =
           payload['ciphertext'] != null || payload['conversation_id'] != null
-              ? payload
-              : nestedPayload;
+          ? payload
+          : nestedPayload;
 
       final createdAtValue =
           (directEnvelope['created_at'] as String?) ??
@@ -927,23 +953,34 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return null;
     }
 
-    try {
-      final senderDeviceId = dto.senderDeviceId?.trim();
-      final signalType = _signalMessageTypeFromDto(dto.type);
-      final plaintext = await _cryptoService.decryptInboundMessage(
-        senderUserId: dto.senderId,
-        senderDeviceId: senderDeviceId ?? '1',
-        ciphertextBase64: ciphertext,
-        type: signalType,
-      );
-      return plaintext;
-    } on Exception catch (error, stackTrace) {
-      _logger.w(
-        'decryptInboundMessage failed for message ${dto.id}; retrying via decryptMessage',
-        error: error,
-        stackTrace: stackTrace,
-        module: 'ChatsRepository',
-      );
+    final candidates = <String>{
+      dto.senderDeviceId?.trim() ?? '1',
+      '1',
+      '2',
+      '3',
+      '4',
+    };
+    final signalTypes = <int>{_signalMessageTypeFromDto(dto.type), 3, 2, 1};
+
+    for (final senderDeviceId in candidates) {
+      for (final signalType in signalTypes) {
+        try {
+          final plaintext = await _cryptoService.decryptInboundMessage(
+            senderUserId: dto.senderId,
+            senderDeviceId: senderDeviceId,
+            ciphertextBase64: ciphertext,
+            type: signalType,
+          );
+          return plaintext;
+        } on Exception catch (error, stackTrace) {
+          _logger.w(
+            'decryptInboundMessage failed for message ${dto.id}; device_id=$senderDeviceId type=$signalType',
+            error: error,
+            stackTrace: stackTrace,
+            module: 'ChatsRepository',
+          );
+        }
+      }
     }
 
     try {
@@ -974,8 +1011,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final normalized = rawType.toLowerCase();
-    if (normalized.contains('pre')) return 3;
-    if (normalized.contains('signal') || normalized.contains('cipher')) return 2;
+    if (normalized.contains('pre')) {
+      return 3;
+    }
+    if (normalized.contains('signal') || normalized.contains('cipher')) {
+      return 2;
+    }
     return 1;
   }
 
@@ -1001,6 +1042,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     Message message, {
     String? senderDeviceId,
     String? encryptedContent,
+    int? signalType,
   }) {
     final ciphertext = encryptedContent ?? message.content;
     return MessagesCompanion(
@@ -1008,7 +1050,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId: Value(message.conversationId),
       senderId: Value(message.senderId),
       senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
-      type: const Value('text'),
+      type: Value(signalType?.toString() ?? 'text'),
       sequence: Value(BigInt.from(DateTime.now().millisecondsSinceEpoch)),
       encryptedPayload: Value(utf8.encode(ciphertext)),
       mediaHeader: const Value.absent(),
@@ -1027,7 +1069,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
     final localPlaintext = _localPlaintextCache[entity.id];
-    final resolvedContent = localPlaintext ?? ciphertext;
+    const encryptedPlaceholder =
+        'Wiadomość zaszyfrowana – oczekiwanie na klucz sesji';
+    final resolvedContent = localPlaintext ?? encryptedPlaceholder;
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
