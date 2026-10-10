@@ -165,37 +165,31 @@ class E2eeCryptoService {
     }
 
     final numeric = int.tryParse(trimmed);
-    if (numeric != null) {
-      if (numeric <= 0) {
-        if (fallback != null) return fallback;
-        throw const FormatException(
-          'Signal device id must be > 0; zero or negative IDs are invalid for Signal addresses',
-        );
-      }
-      return numeric;
-    }
-
-    final digest = sha256.convert(utf8.encode(trimmed));
-    final packed = digest.bytes.take(4).fold<int>(0, (sum, byte) {
-      return (sum << 8) | byte;
-    });
-    final normalized = packed & 0x7fffffff;
-    if (normalized == 0 && fallback != null) {
-      return fallback;
-    }
-    if (normalized == 0) {
+    if (numeric == null || numeric <= 0) {
+      if (fallback != null) return fallback;
       throw const FormatException(
-        'Signal device id resolved to zero after hashing; this indicates an invalid app device UUID was provided to Signal',
+        'Signal device id must be a positive integer; app UUID values are not valid Signal device ids and must not be hashed',
       );
     }
-    return normalized;
+    return numeric;
   }
 
   static SignalDeviceId resolveSignalDeviceIdFromAppUuid(
     AppDeviceUuid? rawAppDeviceUuid, {
     SignalDeviceId? fallback,
   }) {
-    final appDeviceUuid = requireAppDeviceUuid(rawAppDeviceUuid, context: 'app_device_id');
+    final appDeviceUuid = requireAppDeviceUuid(
+      rawAppDeviceUuid,
+      context: 'app_device_id',
+    );
+
+    if (Uuid.isValidUUID(fromString: appDeviceUuid)) {
+      if (fallback != null) return fallback;
+      throw const FormatException(
+        'App UUID cannot be used as a Signal device id; use the numeric Signal device id from the session or the known local session device list',
+      );
+    }
+
     return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
   }
 
@@ -736,53 +730,85 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    final senderAppDeviceId = requireAppDeviceUuid(
-      senderDeviceId,
-      context: 'sender_device_id',
-    );
-    final signalDeviceId = resolveSignalDeviceIdFromAppUuid(senderAppDeviceId);
-    final address = SignalProtocolAddress(senderUserId, signalDeviceId);
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_app_device_id=$senderAppDeviceId signal_device_id=$signalDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
-      module: 'E2eeCrypto',
-    );
-    try {
-      final trustedIdentity = await _signalStore.getIdentity(address);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_identity_loaded event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} trusted_identity_fingerprint=${fingerprintIdentityKey(trustedIdentity)}',
-        module: 'E2eeCrypto',
-      );
-      final ciphertextBytes = base64Decode(ciphertextBase64);
-      final sessionCipher = SessionCipher.fromStore(_signalStore, address);
+    final trimmedSenderDeviceId = senderDeviceId.trim();
+    final candidateDeviceIds = <int>{};
 
-      final Uint8List plaintext;
-      if (type == CiphertextMessage.prekeyType) {
-        plaintext = await sessionCipher.decrypt(
-          PreKeySignalMessage(ciphertextBytes),
-        );
-      } else {
-        plaintext = await sessionCipher.decryptFromSignal(
-          SignalMessage.fromSerialized(ciphertextBytes),
+    final explicitDeviceId = int.tryParse(trimmedSenderDeviceId);
+    if (explicitDeviceId != null && explicitDeviceId > 0) {
+      candidateDeviceIds.add(explicitDeviceId);
+    }
+
+    final knownDeviceIds = await _signalStore.getSubDeviceSessions(senderUserId);
+    for (final knownDeviceId in knownDeviceIds) {
+      if (knownDeviceId > 0) {
+        candidateDeviceIds.add(knownDeviceId);
+      }
+    }
+
+    if (candidateDeviceIds.isEmpty) {
+      final senderAppDeviceId = requireAppDeviceUuid(
+        trimmedSenderDeviceId,
+        context: 'sender_device_id',
+      );
+      if (Uuid.isValidUUID(fromString: senderAppDeviceId)) {
+        throw const FormatException(
+          'Inbound sender app UUID cannot be used as a Signal device id; no valid local numeric Signal session exists for this sender',
         );
       }
-
-      final decoded = utf8.decode(plaintext);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_success event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} plaintext_len=${decoded.length} signal_type=$type',
-        module: 'E2eeCrypto',
-      );
-      return decoded;
-    } catch (e, st) {
-      _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_error event=error sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} signal_type=$type error_type=${e.runtimeType} error_message=${e.toString()}',
-        error: e,
-        stackTrace: st,
-        module: 'E2eeCrypto',
-      );
-      throw EncryptionFailureException(
-        'Nie można odszyfrować wiadomości od użytkownika $senderUserId',
+      throw const FormatException(
+        'No valid numeric Signal device id was found for this inbound message; local session data is missing or stale',
       );
     }
+
+    Object? lastError;
+    for (final candidateDeviceId in candidateDeviceIds) {
+      final address = SignalProtocolAddress(senderUserId, candidateDeviceId);
+      _logger.i(
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_device_id=$trimmedSenderDeviceId signal_device_id=$candidateDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
+        module: 'E2eeCrypto',
+      );
+
+      try {
+        final trustedIdentity = await _signalStore.getIdentity(address);
+        _logger.i(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_identity_loaded event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} trusted_identity_fingerprint=${fingerprintIdentityKey(trustedIdentity)}',
+          module: 'E2eeCrypto',
+        );
+        final ciphertextBytes = base64Decode(ciphertextBase64);
+        final sessionCipher = SessionCipher.fromStore(_signalStore, address);
+
+        final Uint8List plaintext;
+        if (type == CiphertextMessage.prekeyType) {
+          plaintext = await sessionCipher.decrypt(
+            PreKeySignalMessage(ciphertextBytes),
+          );
+        } else {
+          plaintext = await sessionCipher.decryptFromSignal(
+            SignalMessage.fromSerialized(ciphertextBytes),
+          );
+        }
+
+        final decoded = utf8.decode(plaintext);
+        _logger.i(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_success event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} plaintext_len=${decoded.length} signal_type=$type',
+          module: 'E2eeCrypto',
+        );
+        return decoded;
+      } catch (e, st) {
+        lastError = e;
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_candidate_failed event=warning sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} signal_device_id=$candidateDeviceId signal_type=$type error_type=${e.runtimeType} error_message=${e.toString()}',
+          error: e,
+          stackTrace: st,
+          module: 'E2eeCrypto',
+        );
+      }
+    }
+
+    final lastErrorMessage = lastError?.toString() ?? 'unknown';
+    throw EncryptionFailureException(
+      'Nie można odszyfrować wiadomości od użytkownika $senderUserId. Nie ma poprawnego numeru Signal device id dla sesji lokalnej i nie wolno zgadywać UUID jako device id. Ostatni błąd: $lastErrorMessage',
+    );
   }
 
   Future<EncryptedData> encryptMessage(
