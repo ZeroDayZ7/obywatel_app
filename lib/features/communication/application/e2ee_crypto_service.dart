@@ -123,10 +123,11 @@ class E2eeCryptoService {
   static String _signalAddressName(SignalProtocolAddress address) =>
       '${address.getName()}@${address.getDeviceId()}';
 
-  static int resolveSignalDeviceId(String? rawDeviceId, {int fallback = 1}) {
+  static int resolveSignalDeviceId(String? rawDeviceId, {int? fallback}) {
     final trimmed = (rawDeviceId ?? '').trim();
     if (trimmed.isEmpty) {
-      return fallback;
+      if (fallback != null) return fallback;
+      throw const FormatException('Signal device id is missing');
     }
 
     final numeric = int.tryParse(trimmed);
@@ -139,7 +140,13 @@ class E2eeCryptoService {
       return (sum << 8) | byte;
     });
     final normalized = packed & 0x7fffffff;
-    return normalized == 0 ? fallback : normalized;
+    if (normalized == 0 && fallback != null) {
+      return fallback;
+    }
+    if (normalized == 0) {
+      throw const FormatException('Signal device id resolved to zero');
+    }
+    return normalized;
   }
 
   static String fingerprintIdentityKey(IdentityKey? identityKey) {
@@ -198,8 +205,8 @@ class E2eeCryptoService {
     ], fallback: 0);
     final rawDeviceId = json['deviceId'] ?? json['device_id'];
     final deviceId = rawDeviceId is String || rawDeviceId is int
-        ? resolveSignalDeviceId(rawDeviceId?.toString(), fallback: 1)
-        : 1;
+        ? resolveSignalDeviceId(rawDeviceId?.toString())
+        : throw const FormatException('Missing deviceId in Signal bundle');
     final preKeyId = _readIntValue(json, [
       'preKeyId',
       'pre_key_id',
@@ -303,12 +310,17 @@ class E2eeCryptoService {
   Future<SignalProtocolAddress> initializeSessionForPeer(
     String remoteUserId, {
     required PreKeyBundle remoteBundle,
-    int deviceId = 1,
+    int? deviceId,
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    final signalDeviceId = deviceId != 0 ? deviceId : 1;
-    final address = SignalProtocolAddress(remoteUserId, signalDeviceId);
+    final resolvedDeviceId = deviceId ?? remoteBundle.getDeviceId();
+    if (resolvedDeviceId <= 0) {
+      throw const FormatException(
+        'Signal session device id is required and cannot be zero',
+      );
+    }
+    final address = SignalProtocolAddress(remoteUserId, resolvedDeviceId);
     final bundleIdentity = remoteBundle.getIdentityKey();
     final existingIdentity = await _signalStore.getIdentity(address);
     final existingFingerprint = fingerprintIdentityKey(existingIdentity);
@@ -351,25 +363,27 @@ class E2eeCryptoService {
 
   Future<void> ensureSessionForPeer(
     String remoteUserId, {
-    int deviceId = 1,
+    int? deviceId,
     String? operationId,
   }) async {
     final effectiveOperationId = _resolveOperationId(operationId);
-    final initialAddress = SignalProtocolAddress(
-      remoteUserId,
-      resolveSignalDeviceId(deviceId.toString(), fallback: 1),
-    );
-    final sessionExists = await _signalStore.containsSession(initialAddress);
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_check_start event=start remote_user_id=$remoteUserId signal_address=${_signalAddressName(initialAddress)} session_exists=$sessionExists',
-      module: 'E2eeCrypto',
-    );
-    if (sessionExists) {
+    final explicitAddress = deviceId != null && deviceId > 0
+        ? SignalProtocolAddress(remoteUserId, deviceId)
+        : null;
+
+    if (explicitAddress != null) {
+      final sessionExists = await _signalStore.containsSession(explicitAddress);
       _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(initialAddress)}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_check_start event=start remote_user_id=$remoteUserId signal_address=${_signalAddressName(explicitAddress)} session_exists=$sessionExists',
         module: 'E2eeCrypto',
       );
-      return;
+      if (sessionExists) {
+        _logger.i(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(explicitAddress)}',
+          module: 'E2eeCrypto',
+        );
+        return;
+      }
     }
 
     try {
@@ -379,14 +393,20 @@ class E2eeCryptoService {
         operationId: effectiveOperationId,
       );
       final bundleSignalDeviceId = remoteBundle.getDeviceId();
-      final resolvedAddress = SignalProtocolAddress(
-        remoteUserId,
-        bundleSignalDeviceId,
-      );
+      final bundleAddress = SignalProtocolAddress(remoteUserId, bundleSignalDeviceId);
       _logger.i(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_decision event=success remote_user_id=$remoteUserId bundle_device_id=$bundleSignalDeviceId bundle_identity_fingerprint=${fingerprintIdentityKey(remoteBundle.getIdentityKey())}',
         module: 'E2eeCrypto',
       );
+      final hasSessionForBundle = await _signalStore.containsSession(bundleAddress);
+      if (hasSessionForBundle) {
+        _logger.i(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse_bundle event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(bundleAddress)}',
+          module: 'E2eeCrypto',
+        );
+        return;
+      }
+
       final activeAddress = await initializeSessionForPeer(
         remoteUserId,
         remoteBundle: remoteBundle,
@@ -394,12 +414,13 @@ class E2eeCryptoService {
         operationId: effectiveOperationId,
       );
       _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_complete event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(activeAddress)} bundle_address=${_signalAddressName(resolvedAddress)}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_complete event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(activeAddress)} bundle_address=${_signalAddressName(bundleAddress)}',
         module: 'E2eeCrypto',
       );
     } catch (error, stackTrace) {
+      final fallbackAddress = explicitAddress ?? const SignalProtocolAddress('', 0);
       _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(initialAddress)} error_type=${error.runtimeType} error_message=${error.toString()}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(fallbackAddress)} error_type=${error.runtimeType} error_message=${error.toString()}',
         error: error,
         stackTrace: stackTrace,
         module: 'E2eeCrypto',
@@ -476,6 +497,27 @@ class E2eeCryptoService {
     _deviceIdentityRegistrationTask = () async {
       try {
         final bundle = await ensureDeviceIdentityBundle();
+        final marker = {
+          'device_id': bundle.deviceId,
+          'registration_id': bundle.registrationId,
+          'public_key_fingerprint': sha256
+              .convert(base64Decode(bundle.publicKey))
+              .toString(),
+          'signed_pre_key_id': bundle.signedPreKeyId,
+        }.toString();
+
+        final persistedMarker = await _secureStorage.read(
+          key: 'e2ee_device_registration_marker',
+        );
+        if (persistedMarker != null && persistedMarker == marker) {
+          _deviceIdentityRegistered = true;
+          _logger.i(
+            '[E2EE-FLOW-2.3] device identity already published for this installation; skipping duplicate registration',
+            module: 'E2eeCrypto',
+          );
+          return;
+        }
+
         final payload = {
           'device_id': bundle.deviceId,
           'registration_id': bundle.registrationId,
@@ -504,6 +546,10 @@ class E2eeCryptoService {
           '/crypto/keys/device',
           data: payload,
           headers: headers,
+        );
+        await _secureStorage.write(
+          key: 'e2ee_device_registration_marker',
+          value: marker,
         );
         _deviceIdentityRegistered = true;
         _logger.i(
@@ -540,15 +586,23 @@ class E2eeCryptoService {
   Future<SignalCiphertextEnvelope> encryptOutboundMessage(
     String recipientUserId,
     String plaintext, {
-    int recipientDeviceId = 1,
+    int? recipientDeviceId,
     String? senderDeviceId,
     String? operationId,
   }) async {
     final effectiveOperationId = _resolveOperationId(operationId);
-    var resolvedRecipientDeviceId = resolveSignalDeviceId(
-      recipientDeviceId.toString(),
-      fallback: 1,
-    );
+    var resolvedRecipientDeviceId = recipientDeviceId;
+    if (resolvedRecipientDeviceId == null || resolvedRecipientDeviceId <= 0) {
+      final remoteBundle = await fetchRemotePreKeyBundle(
+        recipientUserId,
+        operationId: effectiveOperationId,
+      );
+      resolvedRecipientDeviceId = remoteBundle.getDeviceId();
+    }
+    if (resolvedRecipientDeviceId <= 0) {
+      throw const FormatException('Signal recipient device id is required');
+    }
+
     var address = SignalProtocolAddress(
       recipientUserId,
       resolvedRecipientDeviceId,
@@ -625,13 +679,19 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    final signalDeviceId = resolveSignalDeviceId(senderDeviceId, fallback: 1);
+    if (senderDeviceId.trim().isEmpty) {
+      throw const FormatException('Missing sender device id for Signal decrypt');
+    }
+    final signalDeviceId = resolveSignalDeviceId(senderDeviceId);
     final address = SignalProtocolAddress(senderUserId, signalDeviceId);
     _logger.i(
       '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_device_id=$senderDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
       module: 'E2eeCrypto',
     );
     try {
+      if (senderDeviceId.trim().isEmpty) {
+        throw const FormatException('Missing sender device id for Signal decrypt');
+      }
       final trustedIdentity = await _signalStore.getIdentity(address);
       _logger.i(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_identity_loaded event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} trusted_identity_fingerprint=${fingerprintIdentityKey(trustedIdentity)}',
@@ -708,9 +768,25 @@ class E2eeCryptoService {
     String ciphertextBase64,
     String nonceBase64,
   ) async {
+    _logger.w(
+      'Błąd odszyfrowywania wiadomości Signal: brak peerDeviceId; nie można zgadywać adresu Signal z konwersacji lub ciphertextu.',
+      module: 'E2eeCrypto',
+    );
+    return null;
+  }
+
+  Future<String?> decryptMessageWithPeerDevice(
+    String conversationId,
+    String peerDeviceId,
+    String ciphertextBase64,
+    String nonceBase64,
+  ) async {
     try {
       final ciphertextBytes = base64Decode(ciphertextBase64);
-      final peerAddress = SignalProtocolAddress(conversationId, 1);
+      final peerAddress = SignalProtocolAddress(
+        conversationId,
+        resolveSignalDeviceId(peerDeviceId),
+      );
       final sessionCipher = SessionCipher.fromStore(_signalStore, peerAddress);
 
       Uint8List plaintext;

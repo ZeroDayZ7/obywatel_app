@@ -645,6 +645,18 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final isServerBackedConversation = Uuid.isValidUUID(
       fromString: effectiveConversationId,
     );
+    final hasValidServerConversation = effectiveConversationId.trim().isNotEmpty;
+    final hasCiphertextPayload = encrypted.ciphertextBase64.trim().isNotEmpty;
+    if (!hasValidServerConversation || !hasCiphertextPayload) {
+      _logger.w(
+        '[OUTBOX-FLOW-4] refusing to enqueue invalid outbox event without clearing data: message_id=${message.id} conversation_id=$effectiveConversationId ciphertext_present=$hasCiphertextPayload',
+        module: 'ChatsRepository',
+      );
+      final localOnlyMessage = message.copyWith(status: 'pending');
+      _incomingMessagesController.add(localOnlyMessage);
+      return;
+    }
+
     final outboxEventId = buildOutboxEventIdForMessage(message: message);
     _localPlaintextCache[message.id] = content;
 

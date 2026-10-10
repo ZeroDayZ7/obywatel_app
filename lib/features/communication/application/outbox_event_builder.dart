@@ -29,7 +29,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   int signalType = 1,
 }) {
   final createdAt = message.createdAt.toUtc().toIso8601String();
-  final ciphertext = encryptedContent ?? message.encryptedPayload;
+  final ciphertext = (encryptedContent ?? message.encryptedPayload).trim();
   final safeMessageId = _normalizeUuidString(
     message.id,
     fallback: const Uuid().v4(),

@@ -50,6 +50,22 @@ class SharedPreferencesService {
     await _prefs.clear();
   }
 
+  static String _redactForLog(String key, Object? value) {
+    final text = value?.toString() ?? '<null>';
+    if (text == '<null>') {
+      return '<null>';
+    }
+
+    final keyLower = key.toLowerCase();
+    final secretish = const ['token', 'secret', 'jwt', 'password', 'cookie', 'key']
+        .any((token) => keyLower.contains(token));
+    if (secretish || keyLower.contains('database')) {
+      return '[redacted:${text.length} chars]';
+    }
+
+    return '[present:${text.length} chars]';
+  }
+
   /// Debug: print all key-value pairs using AppLogger
   Future<void> debugPrintAll() async {
     final keys = _prefs.getKeys();
@@ -65,7 +81,7 @@ class SharedPreferencesService {
       );
       for (final key in keys) {
         final value = _prefs.get(key);
-        _logger.d('• $key: $value', module: 'Storage');
+        _logger.d('• $key: ${_redactForLog(key, value)}', module: 'Storage');
       }
     }
   }

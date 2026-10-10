@@ -27,7 +27,7 @@ class ThrowingCryptoService extends E2eeCryptoService {
   @override
   Future<void> ensureSessionForPeer(
     String remoteUserId, {
-    int deviceId = 1,
+    int? deviceId,
     String? operationId,
   }) async {
     throw StateError('E2EE bootstrap should not run while accepting a contact');
