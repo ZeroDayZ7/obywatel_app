@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
-import 'package:obywatel_plus/features/communication/presentation/pages/contacts_screen.dart';
-import 'package:obywatel_plus/features/communication/presentation/pages/conversations_screen.dart';
+import 'package:obywatel_plus/features/communication/presentation/screens/contacts_screen.dart';
+import 'package:obywatel_plus/features/communication/presentation/screens/conversations_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messaging_onboarding_screen.dart';
 
 class CommunicationScreen extends ConsumerStatefulWidget {
@@ -11,7 +11,8 @@ class CommunicationScreen extends ConsumerStatefulWidget {
   final int initialIndex;
 
   @override
-  ConsumerState<CommunicationScreen> createState() => _CommunicationScreenState();
+  ConsumerState<CommunicationScreen> createState() =>
+      _CommunicationScreenState();
 }
 
 class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
@@ -29,9 +30,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
     final colorScheme = Theme.of(context).colorScheme;
 
     if (state.isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (state.hasError) {
@@ -43,7 +42,11 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.wifi_off_rounded, size: 48, color: colorScheme.error),
+                Icon(
+                  Icons.wifi_off_rounded,
+                  size: 48,
+                  color: colorScheme.error,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Nie udało się pobrać stanu komunikatora.',
@@ -51,14 +54,12 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  error.toString(),
-                  textAlign: TextAlign.center,
-                ),
+                Text(error.toString(), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
                 FilledButton(
-                  onPressed: () =>
-                      ref.read(messagingActivationControllerProvider.notifier).load(),
+                  onPressed: () => ref
+                      .read(messagingActivationControllerProvider.notifier)
+                      .load(),
                   child: const Text('Spróbuj ponownie'),
                 ),
               ],
@@ -103,10 +104,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
         ),
         body: const SafeArea(
           child: TabBarView(
-            children: [
-              ConversationsScreen(),
-              ContactsScreen(),
-            ],
+            children: [ConversationsScreen(), ContactsScreen()],
           ),
         ),
       ),

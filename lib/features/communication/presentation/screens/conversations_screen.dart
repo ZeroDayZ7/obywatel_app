@@ -5,8 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_bar.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
-import 'package:obywatel_plus/features/communication/presentation/pages/chat_room_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/conversations_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/screens/chat_room_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat/messages_settings_sheet.dart';
 
 class ConversationsScreen extends ConsumerWidget {
@@ -105,7 +105,8 @@ class ConversationsScreen extends ConsumerWidget {
                 }
 
                 return RefreshIndicator(
-                  onRefresh: () => ref.read(conversationsProvider.notifier).refresh(),
+                  onRefresh: () =>
+                      ref.read(conversationsProvider.notifier).refresh(),
                   child: ListView.builder(
                     padding: const EdgeInsets.all(12),
                     itemCount: conversations.length,
@@ -125,9 +126,10 @@ class ConversationsScreen extends ConsumerWidget {
                       }
 
                       final displayName =
-                          (conversation.title != null && conversation.title!.isNotEmpty)
-                              ? conversation.title!
-                              : 'Konwersacja #${conversation.id.substring(0, 4)}';
+                          (conversation.title != null &&
+                              conversation.title!.isNotEmpty)
+                          ? conversation.title!
+                          : 'Konwersacja #${conversation.id.substring(0, 4)}';
 
                       final lastActivity =
                           conversation.updatedAt ?? DateTime.now();
@@ -141,7 +143,9 @@ class ConversationsScreen extends ConsumerWidget {
                           color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                            color: colorScheme.outlineVariant.withValues(
+                              alpha: 0.35,
+                            ),
                           ),
                         ),
                         child: InkWell(
@@ -166,7 +170,8 @@ class ConversationsScreen extends ConsumerWidget {
                                   color: colorScheme.surfaceContainerHighest,
                                   borderRadius: BorderRadius.circular(4),
                                   border: Border.all(
-                                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                    color: colorScheme.outlineVariant
+                                        .withValues(alpha: 0.3),
                                   ),
                                 ),
                                 child: Icon(
@@ -187,29 +192,33 @@ class ConversationsScreen extends ConsumerWidget {
                                         Expanded(
                                           child: Text(
                                             displayName,
-                                            style: theme.textTheme.titleSmall?.copyWith(
-                                              color: colorScheme.onSurface,
-                                              fontWeight: FontWeight.w700,
-                                            ),
+                                            style: theme.textTheme.titleSmall
+                                                ?.copyWith(
+                                                  color: colorScheme.onSurface,
+                                                  fontWeight: FontWeight.w700,
+                                                ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                         Text(
                                           timestamp,
-                                          style: theme.textTheme.labelSmall?.copyWith(
-                                            color: colorScheme.onSurfaceVariant,
-                                          ),
+                                          style: theme.textTheme.labelSmall
+                                              ?.copyWith(
+                                                color: colorScheme
+                                                    .onSurfaceVariant,
+                                              ),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 6),
                                     Text(
                                       'SESSION: ${conversation.id.substring(0, min(12, conversation.id.length))}',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        letterSpacing: 0.4,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                            letterSpacing: 0.4,
+                                          ),
                                     ),
                                     const SizedBox(height: 8),
                                     Row(
@@ -225,9 +234,11 @@ class ConversationsScreen extends ConsumerWidget {
                                             previewText,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: colorScheme.onSurfaceVariant,
-                                            ),
+                                            style: theme.textTheme.bodySmall
+                                                ?.copyWith(
+                                                  color: colorScheme
+                                                      .onSurfaceVariant,
+                                                ),
                                           ),
                                         ),
                                       ],
@@ -239,17 +250,22 @@ class ConversationsScreen extends ConsumerWidget {
                               Column(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 3,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: colorScheme.primaryContainer,
                                       borderRadius: BorderRadius.circular(2),
                                     ),
                                     child: Text(
                                       'E2EE',
-                                      style: theme.textTheme.labelSmall?.copyWith(
-                                        color: colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w700,
-                                      ),
+                                      style: theme.textTheme.labelSmall
+                                          ?.copyWith(
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                     ),
                                   ),
                                   const SizedBox(height: 8),

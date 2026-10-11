@@ -191,7 +191,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
+                        icon: Icon(
+                          Icons.tune_rounded,
+                          color: colorScheme.onSurface,
+                        ),
                         tooltip: 'Ustawienia kontaktów',
                         onPressed: () => _openSettingsSheet(context),
                       ),
@@ -201,7 +204,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                         onPressed: () {
                           showSearch(
                             context: context,
-                            delegate: ContactsSearchDelegate(contacts: contacts),
+                            delegate: ContactsSearchDelegate(
+                              contacts: contacts,
+                            ),
                           );
                         },
                       ),
@@ -240,7 +245,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(2),
@@ -286,13 +294,18 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   final isIncoming = contact.direction == 'incoming';
 
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -365,7 +378,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(999),
