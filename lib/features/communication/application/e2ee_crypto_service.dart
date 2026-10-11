@@ -152,6 +152,15 @@ class E2eeCryptoService {
     return normalized;
   }
 
+  static SignalDeviceId _hashUuidToSignalDeviceId(String uuid) {
+    final digestHex = sha256.convert(utf8.encode(uuid)).toString();
+    final numeric = BigInt.parse('0x${digestHex.substring(0, 16)}');
+    final maxSignalDeviceId = BigInt.from(2147483646);
+    final candidate = (numeric % maxSignalDeviceId) + BigInt.one;
+    final resolved = candidate.toInt();
+    return resolved == 1 ? 2 : resolved;
+  }
+
   static SignalDeviceId resolveSignalDeviceId(
     String? rawDeviceId, {
     SignalDeviceId? fallback,
@@ -165,13 +174,18 @@ class E2eeCryptoService {
     }
 
     final numeric = int.tryParse(trimmed);
-    if (numeric == null || numeric <= 0) {
-      if (fallback != null) return fallback;
-      throw const FormatException(
-        'Signal device id must be a positive integer; app UUID values are not valid Signal device ids and must not be hashed',
-      );
+    if (numeric != null && numeric > 0) {
+      return numeric;
     }
-    return numeric;
+
+    if (Uuid.isValidUUID(fromString: trimmed)) {
+      return _hashUuidToSignalDeviceId(trimmed);
+    }
+
+    if (fallback != null) return fallback;
+    throw const FormatException(
+      'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id',
+    );
   }
 
   static SignalDeviceId resolveSignalDeviceIdFromAppUuid(
@@ -182,14 +196,6 @@ class E2eeCryptoService {
       rawAppDeviceUuid,
       context: 'app_device_id',
     );
-
-    if (Uuid.isValidUUID(fromString: appDeviceUuid)) {
-      if (fallback != null) return fallback;
-      throw const FormatException(
-        'App UUID cannot be used as a Signal device id; use the numeric Signal device id from the session or the known local session device list',
-      );
-    }
-
     return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
   }
 
@@ -782,6 +788,8 @@ class E2eeCryptoService {
     final explicitDeviceId = int.tryParse(trimmedSenderDeviceId);
     if (explicitDeviceId != null && explicitDeviceId > 0) {
       candidateDeviceIds.add(explicitDeviceId);
+    } else if (Uuid.isValidUUID(fromString: trimmedSenderDeviceId)) {
+      candidateDeviceIds.add(resolveSignalDeviceId(trimmedSenderDeviceId));
     }
 
     final knownDeviceIds = await _signalStore.getSubDeviceSessions(senderUserId);

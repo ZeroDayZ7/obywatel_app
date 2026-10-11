@@ -768,9 +768,10 @@ void main() {
   test(
     'outbox event payload should match backend contract and keep ciphertext nested',
     () {
+      final conversationId = const Uuid().v4();
       final message = Message(
         id: const Uuid().v4(),
-        conversationId: 'conv-123',
+        conversationId: conversationId,
         senderId: 'user-123',
         content: 'ciphertext-payload',
         encryptedPayload: 'ciphertext-payload',
@@ -802,6 +803,8 @@ void main() {
         Uuid.isValidUUID(fromString: payload['message_id'] as String),
         isTrue,
       );
+      expect(event['conversation_id'], conversationId);
+      expect(payload['conversation_id'], conversationId);
       expect(event['event_type'], 'SEND_MESSAGE');
       expect(payload['content'], equals(null));
       expect(payload['ciphertext'], 'ciphertext-payload');
@@ -810,7 +813,7 @@ void main() {
   );
 
   test(
-    'outbox builder strips local composite conversation ids before server sync',
+    'outbox builder rejects local composite conversation ids before server sync',
     () {
       final message = Message(
         id: const Uuid().v4(),
@@ -818,15 +821,15 @@ void main() {
             'a2f6b8c9-1122-4a55-8822-b98765432101:c3d4e5f6-3344-5b66-9933-a12345678902',
         senderId: 'user-123',
         content: 'siema',
+        encryptedPayload: 'ciphertext-siema',
         isMine: true,
         createdAt: DateTime.utc(2024, 1, 1, 10, 0),
       );
 
-      final event = buildOutboxEventPayload(message, 'device-abc');
-      final payload = event['payload'] as Map<String, dynamic>;
-
-      expect(event['conversation_id'], null);
-      expect(payload['conversation_id'], null);
+      expect(
+        () => buildOutboxEventPayload(message, 'device-abc'),
+        throwsA(isA<StateError>()),
+      );
     },
   );
 
