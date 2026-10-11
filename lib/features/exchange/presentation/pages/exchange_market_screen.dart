@@ -41,7 +41,7 @@ class ExchangeMarketScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         title: Text(
-          'Giełda Polityków',
+          'Giełda Zaufania',
           style: theme.textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.w800,
           ),

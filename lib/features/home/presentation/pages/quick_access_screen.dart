@@ -28,18 +28,12 @@ class QuickAccessItem {
 class QuickAccessScreen extends StatelessWidget {
   const QuickAccessScreen({super.key});
 
-  static const _contactsItem = QuickAccessItem(
-    title: 'Kontakty',
-    icon: Icons.badge_outlined,
+  static const _communicationItem = QuickAccessItem(
+    title: 'Komunikacja',
+    subtitle: 'Wiadomości i kontakty',
+    icon: Icons.forum_outlined,
     accent: QuickAccessAccent.primary,
-    route: AppRoutes.contacts,
-  );
-
-  static const _messagesItem = QuickAccessItem(
-    title: 'Wiadomości',
-    icon: Icons.chat_bubble_outline_rounded,
-    accent: QuickAccessAccent.secondary,
-    route: AppRoutes.chats,
+    route: AppRoutes.communication,
   );
 
   static const _liquidDemocracyItem = QuickAccessItem(
@@ -51,7 +45,7 @@ class QuickAccessScreen extends StatelessWidget {
   );
 
   static final _marketItem = QuickAccessItem(
-    title: 'Giełda Polityków',
+    title: 'Giełda Zaufania',
     subtitle: 'Rynek reputacji',
     icon: Icons.trending_up_rounded,
     accent: QuickAccessAccent.tertiary,
@@ -96,19 +90,17 @@ class QuickAccessScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Row(
               children: const [
-                Expanded(child: _QuickAccessCard(item: _contactsItem)),
-                SizedBox(width: 14),
-                Expanded(child: _QuickAccessCard(item: _messagesItem)),
+                Expanded(child: _QuickAccessCard(item: _communicationItem)),
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(child: _QuickAccessCard(item: _liquidDemocracyItem)),
-                const SizedBox(width: 14),
+                const SizedBox(width: 10),
                 Expanded(child: _QuickAccessCard(item: _marketItem)),
               ],
             ),
@@ -119,7 +111,6 @@ class QuickAccessScreen extends StatelessWidget {
   }
 }
 
-// standardowy kwadratowy kafel
 class _QuickAccessCard extends StatelessWidget {
   final QuickAccessItem item;
 
@@ -140,92 +131,90 @@ class _QuickAccessCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final accentColor = _resolveAccentColor(colorScheme);
 
-    return AspectRatio(
-      aspectRatio: 1.05,
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.6),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+    return Container(
+      height: 100, // Stała wysokość dla lekko prostokątnego kształtu
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+          width: 1,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => context.push(item.route),
-              splashColor: accentColor.withValues(alpha: 0.1),
-              highlightColor: accentColor.withValues(alpha: 0.05),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: accentColor.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: accentColor.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push(item.route),
+            splashColor: accentColor.withValues(alpha: 0.1),
+            highlightColor: accentColor.withValues(alpha: 0.05),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0), // Zmniejszony padding
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6), // Zmniejszony padding ikony
+                        decoration: BoxDecoration(
+                          color: accentColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: accentColor.withValues(alpha: 0.2),
+                            width: 1,
                           ),
-                          child: Icon(item.icon, color: accentColor, size: 24),
                         ),
-                        Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: colorScheme.onSurface.withValues(alpha: 0.3),
+                        child: Icon(item.icon, color: accentColor, size: 20),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: colorScheme.onSurface.withValues(alpha: 0.3),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: colorScheme.onSurface,
                         ),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (item.subtitle case final subtitle?) ...[
+                        const SizedBox(height: 2),
                         Text(
-                          item.title,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: colorScheme.onSurface,
+                          subtitle,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.6,
+                            ),
+                            fontSize: 11,
+                            height: 1.1,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (item.subtitle case final subtitle?) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontSize: 12,
-                              height: 1.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
                       ],
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
@@ -234,4 +223,3 @@ class _QuickAccessCard extends StatelessWidget {
     );
   }
 }
-

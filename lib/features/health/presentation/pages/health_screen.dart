@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/app_card.dart';
 
 class HealthScreen extends StatelessWidget {
@@ -21,30 +22,33 @@ class _HealthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
+
     final items = [
       _HealthItem(
         'E-recepty',
         AppRoutes.healthPrescriptions,
         Icons.medication_liquid,
-        Colors.blue,
+        colorScheme.primary,
       ),
       _HealthItem(
         'Skierowania',
         AppRoutes.healthReferrals,
         Icons.assignment,
-        Colors.purple,
+        colorScheme.tertiary,
       ),
       _HealthItem(
         'Historia',
         AppRoutes.healthHistory,
         Icons.history,
-        Colors.orange,
+        statusColors.warning,
       ),
       _HealthItem(
         'Szczepienia',
         AppRoutes.healthVaccinations,
         Icons.vaccines,
-        Colors.green,
+        statusColors.success,
       ),
     ];
 

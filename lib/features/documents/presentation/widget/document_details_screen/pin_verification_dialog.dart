@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class PinVerificationDialog extends StatefulWidget {
   const PinVerificationDialog({super.key});
@@ -32,13 +33,15 @@ class _PinVerificationDialogState extends State<PinVerificationDialog> {
   }
 
   void _submit() {
+    final colorScheme = context.colorScheme;
+
     if (_pinController.text == '1234') {
       Navigator.of(context).pop(true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Niepoprawny PIN'),
-          backgroundColor: Colors.redAccent,
+        SnackBar(
+          content: const Text('Niepoprawny PIN'),
+          backgroundColor: colorScheme.error,
         ),
       );
     }
@@ -46,6 +49,8 @@ class _PinVerificationDialogState extends State<PinVerificationDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       title: const Text('Weryfikacja dostępu', textAlign: TextAlign.center),
@@ -70,13 +75,11 @@ class _PinVerificationDialogState extends State<PinVerificationDialog> {
               counterText: '',
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Theme.of(context).dividerColor),
+                borderSide: BorderSide(color: colorScheme.outlineVariant),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+                borderSide: BorderSide(color: colorScheme.primary),
               ),
               filled: true,
             ),

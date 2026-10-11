@@ -19,10 +19,9 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final sections = SettingsConfig.getSections(
       context,
+      ref,
       onLanguageTap: () => _showLanguageSelectorSheet(context),
       onThemeTap: () => _showThemeSelectorSheet(context),
-      biometryValue: true,
-      onBiometryToggle: (val) {},
     );
 
     return AppScaffold(
@@ -33,23 +32,21 @@ class SettingsScreen extends ConsumerWidget {
       ),
       child: ListView.builder(
         itemCount: sections.length,
-        itemBuilder: (context, index) {
-          final section = sections[index];
-          final items = section['items'] as List<ActionItem>;
-
+        itemBuilder: (context, sectionIndex) {
+          final section = sections[sectionIndex];
           return ActionGroup(
-            title: section['title'] as String,
-            children: items
+            title: section.title,
+            children: section.items
                 .map(
                   (item) => ActionTile(
                     icon: item.icon,
                     title: item.title,
                     subtitle: item.subtitle,
                     isDanger: item.isDanger,
-                    showArrow: item.type == ActionType.navigation,
-                    onToggle: item.type == ActionType.toggle
-                        ? item.onToggle
-                        : null,
+                    showArrow: item.type == ActionType.navigation ||
+                        item.type == ActionType.sheet ||
+                        item.type == ActionType.selection,
+                    onToggle: item.type == ActionType.toggle ? item.onToggle : null,
                     value: item.initialValue,
                     onTap: item.onTap,
                     isEnabled: item.isEnabled,

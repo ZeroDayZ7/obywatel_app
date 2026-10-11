@@ -23,7 +23,7 @@ class _GlobalNotificationOverlayState
   @override
   Widget build(BuildContext context) {
     ref.listen<List<AppNotification>>(globalNotificationProvider, (prev, next) {
-      _handleChanges(prev ?? [], next);
+      _handleChanges(prev ?? const [], next);
     });
 
     return Stack(
@@ -54,7 +54,6 @@ class _GlobalNotificationOverlayState
     List<AppNotification> oldList,
     List<AppNotification> newList,
   ) {
-    // 1. Dodawanie nowych elementów
     for (final item in newList) {
       final exists = _currentItems.any((e) => e.id == item.id);
       if (!exists) {
@@ -68,7 +67,6 @@ class _GlobalNotificationOverlayState
       }
     }
 
-    // 2. Usuwanie nieobecnych elementów
     for (int i = _currentItems.length - 1; i >= 0; i--) {
       final item = _currentItems[i];
       final stillExists = newList.any((e) => e.id == item.id);
@@ -76,10 +74,28 @@ class _GlobalNotificationOverlayState
         final removedItem = _currentItems.removeAt(i);
         _listKey.currentState?.removeItem(
           i,
-          (context, animation) => _buildItem(removedItem, animation),
+          (context, animation) => _buildRemovalItem(removedItem, animation),
           duration: const Duration(milliseconds: 300),
         );
       }
+    }
+  }
+
+  void _removeLocalItem(String id, {bool syncProvider = true}) {
+    final index = _currentItems.indexWhere((item) => item.id == id);
+    if (index == -1) {
+      return;
+    }
+
+    final removedItem = _currentItems.removeAt(index);
+    _listKey.currentState?.removeItem(
+      index,
+      (context, animation) => _buildRemovalItem(removedItem, animation),
+      duration: const Duration(milliseconds: 300),
+    );
+
+    if (syncProvider) {
+      ref.read(globalNotificationProvider.notifier).remove(id);
     }
   }
 
@@ -104,10 +120,34 @@ class _GlobalNotificationOverlayState
       ),
       child: FadeTransition(
         opacity: animation,
+        child: Dismissible(
+          key: ValueKey(item.id),
+          direction: DismissDirection.horizontal,
+          onDismissed: (_) {
+            _removeLocalItem(item.id);
+          },
+          child: AnimatedToastWidget(
+            notification: item,
+            onClose: () => _removeLocalItem(item.id),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRemovalItem(AppNotification item, Animation<double> animation) {
+    return SlideTransition(
+      position: animation.drive(
+        Tween<Offset>(
+          begin: Offset.zero,
+          end: const Offset(1, 0),
+        ).chain(CurveTween(curve: Curves.easeInCubic)),
+      ),
+      child: FadeTransition(
+        opacity: animation,
         child: AnimatedToastWidget(
           notification: item,
-          onClose: () =>
-              ref.read(globalNotificationProvider.notifier).remove(item.id),
+          onClose: () {},
         ),
       ),
     );

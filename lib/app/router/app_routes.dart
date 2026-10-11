@@ -52,6 +52,7 @@ abstract final class AppRoutes {
   static const settingsNotifications = 'notifications';
   static const settingsActiveSession = 'active-session';
   static const settingsChangePin = 'change-pin';
+  static const settingsChangePassword = 'change-password';
 
   static const chatTitles = ['Messages', 'Groups', 'Settings'];
   static const chats = '/chats';
@@ -65,6 +66,7 @@ abstract final class AppRoutes {
   static const contactsSettings = '/contacts/settings';
 
   static const explore = '/explore';
+  static const communication = '/communication';
   static const payments = '/payments';
   static const store = '/store';
 

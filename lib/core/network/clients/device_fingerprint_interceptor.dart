@@ -18,8 +18,9 @@ class DeviceFingerprintInterceptor extends Interceptor {
       final deviceInfoService = ref.read(deviceInfoServiceProvider);
       final fingerprint = await deviceInfoService.getFingerprint();
 
-      if (fingerprint.isNotEmpty) {
-        options.headers[StorageKeys.headerFingerPrint] = fingerprint;
+      final normalizedFingerprint = fingerprint.trim();
+      if (normalizedFingerprint.isNotEmpty) {
+        options.headers[StorageKeys.headerFingerPrint] = normalizedFingerprint;
       }
     } catch (e) {
       // Jeśli pobranie fingerprintu zawiedzie, logujemy to, ale puszczamy request

@@ -1,25 +1,93 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/sync/sync_coordinator.dart';
 import 'package:obywatel_plus/features/notifications/data/notification_api.dart';
 import 'package:obywatel_plus/features/notifications/data/notifications_repository.dart' as repo;
 import 'package:obywatel_plus/features/notifications/domain/notification_model.dart';
+import 'package:obywatel_plus/features/notifications/domain/notification_sync_settings_provider.dart';
 import 'package:obywatel_plus/features/notifications/domain/sync_batch_model.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notifications_controller.g.dart';
 
+Future<void> syncNotificationsWithBackend(Ref ref) async {
+  final logger = ref.read(appLoggerProvider);
+  final api = ref.read(notificationApiProvider);
+  final db = ref.read(appDatabaseProvider);
+
+  try {
+    final events = await db.outboxDao.getPendingEvents();
+    final notificationEvents =
+        events.where((e) => e.eventType.startsWith('notification.')).toList();
+
+    if (notificationEvents.isNotEmpty) {
+      final dtos = notificationEvents.map((e) {
+        final payload = (e.payload.isNotEmpty)
+            ? Map<String, dynamic>.from(jsonDecode(e.payload) as Map<String, dynamic>)
+            : <String, dynamic>{};
+
+        return SyncEventDto(
+          id: e.id,
+          eventType: e.eventType,
+          payload: payload,
+          createdAt: e.createdAt.toUtc().toIso8601String(),
+        );
+      }).toList();
+
+      final resp = await api.syncBatch(dtos);
+      if (resp.processedEventIds.isNotEmpty) {
+        await db.outboxDao.deleteEventsByIds(resp.processedEventIds);
+      }
+    }
+  } catch (e, st) {
+    logger.e('[NOTIFICATIONS] Background push failed', error: e, stackTrace: st);
+    return;
+  }
+
+  try {
+    final remoteNotifications = await api.fetchNotifications();
+    await ref.read(notificationsDaoProvider).syncLocalWithRemote(remoteNotifications);
+    // Update last sync timestamp on successful pull
+    try {
+      await ref
+          .read(notificationSyncSettingsProvider.notifier)
+          .setLastSyncTimestamp(DateTime.now().toUtc());
+    } catch (_) {}
+    logger.i(
+      '[NOTIFICATIONS] Background sync completed: ${remoteNotifications.length} notifications',
+    );
+  } catch (e, st) {
+    logger.e('[NOTIFICATIONS] Background pull failed', error: e, stackTrace: st);
+  }
+}
+
 @riverpod
 class NotificationsController extends _$NotificationsController {
   @override
   Stream<List<NotificationModel>> build() {
-    final stream = ref.watch(notificationsDaoProvider).watchAllNotifications();
-    // Automatycznie czyść stary kosz przy inicjalizacji kontrolera (opcjonalnie)
-    // vacuumOldNotifications();
-    Future.microtask(() => syncWithBackend());
+    return ref.watch(notificationsDaoProvider).watchAllNotifications();
+  }
 
-    return stream;
+  Future<void> syncWithBackend() async {
+    final readiness = await ref.read(syncCoordinatorProvider.notifier).ensureReady();
+    if (readiness != SyncReadiness.ready) {
+      return;
+    }
+
+    await syncNotificationsWithBackend(ref);
+  }
+
+  /// Called when a remote notification indicates new content is available.
+  /// Triggers realtime sync if the user enabled realtime sync.
+  Future<void> handleRemoteNotificationTrigger() async {
+    final settings = ref.read(notificationSyncSettingsProvider);
+    if (!settings.realtimeSyncEnabled) return;
+
+    // Fire-and-forget sync
+    unawaited(syncNotificationsWithBackend(ref));
   }
 
   Future<void> markAsRead(String id) async {
@@ -32,13 +100,12 @@ class NotificationsController extends _$NotificationsController {
   }
 
   Future<void> markAllAsRead() async {
-    final logger = ref.read(appLoggerProvider);
     await repo.markAllAsRead(
       ref.read(appDatabaseProvider),
       ref.read(notificationsDaoProvider),
       ref.read(outboxDaoProvider),
     );
-    logger.i('Queued mark_all_read in outbox');
+    ref.read(appLoggerProvider).i('Queued mark_all_read in outbox');
   }
 
   Future<void> moveToTrash(String id) async {
@@ -83,50 +150,60 @@ class NotificationsController extends _$NotificationsController {
     final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
     await ref.read(notificationsDaoProvider).deleteOlderThan(sevenDaysAgo);
   }
-
-  Future<void> syncWithBackend() async {
-    final logger = ref.read(appLoggerProvider);
-    final api = ref.read(notificationApiProvider);
-
-    // 1) Push: flush outbox
-    try {
-      final events = await ref.read(appDatabaseProvider).outboxDao.getPendingEvents();
-      final notificationEvents = events.where((e) => e.eventType.startsWith('notification.')).toList();
-
-      if (notificationEvents.isNotEmpty) {
-        // map to DTOs
-        final dtos = notificationEvents.map((e) => SyncEventDto(
-              id: e.id,
-              eventType: e.eventType,
-              payload: (e.payload.isNotEmpty) ? Map<String, dynamic>.from(jsonDecode(e.payload) as Map<String, dynamic>) : {},
-              createdAt: e.createdAt.toUtc().toIso8601String(),
-            )).toList();
-
-        final resp = await api.syncBatch(dtos);
-
-        // remove processed ids
-        if (resp.processedEventIds.isNotEmpty) {
-          await ref.read(appDatabaseProvider).outboxDao.deleteEventsByIds(resp.processedEventIds);
-        }
-      }
-    } catch (e, st) {
-      logger.e('❌ Błąd wysyłania outboxa', error: e, stackTrace: st);
-      // don't proceed to pull if push failed
-      return;
-    }
-
-    // 2) Pull: fetch latest notifications and apply
-    try {
-      final remoteNotifications = await api.fetchNotifications();
-      await ref.read(notificationsDaoProvider).syncLocalWithRemote(remoteNotifications);
-      logger.i('🔄 Synchronizacja zakończona: ${remoteNotifications.length} powiadomień');
-    } catch (e, st) {
-      logger.e('❌ Błąd pobierania powiadomień', error: e, stackTrace: st);
-    }
-  }
 }
 
 @riverpod
 Stream<List<NotificationModel>> trashNotifications(Ref ref) {
   return ref.watch(notificationsDaoProvider).watchTrashNotifications();
+}
+
+@Riverpod(keepAlive: true)
+class NotificationsBackgroundSync extends _$NotificationsBackgroundSync {
+  bool _syncInProgress = false;
+
+  @override
+  void build() {
+    ref.listen(syncCoordinatorProvider, (previous, next) {
+      if (next == SyncReadiness.ready && previous != SyncReadiness.ready) {
+        unawaited(_syncWhenReady());
+      }
+    });
+
+    if (ref.read(syncCoordinatorProvider) == SyncReadiness.ready) {
+      unawaited(_syncWhenReady());
+    }
+  }
+
+  Future<void> _syncWhenReady() async {
+    if (_syncInProgress) return;
+
+    final readiness = await ref.read(syncCoordinatorProvider.notifier).ensureReady();
+    if (readiness != SyncReadiness.ready) {
+      return;
+    }
+
+    // Decide whether to run sync based on settings and cold-start state.
+    final settings = ref.read(notificationSyncSettingsProvider);
+    final now = DateTime.now().toUtc();
+    final last = settings.lastSyncTimestamp;
+
+    // Cold-start: if we've never synced before, always run one sync.
+    final shouldRun = last == null
+        ? true
+        : (settings.autoSyncEnabled && now.difference(last) > const Duration(minutes: 15));
+
+    if (!shouldRun) return;
+
+    _syncInProgress = true;
+    try {
+      await syncNotificationsWithBackend(ref);
+    } finally {
+      _syncInProgress = false;
+    }
+  }
+}
+
+@riverpod
+Stream<int> unreadNotificationsCount(Ref ref) {
+  return ref.watch(notificationsDaoProvider).watchUnreadNotificationCount();
 }

@@ -1919,6 +1919,42 @@ class $ContactsTable extends Contacts
     requiredDuringInsert: false,
     defaultValue: const Constant('pending'),
   );
+  static const VerificationMeta _syncStateMeta = const VerificationMeta(
+    'syncState',
+  );
+  @override
+  late final GeneratedColumn<String> syncState = GeneratedColumn<String>(
+    'sync_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('synced'),
+  );
+  static const VerificationMeta _directionMeta = const VerificationMeta(
+    'direction',
+  );
+  @override
+  late final GeneratedColumn<String> direction = GeneratedColumn<String>(
+    'direction',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('incoming'),
+  );
+  static const VerificationMeta _changeSequenceMeta = const VerificationMeta(
+    'changeSequence',
+  );
+  @override
+  late final GeneratedColumn<BigInt> changeSequence = GeneratedColumn<BigInt>(
+    'change_sequence',
+    aliasedName,
+    false,
+    type: DriftSqlType.bigInt,
+    requiredDuringInsert: false,
+    defaultValue: Constant(BigInt.from(1)),
+  );
   static const VerificationMeta _localAliasMeta = const VerificationMeta(
     'localAlias',
   );
@@ -1995,6 +2031,9 @@ class $ContactsTable extends Contacts
     ownerId,
     contactId,
     status,
+    syncState,
+    direction,
+    changeSequence,
     localAlias,
     encryptedAlias,
     version,
@@ -2039,6 +2078,27 @@ class $ContactsTable extends Contacts
       context.handle(
         _statusMeta,
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('sync_state')) {
+      context.handle(
+        _syncStateMeta,
+        syncState.isAcceptableOrUnknown(data['sync_state']!, _syncStateMeta),
+      );
+    }
+    if (data.containsKey('direction')) {
+      context.handle(
+        _directionMeta,
+        direction.isAcceptableOrUnknown(data['direction']!, _directionMeta),
+      );
+    }
+    if (data.containsKey('change_sequence')) {
+      context.handle(
+        _changeSequenceMeta,
+        changeSequence.isAcceptableOrUnknown(
+          data['change_sequence']!,
+          _changeSequenceMeta,
+        ),
       );
     }
     if (data.containsKey('local_alias')) {
@@ -2105,6 +2165,18 @@ class $ContactsTable extends Contacts
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      syncState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_state'],
+      )!,
+      direction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}direction'],
+      )!,
+      changeSequence: attachedDatabase.typeMapping.read(
+        DriftSqlType.bigInt,
+        data['${effectivePrefix}change_sequence'],
+      )!,
       localAlias: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}local_alias'],
@@ -2143,6 +2215,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
   final String ownerId;
   final String contactId;
   final String status;
+  final String syncState;
+  final String direction;
+  final BigInt changeSequence;
   final String? localAlias;
   final Uint8List? encryptedAlias;
   final BigInt version;
@@ -2154,6 +2229,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     required this.ownerId,
     required this.contactId,
     required this.status,
+    required this.syncState,
+    required this.direction,
+    required this.changeSequence,
     this.localAlias,
     this.encryptedAlias,
     required this.version,
@@ -2168,6 +2246,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     map['owner_id'] = Variable<String>(ownerId);
     map['contact_id'] = Variable<String>(contactId);
     map['status'] = Variable<String>(status);
+    map['sync_state'] = Variable<String>(syncState);
+    map['direction'] = Variable<String>(direction);
+    map['change_sequence'] = Variable<BigInt>(changeSequence);
     if (!nullToAbsent || localAlias != null) {
       map['local_alias'] = Variable<String>(localAlias);
     }
@@ -2189,6 +2270,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: Value(ownerId),
       contactId: Value(contactId),
       status: Value(status),
+      syncState: Value(syncState),
+      direction: Value(direction),
+      changeSequence: Value(changeSequence),
       localAlias: localAlias == null && nullToAbsent
           ? const Value.absent()
           : Value(localAlias),
@@ -2214,6 +2298,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: serializer.fromJson<String>(json['ownerId']),
       contactId: serializer.fromJson<String>(json['contactId']),
       status: serializer.fromJson<String>(json['status']),
+      syncState: serializer.fromJson<String>(json['syncState']),
+      direction: serializer.fromJson<String>(json['direction']),
+      changeSequence: serializer.fromJson<BigInt>(json['changeSequence']),
       localAlias: serializer.fromJson<String?>(json['localAlias']),
       encryptedAlias: serializer.fromJson<Uint8List?>(json['encryptedAlias']),
       version: serializer.fromJson<BigInt>(json['version']),
@@ -2230,6 +2317,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       'ownerId': serializer.toJson<String>(ownerId),
       'contactId': serializer.toJson<String>(contactId),
       'status': serializer.toJson<String>(status),
+      'syncState': serializer.toJson<String>(syncState),
+      'direction': serializer.toJson<String>(direction),
+      'changeSequence': serializer.toJson<BigInt>(changeSequence),
       'localAlias': serializer.toJson<String?>(localAlias),
       'encryptedAlias': serializer.toJson<Uint8List?>(encryptedAlias),
       'version': serializer.toJson<BigInt>(version),
@@ -2244,6 +2334,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     String? ownerId,
     String? contactId,
     String? status,
+    String? syncState,
+    String? direction,
+    BigInt? changeSequence,
     Value<String?> localAlias = const Value.absent(),
     Value<Uint8List?> encryptedAlias = const Value.absent(),
     BigInt? version,
@@ -2255,6 +2348,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId: ownerId ?? this.ownerId,
     contactId: contactId ?? this.contactId,
     status: status ?? this.status,
+    syncState: syncState ?? this.syncState,
+    direction: direction ?? this.direction,
+    changeSequence: changeSequence ?? this.changeSequence,
     localAlias: localAlias.present ? localAlias.value : this.localAlias,
     encryptedAlias: encryptedAlias.present
         ? encryptedAlias.value
@@ -2270,6 +2366,11 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
       ownerId: data.ownerId.present ? data.ownerId.value : this.ownerId,
       contactId: data.contactId.present ? data.contactId.value : this.contactId,
       status: data.status.present ? data.status.value : this.status,
+      syncState: data.syncState.present ? data.syncState.value : this.syncState,
+      direction: data.direction.present ? data.direction.value : this.direction,
+      changeSequence: data.changeSequence.present
+          ? data.changeSequence.value
+          : this.changeSequence,
       localAlias: data.localAlias.present
           ? data.localAlias.value
           : this.localAlias,
@@ -2290,6 +2391,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('syncState: $syncState, ')
+          ..write('direction: $direction, ')
+          ..write('changeSequence: $changeSequence, ')
           ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
@@ -2306,6 +2410,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
     ownerId,
     contactId,
     status,
+    syncState,
+    direction,
+    changeSequence,
     localAlias,
     $driftBlobEquality.hash(encryptedAlias),
     version,
@@ -2321,6 +2428,9 @@ class ContactEntity extends DataClass implements Insertable<ContactEntity> {
           other.ownerId == this.ownerId &&
           other.contactId == this.contactId &&
           other.status == this.status &&
+          other.syncState == this.syncState &&
+          other.direction == this.direction &&
+          other.changeSequence == this.changeSequence &&
           other.localAlias == this.localAlias &&
           $driftBlobEquality.equals(
             other.encryptedAlias,
@@ -2337,6 +2447,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
   final Value<String> ownerId;
   final Value<String> contactId;
   final Value<String> status;
+  final Value<String> syncState;
+  final Value<String> direction;
+  final Value<BigInt> changeSequence;
   final Value<String?> localAlias;
   final Value<Uint8List?> encryptedAlias;
   final Value<BigInt> version;
@@ -2349,6 +2462,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     this.ownerId = const Value.absent(),
     this.contactId = const Value.absent(),
     this.status = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.changeSequence = const Value.absent(),
     this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
@@ -2362,6 +2478,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     required String ownerId,
     required String contactId,
     this.status = const Value.absent(),
+    this.syncState = const Value.absent(),
+    this.direction = const Value.absent(),
+    this.changeSequence = const Value.absent(),
     this.localAlias = const Value.absent(),
     this.encryptedAlias = const Value.absent(),
     this.version = const Value.absent(),
@@ -2377,6 +2496,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Expression<String>? ownerId,
     Expression<String>? contactId,
     Expression<String>? status,
+    Expression<String>? syncState,
+    Expression<String>? direction,
+    Expression<BigInt>? changeSequence,
     Expression<String>? localAlias,
     Expression<Uint8List>? encryptedAlias,
     Expression<BigInt>? version,
@@ -2390,6 +2512,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       if (ownerId != null) 'owner_id': ownerId,
       if (contactId != null) 'contact_id': contactId,
       if (status != null) 'status': status,
+      if (syncState != null) 'sync_state': syncState,
+      if (direction != null) 'direction': direction,
+      if (changeSequence != null) 'change_sequence': changeSequence,
       if (localAlias != null) 'local_alias': localAlias,
       if (encryptedAlias != null) 'encrypted_alias': encryptedAlias,
       if (version != null) 'version': version,
@@ -2405,6 +2530,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     Value<String>? ownerId,
     Value<String>? contactId,
     Value<String>? status,
+    Value<String>? syncState,
+    Value<String>? direction,
+    Value<BigInt>? changeSequence,
     Value<String?>? localAlias,
     Value<Uint8List?>? encryptedAlias,
     Value<BigInt>? version,
@@ -2418,6 +2546,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
       ownerId: ownerId ?? this.ownerId,
       contactId: contactId ?? this.contactId,
       status: status ?? this.status,
+      syncState: syncState ?? this.syncState,
+      direction: direction ?? this.direction,
+      changeSequence: changeSequence ?? this.changeSequence,
       localAlias: localAlias ?? this.localAlias,
       encryptedAlias: encryptedAlias ?? this.encryptedAlias,
       version: version ?? this.version,
@@ -2442,6 +2573,15 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
     }
     if (status.present) {
       map['status'] = Variable<String>(status.value);
+    }
+    if (syncState.present) {
+      map['sync_state'] = Variable<String>(syncState.value);
+    }
+    if (direction.present) {
+      map['direction'] = Variable<String>(direction.value);
+    }
+    if (changeSequence.present) {
+      map['change_sequence'] = Variable<BigInt>(changeSequence.value);
     }
     if (localAlias.present) {
       map['local_alias'] = Variable<String>(localAlias.value);
@@ -2474,6 +2614,9 @@ class ContactsCompanion extends UpdateCompanion<ContactEntity> {
           ..write('ownerId: $ownerId, ')
           ..write('contactId: $contactId, ')
           ..write('status: $status, ')
+          ..write('syncState: $syncState, ')
+          ..write('direction: $direction, ')
+          ..write('changeSequence: $changeSequence, ')
           ..write('localAlias: $localAlias, ')
           ..write('encryptedAlias: $encryptedAlias, ')
           ..write('version: $version, ')
@@ -3529,9 +3672,9 @@ class $MessagesTable extends Messages
   late final GeneratedColumn<BigInt> sequence = GeneratedColumn<BigInt>(
     'sequence',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.bigInt,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _encryptedPayloadMeta = const VerificationMeta(
     'encryptedPayload',
@@ -3568,6 +3711,16 @@ class $MessagesTable extends Messages
     type: DriftSqlType.bigInt,
     requiredDuringInsert: false,
     defaultValue: Constant(BigInt.from(1)),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
   );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
@@ -3615,6 +3768,7 @@ class $MessagesTable extends Messages
     encryptedPayload,
     mediaHeader,
     version,
+    status,
     createdAt,
     updatedAt,
     deletedAt,
@@ -3677,8 +3831,6 @@ class $MessagesTable extends Messages
         _sequenceMeta,
         sequence.isAcceptableOrUnknown(data['sequence']!, _sequenceMeta),
       );
-    } else if (isInserting) {
-      context.missing(_sequenceMeta);
     }
     if (data.containsKey('encrypted_payload')) {
       context.handle(
@@ -3704,6 +3856,12 @@ class $MessagesTable extends Messages
       context.handle(
         _versionMeta,
         version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
     if (data.containsKey('created_at')) {
@@ -3756,7 +3914,7 @@ class $MessagesTable extends Messages
       sequence: attachedDatabase.typeMapping.read(
         DriftSqlType.bigInt,
         data['${effectivePrefix}sequence'],
-      )!,
+      ),
       encryptedPayload: attachedDatabase.typeMapping.read(
         DriftSqlType.blob,
         data['${effectivePrefix}encrypted_payload'],
@@ -3768,6 +3926,10 @@ class $MessagesTable extends Messages
       version: attachedDatabase.typeMapping.read(
         DriftSqlType.bigInt,
         data['${effectivePrefix}version'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
       )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
@@ -3796,10 +3958,11 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
   final String senderId;
   final String senderDeviceId;
   final String type;
-  final BigInt sequence;
+  final BigInt? sequence;
   final Uint8List encryptedPayload;
   final Uint8List? mediaHeader;
   final BigInt version;
+  final String status;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
@@ -3809,10 +3972,11 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     required this.senderId,
     required this.senderDeviceId,
     required this.type,
-    required this.sequence,
+    this.sequence,
     required this.encryptedPayload,
     this.mediaHeader,
     required this.version,
+    required this.status,
     required this.createdAt,
     required this.updatedAt,
     this.deletedAt,
@@ -3825,12 +3989,15 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     map['sender_id'] = Variable<String>(senderId);
     map['sender_device_id'] = Variable<String>(senderDeviceId);
     map['type'] = Variable<String>(type);
-    map['sequence'] = Variable<BigInt>(sequence);
+    if (!nullToAbsent || sequence != null) {
+      map['sequence'] = Variable<BigInt>(sequence);
+    }
     map['encrypted_payload'] = Variable<Uint8List>(encryptedPayload);
     if (!nullToAbsent || mediaHeader != null) {
       map['media_header'] = Variable<Uint8List>(mediaHeader);
     }
     map['version'] = Variable<BigInt>(version);
+    map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     if (!nullToAbsent || deletedAt != null) {
@@ -3846,12 +4013,15 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderId: Value(senderId),
       senderDeviceId: Value(senderDeviceId),
       type: Value(type),
-      sequence: Value(sequence),
+      sequence: sequence == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sequence),
       encryptedPayload: Value(encryptedPayload),
       mediaHeader: mediaHeader == null && nullToAbsent
           ? const Value.absent()
           : Value(mediaHeader),
       version: Value(version),
+      status: Value(status),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
       deletedAt: deletedAt == null && nullToAbsent
@@ -3871,12 +4041,13 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderId: serializer.fromJson<String>(json['senderId']),
       senderDeviceId: serializer.fromJson<String>(json['senderDeviceId']),
       type: serializer.fromJson<String>(json['type']),
-      sequence: serializer.fromJson<BigInt>(json['sequence']),
+      sequence: serializer.fromJson<BigInt?>(json['sequence']),
       encryptedPayload: serializer.fromJson<Uint8List>(
         json['encryptedPayload'],
       ),
       mediaHeader: serializer.fromJson<Uint8List?>(json['mediaHeader']),
       version: serializer.fromJson<BigInt>(json['version']),
+      status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
@@ -3891,10 +4062,11 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       'senderId': serializer.toJson<String>(senderId),
       'senderDeviceId': serializer.toJson<String>(senderDeviceId),
       'type': serializer.toJson<String>(type),
-      'sequence': serializer.toJson<BigInt>(sequence),
+      'sequence': serializer.toJson<BigInt?>(sequence),
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
       'mediaHeader': serializer.toJson<Uint8List?>(mediaHeader),
       'version': serializer.toJson<BigInt>(version),
+      'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
@@ -3907,10 +4079,11 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     String? senderId,
     String? senderDeviceId,
     String? type,
-    BigInt? sequence,
+    Value<BigInt?> sequence = const Value.absent(),
     Uint8List? encryptedPayload,
     Value<Uint8List?> mediaHeader = const Value.absent(),
     BigInt? version,
+    String? status,
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
@@ -3920,10 +4093,11 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     senderId: senderId ?? this.senderId,
     senderDeviceId: senderDeviceId ?? this.senderDeviceId,
     type: type ?? this.type,
-    sequence: sequence ?? this.sequence,
+    sequence: sequence.present ? sequence.value : this.sequence,
     encryptedPayload: encryptedPayload ?? this.encryptedPayload,
     mediaHeader: mediaHeader.present ? mediaHeader.value : this.mediaHeader,
     version: version ?? this.version,
+    status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
@@ -3947,6 +4121,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ? data.mediaHeader.value
           : this.mediaHeader,
       version: data.version.present ? data.version.value : this.version,
+      status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -3965,6 +4140,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ..write('encryptedPayload: $encryptedPayload, ')
           ..write('mediaHeader: $mediaHeader, ')
           ..write('version: $version, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt')
@@ -3983,6 +4159,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     $driftBlobEquality.hash(encryptedPayload),
     $driftBlobEquality.hash(mediaHeader),
     version,
+    status,
     createdAt,
     updatedAt,
     deletedAt,
@@ -4003,6 +4180,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ) &&
           $driftBlobEquality.equals(other.mediaHeader, this.mediaHeader) &&
           other.version == this.version &&
+          other.status == this.status &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt);
@@ -4014,10 +4192,11 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
   final Value<String> senderId;
   final Value<String> senderDeviceId;
   final Value<String> type;
-  final Value<BigInt> sequence;
+  final Value<BigInt?> sequence;
   final Value<Uint8List> encryptedPayload;
   final Value<Uint8List?> mediaHeader;
   final Value<BigInt> version;
+  final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
@@ -4032,6 +4211,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     this.encryptedPayload = const Value.absent(),
     this.mediaHeader = const Value.absent(),
     this.version = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -4043,10 +4223,11 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     required String senderId,
     required String senderDeviceId,
     this.type = const Value.absent(),
-    required BigInt sequence,
+    this.sequence = const Value.absent(),
     required Uint8List encryptedPayload,
     this.mediaHeader = const Value.absent(),
     this.version = const Value.absent(),
+    this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
@@ -4055,7 +4236,6 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
        conversationId = Value(conversationId),
        senderId = Value(senderId),
        senderDeviceId = Value(senderDeviceId),
-       sequence = Value(sequence),
        encryptedPayload = Value(encryptedPayload);
   static Insertable<MessageEntity> custom({
     Expression<String>? id,
@@ -4067,6 +4247,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Expression<Uint8List>? encryptedPayload,
     Expression<Uint8List>? mediaHeader,
     Expression<BigInt>? version,
+    Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
@@ -4082,6 +4263,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       if (encryptedPayload != null) 'encrypted_payload': encryptedPayload,
       if (mediaHeader != null) 'media_header': mediaHeader,
       if (version != null) 'version': version,
+      if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
@@ -4095,10 +4277,11 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Value<String>? senderId,
     Value<String>? senderDeviceId,
     Value<String>? type,
-    Value<BigInt>? sequence,
+    Value<BigInt?>? sequence,
     Value<Uint8List>? encryptedPayload,
     Value<Uint8List?>? mediaHeader,
     Value<BigInt>? version,
+    Value<String>? status,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
@@ -4114,6 +4297,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       encryptedPayload: encryptedPayload ?? this.encryptedPayload,
       mediaHeader: mediaHeader ?? this.mediaHeader,
       version: version ?? this.version,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
@@ -4151,6 +4335,9 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     if (version.present) {
       map['version'] = Variable<BigInt>(version.value);
     }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -4178,6 +4365,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
           ..write('encryptedPayload: $encryptedPayload, ')
           ..write('mediaHeader: $mediaHeader, ')
           ..write('version: $version, ')
+          ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
@@ -4201,6 +4389,40 @@ class $OutboxEventsTable extends OutboxEvents
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: true,
+  );
+  static const VerificationMeta _outboxEventIdMeta = const VerificationMeta(
+    'outboxEventId',
+  );
+  @override
+  late final GeneratedColumn<String> outboxEventId = GeneratedColumn<String>(
+    'outbox_event_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
+  @override
+  late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('GENERIC'),
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
+  @override
+  late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
+    'entity_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _eventTypeMeta = const VerificationMeta(
     'eventType',
@@ -4257,6 +4479,30 @@ class $OutboxEventsTable extends OutboxEvents
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
+  @override
+  late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
+    'attempt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _nextAttemptAtMeta = const VerificationMeta(
+    'nextAttemptAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> nextAttemptAt =
+      GeneratedColumn<DateTime>(
+        'next_attempt_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -4269,15 +4515,33 @@ class $OutboxEventsTable extends OutboxEvents
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    outboxEventId,
+    entityType,
+    entityId,
     eventType,
     conversationId,
     payload,
     status,
     retryCount,
+    attemptCount,
+    nextAttemptAt,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4295,6 +4559,27 @@ class $OutboxEventsTable extends OutboxEvents
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('outbox_event_id')) {
+      context.handle(
+        _outboxEventIdMeta,
+        outboxEventId.isAcceptableOrUnknown(
+          data['outbox_event_id']!,
+          _outboxEventIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('entity_type')) {
+      context.handle(
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
+    }
+    if (data.containsKey('entity_id')) {
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
     }
     if (data.containsKey('event_type')) {
       context.handle(
@@ -4333,10 +4618,34 @@ class $OutboxEventsTable extends OutboxEvents
         retryCount.isAcceptableOrUnknown(data['retry_count']!, _retryCountMeta),
       );
     }
+    if (data.containsKey('attempt_count')) {
+      context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
+          _attemptCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('next_attempt_at')) {
+      context.handle(
+        _nextAttemptAtMeta,
+        nextAttemptAt.isAcceptableOrUnknown(
+          data['next_attempt_at']!,
+          _nextAttemptAtMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
     return context;
@@ -4352,6 +4661,18 @@ class $OutboxEventsTable extends OutboxEvents
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      outboxEventId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}outbox_event_id'],
+      ),
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_id'],
+      ),
       eventType: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}event_type'],
@@ -4372,9 +4693,21 @@ class $OutboxEventsTable extends OutboxEvents
         DriftSqlType.int,
         data['${effectivePrefix}retry_count'],
       )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      nextAttemptAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}next_attempt_at'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
       )!,
     );
   }
@@ -4388,25 +4721,44 @@ class $OutboxEventsTable extends OutboxEvents
 class OutboxEventEntity extends DataClass
     implements Insertable<OutboxEventEntity> {
   final String id;
+  final String? outboxEventId;
+  final String entityType;
+  final String? entityId;
   final String eventType;
   final String? conversationId;
   final String payload;
   final String status;
   final int retryCount;
+  final int attemptCount;
+  final DateTime? nextAttemptAt;
   final DateTime createdAt;
+  final DateTime updatedAt;
   const OutboxEventEntity({
     required this.id,
+    this.outboxEventId,
+    required this.entityType,
+    this.entityId,
     required this.eventType,
     this.conversationId,
     required this.payload,
     required this.status,
     required this.retryCount,
+    required this.attemptCount,
+    this.nextAttemptAt,
     required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    if (!nullToAbsent || outboxEventId != null) {
+      map['outbox_event_id'] = Variable<String>(outboxEventId);
+    }
+    map['entity_type'] = Variable<String>(entityType);
+    if (!nullToAbsent || entityId != null) {
+      map['entity_id'] = Variable<String>(entityId);
+    }
     map['event_type'] = Variable<String>(eventType);
     if (!nullToAbsent || conversationId != null) {
       map['conversation_id'] = Variable<String>(conversationId);
@@ -4414,13 +4766,25 @@ class OutboxEventEntity extends DataClass
     map['payload'] = Variable<String>(payload);
     map['status'] = Variable<String>(status);
     map['retry_count'] = Variable<int>(retryCount);
+    map['attempt_count'] = Variable<int>(attemptCount);
+    if (!nullToAbsent || nextAttemptAt != null) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
   OutboxEventsCompanion toCompanion(bool nullToAbsent) {
     return OutboxEventsCompanion(
       id: Value(id),
+      outboxEventId: outboxEventId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(outboxEventId),
+      entityType: Value(entityType),
+      entityId: entityId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(entityId),
       eventType: Value(eventType),
       conversationId: conversationId == null && nullToAbsent
           ? const Value.absent()
@@ -4428,7 +4792,12 @@ class OutboxEventEntity extends DataClass
       payload: Value(payload),
       status: Value(status),
       retryCount: Value(retryCount),
+      attemptCount: Value(attemptCount),
+      nextAttemptAt: nextAttemptAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(nextAttemptAt),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -4439,12 +4808,18 @@ class OutboxEventEntity extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxEventEntity(
       id: serializer.fromJson<String>(json['id']),
+      outboxEventId: serializer.fromJson<String?>(json['outboxEventId']),
+      entityType: serializer.fromJson<String>(json['entityType']),
+      entityId: serializer.fromJson<String?>(json['entityId']),
       eventType: serializer.fromJson<String>(json['eventType']),
       conversationId: serializer.fromJson<String?>(json['conversationId']),
       payload: serializer.fromJson<String>(json['payload']),
       status: serializer.fromJson<String>(json['status']),
       retryCount: serializer.fromJson<int>(json['retryCount']),
+      attemptCount: serializer.fromJson<int>(json['attemptCount']),
+      nextAttemptAt: serializer.fromJson<DateTime?>(json['nextAttemptAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -4452,25 +4827,42 @@ class OutboxEventEntity extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'outboxEventId': serializer.toJson<String?>(outboxEventId),
+      'entityType': serializer.toJson<String>(entityType),
+      'entityId': serializer.toJson<String?>(entityId),
       'eventType': serializer.toJson<String>(eventType),
       'conversationId': serializer.toJson<String?>(conversationId),
       'payload': serializer.toJson<String>(payload),
       'status': serializer.toJson<String>(status),
       'retryCount': serializer.toJson<int>(retryCount),
+      'attemptCount': serializer.toJson<int>(attemptCount),
+      'nextAttemptAt': serializer.toJson<DateTime?>(nextAttemptAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
   OutboxEventEntity copyWith({
     String? id,
+    Value<String?> outboxEventId = const Value.absent(),
+    String? entityType,
+    Value<String?> entityId = const Value.absent(),
     String? eventType,
     Value<String?> conversationId = const Value.absent(),
     String? payload,
     String? status,
     int? retryCount,
+    int? attemptCount,
+    Value<DateTime?> nextAttemptAt = const Value.absent(),
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) => OutboxEventEntity(
     id: id ?? this.id,
+    outboxEventId: outboxEventId.present
+        ? outboxEventId.value
+        : this.outboxEventId,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId.present ? entityId.value : this.entityId,
     eventType: eventType ?? this.eventType,
     conversationId: conversationId.present
         ? conversationId.value
@@ -4478,11 +4870,23 @@ class OutboxEventEntity extends DataClass
     payload: payload ?? this.payload,
     status: status ?? this.status,
     retryCount: retryCount ?? this.retryCount,
+    attemptCount: attemptCount ?? this.attemptCount,
+    nextAttemptAt: nextAttemptAt.present
+        ? nextAttemptAt.value
+        : this.nextAttemptAt,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   OutboxEventEntity copyWithCompanion(OutboxEventsCompanion data) {
     return OutboxEventEntity(
       id: data.id.present ? data.id.value : this.id,
+      outboxEventId: data.outboxEventId.present
+          ? data.outboxEventId.value
+          : this.outboxEventId,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
+      entityId: data.entityId.present ? data.entityId.value : this.entityId,
       eventType: data.eventType.present ? data.eventType.value : this.eventType,
       conversationId: data.conversationId.present
           ? data.conversationId.value
@@ -4492,7 +4896,14 @@ class OutboxEventEntity extends DataClass
       retryCount: data.retryCount.present
           ? data.retryCount.value
           : this.retryCount,
+      attemptCount: data.attemptCount.present
+          ? data.attemptCount.value
+          : this.attemptCount,
+      nextAttemptAt: data.nextAttemptAt.present
+          ? data.nextAttemptAt.value
+          : this.nextAttemptAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -4500,12 +4911,18 @@ class OutboxEventEntity extends DataClass
   String toString() {
     return (StringBuffer('OutboxEventEntity(')
           ..write('id: $id, ')
+          ..write('outboxEventId: $outboxEventId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
           ..write('eventType: $eventType, ')
           ..write('conversationId: $conversationId, ')
           ..write('payload: $payload, ')
           ..write('status: $status, ')
           ..write('retryCount: $retryCount, ')
-          ..write('createdAt: $createdAt')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -4513,97 +4930,151 @@ class OutboxEventEntity extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
+    outboxEventId,
+    entityType,
+    entityId,
     eventType,
     conversationId,
     payload,
     status,
     retryCount,
+    attemptCount,
+    nextAttemptAt,
     createdAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is OutboxEventEntity &&
           other.id == this.id &&
+          other.outboxEventId == this.outboxEventId &&
+          other.entityType == this.entityType &&
+          other.entityId == this.entityId &&
           other.eventType == this.eventType &&
           other.conversationId == this.conversationId &&
           other.payload == this.payload &&
           other.status == this.status &&
           other.retryCount == this.retryCount &&
-          other.createdAt == this.createdAt);
+          other.attemptCount == this.attemptCount &&
+          other.nextAttemptAt == this.nextAttemptAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   final Value<String> id;
+  final Value<String?> outboxEventId;
+  final Value<String> entityType;
+  final Value<String?> entityId;
   final Value<String> eventType;
   final Value<String?> conversationId;
   final Value<String> payload;
   final Value<String> status;
   final Value<int> retryCount;
+  final Value<int> attemptCount;
+  final Value<DateTime?> nextAttemptAt;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const OutboxEventsCompanion({
     this.id = const Value.absent(),
+    this.outboxEventId = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
     this.eventType = const Value.absent(),
     this.conversationId = const Value.absent(),
     this.payload = const Value.absent(),
     this.status = const Value.absent(),
     this.retryCount = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   OutboxEventsCompanion.insert({
     required String id,
+    this.outboxEventId = const Value.absent(),
+    this.entityType = const Value.absent(),
+    this.entityId = const Value.absent(),
     required String eventType,
     this.conversationId = const Value.absent(),
     required String payload,
     this.status = const Value.absent(),
     this.retryCount = const Value.absent(),
+    this.attemptCount = const Value.absent(),
+    this.nextAttemptAt = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        eventType = Value(eventType),
        payload = Value(payload);
   static Insertable<OutboxEventEntity> custom({
     Expression<String>? id,
+    Expression<String>? outboxEventId,
+    Expression<String>? entityType,
+    Expression<String>? entityId,
     Expression<String>? eventType,
     Expression<String>? conversationId,
     Expression<String>? payload,
     Expression<String>? status,
     Expression<int>? retryCount,
+    Expression<int>? attemptCount,
+    Expression<DateTime>? nextAttemptAt,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (outboxEventId != null) 'outbox_event_id': outboxEventId,
+      if (entityType != null) 'entity_type': entityType,
+      if (entityId != null) 'entity_id': entityId,
       if (eventType != null) 'event_type': eventType,
       if (conversationId != null) 'conversation_id': conversationId,
       if (payload != null) 'payload': payload,
       if (status != null) 'status': status,
       if (retryCount != null) 'retry_count': retryCount,
+      if (attemptCount != null) 'attempt_count': attemptCount,
+      if (nextAttemptAt != null) 'next_attempt_at': nextAttemptAt,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   OutboxEventsCompanion copyWith({
     Value<String>? id,
+    Value<String?>? outboxEventId,
+    Value<String>? entityType,
+    Value<String?>? entityId,
     Value<String>? eventType,
     Value<String?>? conversationId,
     Value<String>? payload,
     Value<String>? status,
     Value<int>? retryCount,
+    Value<int>? attemptCount,
+    Value<DateTime?>? nextAttemptAt,
     Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return OutboxEventsCompanion(
       id: id ?? this.id,
+      outboxEventId: outboxEventId ?? this.outboxEventId,
+      entityType: entityType ?? this.entityType,
+      entityId: entityId ?? this.entityId,
       eventType: eventType ?? this.eventType,
       conversationId: conversationId ?? this.conversationId,
       payload: payload ?? this.payload,
       status: status ?? this.status,
       retryCount: retryCount ?? this.retryCount,
+      attemptCount: attemptCount ?? this.attemptCount,
+      nextAttemptAt: nextAttemptAt ?? this.nextAttemptAt,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4613,6 +5084,15 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (outboxEventId.present) {
+      map['outbox_event_id'] = Variable<String>(outboxEventId.value);
+    }
+    if (entityType.present) {
+      map['entity_type'] = Variable<String>(entityType.value);
+    }
+    if (entityId.present) {
+      map['entity_id'] = Variable<String>(entityId.value);
     }
     if (eventType.present) {
       map['event_type'] = Variable<String>(eventType.value);
@@ -4629,8 +5109,17 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
     if (retryCount.present) {
       map['retry_count'] = Variable<int>(retryCount.value);
     }
+    if (attemptCount.present) {
+      map['attempt_count'] = Variable<int>(attemptCount.value);
+    }
+    if (nextAttemptAt.present) {
+      map['next_attempt_at'] = Variable<DateTime>(nextAttemptAt.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4642,12 +5131,18 @@ class OutboxEventsCompanion extends UpdateCompanion<OutboxEventEntity> {
   String toString() {
     return (StringBuffer('OutboxEventsCompanion(')
           ..write('id: $id, ')
+          ..write('outboxEventId: $outboxEventId, ')
+          ..write('entityType: $entityType, ')
+          ..write('entityId: $entityId, ')
           ..write('eventType: $eventType, ')
           ..write('conversationId: $conversationId, ')
           ..write('payload: $payload, ')
           ..write('status: $status, ')
           ..write('retryCount: $retryCount, ')
+          ..write('attemptCount: $attemptCount, ')
+          ..write('nextAttemptAt: $nextAttemptAt, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -7440,6 +7935,9 @@ typedef $$ContactsTableCreateCompanionBuilder =
       required String ownerId,
       required String contactId,
       Value<String> status,
+      Value<String> syncState,
+      Value<String> direction,
+      Value<BigInt> changeSequence,
       Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
@@ -7454,6 +7952,9 @@ typedef $$ContactsTableUpdateCompanionBuilder =
       Value<String> ownerId,
       Value<String> contactId,
       Value<String> status,
+      Value<String> syncState,
+      Value<String> direction,
+      Value<BigInt> changeSequence,
       Value<String?> localAlias,
       Value<Uint8List?> encryptedAlias,
       Value<BigInt> version,
@@ -7489,6 +7990,21 @@ class $$ContactsTableFilterComposer
 
   ColumnFilters<String> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<BigInt> get changeSequence => $composableBuilder(
+    column: $table.changeSequence,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -7552,6 +8068,21 @@ class $$ContactsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get syncState => $composableBuilder(
+    column: $table.syncState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get direction => $composableBuilder(
+    column: $table.direction,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<BigInt> get changeSequence => $composableBuilder(
+    column: $table.changeSequence,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get localAlias => $composableBuilder(
     column: $table.localAlias,
     builder: (column) => ColumnOrderings(column),
@@ -7603,6 +8134,17 @@ class $$ContactsTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get syncState =>
+      $composableBuilder(column: $table.syncState, builder: (column) => column);
+
+  GeneratedColumn<String> get direction =>
+      $composableBuilder(column: $table.direction, builder: (column) => column);
+
+  GeneratedColumn<BigInt> get changeSequence => $composableBuilder(
+    column: $table.changeSequence,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get localAlias => $composableBuilder(
     column: $table.localAlias,
@@ -7662,6 +8204,9 @@ class $$ContactsTableTableManager
                 Value<String> ownerId = const Value.absent(),
                 Value<String> contactId = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<BigInt> changeSequence = const Value.absent(),
                 Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
@@ -7674,6 +8219,9 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                syncState: syncState,
+                direction: direction,
+                changeSequence: changeSequence,
                 localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
@@ -7688,6 +8236,9 @@ class $$ContactsTableTableManager
                 required String ownerId,
                 required String contactId,
                 Value<String> status = const Value.absent(),
+                Value<String> syncState = const Value.absent(),
+                Value<String> direction = const Value.absent(),
+                Value<BigInt> changeSequence = const Value.absent(),
                 Value<String?> localAlias = const Value.absent(),
                 Value<Uint8List?> encryptedAlias = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
@@ -7700,6 +8251,9 @@ class $$ContactsTableTableManager
                 ownerId: ownerId,
                 contactId: contactId,
                 status: status,
+                syncState: syncState,
+                direction: direction,
+                changeSequence: changeSequence,
                 localAlias: localAlias,
                 encryptedAlias: encryptedAlias,
                 version: version,
@@ -8261,10 +8815,11 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required String senderId,
       required String senderDeviceId,
       Value<String> type,
-      required BigInt sequence,
+      Value<BigInt?> sequence,
       required Uint8List encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
+      Value<String> status,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8277,10 +8832,11 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String> senderId,
       Value<String> senderDeviceId,
       Value<String> type,
-      Value<BigInt> sequence,
+      Value<BigInt?> sequence,
       Value<Uint8List> encryptedPayload,
       Value<Uint8List?> mediaHeader,
       Value<BigInt> version,
+      Value<String> status,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<DateTime?> deletedAt,
@@ -8338,6 +8894,11 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<BigInt> get version => $composableBuilder(
     column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8411,6 +8972,11 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -8471,6 +9037,9 @@ class $$MessagesTableAnnotationComposer
   GeneratedColumn<BigInt> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -8517,10 +9086,11 @@ class $$MessagesTableTableManager
                 Value<String> senderId = const Value.absent(),
                 Value<String> senderDeviceId = const Value.absent(),
                 Value<String> type = const Value.absent(),
-                Value<BigInt> sequence = const Value.absent(),
+                Value<BigInt?> sequence = const Value.absent(),
                 Value<Uint8List> encryptedPayload = const Value.absent(),
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8535,6 +9105,7 @@ class $$MessagesTableTableManager
                 encryptedPayload: encryptedPayload,
                 mediaHeader: mediaHeader,
                 version: version,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8547,10 +9118,11 @@ class $$MessagesTableTableManager
                 required String senderId,
                 required String senderDeviceId,
                 Value<String> type = const Value.absent(),
-                required BigInt sequence,
+                Value<BigInt?> sequence = const Value.absent(),
                 required Uint8List encryptedPayload,
                 Value<Uint8List?> mediaHeader = const Value.absent(),
                 Value<BigInt> version = const Value.absent(),
+                Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
@@ -8565,6 +9137,7 @@ class $$MessagesTableTableManager
                 encryptedPayload: encryptedPayload,
                 mediaHeader: mediaHeader,
                 version: version,
+                status: status,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
@@ -8598,23 +9171,35 @@ typedef $$MessagesTableProcessedTableManager =
 typedef $$OutboxEventsTableCreateCompanionBuilder =
     OutboxEventsCompanion Function({
       required String id,
+      Value<String?> outboxEventId,
+      Value<String> entityType,
+      Value<String?> entityId,
       required String eventType,
       Value<String?> conversationId,
       required String payload,
       Value<String> status,
       Value<int> retryCount,
+      Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$OutboxEventsTableUpdateCompanionBuilder =
     OutboxEventsCompanion Function({
       Value<String> id,
+      Value<String?> outboxEventId,
+      Value<String> entityType,
+      Value<String?> entityId,
       Value<String> eventType,
       Value<String?> conversationId,
       Value<String> payload,
       Value<String> status,
       Value<int> retryCount,
+      Value<int> attemptCount,
+      Value<DateTime?> nextAttemptAt,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
@@ -8629,6 +9214,21 @@ class $$OutboxEventsTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get entityId => $composableBuilder(
+    column: $table.entityId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8657,8 +9257,23 @@ class $$OutboxEventsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -8674,6 +9289,21 @@ class $$OutboxEventsTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get entityId => $composableBuilder(
+    column: $table.entityId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8702,8 +9332,23 @@ class $$OutboxEventsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
 }
@@ -8719,6 +9364,19 @@ class $$OutboxEventsTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get outboxEventId => $composableBuilder(
+    column: $table.outboxEventId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityType => $composableBuilder(
+    column: $table.entityType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => column);
 
   GeneratedColumn<String> get eventType =>
       $composableBuilder(column: $table.eventType, builder: (column) => column);
@@ -8739,8 +9397,21 @@ class $$OutboxEventsTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<int> get attemptCount => $composableBuilder(
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get nextAttemptAt => $composableBuilder(
+    column: $table.nextAttemptAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
 class $$OutboxEventsTableTableManager
@@ -8779,41 +9450,65 @@ class $$OutboxEventsTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String?> outboxEventId = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String?> entityId = const Value.absent(),
                 Value<String> eventType = const Value.absent(),
                 Value<String?> conversationId = const Value.absent(),
                 Value<String> payload = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxEventsCompanion(
                 id: id,
+                outboxEventId: outboxEventId,
+                entityType: entityType,
+                entityId: entityId,
                 eventType: eventType,
                 conversationId: conversationId,
                 payload: payload,
                 status: status,
                 retryCount: retryCount,
+                attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required String id,
+                Value<String?> outboxEventId = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String?> entityId = const Value.absent(),
                 required String eventType,
                 Value<String?> conversationId = const Value.absent(),
                 required String payload,
                 Value<String> status = const Value.absent(),
                 Value<int> retryCount = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<DateTime?> nextAttemptAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => OutboxEventsCompanion.insert(
                 id: id,
+                outboxEventId: outboxEventId,
+                entityType: entityType,
+                entityId: entityId,
                 eventType: eventType,
                 conversationId: conversationId,
                 payload: payload,
                 status: status,
                 retryCount: retryCount,
+                attemptCount: attemptCount,
+                nextAttemptAt: nextAttemptAt,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

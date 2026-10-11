@@ -16,7 +16,7 @@ class StatusPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surfaceText = textColor ?? Colors.white;
+    final surfaceText = textColor ?? Theme.of(context).colorScheme.onSurface;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),

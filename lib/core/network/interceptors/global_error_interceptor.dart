@@ -1,53 +1,104 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/network/network_manager.dart';
 
 class GlobalErrorInterceptor extends Interceptor {
   final AppLogger logger;
+  final NetworkManager networkManager;
 
   final int maxRetries;
-  final Duration initialRetryDelay;
+  final Duration retryDelay;
+  final Duration backendCooldown;
 
   GlobalErrorInterceptor({
     required this.logger,
-    this.maxRetries = 2,
-    this.initialRetryDelay = const Duration(milliseconds: 500),
+    required this.networkManager,
+    this.maxRetries = 3,
+    this.retryDelay = const Duration(seconds: 5),
+    this.backendCooldown = const Duration(seconds: 30),
   });
+
+  @override
+  Future<void> onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    if (networkManager.shouldFailFast()) {
+      final isOffline = networkManager.state == NetworkState.offline;
+      final error = DioException(
+        requestOptions: options,
+        type: DioExceptionType.connectionError,
+        error: isOffline
+            ? const NetworkException()
+            : const BackendUnavailableException(),
+      );
+
+      logger.w(
+        '[NETWORK] Blocked request while ${isOffline ? 'offline' : 'backend unavailable'}',
+        module: 'NETWORK',
+      );
+
+      return handler.reject(error);
+    }
+
+    return handler.next(options);
+  }
+
+  AppException mapToException(DioException error) => _mapToException(error);
+
+  bool shouldRetry(DioException error) =>
+      _shouldRetry(error, mapToException(error));
+
+  bool isHardBackendUnavailable(DioException error) =>
+      _isHardBackendUnavailable(error);
+
+  bool shouldOpenCircuitImmediately(DioException error) =>
+      _isHardBackendUnavailable(error);
 
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    final response = err.response;
+    if (err.response?.statusCode == 304) {
+      return handler.resolve(err.response!);
+    }
 
     final requestOptions = err.requestOptions;
+    final appException = mapToException(err);
 
-    final appException = _mapToException(err);
+    if (shouldOpenCircuitImmediately(err)) {
+      networkManager.markBackendUnavailable(cooldown: backendCooldown);
+      logger.w(
+        '[NETWORK] Hard backend failure detected for ${requestOptions.path}; circuit opened immediately',
+        module: 'NETWORK',
+        error: err,
+      );
 
-    /*
-      Retry wykonujemy tylko dla błędów tymczasowych.
-      Nie retryujemy:
-      - 401
-      - 403
-      - validation
-      - parse
-    */
-    if (_shouldRetry(err, appException)) {
+      return handler.reject(
+        DioException(
+          requestOptions: requestOptions,
+          response: err.response,
+          type: err.type,
+          error: const BackendUnavailableException(),
+        ),
+      );
+    }
+
+    if (shouldRetry(err)) {
       final retryCount = requestOptions.extra['retry_count'] as int? ?? 0;
-
       final nextRetry = retryCount + 1;
 
       if (nextRetry <= maxRetries) {
         requestOptions.extra['retry_count'] = nextRetry;
+        networkManager.markRetrying();
 
-        final delay = initialRetryDelay * (1 << (nextRetry - 1));
-
+        final delay = retryDelay;
         logger.w(
-          'NETWORK RETRY '
-          '$nextRetry/$maxRetries '
-          '${requestOptions.path} '
-          'delay=${delay.inMilliseconds}ms',
+          '[NETWORK] Retry $nextRetry/$maxRetries in ${delay.inSeconds}s for ${requestOptions.path}',
           module: 'NETWORK',
         );
 
@@ -55,18 +106,36 @@ class GlobalErrorInterceptor extends Interceptor {
 
         try {
           final retryResponse = await _retryRequest(requestOptions);
-
+          requestOptions.extra['retry_count'] = 0;
           return handler.resolve(retryResponse);
         } on DioException catch (retryError) {
           return onError(retryError, handler);
         }
       }
+
+      networkManager.markBackendUnavailable(cooldown: backendCooldown);
+      logger.w(
+        '[NETWORK] Circuit opened for ${backendCooldown.inSeconds}s after $maxRetries attempts',
+        module: 'NETWORK',
+      );
+
+      return handler.reject(
+        DioException(
+          requestOptions: requestOptions,
+          response: err.response,
+          type: err.type,
+          error: const BackendUnavailableException(),
+        ),
+      );
+    }
+
+    if (appException is NetworkException &&
+        networkManager.state == NetworkState.offline) {
+      networkManager.resetAfterConnectivityRecovery();
     }
 
     logger.e(
-      'NETWORK ERROR '
-      '${appException.runtimeType}: '
-      '${appException.message}',
+      '[NETWORK] ${appException.runtimeType}: ${appException.message}',
       module: 'NETWORK',
       error: err,
     );
@@ -74,7 +143,7 @@ class GlobalErrorInterceptor extends Interceptor {
     return handler.reject(
       DioException(
         requestOptions: requestOptions,
-        response: response,
+        response: err.response,
         type: err.type,
         error: appException,
       ),
@@ -82,16 +151,20 @@ class GlobalErrorInterceptor extends Interceptor {
   }
 
   Future<Response<dynamic>> _retryRequest(RequestOptions requestOptions) async {
-    final retryDio = Dio(
-      BaseOptions(
-        baseUrl: requestOptions.baseUrl,
-        connectTimeout: requestOptions.connectTimeout,
-        receiveTimeout: requestOptions.receiveTimeout,
-        headers: requestOptions.headers,
-      ),
+    final retryOptions = BaseOptions(
+      baseUrl: requestOptions.baseUrl,
+      connectTimeout: requestOptions.connectTimeout,
+      receiveTimeout: requestOptions.receiveTimeout,
+      headers: requestOptions.headers,
+      validateStatus: (status) {
+        return status != null &&
+            ((status >= 200 && status < 300) || status == 304);
+      },
     );
 
-    return retryDio.request<dynamic>(
+    final retryClient = Dio(retryOptions);
+
+    return retryClient.request<dynamic>(
       requestOptions.path,
       data: requestOptions.data,
       queryParameters: requestOptions.queryParameters,
@@ -106,11 +179,15 @@ class GlobalErrorInterceptor extends Interceptor {
   }
 
   bool _shouldRetry(DioException error, AppException exception) {
-    if (exception is UpstreamUnavailableException) {
+    if (exception is NetworkException) {
       return true;
     }
 
     if (exception is TimeoutException) {
+      return true;
+    }
+
+    if (exception is UpstreamUnavailableException) {
       return true;
     }
 
@@ -123,53 +200,95 @@ class GlobalErrorInterceptor extends Interceptor {
     return false;
   }
 
+  bool _isHardBackendUnavailable(DioException error) {
+    if (networkManager.state == NetworkState.offline) {
+      return false;
+    }
+
+    final message = (error.message ?? error.error.toString()).toLowerCase();
+    final socketException = error.error is SocketException
+        ? error.error as SocketException
+        : null;
+    final socketMessage = socketException?.message.toLowerCase() ?? '';
+    final socketErrorCode = socketException?.osError?.errorCode;
+
+    final hardBackendRefusalCodes = {61, 111, 1225, 10061};
+
+    final isRefusedByPeer =
+        socketErrorCode != null &&
+        hardBackendRefusalCodes.contains(socketErrorCode);
+
+    final isConnectionRefusedText =
+        message.contains('connection refused') ||
+        message.contains('refused the connection') ||
+        message.contains('failed to connect to') ||
+        message.contains('connection reset by peer') ||
+        message.contains('no route to host') ||
+        message.contains('odrzucił połączenie') ||
+        message.contains('odrzucił połączenie') ||
+        socketMessage.contains('connection refused') ||
+        socketMessage.contains('refused the connection') ||
+        socketMessage.contains('failed to connect to') ||
+        socketMessage.contains('connection reset by peer') ||
+        socketMessage.contains('no route to host') ||
+        socketMessage.contains('odrzucił połączenie') ||
+        socketMessage.contains('odrzucił połączenie');
+
+    if (error.type == DioExceptionType.connectionError &&
+        (isRefusedByPeer || isConnectionRefusedText)) {
+      return true;
+    }
+
+    return false;
+  }
+
   AppException _mapToException(DioException error) {
     final response = error.response;
-
     final statusCode = response?.statusCode;
-
     final data = response?.data;
 
-    /*
-      Brak internetu
-    */
+    if (error.error is BackendUnavailableException) {
+      return const BackendUnavailableException();
+    }
+
+    if (_isHardBackendUnavailable(error)) {
+      return const BackendUnavailableException();
+    }
+
+    if (networkManager.state == NetworkState.offline) {
+      return const NetworkException();
+    }
+
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout) {
       return const NetworkException();
     }
 
-    /*
-      Timeout odpowiedzi
-    */
     if (error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
       return const TimeoutException();
     }
 
-    /*
-      Gateway nie może dostać się do mikroserwisu
-    */
+    if (error.error is SocketException) {
+      return const NetworkException();
+    }
+
     if (_isUpstreamUnavailable(data)) {
       return const UpstreamUnavailableException();
     }
 
-    /*
-      Autoryzacja
-    */
+    if (statusCode == 502 || statusCode == 503 || statusCode == 504) {
+      return const BackendUnavailableException();
+    }
+
     if (statusCode == 401) {
       return const UnauthorizedException();
     }
 
-    /*
-      Uprawnienia
-    */
     if (statusCode == 403) {
       return const ForbiddenException();
     }
 
-    /*
-      Błędy walidacji backendu
-    */
     if (statusCode == 400) {
       return ValidationException(
         message: _extractMessage(data) ?? 'Niepoprawne dane.',
@@ -178,9 +297,6 @@ class GlobalErrorInterceptor extends Interceptor {
       );
     }
 
-    /*
-      Błędy serwera
-    */
     if (statusCode != null && statusCode >= 500) {
       return ServerException(
         message: _extractMessage(data) ?? 'Błąd serwera.',

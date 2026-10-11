@@ -2,6 +2,7 @@
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/app/router/extensions/go_router_extensions.dart';
 import 'package:obywatel_plus/features/settings/presentation/pages/active_sessions_screen.dart';
+import 'package:obywatel_plus/features/settings/presentation/pages/change_password_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/pages/change_pin_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/pages/notifications_settings_screen.dart';
 import 'package:obywatel_plus/features/settings/presentation/pages/security_settings_screen.dart';
@@ -15,6 +16,7 @@ final settingsRoutes = [
       AppRoutes.settingsNotifications.go(const NotificationsSettingsScreen()),
       AppRoutes.settingsActiveSession.go(const ActiveSessionsScreen()),
       AppRoutes.settingsChangePin.go(const ChangePinScreen()),
+      AppRoutes.settingsChangePassword.go(const ChangePasswordScreen()),
     ],
   ),
 ];

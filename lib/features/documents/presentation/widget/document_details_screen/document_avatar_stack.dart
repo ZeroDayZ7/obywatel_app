@@ -45,7 +45,7 @@ class DocumentAvatarStack extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: theme.colorScheme.shadow.withValues(alpha: 0.3),
                   blurRadius: 8,
                 ),
               ],

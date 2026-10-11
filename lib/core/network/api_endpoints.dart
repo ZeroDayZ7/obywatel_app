@@ -61,6 +61,14 @@ abstract class ApiEndpoints {
   static String markConversationAsRead(String id) => '/conversations/$id/read';
 
   // ===========================================================================
+  // --- MESSAGING ACTIVATION & TERMS ---
+  // ===========================================================================
+  static String get messagingTerms => '/messaging/terms';
+  static String get messagingActivationStatus => '/messaging/activation';
+  static String get messagingActivation => '/messaging/activation';
+  static String get messagingAcceptTerms => '/messaging/activation/consent';
+
+  // ===========================================================================
   // --- DELTA SYNC & OUTBOX (Offline-First) ---
   // ===========================================================================
   static String get syncDelta => '/sync/delta';

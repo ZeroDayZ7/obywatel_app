@@ -7,11 +7,15 @@ AppFailure mapExceptionToFailure(Object exception) {
   }
 
   if (exception is TimeoutException) {
-    return const AppFailure.network();
+    return const AppFailure.timeout();
+  }
+
+  if (exception is BackendUnavailableException) {
+    return const AppFailure.backendUnavailable();
   }
 
   if (exception is UpstreamUnavailableException) {
-    return AppFailure.server(statusCode: exception.statusCode);
+    return const AppFailure.backendUnavailable();
   }
 
   if (exception is UnauthorizedException) {

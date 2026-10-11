@@ -72,7 +72,21 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
           ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
           ..orderBy([
             (t) => OrderingTerm(
+                  expression: CustomExpression<int>(
+                    'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+                  ),
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
                   expression: t.sequence,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.createdAt,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.id,
                   mode: OrderingMode.asc,
                 ),
           ]))
@@ -87,7 +101,21 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
           ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
           ..orderBy([
             (t) => OrderingTerm(
+                  expression: CustomExpression<int>(
+                    'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+                  ),
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
                   expression: t.sequence,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.createdAt,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.id,
                   mode: OrderingMode.asc,
                 ),
           ])
@@ -99,8 +127,9 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
     final maxSeqExpr = messages.sequence.max();
     final query = selectOnly(messages)
       ..addColumns([maxSeqExpr])
-      ..where(messages.conversationId.equals(conversationId));
-    
+      ..where(messages.conversationId.equals(conversationId))
+      ..where(messages.sequence.isNotNull());
+
     final result = await query.map((row) => row.read(maxSeqExpr)).getSingleOrNull();
     return result ?? BigInt.zero;
   }
@@ -125,9 +154,11 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
 
       // Aktualizacja lastSequence w konwersacji na podstawie najwyższej wstawionej sekwencji
       for (final msg in newMessages) {
-        if (msg.conversationId.present && msg.sequence.present) {
+        if (msg.conversationId.present &&
+            msg.sequence.present &&
+            msg.sequence.value != null) {
           final convId = msg.conversationId.value;
-          final seq = msg.sequence.value;
+          final seq = msg.sequence.value!;
 
           await (update(conversations)..where((t) => t.id.equals(convId))).write(
             ConversationsCompanion(

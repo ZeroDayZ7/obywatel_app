@@ -24,7 +24,6 @@ linter:
   # producing the lint.
   rules:
     - always_use_package_imports
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
     - prefer_single_quotes
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
@@ -43,7 +42,8 @@ analyzer:
     unused_field: error
     unused_element: error
     dead_code: error
-    avoid_print: warning
+    avoid_print: ignore
+    # avoid_print: false
     todo: ignore
 
   language:

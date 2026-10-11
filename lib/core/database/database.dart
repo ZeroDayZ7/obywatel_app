@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 10;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -89,11 +89,47 @@ class AppDatabase extends _$AppDatabase {
         await m.createTable(signalSignedPreKeys);
         await m.createTable(signalSessions);
       }
+      if (from < 7) {
+        await m.addColumn(contacts, contacts.syncState);
+        await m.addColumn(contacts, contacts.direction);
+        await m.addColumn(contacts, contacts.changeSequence);
+        await m.addColumn(outboxEvents, outboxEvents.entityType);
+        await m.addColumn(outboxEvents, outboxEvents.entityId);
+        await m.addColumn(outboxEvents, outboxEvents.attemptCount);
+        await m.addColumn(outboxEvents, outboxEvents.updatedAt);
+      }
+      if (from < 8) {
+        await m.addColumn(messages, messages.status);
+      }
+      if (from < 9) {
+        await m.addColumn(outboxEvents, outboxEvents.outboxEventId);
+        await m.addColumn(outboxEvents, outboxEvents.nextAttemptAt);
+      }
+      if (from < 10) {
+        await customStatement('ALTER TABLE messages RENAME TO messages_old;');
+        await m.createTable(messages);
+        await customStatement(
+          'INSERT INTO messages (id, conversation_id, sender_id, sender_device_id, type, sequence, encrypted_payload, media_header, version, status, created_at, updated_at, deleted_at) '
+          'SELECT id, conversation_id, sender_id, sender_device_id, type, sequence, encrypted_payload, media_header, version, status, created_at, updated_at, deleted_at '
+          'FROM messages_old;',
+        );
+        await customStatement('DROP TABLE messages_old;');
+      }
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> clearSignalStore() async {
+    await transaction(() async {
+      await delete(signalLocalIdentity).go();
+      await delete(signalIdentityKeys).go();
+      await delete(signalPreKeys).go();
+      await delete(signalSignedPreKeys).go();
+      await delete(signalSessions).go();
+    });
+  }
 
   Future<void> clearDatabase() async {
     await transaction(() async {

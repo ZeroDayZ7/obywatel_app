@@ -1,7 +1,6 @@
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-
 import 'package:obywatel_plus/features/settings/domain/notification_settings_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'notification_settings_notifier.g.dart';
 
@@ -34,18 +33,17 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
     required bool value,
     required NotificationSettings Function(NotificationSettings old) copyWith,
   }) async {
-    // 1. Optymistyczna aktualizacja UI (natychmiastowa reakcja switcha)
+    final previous = state;
     state = copyWith(state);
 
     try {
-      // 2. Zapis lokalny (SharedPrefs)
       await _prefs.writeBool(key, value);
-
-      // 3. TUTAJ: Miejsce na wysłanie zmiany do API (np. updateNotifications na backendzie)
-      // await ref.read(apiServiceProvider).updateNotificationSettings(key, value);
-    } catch (e) {
-      // W razie błędu przywracamy poprzedni stan (opcjonalnie)
-      // state = oldState;
+      // TODO: Replace with backend sync service once API contract is ready.
+      // await ref.read(notificationSyncServiceProvider).syncNotificationSetting(key, value);
+    } catch (error, _) {
+      state = previous;
+      // UI remains consistent and the previous value is restored.
+      // A global logger can be used here when available.
     }
   }
 

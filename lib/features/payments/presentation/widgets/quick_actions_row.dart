@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/payments/domain/models/quick_action.dart';
 
 class QuickActionsRow extends StatelessWidget {
@@ -6,16 +7,19 @@ class QuickActionsRow extends StatelessWidget {
 
   const QuickActionsRow({super.key, required this.actions});
 
-  Color _mapColor(String key) {
+  Color _mapColor(BuildContext context, String key) {
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
+
     switch (key) {
       case 'orange':
-        return Colors.orange;
+        return statusColors.warning;
       case 'blue':
-        return Colors.blue;
+        return colorScheme.primary;
       case 'purple':
-        return Colors.purple;
+        return colorScheme.tertiary;
       default:
-        return Colors.grey;
+        return colorScheme.outlineVariant;
     }
   }
 
@@ -26,7 +30,7 @@ class QuickActionsRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: actions.map((action) {
-        final color = _mapColor(action.colorKey);
+        final color = _mapColor(context, action.colorKey);
 
         return Column(
           children: [

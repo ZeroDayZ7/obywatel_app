@@ -11,12 +11,14 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
+import 'package:obywatel_plus/core/network/network_manager.dart';
 
 enum DioProfile { public, authenticated, refreshToken, noAuthAuth }
 
 Dio createDioInstance({
   required DioProfile profile,
   required AppLogger logger,
+  required NetworkManager networkManager,
   Ref? deviceInfoRef,
 }) {
   final String baseUrl = switch (profile) {
@@ -32,6 +34,10 @@ Dio createDioInstance({
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
       headers: {'Content-Type': 'application/json'},
+      validateStatus: (status) {
+        return status != null &&
+            ((status >= 200 && status < 300) || status == 304);
+      },
     ),
   );
 
@@ -60,7 +66,7 @@ Dio createDioInstance({
 
   dio.interceptors.addAll([
     LoggingInterceptor(logger: logger),
-    GlobalErrorInterceptor(logger: logger),
+    GlobalErrorInterceptor(logger: logger, networkManager: networkManager),
   ]);
 
   if (deviceInfoRef != null) {

@@ -30,13 +30,11 @@ class SecuritySettingsScreen extends ConsumerWidget {
       size: ContainerSize.medium,
       child: ListView.builder(
         itemCount: sections.length,
-        itemBuilder: (context, index) {
-          final section = sections[index];
-          final items = section['items'] as List<ActionItem>;
-
+        itemBuilder: (context, sectionIndex) {
+          final section = sections[sectionIndex];
           return ActionGroup(
-            title: section['title'] as String?,
-            children: items
+            title: section.title,
+            children: section.items
                 .map(
                   (item) => ActionTile(
                     icon: item.icon,
@@ -44,11 +42,11 @@ class SecuritySettingsScreen extends ConsumerWidget {
                     subtitle: item.subtitle,
                     isDanger: item.isDanger,
                     isEnabled: item.isEnabled,
-                    showArrow: item.type == ActionType.navigation,
+                    showArrow: item.type == ActionType.navigation ||
+                        item.type == ActionType.sheet ||
+                        item.type == ActionType.selection,
                     onTap: item.onTap,
-                    onToggle: item.type == ActionType.toggle
-                        ? item.onToggle
-                        : null,
+                    onToggle: item.type == ActionType.toggle ? item.onToggle : null,
                     value: item.initialValue,
                   ),
                 )

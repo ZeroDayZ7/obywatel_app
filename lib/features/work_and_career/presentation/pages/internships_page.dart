@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
 import 'package:obywatel_plus/core/design/widgets/app_card.dart';
@@ -9,17 +10,19 @@ class InternshipsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
+
     return ListView(
       children: [
-        
         Wrap(
           spacing: 12,
           runSpacing: 12,
           children: [
-            AppCard(themeColor: Colors.blue, child: const Text('120+\nOfert')),
-            AppCard(themeColor: Colors.green, child: const Text('45\nFirm')),
+            AppCard(themeColor: colorScheme.primary, child: const Text('120+\nOfert')),
+            AppCard(themeColor: statusColors.success, child: const Text('45\nFirm')),
             AppCard(
-              themeColor: Colors.orange,
+              themeColor: statusColors.warning,
               child: const Text('8\nZapisanych'),
             ),
           ],
@@ -28,7 +31,7 @@ class InternshipsPage extends StatelessWidget {
           title: 'Polecane',
           children: [
             ListTile(
-              leading: const Icon(Icons.star, color: Colors.amber),
+              leading: Icon(Icons.star, color: statusColors.warning),
               title: const Text('Flutter Internship'),
               subtitle: const Text('Tech Corp • Warszawa'),
               trailing: const UserBadge(

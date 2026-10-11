@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 /// =====================
 /// Emergency Button
@@ -46,6 +47,8 @@ class _EmergencyButtonState extends State<EmergencyButton>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -57,18 +60,18 @@ class _EmergencyButtonState extends State<EmergencyButton>
               width: 100 * _scale,
               height: 100 * _scale,
               decoration: BoxDecoration(
-                color: Colors.redAccent,
+                color: colorScheme.error,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.redAccent.withValues(alpha: 0.5),
+                    color: colorScheme.error.withValues(alpha: 0.5),
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),
                 ],
               ),
-              child: const Center(
-                child: Icon(Icons.warning, color: Colors.white, size: 36),
+              child: Center(
+                child: Icon(Icons.warning, color: colorScheme.onError, size: 36),
               ),
             ),
           ),
@@ -76,7 +79,7 @@ class _EmergencyButtonState extends State<EmergencyButton>
           if (_showConfirmButton)
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
+                backgroundColor: colorScheme.error,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24,
                   vertical: 12,

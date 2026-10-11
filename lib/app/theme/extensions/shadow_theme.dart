@@ -18,12 +18,12 @@ class ShadowTheme extends ThemeExtension<ShadowTheme> {
   });
 
   // fabryka na podstawie trybu ciemnego/jasnego
-  factory ShadowTheme.fromMode(bool isDark) {
+  factory ShadowTheme.fromMode(bool isDark, {required Color shadowColor}) {
     return ShadowTheme(
-      subtle: mapShadows(Shadows.subtle, isDark),
-      low: mapShadows(Shadows.low, isDark),
-      medium: mapShadows(Shadows.medium, isDark),
-      high: mapShadows(Shadows.high, isDark),
+      subtle: mapShadows(Shadows.subtle, isDark, shadowColor: shadowColor),
+      low: mapShadows(Shadows.low, isDark, shadowColor: shadowColor),
+      medium: mapShadows(Shadows.medium, isDark, shadowColor: shadowColor),
+      high: mapShadows(Shadows.high, isDark, shadowColor: shadowColor),
     );
   }
 

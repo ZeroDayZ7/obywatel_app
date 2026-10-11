@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
 class DocumentQrSection extends StatelessWidget {
@@ -8,13 +9,15 @@ class DocumentQrSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+
     return Column(
       children: [
-        const Divider(color: Colors.white10, height: 40),
-        const Text(
+        Divider(color: colorScheme.outlineVariant, height: 40),
+        Text(
           'KOD QR DO WERYFIKACJI',
           style: TextStyle(
-            color: Colors.grey,
+            color: colorScheme.onSurfaceVariant,
             fontSize: 10,
             letterSpacing: 2,
             fontWeight: FontWeight.bold,
@@ -24,7 +27,7 @@ class DocumentQrSection extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: QrImageView(
@@ -32,13 +35,13 @@ class DocumentQrSection extends StatelessWidget {
             version: QrVersions.auto,
             size: 140.0,
             gapless: false,
-            eyeStyle: const QrEyeStyle(
+            eyeStyle: QrEyeStyle(
               eyeShape: QrEyeShape.square,
-              color: Colors.black,
+              color: colorScheme.onSurface,
             ),
-            dataModuleStyle: const QrDataModuleStyle(
+            dataModuleStyle: QrDataModuleStyle(
               dataModuleShape: QrDataModuleShape.square,
-              color: Colors.black,
+              color: colorScheme.onSurface,
             ),
           ),
         ),

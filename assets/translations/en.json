@@ -99,6 +99,9 @@
     "ACCOUNT_BANNED": "User account has been banned",
     "ACCOUNT_PENDING": "User account is pending verification",
     "CONNECTION_ERROR": "No internet connection",
+    "BACKEND_UNAVAILABLE": "The server is temporarily unavailable",
+    "TIMEOUT": "The server response timed out",
+    "RETRYING": "Reconnecting...",
     "SERVER_ERROR": "Server error. Try again later.",
     "INVALID_CREDENTIALS": "Invalid login credentials",
     "INVALID_2FA": "Invalid 2FA code",
@@ -196,9 +199,21 @@
       "emergency_lock": "Emergency Lock",
       "emergency_lock_description": "This action will immediately lock your account, log out all devices, and suspend certificates.",
       "emergency_lock_slider": "Slide to lock",
-      "emergency_lock_cancel": "Cancel"
+      "emergency_lock_cancel": "Cancel",
+      "change_password": "Change Password",
+      "change_password_description": "Update your account password"
     },
     "notifications": "Notifications",
+    "notifications_section_general": "General notifications",
+    "notifications_section_channels": "Notification channels",
+    "change_password": {
+      "current": "Current password",
+      "new": "New password",
+      "confirm": "Confirm new password",
+      "requirements": "Your new password must include:",
+      "submit": "Change Password",
+      "backend_pending": "Password change is not yet connected to the backend."
+    },
     "notifications_subtitle": "Manage your notifications",
     "notifications_settings": {
       "title": "Notification Settings",

@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/settings/application/active_sessions_provider.dart';
@@ -14,6 +15,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionsAsync = ref.watch(activeSessionsProvider);
+    final colorScheme = context.colorScheme;
 
     return AppScaffold(
       title: Text(LocaleKeys.settings_security_active_sessions.tr()),
@@ -25,7 +27,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, color: Colors.red, size: 40),
+              Icon(Icons.error_outline, color: colorScheme.error, size: 40),
               const SizedBox(height: 16),
               Text(LocaleKeys.errors_general.tr()),
               TextButton(
@@ -72,6 +74,8 @@ class _SessionTile extends ConsumerWidget {
     final String formattedDate = DateFormat(
       'dd.MM.yyyy HH:mm',
     ).format(session.createdAt);
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return SettingsCard(
       icon: session.isCurrent ? Icons.phonelink_setup : Icons.devices,
@@ -81,11 +85,11 @@ class _SessionTile extends ConsumerWidget {
       trailing: session.isCurrent
           ? Badge(
               label: const Text('Current'),
-              backgroundColor: Colors.green.withValues(alpha: 0.1),
-              textColor: Colors.green,
+              backgroundColor: statusColors.success.withValues(alpha: 0.1),
+              textColor: statusColors.success,
             )
           : IconButton(
-              icon: const Icon(Icons.logout, color: Colors.redAccent),
+              icon: Icon(Icons.logout, color: colorScheme.error),
               onPressed: () => _confirmTermination(context, ref),
             ),
     );
@@ -109,7 +113,10 @@ class _SessionTile extends ConsumerWidget {
                   .terminateSession(session.id);
               Navigator.pop(context);
             },
-            child: const Text('Terminate', style: TextStyle(color: Colors.red)),
+            child: Text(
+              'Terminate',
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ),
         ],
       ),

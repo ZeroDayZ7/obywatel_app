@@ -1,0 +1,653 @@
+00:00 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:01 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:02 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:03 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:04 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:05 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:06 +0: loading C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart                                                                                         00:06 +0: device bundle persists generated signed and one-time prekeys in Drift before session setup                                                                                                   00:07 +0: device bundle persists generated signed and one-time prekeys in Drift before session setup                                                                                                   00:08 +0: device bundle persists generated signed and one-time prekeys in Drift before session setup                                                                                                   00:09 +0: device bundle persists generated signed and one-time prekeys in Drift before session setup                                                                                                   00:09 +1: device bundle persists generated signed and one-time prekeys in Drift before session setup                                                                                                   00:09 +1: outbox payload keeps only ciphertext and omits plaintext content                                                                                                                             00:09 +2: outbox payload keeps only ciphertext and omits plaintext content                                                                                                                             00:09 +2: local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow                                                                                                   00:09 +2: local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow                                                                                                   
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:230:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=22 sender_device_id=36babe20-9f40-48af-b827-704c750369af[0m
+00:09 +2 -1: local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow [E]                                                                                            
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+Warning: At least one test in this suite creates an HttpClient. When running a test suite that uses
+TestWidgetsFlutterBinding, all HTTP requests will return status code 400, and no network request
+will actually be made. Any test expecting a real network connection and status code will fail.
+To test code that needs an HttpClient, provide your own HttpClient implementation to the code under
+test, so that your test can consistently provide a testable response to the code under test.
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow"
+00:09 +2 -1: local pending message keeps a null server sequence until sync assigns one                                                                                                                 00:09 +2 -1: local pending message keeps a null server sequence until sync assigns one                                                                                                                 
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:262:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=15 sender_device_id=36babe20-9f40-48af-b827-704c750369af[0m
+00:09 +2 -2: local pending message keeps a null server sequence until sync assigns one [E]                                                                                                             
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "local pending message keeps a null server sequence until sync assigns one"
+00:09 +2 -2: offline: pending outbox remains after send and status stays pending                                                                                                                       00:09 +2 -2: offline: pending outbox remains after send and status stays pending                                                                                                                       
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:285:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=15 sender_device_id=36babe20-9f40-48af-b827-704c750369af[0m
+00:09 +2 -3: offline: pending outbox remains after send and status stays pending [E]                                                                                                                   
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "offline: pending outbox remains after send and status stays pending"
+00:09 +2 -3: restart persistence: pending message survives database reopen                                                                                                                             00:10 +2 -3: restart persistence: pending message survives database reopen                                                                                                                             00:10 +2 -3: restart persistence: pending message survives database reopen                                                                                                                             
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:310:25)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:9)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:334:21)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:9)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=10 sender_device_id=36babe20-9f40-48af-b827-704c750369af[0m
+00:10 +2 -4: restart persistence: pending message survives database reopen [E]                                                                                                                         
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "restart persistence: pending message survives database reopen"
+00:10 +2 -4: successful sync clears outbox and marks message sent without deleting local record                                                                                                        00:10 +2 -4: successful sync clears outbox and marks message sent without deleting local record                                                                                                        
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:386:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] Usunięto 1 wysłanych wiadomości z outboxa[0m
+00:10 +3 -4: successful sync clears outbox and marks message sent without deleting local record                                                                                                        00:10 +3 -4: outbox ids are valid UUIDs for every generated message event                                                                                                                              00:10 +3 -4: outbox ids are valid UUIDs for every generated message event                                                                                                                              
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +4 -4: outbox ids are valid UUIDs for every generated message event                                                                                                                              00:10 +4 -4: phase 6: outbox event id stays stable across retries                                                                                                                                      00:10 +4 -4: phase 6: outbox event id stays stable across retries                                                                                                                                      
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +5 -4: phase 6: outbox event id stays stable across retries                                                                                                                                      00:10 +5 -4: phase 6: retry eligibility is gated by nextAttemptAt                                                                                                                                      00:10 +5 -4: phase 6: retry eligibility is gated by nextAttemptAt                                                                                                                                      
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +6 -4: phase 6: retry eligibility is gated by nextAttemptAt                                                                                                                                      00:10 +6 -4: phase 6: exponential backoff moves nextAttemptAt forward                                                                                                                                  00:10 +6 -4: phase 6: exponential backoff moves nextAttemptAt forward                                                                                                                                  
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +7 -4: phase 6: exponential backoff moves nextAttemptAt forward                                                                                                                                  00:10 +7 -4: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload                                                                                                          00:10 +7 -4: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload                                                                                                          
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.createRepositoryWithSession (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:191:19)
+#6      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:701:32)
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:242:19)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:7)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] [CHAT-FLOW-3] sendMessage start conversationId=peer-user content_length=14 sender_device_id=36babe20-9f40-48af-b827-704c750369af[0m
+00:10 +7 -5: ciphertext is stored in Drift and plaintext is not persisted as outgoing payload [E]                                                                                                      
+  DioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.
+  The status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"
+  Read more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status
+  In order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.
+  
+  package:dio/src/dio_mixin.dart 598:7  DioMixin.fetch
+  
+
+To run this test again: C:\Users\Neo\Desktop\WWW\flutter\bin\cache\dart-sdk\bin\dart.exe test C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart -p vm --plain-name "ciphertext is stored in Drift and plaintext is not persisted as outgoing payload"
+00:10 +7 -5: device identity should stay stable per installation                                                                                                                                       00:10 +7 -5: device identity should stay stable per installation                                                                                                                                       
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +8 -5: device identity should stay stable per installation                                                                                                                                       00:10 +8 -5: message dto accepts backend snake_case encrypted payload fields                                                                                                                           00:10 +8 -5: message dto accepts backend snake_case encrypted payload fields                                                                                                                           
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:10 +9 -5: message dto accepts backend snake_case encrypted payload fields                                                                                                                           00:10 +9 -5: outbox event payload should match backend contract and keep ciphertext nested                                                                                                             00:10 +9 -5: outbox event payload should match backend contract and keep ciphertext nested                                                                                                             
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:11 +10 -5: outbox event payload should match backend contract and keep ciphertext nested                                                                                                            00:11 +10 -5: outbox builder strips local composite conversation ids before server sync                                                                                                                00:11 +10 -5: outbox builder strips local composite conversation ids before server sync                                                                                                                
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:11 +11 -5: outbox builder strips local composite conversation ids before server sync                                                                                                                00:11 +11 -5: encryption should fail hard when no session key exists                                                                                                                                   00:11 +11 -5: encryption should fail hard when no session key exists                                                                                                                                   
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[E2eeCrypto] [E2EE-FLOW-3] encryptOutboundMessage start recipientUserId=missing-session-conversation deviceId=1 plaintext_length=10[0m
+[38;5;12m[E2eeCrypto] [E2EE-FLOW-2] registerDeviceIdentityWithOperation start operationId=68e5f637-0774-4d31-bd59-531b1eefeb63[0m
+[38;5;196mDioException [bad response]: This exception was thrown because the response has a status code of 400 and RequestOptions.validateStatus was configured to throw for this status code.[0m
+[38;5;196mThe status code of 400 has the following meaning: "Client error - the request contains bad syntax or cannot be fulfilled"[0m
+[38;5;196mRead more about status codes at https://developer.mozilla.org/en-US/docs/Web/HTTP/Status[0m
+[38;5;196mIn order to resolve this exception you typically have either to verify and fix your request code or you have to fix the server code.[0m
+[38;5;196m[0m
+[38;5;196m#0   DioMixin.fetch (package:dio/src/dio_mixin.dart:598:7)[0m
+[38;5;196m#1   <asynchronous suspension>[0m
+[38;5;196m#2   E2eeCryptoService.registerDeviceIdentityWithOperation.<anonymous closure> (package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart:387:9)[0m
+[38;5;196m[E2eeCrypto] Błąd szyfrowania wiadomości Signal outbound[0m
+00:11 +12 -5: encryption should fail hard when no session key exists                                                                                                                                   00:11 +12 -5: repository should persist remote conversations to local db and expose them via stream                                                                                                    00:11 +12 -5: repository should persist remote conversations to local db and expose them via stream                                                                                                    
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:obywatel_plus/core/database/database.g.dart:6973:36)
+#4      new AppDatabase (package:obywatel_plus/core/database/database.dart)
+#5      main.<anonymous closure> (file:///C:/Users/Neo/Desktop/WWW/obywatel_app/test/features/chats/chats_repository_offline_test.dart:106:16)
+#6      Declarer._runSetUps.<anonymous closure> (package:test_api/src/backend/declarer.dart:403:61)
+#7      Future.forEach.<anonymous closure> (dart:async/future.dart:674:26)
+#8      Future.doWhile.<anonymous closure> (dart:async/future.dart:732:26)
+#9      StackZoneSpecification._registerUnaryCallback.<anonymous closure>.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:36)
+#10     StackZoneSpecification._run (package:stack_trace/src/stack_zone_specification.dart:207:15)
+#11     StackZoneSpecification._registerUnaryCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:127:24)
+#12     _rootRunUnary (dart:async/zone.dart:1538:47)
+#13     _CustomZone.runUnary (dart:async/zone.dart:1429:19)
+#14     _CustomZone.runUnaryGuarded (dart:async/zone.dart:1329:7)
+#15     _CustomZone.bindUnaryCallbackGuarded.<anonymous closure> (dart:async/zone.dart:1367:26)
+#16     Future.doWhile (dart:async/future.dart:749:18)
+#17     Future.forEach (dart:async/future.dart:672:12)
+#18     Declarer._runSetUps (package:test_api/src/backend/declarer.dart:403:18)
+#19     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:241:15)
+#20     _rootRun (dart:async/zone.dart:1525:13)
+#21     _CustomZone.run (dart:async/zone.dart:1422:19)
+#22     _runZoned (dart:async/zone.dart:2034:6)
+#23     runZoned (dart:async/zone.dart:1960:10)
+#24     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:240:13)
+#25     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:282:17)
+#26     _rootRun (dart:async/zone.dart:1525:13)
+#27     _CustomZone.run (dart:async/zone.dart:1422:19)
+#28     _runZoned (dart:async/zone.dart:2034:6)
+#29     runZoned (dart:async/zone.dart:1960:10)
+#30     Invoker._waitForOutstandingCallbacks (package:test_api/src/backend/invoker.dart:278:5)
+#31     Invoker._onRun.<anonymous closure>.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/invoker.dart:418:17)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+[38;5;12m[ChatsRepository] Zaktualizowano 1 konwersacji[0m
+00:11 +13 -5: repository should persist remote conversations to local db and expose them via stream                                                                                                    00:11 +13 -5: Some tests failed.                                                                                                                                                                       

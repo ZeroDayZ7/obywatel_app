@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/evoting/data/mock/mock_evoting_repository.dart';
@@ -36,7 +37,8 @@ class _EVotingScreenState extends State<EVotingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
+    final statusColors = context.statusColors;
 
     return AppScaffold(
       size: ContainerSize.medium,
@@ -100,7 +102,7 @@ class _EVotingScreenState extends State<EVotingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildUserVotingStatsCard(theme, colorScheme),
+                _buildUserVotingStatsCard(theme, colorScheme, statusColors.success),
                 const SizedBox(height: 20),
                 SizedBox(
                   height: 42,
@@ -184,7 +186,11 @@ class _EVotingScreenState extends State<EVotingScreen> {
     );
   }
 
-  Widget _buildUserVotingStatsCard(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildUserVotingStatsCard(
+    ThemeData theme,
+    ColorScheme colorScheme,
+    Color successColor,
+  ) {
     return FutureBuilder<DashboardStats>(
       future: repository.getDashboardStats(),
       builder: (context, snapshot) {
@@ -216,8 +222,8 @@ class _EVotingScreenState extends State<EVotingScreen> {
                         Container(
                           width: 8,
                           height: 8,
-                          decoration: const BoxDecoration(
-                            color: Colors.greenAccent,
+                          decoration: BoxDecoration(
+                            color: successColor,
                             shape: BoxShape.circle,
                           ),
                         ),

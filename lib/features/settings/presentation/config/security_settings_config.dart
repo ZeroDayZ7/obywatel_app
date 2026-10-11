@@ -7,19 +7,29 @@ import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/models/action_item.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
+import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
 
 class SecuritySettingsConfig {
-  static List<Map<String, dynamic>> getSections(
+  static List<SettingsSection> getSections(
     BuildContext context,
     WidgetRef ref, {
     required SecurityState state,
     required SecurityService notifier,
   }) {
     return [
-      {
-        'title': LocaleKeys.settings_security_pin_section.tr(),
-        'items': [
+      SettingsSection(
+        title: LocaleKeys.settings_security_access_section.tr(),
+        items: [
+          ActionItem(
+            icon: Icons.lock_outline_rounded,
+            title: LocaleKeys.settings_security_change_password.tr(),
+            subtitle: LocaleKeys.settings_security_change_password_description.tr(),
+            type: ActionType.navigation,
+            onTap: () => context.push(
+              '${AppRoutes.settings}/${AppRoutes.settingsChangePassword}',
+            ),
+          ),
           ActionItem(
             icon: Icons.lock_person_outlined,
             title: LocaleKeys.settings_security_pin.tr(),
@@ -32,10 +42,10 @@ class SecuritySettingsConfig {
             ),
           ),
         ],
-      },
-      {
-        'title': LocaleKeys.settings_security_biometrics.tr(),
-        'items': [
+      ),
+      SettingsSection(
+        title: LocaleKeys.settings_security_biometrics_section.tr(),
+        items: [
           ActionItem(
             icon: Icons.fingerprint,
             title: LocaleKeys.settings_security_biometrics.tr(),
@@ -44,14 +54,16 @@ class SecuritySettingsConfig {
                 : LocaleKeys.settings_notifications_settings_not_available.tr(),
             type: ActionType.toggle,
             initialValue: state.isBiometricEnabled,
-            onToggle: notifier.toggleBiometrics,
+            onToggle: state.canUseBiometrics
+                ? notifier.toggleBiometrics
+                : null,
             isEnabled: state.canUseBiometrics,
           ),
         ],
-      },
-      {
-        'title': LocaleKeys.settings_security_access_section.tr(),
-        'items': [
+      ),
+      SettingsSection(
+        title: LocaleKeys.settings_security_access_section.tr(),
+        items: [
           ActionItem(
             icon: Icons.devices,
             title: LocaleKeys.settings_security_active_sessions.tr(),
@@ -63,12 +75,12 @@ class SecuritySettingsConfig {
           ActionItem(
             icon: Icons.lock_reset,
             title: LocaleKeys.settings_security_emergency_lock.tr(),
-            type: ActionType.navigation,
+            type: ActionType.action,
             onTap: () => EmergencyLockDialog.show(context, ref),
             isDanger: true,
           ),
         ],
-      },
+      ),
     ];
   }
 }

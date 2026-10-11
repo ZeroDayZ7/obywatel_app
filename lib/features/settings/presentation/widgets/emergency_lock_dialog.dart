@@ -13,6 +13,7 @@ abstract class EmergencyLockDialog {
       builder: (context) {
         final screenWidth = MediaQuery.of(context).size.width;
         final dialogWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.85;
+        final colorScheme = Theme.of(context).colorScheme;
 
         return AlertDialog(
           shape: RoundedRectangleBorder(
@@ -20,9 +21,9 @@ abstract class EmergencyLockDialog {
           ),
           title: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.warning_amber_rounded,
-                color: Colors.red,
+                color: colorScheme.error,
                 size: 28,
               ),
               const SizedBox(width: 10),
@@ -51,9 +52,9 @@ abstract class EmergencyLockDialog {
                   backgroundColor: Theme.of(
                     context,
                   ).colorScheme.surfaceContainerHighest,
-                  toggleColor: Colors.red,
+                  toggleColor: colorScheme.error,
                   actionThresholdType: ThresholdType.release,
-                  icon: const Icon(Icons.lock_reset, color: Colors.white),
+                  icon: Icon(Icons.lock_reset, color: colorScheme.onError),
                   action: (controller) async {
                     controller.loading();
                     await Future.delayed(const Duration(seconds: 2));

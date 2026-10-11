@@ -45,7 +45,7 @@ abstract final class AppTheme {
       ),
 
       extensions: [
-        ShadowTheme.fromMode(isDark),
+        ShadowTheme.fromMode(isDark, shadowColor: colorScheme.shadow),
         ToastTheme.fromColorScheme(colorScheme),
         StatusColorsTheme.fromColorScheme(colorScheme),
       ],

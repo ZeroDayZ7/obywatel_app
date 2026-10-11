@@ -55,12 +55,13 @@ extension AppFailurePatterns on AppFailure {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Network value)?  network,TResult Function( _Timeout value)?  timeout,TResult Function( _Server value)?  server,TResult Function( _Upstream value)?  upstream,TResult Function( _Unauthorized value)?  unauthorized,TResult Function( _Forbidden value)?  forbidden,TResult Function( _Validation value)?  validation,TResult Function( _Parse value)?  parse,TResult Function( _Cache value)?  cache,TResult Function( _Unknown value)?  unknown,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _Network value)?  network,TResult Function( _Timeout value)?  timeout,TResult Function( _BackendUnavailable value)?  backendUnavailable,TResult Function( _Server value)?  server,TResult Function( _Upstream value)?  upstream,TResult Function( _Unauthorized value)?  unauthorized,TResult Function( _Forbidden value)?  forbidden,TResult Function( _Validation value)?  validation,TResult Function( _Parse value)?  parse,TResult Function( _Cache value)?  cache,TResult Function( _Unknown value)?  unknown,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case _Network() when network != null:
 return network(_that);case _Timeout() when timeout != null:
-return timeout(_that);case _Server() when server != null:
+return timeout(_that);case _BackendUnavailable() when backendUnavailable != null:
+return backendUnavailable(_that);case _Server() when server != null:
 return server(_that);case _Upstream() when upstream != null:
 return upstream(_that);case _Unauthorized() when unauthorized != null:
 return unauthorized(_that);case _Forbidden() when forbidden != null:
@@ -86,12 +87,13 @@ return unknown(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Network value)  network,required TResult Function( _Timeout value)  timeout,required TResult Function( _Server value)  server,required TResult Function( _Upstream value)  upstream,required TResult Function( _Unauthorized value)  unauthorized,required TResult Function( _Forbidden value)  forbidden,required TResult Function( _Validation value)  validation,required TResult Function( _Parse value)  parse,required TResult Function( _Cache value)  cache,required TResult Function( _Unknown value)  unknown,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _Network value)  network,required TResult Function( _Timeout value)  timeout,required TResult Function( _BackendUnavailable value)  backendUnavailable,required TResult Function( _Server value)  server,required TResult Function( _Upstream value)  upstream,required TResult Function( _Unauthorized value)  unauthorized,required TResult Function( _Forbidden value)  forbidden,required TResult Function( _Validation value)  validation,required TResult Function( _Parse value)  parse,required TResult Function( _Cache value)  cache,required TResult Function( _Unknown value)  unknown,}){
 final _that = this;
 switch (_that) {
 case _Network():
 return network(_that);case _Timeout():
-return timeout(_that);case _Server():
+return timeout(_that);case _BackendUnavailable():
+return backendUnavailable(_that);case _Server():
 return server(_that);case _Upstream():
 return upstream(_that);case _Unauthorized():
 return unauthorized(_that);case _Forbidden():
@@ -113,12 +115,13 @@ return unknown(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Network value)?  network,TResult? Function( _Timeout value)?  timeout,TResult? Function( _Server value)?  server,TResult? Function( _Upstream value)?  upstream,TResult? Function( _Unauthorized value)?  unauthorized,TResult? Function( _Forbidden value)?  forbidden,TResult? Function( _Validation value)?  validation,TResult? Function( _Parse value)?  parse,TResult? Function( _Cache value)?  cache,TResult? Function( _Unknown value)?  unknown,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _Network value)?  network,TResult? Function( _Timeout value)?  timeout,TResult? Function( _BackendUnavailable value)?  backendUnavailable,TResult? Function( _Server value)?  server,TResult? Function( _Upstream value)?  upstream,TResult? Function( _Unauthorized value)?  unauthorized,TResult? Function( _Forbidden value)?  forbidden,TResult? Function( _Validation value)?  validation,TResult? Function( _Parse value)?  parse,TResult? Function( _Cache value)?  cache,TResult? Function( _Unknown value)?  unknown,}){
 final _that = this;
 switch (_that) {
 case _Network() when network != null:
 return network(_that);case _Timeout() when timeout != null:
-return timeout(_that);case _Server() when server != null:
+return timeout(_that);case _BackendUnavailable() when backendUnavailable != null:
+return backendUnavailable(_that);case _Server() when server != null:
 return server(_that);case _Upstream() when upstream != null:
 return upstream(_that);case _Unauthorized() when unauthorized != null:
 return unauthorized(_that);case _Forbidden() when forbidden != null:
@@ -143,11 +146,12 @@ return unknown(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  network,TResult Function()?  timeout,TResult Function( int? statusCode)?  server,TResult Function( int? statusCode)?  upstream,TResult Function()?  unauthorized,TResult Function()?  forbidden,TResult Function( String messageKey)?  validation,TResult Function()?  parse,TResult Function()?  cache,TResult Function()?  unknown,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  network,TResult Function()?  timeout,TResult Function()?  backendUnavailable,TResult Function( int? statusCode)?  server,TResult Function( int? statusCode)?  upstream,TResult Function()?  unauthorized,TResult Function()?  forbidden,TResult Function( String messageKey)?  validation,TResult Function()?  parse,TResult Function()?  cache,TResult Function()?  unknown,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Network() when network != null:
 return network();case _Timeout() when timeout != null:
-return timeout();case _Server() when server != null:
+return timeout();case _BackendUnavailable() when backendUnavailable != null:
+return backendUnavailable();case _Server() when server != null:
 return server(_that.statusCode);case _Upstream() when upstream != null:
 return upstream(_that.statusCode);case _Unauthorized() when unauthorized != null:
 return unauthorized();case _Forbidden() when forbidden != null:
@@ -173,11 +177,12 @@ return unknown();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  network,required TResult Function()  timeout,required TResult Function( int? statusCode)  server,required TResult Function( int? statusCode)  upstream,required TResult Function()  unauthorized,required TResult Function()  forbidden,required TResult Function( String messageKey)  validation,required TResult Function()  parse,required TResult Function()  cache,required TResult Function()  unknown,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  network,required TResult Function()  timeout,required TResult Function()  backendUnavailable,required TResult Function( int? statusCode)  server,required TResult Function( int? statusCode)  upstream,required TResult Function()  unauthorized,required TResult Function()  forbidden,required TResult Function( String messageKey)  validation,required TResult Function()  parse,required TResult Function()  cache,required TResult Function()  unknown,}) {final _that = this;
 switch (_that) {
 case _Network():
 return network();case _Timeout():
-return timeout();case _Server():
+return timeout();case _BackendUnavailable():
+return backendUnavailable();case _Server():
 return server(_that.statusCode);case _Upstream():
 return upstream(_that.statusCode);case _Unauthorized():
 return unauthorized();case _Forbidden():
@@ -199,11 +204,12 @@ return unknown();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  network,TResult? Function()?  timeout,TResult? Function( int? statusCode)?  server,TResult? Function( int? statusCode)?  upstream,TResult? Function()?  unauthorized,TResult? Function()?  forbidden,TResult? Function( String messageKey)?  validation,TResult? Function()?  parse,TResult? Function()?  cache,TResult? Function()?  unknown,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  network,TResult? Function()?  timeout,TResult? Function()?  backendUnavailable,TResult? Function( int? statusCode)?  server,TResult? Function( int? statusCode)?  upstream,TResult? Function()?  unauthorized,TResult? Function()?  forbidden,TResult? Function( String messageKey)?  validation,TResult? Function()?  parse,TResult? Function()?  cache,TResult? Function()?  unknown,}) {final _that = this;
 switch (_that) {
 case _Network() when network != null:
 return network();case _Timeout() when timeout != null:
-return timeout();case _Server() when server != null:
+return timeout();case _BackendUnavailable() when backendUnavailable != null:
+return backendUnavailable();case _Server() when server != null:
 return server(_that.statusCode);case _Upstream() when upstream != null:
 return upstream(_that.statusCode);case _Unauthorized() when unauthorized != null:
 return unauthorized();case _Forbidden() when forbidden != null:
@@ -275,6 +281,38 @@ int get hashCode => runtimeType.hashCode;
 @override
 String toString() {
   return 'AppFailure.timeout()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class _BackendUnavailable extends AppFailure {
+  const _BackendUnavailable(): super._();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackendUnavailable);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'AppFailure.backendUnavailable()';
 }
 
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
 import 'package:obywatel_plus/features/evoting/data/mock/mock_evoting_repository.dart';
@@ -22,7 +23,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = context.colorScheme;
 
     return AppScaffold(
       size: ContainerSize.medium,
@@ -61,7 +62,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
                     StatusPill(
                       label: voting.status,
                       color: voting.status.contains('Zakończone')
-                          ? Colors.blueGrey
+                          ? colorScheme.primaryContainer
                           : colorScheme.primary,
                     ),
                     const SizedBox(width: 8),
@@ -221,6 +222,8 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
   }
 
   Widget _buildArgumentTile(VotingArgument argument, bool isFor, ColorScheme colorScheme) {
+    final statusColors = context.statusColors;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
@@ -229,8 +232,8 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isFor
-              ? Colors.green.withValues(alpha: 0.4)
-              : Colors.red.withValues(alpha: 0.4),
+              ? statusColors.success.withValues(alpha: 0.4)
+              : colorScheme.error.withValues(alpha: 0.4),
         ),
       ),
       child: Column(
@@ -241,7 +244,7 @@ class _VotingDetailScreenState extends State<VotingDetailScreen> {
               Icon(
                 isFor ? Icons.thumb_up_alt_outlined : Icons.thumb_down_alt_outlined,
                 size: 16,
-                color: isFor ? Colors.green : Colors.red,
+                color: isFor ? statusColors.success : colorScheme.error,
               ),
               const SizedBox(width: 8),
               Text(
