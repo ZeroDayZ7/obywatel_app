@@ -215,8 +215,104 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final E2eeCryptoService _cryptoService;
   final SecureStorageService _secureStorage;
   final Map<String, String> _localPlaintextCache = <String, String>{};
+  final Map<String, Set<String>> _plaintextIdAliases = <String, Set<String>>{};
 
   AppDatabase get db => _db;
+
+  Set<String> _collectRelatedMessageIds(String messageId) {
+    final normalizedId = messageId.trim();
+    if (normalizedId.isEmpty) {
+      return <String>{};
+    }
+
+    final related = <String>{normalizedId};
+    final queue = <String>[normalizedId];
+
+    while (queue.isNotEmpty) {
+      final current = queue.removeLast();
+      final aliases = _plaintextIdAliases[current] ?? const <String>{};
+      for (final alias in aliases) {
+        final normalizedAlias = alias.trim();
+        if (normalizedAlias.isNotEmpty && related.add(normalizedAlias)) {
+          queue.add(normalizedAlias);
+        }
+      }
+    }
+
+    return related;
+  }
+
+  void _registerPlaintextAlias(String firstId, String secondId) {
+    final left = firstId.trim();
+    final right = secondId.trim();
+
+    if (left.isEmpty || right.isEmpty || left == right) {
+      return;
+    }
+
+    _plaintextIdAliases.putIfAbsent(left, () => <String>{}).add(right);
+    _plaintextIdAliases.putIfAbsent(right, () => <String>{}).add(left);
+  }
+
+  String? _resolvePlaintextByMessageId(String messageId) {
+    final relatedIds = _collectRelatedMessageIds(messageId);
+    for (final candidate in relatedIds) {
+      final value = _localPlaintextCache[candidate];
+      if (value != null && value.trim().isNotEmpty) {
+        return value;
+      }
+    }
+    return null;
+  }
+
+  String? _extractServerMessageIdFromResponse(dynamic responseData) {
+    dynamic value = responseData;
+    if (value is Map<String, dynamic>) {
+      final direct = _readMessageIdField(value);
+      if (direct != null) return direct;
+      if (value.containsKey('data')) {
+        return _extractServerMessageIdFromResponse(value['data']);
+      }
+      return null;
+    }
+
+    if (value is Map) {
+      final converted = value.map(
+        (key, nestedValue) => MapEntry(key.toString(), nestedValue),
+      );
+      final direct = _readMessageIdField(converted);
+      if (direct != null) return direct;
+      if (converted.containsKey('data')) {
+        return _extractServerMessageIdFromResponse(converted['data']);
+      }
+      return null;
+    }
+
+    return null;
+  }
+
+  String? _readMessageIdField(Map<String, dynamic> data) {
+    final candidates = [
+      'id',
+      'message_id',
+      'messageId',
+      'MessageID',
+      'server_message_id',
+      'serverMessageId',
+    ];
+
+    for (final key in candidates) {
+      final candidate = data[key];
+      if (candidate is String) {
+        final trimmed = candidate.trim();
+        if (trimmed.isNotEmpty) {
+          return trimmed;
+        }
+      }
+    }
+
+    return null;
+  }
 
   ChatsRepositoryImpl(
     this._apiClient,
@@ -241,28 +337,43 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return;
     }
 
-    _localPlaintextCache[messageId] = normalized;
+    final relatedIds = _collectRelatedMessageIds(messageId)..add(messageId);
+    for (final relatedId in relatedIds) {
+      _localPlaintextCache[relatedId] = normalized;
+    }
 
-    try {
-      await _secureStorage.write(
-        key: _plaintextStorageKey(messageId),
-        value: normalized,
-      );
-    } catch (error, stackTrace) {
-      _logger.w(
-        'Unable to persist plaintext for message $messageId in secure storage; keeping in-memory fallback only',
-        error: error,
-        stackTrace: stackTrace,
-        module: 'ChatsRepository',
-      );
+    for (final relatedId in relatedIds) {
+      for (final aliasId in relatedIds.where((candidate) => candidate != relatedId)) {
+        _registerPlaintextAlias(relatedId, aliasId);
+      }
+    }
+
+    for (final relatedId in relatedIds) {
+      try {
+        await _secureStorage.write(
+          key: _plaintextStorageKey(relatedId),
+          value: normalized,
+        );
+      } catch (error, stackTrace) {
+        _logger.w(
+          'Unable to persist plaintext for message $relatedId in secure storage; keeping in-memory fallback only',
+          error: error,
+          stackTrace: stackTrace,
+          module: 'ChatsRepository',
+        );
+      }
     }
   }
 
   Future<void> _hydratePlaintextCacheForIds(Iterable<String> messageIds) async {
-    final ids = messageIds
-        .map((id) => id.trim())
-        .where((id) => id.isNotEmpty)
-        .toSet();
+    final ids = <String>{};
+    for (final messageId in messageIds) {
+      final normalizedId = messageId.trim();
+      if (normalizedId.isEmpty) {
+        continue;
+      }
+      ids.addAll(_collectRelatedMessageIds(normalizedId));
+    }
 
     for (final messageId in ids) {
       if (_localPlaintextCache.containsKey(messageId)) {
@@ -815,6 +926,18 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return;
     }
 
+    final serverMessageId = _extractServerMessageIdFromResponse(response.data);
+    if (serverMessageId != null &&
+        serverMessageId.trim().isNotEmpty &&
+        serverMessageId != message.id) {
+      _registerPlaintextAlias(message.id, serverMessageId);
+      await _persistPlaintextForMessage(serverMessageId, content);
+      _logger.i(
+        '[MESSAGE_ID_ALIAS_RESOLVED] local_id=${message.id} server_id=$serverMessageId conversation_id=$effectiveConversationId',
+        module: 'ChatsRepository',
+      );
+    }
+
     await (_db.update(
       _db.messages,
     )..where((tbl) => tbl.id.equals(message.id))).write(
@@ -1189,7 +1312,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       allowMalformed: true,
     );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
-    final localPlaintext = _localPlaintextCache[entity.id];
+    final localPlaintext = _resolvePlaintextByMessageId(entity.id);
     final normalizedType = entity.type.trim().toLowerCase();
     final isPlainTextMessage =
         normalizedType == 'text' || normalizedType == 'plain';
