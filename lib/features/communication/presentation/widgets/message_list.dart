@@ -26,14 +26,12 @@ class MessageList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      reverse: true,
+      reverse: false,
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        final previousMessage = index < messages.length - 1
-            ? messages[index + 1]
-            : null;
+        final previousMessage = index > 0 ? messages[index - 1] : null;
 
         final showDivider = _shouldShowDateDivider(message, previousMessage);
 

@@ -72,11 +72,21 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
           ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
           ..orderBy([
             (t) => OrderingTerm(
+                  expression: CustomExpression<int>(
+                    'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+                  ),
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
                   expression: t.sequence,
                   mode: OrderingMode.asc,
                 ),
             (t) => OrderingTerm(
                   expression: t.createdAt,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.id,
                   mode: OrderingMode.asc,
                 ),
           ]))
@@ -91,11 +101,21 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
           ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
           ..orderBy([
             (t) => OrderingTerm(
+                  expression: CustomExpression<int>(
+                    'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+                  ),
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
                   expression: t.sequence,
                   mode: OrderingMode.asc,
                 ),
             (t) => OrderingTerm(
                   expression: t.createdAt,
+                  mode: OrderingMode.asc,
+                ),
+            (t) => OrderingTerm(
+                  expression: t.id,
                   mode: OrderingMode.asc,
                 ),
           ])

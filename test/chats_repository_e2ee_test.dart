@@ -263,6 +263,117 @@ void main() {
     );
   });
 
+  test('message ordering is deterministic by sequence and pending createdAt', () async {
+    final logger = AppLogger();
+    final db = AppDatabase(NativeDatabase.memory());
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final apiClient = RecordingApiClient(
+      storage: secureStorage,
+      logger: logger,
+    );
+    final deviceInfoService = DeviceInfoService(logger);
+    final cryptoService = CapturingCryptoService(
+      secureStorage,
+      logger,
+      apiClient,
+      deviceInfoService,
+      DriftSignalProtocolStore(db),
+    );
+
+    final repo = ChatsRepositoryImpl(
+      ChatsApiClient(apiClient),
+      db,
+      logger,
+      'user-1',
+      deviceInfoService,
+      cryptoService,
+      secureStorage,
+    );
+
+    final now = DateTime.now();
+    await db.chatsDao.upsertMessages([
+      MessagesCompanion(
+        id: const Value('seq-4'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-2'),
+        senderDeviceId: const Value('device-42'),
+        type: const Value('signal'),
+        sequence: Value(BigInt.from(4)),
+        encryptedPayload: Value(utf8.encode('cipher-4')),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(now.add(const Duration(minutes: 4))),
+        updatedAt: Value(now.add(const Duration(minutes: 4))),
+        deletedAt: const Value.absent(),
+      ),
+      MessagesCompanion(
+        id: const Value('seq-1'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-2'),
+        senderDeviceId: const Value('device-42'),
+        type: const Value('signal'),
+        sequence: Value(BigInt.one),
+        encryptedPayload: Value(utf8.encode('cipher-1')),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(now.add(const Duration(minutes: 1))),
+        updatedAt: Value(now.add(const Duration(minutes: 1))),
+        deletedAt: const Value.absent(),
+      ),
+      MessagesCompanion(
+        id: const Value('pending-local'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-1'),
+        senderDeviceId: const Value('device-1'),
+        type: const Value('text'),
+        sequence: const Value.absent(),
+        encryptedPayload: Value(utf8.encode('pending-plaintext')),
+        version: Value(BigInt.one),
+        status: const Value('pending'),
+        createdAt: Value(now.add(const Duration(minutes: 10))),
+        updatedAt: Value(now.add(const Duration(minutes: 10))),
+        deletedAt: const Value.absent(),
+      ),
+      MessagesCompanion(
+        id: const Value('seq-3'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-2'),
+        senderDeviceId: const Value('device-42'),
+        type: const Value('signal'),
+        sequence: Value(BigInt.from(3)),
+        encryptedPayload: Value(utf8.encode('cipher-3')),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(now.add(const Duration(minutes: 3))),
+        updatedAt: Value(now.add(const Duration(minutes: 3))),
+        deletedAt: const Value.absent(),
+      ),
+      MessagesCompanion(
+        id: const Value('seq-2'),
+        conversationId: const Value('user-1:user-2'),
+        senderId: const Value('user-2'),
+        senderDeviceId: const Value('device-42'),
+        type: const Value('signal'),
+        sequence: Value(BigInt.from(2)),
+        encryptedPayload: Value(utf8.encode('cipher-2')),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(now.add(const Duration(minutes: 2))),
+        updatedAt: Value(now.add(const Duration(minutes: 2))),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    final history = await repo.getMessageHistory('user-1:user-2');
+    expect(
+      history.map((message) => message.id),
+      ['seq-1', 'seq-2', 'seq-3', 'seq-4', 'pending-local'],
+    );
+  });
+
   test(
     'ensureConversationForContact does not bootstrap E2EE session',
     () async {

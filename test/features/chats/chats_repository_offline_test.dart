@@ -221,6 +221,7 @@ void main() {
       userId,
       DeviceInfoService(logger),
       aliceService,
+      secureStorage,
     );
   }
 
@@ -361,6 +362,7 @@ void main() {
         'user-a',
         DeviceInfoService(logger),
         aliceService,
+        secureStorage,
       );
 
       await repository.sendMessage(
@@ -872,6 +874,7 @@ void main() {
         'user-123',
         DeviceInfoService(logger),
         crypto,
+        secureStorage,
       );
 
       await repository.saveConversationsFromRemote([

@@ -575,9 +575,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
       module: 'ChatsRepository',
     );
     try {
-      final local = await _db.chatsDao.getMessagesForConversation(
-        conversationId,
-        limit: limit,
+      final local = _orderMessageEntities(
+        await _db.chatsDao.getMessagesForConversation(
+          conversationId,
+          limit: limit,
+        ),
       );
       if (local.isNotEmpty) {
         await _hydratePlaintextCacheForIds(
@@ -590,10 +592,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
         return local.map(_messageFromEntity).toList();
       }
 
-      final dtos = await _apiClient.getMessageHistory(
-        conversationId,
-        beforeId: beforeId,
-        limit: limit,
+      final dtos = _orderMessageDtos(
+        await _apiClient.getMessageHistory(
+          conversationId,
+          beforeId: beforeId,
+          limit: limit,
+        ),
       );
 
       final newMessages = dtos
@@ -899,7 +903,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       final updatedContacts =
           payload['updated_contacts'] as List<dynamic>? ?? const [];
       final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
-      final remoteMessageDtos = parseRemoteMessageDtos(newMessages);
+      final remoteMessageDtos = _orderMessageDtos(
+        parseRemoteMessageDtos(newMessages),
+      );
 
       if (remoteMessageDtos.isNotEmpty) {
         for (final dto in remoteMessageDtos) {
@@ -1024,11 +1030,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
         );
       }
 
-      final remoteMessages = dto.messages
-          ?.whereType<MessageDto>()
+      final remoteMessages = _orderMessageDtos(
+        dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
+      )
           .map(_messageDtoToCompanion)
           .toList();
-      if (remoteMessages != null && remoteMessages.isNotEmpty) {
+      if (remoteMessages.isNotEmpty) {
         await _db.chatsDao.upsertMessages(remoteMessages);
       }
 
@@ -1040,6 +1047,51 @@ class ChatsRepositoryImpl implements ChatsRepository {
       module: 'ChatsRepository',
     );
     return conversations;
+  }
+
+  List<MessageEntity> _orderMessageEntities(Iterable<MessageEntity> entities) {
+    final ordered = entities.toList()
+      ..sort((left, right) {
+        final leftHasSequence = left.sequence != null;
+        final rightHasSequence = right.sequence != null;
+
+        if (leftHasSequence && rightHasSequence) {
+          final compare = left.sequence!.compareTo(right.sequence!);
+          if (compare != 0) {
+            return compare;
+          }
+        } else if (leftHasSequence != rightHasSequence) {
+          return leftHasSequence ? -1 : 1;
+        }
+
+        final createdAtCompare = left.createdAt.compareTo(right.createdAt);
+        if (createdAtCompare != 0) {
+          return createdAtCompare;
+        }
+
+        return left.id.compareTo(right.id);
+      });
+
+    return ordered;
+  }
+
+  List<MessageDto> _orderMessageDtos(Iterable<MessageDto> dtos) {
+    final ordered = dtos.toList()
+      ..sort((left, right) {
+        final sequenceCompare = left.sequence.compareTo(right.sequence);
+        if (sequenceCompare != 0) {
+          return sequenceCompare;
+        }
+
+        final createdAtCompare = left.createdAt.compareTo(right.createdAt);
+        if (createdAtCompare != 0) {
+          return createdAtCompare;
+        }
+
+        return left.id.compareTo(right.id);
+      });
+
+    return ordered;
   }
 
   Future<String?> _decryptInboundMessage(MessageDto dto) async {
