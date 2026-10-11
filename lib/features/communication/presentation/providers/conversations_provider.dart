@@ -55,13 +55,38 @@ class Conversations extends _$Conversations {
     if (index == -1) return;
 
     final targetConv = currentList[index];
+    final mergedMessages = [...(targetConv.messages ?? []), message]
+      ..sort((a, b) {
+        final left = a ?? Message(
+          id: '',
+          conversationId: targetConv.id,
+          senderId: '',
+          content: '',
+          encryptedPayload: '',
+          isMine: false,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+        );
+        final right = b ?? Message(
+          id: '',
+          conversationId: targetConv.id,
+          senderId: '',
+          content: '',
+          encryptedPayload: '',
+          isMine: false,
+          createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+        );
+        final timeCompare = left.createdAt.compareTo(right.createdAt);
+        if (timeCompare != 0) return timeCompare;
+        return left.id.compareTo(right.id);
+      });
+
     final updatedConv = Conversation(
       id: targetConv.id,
       type: targetConv.type,
       title: targetConv.title,
       lastSequence: targetConv.lastSequence,
       members: targetConv.members,
-      messages: [message, ...(targetConv.messages ?? [])],
+      messages: mergedMessages,
       updatedAt: message.createdAt,
     );
 

@@ -5,8 +5,23 @@ import 'package:obywatel_plus/features/communication/presentation/widgets/messag
 
 class MessageList extends StatelessWidget {
   final List<Message> messages;
+  final ScrollController? controller;
 
-  const MessageList({super.key, required this.messages});
+  const MessageList({
+    super.key,
+    required this.messages,
+    this.controller,
+  });
+
+  List<Message> get _orderedMessages {
+    final ordered = [...messages];
+    ordered.sort((left, right) {
+      final timeCompare = left.createdAt.compareTo(right.createdAt);
+      if (timeCompare != 0) return timeCompare;
+      return left.id.compareTo(right.id);
+    });
+    return ordered;
+  }
 
   bool _shouldShowDateDivider(Message current, Message? previous) {
     if (previous == null) return true;
@@ -25,13 +40,16 @@ class MessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final orderedMessages = _orderedMessages;
+
     return ListView.builder(
+      controller: controller,
       reverse: false,
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      itemCount: messages.length,
+      itemCount: orderedMessages.length,
       itemBuilder: (context, index) {
-        final message = messages[index];
-        final previousMessage = index > 0 ? messages[index - 1] : null;
+        final message = orderedMessages[index];
+        final previousMessage = index > 0 ? orderedMessages[index - 1] : null;
 
         final showDivider = _shouldShowDateDivider(message, previousMessage);
 

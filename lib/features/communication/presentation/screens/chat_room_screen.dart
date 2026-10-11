@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_field.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
 
-class ChatRoomScreen extends ConsumerWidget {
+class ChatRoomScreen extends ConsumerStatefulWidget {
   final String conversationId;
   final String title;
 
@@ -18,12 +19,58 @@ class ChatRoomScreen extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ChatRoomScreen> createState() => _ChatRoomScreenState();
+}
+
+class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
+  late final ScrollController _scrollController;
+  String? _lastRenderedMessageId;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottomIfNeeded(List<Message> messages) {
+    if (!_scrollController.hasClients || messages.isEmpty) return;
+
+    final lastMessageId = messages.last.id;
+    final nearBottom = _scrollController.position.maxScrollExtent -
+            _scrollController.offset <=
+        220;
+
+    if (_lastRenderedMessageId == null ||
+        lastMessageId != _lastRenderedMessageId ||
+        nearBottom) {
+      _lastRenderedMessageId = lastMessageId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients) return;
+        final maxScroll = _scrollController.position.maxScrollExtent;
+        if (maxScroll > 0) {
+          _scrollController.animateTo(
+            maxScroll,
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final chatState = ref.watch(activeChatProvider(conversationId));
+    final chatState = ref.watch(activeChatProvider(widget.conversationId));
     final syncStatus = ref.watch(chatSyncStatusControllerProvider);
-    final e2eeStatus = ref.watch(chatE2eeSessionStatusProvider(conversationId));
+    final e2eeStatus = ref.watch(chatE2eeSessionStatusProvider(widget.conversationId));
 
     final e2eeSubtitle = e2eeStatus.maybeWhen(
       data: (status) {
@@ -57,7 +104,7 @@ class ChatRoomScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: ChatAppBar(
-        title: title,
+        title: widget.title,
         subtitle: e2eeSubtitle,
         actions: [
           IconButton(
@@ -92,20 +139,21 @@ class ChatRoomScreen extends ConsumerWidget {
         children: [
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHighest,
               border: Border(
                 bottom: BorderSide(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.25),
                 ),
               ),
             ),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 8,
-                  height: 8,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: syncColor,
@@ -113,10 +161,10 @@ class ChatRoomScreen extends ConsumerWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'SYNC: $syncMessage',
-                  style: theme.textTheme.labelMedium?.copyWith(
+                  syncMessage,
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: colorScheme.onSurfaceVariant,
-                    letterSpacing: 0.6,
+                    letterSpacing: 0.4,
                   ),
                 ),
               ],
@@ -125,6 +173,7 @@ class ChatRoomScreen extends ConsumerWidget {
           Expanded(
             child: chatState.when(
               data: (messages) {
+                _scrollToBottomIfNeeded(messages);
                 if (messages.isEmpty) {
                   return Center(
                     child: Text(
@@ -135,7 +184,10 @@ class ChatRoomScreen extends ConsumerWidget {
                     ),
                   );
                 }
-                return MessageList(messages: messages);
+                return MessageList(
+                  messages: messages,
+                  controller: _scrollController,
+                );
               },
               loading: () => Center(
                 child: CircularProgressIndicator(color: colorScheme.primary),
@@ -150,7 +202,7 @@ class ChatRoomScreen extends ConsumerWidget {
               ),
             ),
           ),
-          MessageInputField(conversationId: conversationId),
+          MessageInputField(conversationId: widget.conversationId),
         ],
       ),
     );

@@ -1222,11 +1222,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
+    final fallbackContent =
+        status == 'failed' ? 'Nie można odszyfrować wiadomości' : 'Nie można odszyfrować wiadomości';
+
     return Message(
       id: entity.id,
       conversationId: entity.conversationId,
       senderId: entity.senderId,
-      content: '',
+      content: fallbackContent,
       encryptedPayload: ciphertext,
       isMine: entity.senderId == _currentUserId,
       createdAt: entity.createdAt,

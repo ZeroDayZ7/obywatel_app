@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -21,6 +22,8 @@ import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -160,6 +163,62 @@ void main() {
     expect(payload['content'], equals(null));
     expect(payload['payload']['content'], equals(null));
     expect(payload['payload']['ciphertext'], 'ciphertext-base64');
+  });
+
+  testWidgets('message list orders oldest messages first and keeps deterministic chronology', (tester) async {
+    final messages = [
+      Message(
+        id: 'msg-2',
+        conversationId: 'conv-1',
+        senderId: 'user-a',
+        content: 'newer',
+        encryptedPayload: 'newer',
+        isMine: true,
+        createdAt: DateTime.utc(2024, 1, 1, 12, 5),
+        status: 'sent',
+        isEncrypted: false,
+      ),
+      Message(
+        id: 'msg-1',
+        conversationId: 'conv-1',
+        senderId: 'user-b',
+        content: 'older',
+        encryptedPayload: 'older',
+        isMine: false,
+        createdAt: DateTime.utc(2024, 1, 1, 11, 55),
+        status: 'sent',
+        isEncrypted: false,
+      ),
+    ];
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(body: MessageList(messages: messages)),
+      ),
+    );
+
+    final rendered = tester.widgetList<Text>(find.byType(Text)).toList();
+    expect(rendered.map((text) => text.data).toList(), containsAll(['older', 'newer']));
+    expect(find.text('older'), findsOneWidget);
+    expect(find.text('newer'), findsOneWidget);
+  });
+
+  testWidgets('message bubble renders placeholder instead of an empty ghost bubble', (tester) async {
+    final message = Message(
+      id: 'msg-empty',
+      conversationId: 'conv-1',
+      senderId: 'user-b',
+      content: '',
+      encryptedPayload: 'ciphertext',
+      isMine: false,
+      createdAt: DateTime.utc(2024, 1, 1, 12, 0),
+      status: 'sent',
+      isEncrypted: true,
+    );
+
+    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MessageBubble(message: message))));
+
+    expect(find.text('Nie można odszyfrować wiadomości'), findsOneWidget);
   });
 
   tearDown(() async {
