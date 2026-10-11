@@ -17,7 +17,7 @@ class ChatsWsClient {
   Stream<WsConnectionStatus> get statusStream => _wsClient.statusStream;
 
   void connectWithToken(String accessToken) {
-    final baseUrl = ServicesConfig.authBaseUrl.replaceFirst('http', 'ws');
+    final baseUrl = ServicesConfig.apiBaseUrl.replaceFirst('http', 'ws');
     final wsUrl = '$baseUrl${ApiEndpoints.wsMessaging(accessToken)}';
 
     _logger.i(

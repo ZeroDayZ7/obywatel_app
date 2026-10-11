@@ -25,7 +25,7 @@ Dio createDioInstance({
     DioProfile.public => ServicesConfig.versionBaseUrl,
     DioProfile.authenticated ||
     DioProfile.refreshToken ||
-    DioProfile.noAuthAuth => ServicesConfig.authBaseUrl,
+    DioProfile.noAuthAuth => ServicesConfig.apiBaseUrl,
   };
 
   final dio = Dio(

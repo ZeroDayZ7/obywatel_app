@@ -67,7 +67,7 @@ Dio authDio(Ref ref) {
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: ServicesConfig.authBaseUrl,
+      baseUrl: ServicesConfig.apiBaseUrl,
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
       headers: {'Content-Type': 'application/json'},
