@@ -20,7 +20,8 @@ enum _AddContactTab { sendRequest, myQr }
 
 class _AddContactModalState extends ConsumerState<AddContactModal> {
   _AddContactTab _selectedTab = _AddContactTab.sendRequest;
-  final _controller = TextEditingController();
+  // final _controller = TextEditingController();
+  final _controller = TextEditingController(text: 'a2f6b8c9-1122-4a55-8822-b98765432101');
   bool _isLoading = false;
   String _myUserId = '';
 

@@ -31,12 +31,12 @@ class StorageInitTask implements StartupTask {
       // This block is intentionally commented and MUST NOT run during normal startup.
 
 
-      await Future.wait([
-        storage.clearAll(),
-        prefs.clearAll(),
-      ]);
-      await database.clearSignalStore();
-      await database.clearDatabase();
+      // await Future.wait([
+      //   storage.clearAll(),
+      //   prefs.clearAll(),
+      // ]);
+      // await database.clearSignalStore();
+      // await database.clearDatabase();
 
 
       debugPrint(

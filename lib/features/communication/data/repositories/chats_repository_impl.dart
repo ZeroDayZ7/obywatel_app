@@ -812,7 +812,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final message = Message(
-      id: const Uuid().v4(),
+      id: const Uuid().v7(),
       conversationId: effectiveConversationId,
       senderId: _currentUserId,
       content: content,
@@ -884,6 +884,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
 
     final requestPayload = {
+      'message_id': message.id,
       'conversation_id': effectiveConversationId,
       'sender_device_id': senderAppDeviceId,
       'ciphertext': encrypted.ciphertextBase64,

@@ -6,11 +6,11 @@ String _normalizeUuidString(String value, {String? fallback}) {
   if (trimmed.isNotEmpty && Uuid.isValidUUID(fromString: trimmed)) {
     return trimmed;
   }
-  return fallback ?? const Uuid().v4();
+  return fallback ?? const Uuid().v7();
 }
 
 String buildOutboxEventIdForMessage({required Message message}) {
-  return _normalizeUuidString(message.id, fallback: const Uuid().v4());
+  return _normalizeUuidString(message.id, fallback: const Uuid().v7());
 }
 
 String? _normalizeConversationIdForServer(String conversationId) {
