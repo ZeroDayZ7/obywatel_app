@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io' as io show WebSocket;
+import 'dart:io' as io;
 
-import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 
 enum WsConnectionStatus { disconnected, connecting, connected }
 
@@ -12,16 +10,15 @@ class AppWebSocketClient {
   AppWebSocketClient({required AppLogger logger}) : _logger = logger {
     _messageController = StreamController<Map<String, dynamic>>.broadcast();
     _statusController = StreamController<WsConnectionStatus>.broadcast();
-    _statusController!.add(WsConnectionStatus.disconnected);
+    _statusController.add(WsConnectionStatus.disconnected);
   }
 
   final AppLogger _logger;
 
-  WebSocketChannel? _channel;
   io.WebSocket? _socket;
   StreamSubscription<dynamic>? _socketSubscription;
-  StreamController<Map<String, dynamic>>? _messageController;
-  StreamController<WsConnectionStatus>? _statusController;
+  late final StreamController<Map<String, dynamic>> _messageController;
+  late final StreamController<WsConnectionStatus> _statusController;
 
   Timer? _pingTimer;
   Timer? _reconnectTimer;
@@ -32,9 +29,9 @@ class AppWebSocketClient {
   Map<String, String> _connectionHeaders = const {};
   String? _currentUrl;
 
-  Stream<Map<String, dynamic>> get messageStream => _messageController!.stream;
-  Stream<WsConnectionStatus> get statusStream => _statusController!.stream;
-  bool get isConnected => _socket != null || _channel != null;
+  Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
+  Stream<WsConnectionStatus> get statusStream => _statusController.stream;
+  bool get isConnected => _socket != null;
 
   Future<void> connect(String url, {Map<String, String>? headers}) async {
     final normalizedHeaders = headers ?? const <String, String>{};
@@ -43,10 +40,11 @@ class AppWebSocketClient {
       return;
     }
 
-    if (_socket != null || _channel != null) {
-      if (_currentUrl == url) {
-        return;
-      }
+    if (_socket != null && _currentUrl == url) {
+      return;
+    }
+
+    if (_socket != null) {
       await disconnect();
     }
 
@@ -54,24 +52,22 @@ class AppWebSocketClient {
     _connectionHeaders = normalizedHeaders;
     _isExplicitlyClosed = false;
     _isConnecting = true;
-    _statusController?.add(WsConnectionStatus.connecting);
-    _logger.i('[WS] Łączenie z URL: $url');
+    _statusController.add(WsConnectionStatus.connecting);
+
+    _logger.i('[WS] Łączenie z URL: $url (Android/Windows)');
 
     try {
-      if (kIsWeb) {
-        _channel = WebSocketChannel.connect(Uri.parse(url));
-        _attachChannelStream();
-        return;
-      }
-
+      // Dart:io WebSocket natywnie wspiera nagłówki na Androidzie i Windowsie
       final socket = await io.WebSocket.connect(
         url,
         headers: _connectionHeaders,
       );
+      
       _socket = socket;
       _reconnectAttempts = 0;
-      _statusController?.add(WsConnectionStatus.connected);
+      _statusController.add(WsConnectionStatus.connected);
       _startPingTimer();
+
       _socketSubscription = socket.listen(
         _handleIncomingMessage,
         onError: (Object error) {
@@ -96,35 +92,17 @@ class AppWebSocketClient {
     }
   }
 
-  void _attachChannelStream() {
-    _reconnectAttempts = 0;
-    _statusController?.add(WsConnectionStatus.connected);
-    _startPingTimer();
-    _channel!.stream.listen(
-      _handleIncomingMessage,
-      onError: (Object error) {
-        _logger.e('[WS] Błąd połączenia: $error');
-        _handleDisconnect();
-      },
-      onDone: () {
-        _logger.w('[WS] Połączenie zamknięte przez serwer.');
-        _handleDisconnect();
-      },
-      cancelOnError: true,
-    );
-  }
-
   void _handleIncomingMessage(dynamic rawData) {
     try {
       if (rawData is String) {
         if (rawData == 'pong') return;
         final decoded = jsonDecode(rawData);
         if (decoded is Map<String, dynamic>) {
-          _messageController?.add(decoded);
+          _messageController.add(decoded);
           return;
         }
         if (decoded is Map) {
-          _messageController?.add(Map<String, dynamic>.from(decoded));
+          _messageController.add(Map<String, dynamic>.from(decoded));
           return;
         }
       }
@@ -139,10 +117,6 @@ class AppWebSocketClient {
       _socket!.add(encoded);
       return;
     }
-    if (_channel != null) {
-      _channel!.sink.add(encoded);
-      return;
-    }
     _logger.w('[WS] Próba wysłania wiadomości przy braku połączenia!');
   }
 
@@ -151,15 +125,13 @@ class AppWebSocketClient {
     _pingTimer = Timer.periodic(const Duration(seconds: 25), (_) {
       if (_socket != null) {
         _socket!.add('ping');
-      } else if (_channel != null) {
-        _channel!.sink.add('ping');
       }
     });
   }
 
   void _handleDisconnect() {
     _stopPingTimer();
-    _statusController?.add(WsConnectionStatus.disconnected);
+    _statusController.add(WsConnectionStatus.disconnected);
 
     if (!_isExplicitlyClosed) {
       _scheduleReconnect();
@@ -194,20 +166,15 @@ class AppWebSocketClient {
       _socket = null;
     }
 
-    if (_channel != null) {
-      await _channel!.sink.close();
-      _channel = null;
-    }
-
     _socketSubscription?.cancel();
     _socketSubscription = null;
-    _statusController?.add(WsConnectionStatus.disconnected);
+    _statusController.add(WsConnectionStatus.disconnected);
     _logger.i('[WS] Połączenie rozłączone na żądanie.');
   }
 
   Future<void> dispose() async {
     await disconnect();
-    await _messageController?.close();
-    await _statusController?.close();
+    await _messageController.close();
+    await _statusController.close();
   }
 }

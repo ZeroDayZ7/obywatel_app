@@ -21,6 +21,15 @@ class ChatsWsClient {
   bool get isConnected => _wsClient.isConnected;
 
   Future<void> connectWithToken(String accessToken) async {
+    final token = accessToken.trim();
+    if (token.isEmpty) {
+      _logger.w(
+        '[ChatsWsClient] Brak access tokenu; pomijam otwarcie połączenia WS.',
+      );
+      await _wsClient.disconnect();
+      return;
+    }
+
     final deviceFingerprint = await _deviceInfoService.getFingerprint();
     final normalizedBaseUrl = ServicesConfig.apiBaseUrl
         .replaceFirst('https://', 'wss://')
@@ -33,7 +42,7 @@ class ChatsWsClient {
     await _wsClient.connect(
       wsUrl,
       headers: {
-        'Authorization': 'Bearer $accessToken',
+        'Authorization': 'Bearer $token',
         'X-Device-Fingerprint': deviceFingerprint,
       },
     );
