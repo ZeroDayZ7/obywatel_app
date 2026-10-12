@@ -85,5 +85,5 @@ abstract class ApiEndpoints {
   // ===========================================================================
   // --- REAL-TIME WEBSOCKET ---
   // ===========================================================================
-  static String wsMessaging(String token) => '/ws/messaging?token=$token';
+  static String get wsMessaging => '/ws';
 }

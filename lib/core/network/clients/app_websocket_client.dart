@@ -1,55 +1,79 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io' as io show WebSocket;
 
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 enum WsConnectionStatus { disconnected, connecting, connected }
 
 class AppWebSocketClient {
-  final AppLogger _logger;
-  
-  WebSocketChannel? _channel;
-  StreamController<Map<String, dynamic>>? _messageController;
-  StreamController<WsConnectionStatus>? _statusController;
-  
-  Timer? _pingTimer;
-  Timer? _reconnectTimer;
-  
-  int _reconnectAttempts = 0;
-  bool _isExplicitlyClosed = false;
-  String? _currentUrl;
-
   AppWebSocketClient({required AppLogger logger}) : _logger = logger {
     _messageController = StreamController<Map<String, dynamic>>.broadcast();
     _statusController = StreamController<WsConnectionStatus>.broadcast();
+    _statusController!.add(WsConnectionStatus.disconnected);
   }
+
+  final AppLogger _logger;
+
+  WebSocketChannel? _channel;
+  io.WebSocket? _socket;
+  StreamSubscription<dynamic>? _socketSubscription;
+  StreamController<Map<String, dynamic>>? _messageController;
+  StreamController<WsConnectionStatus>? _statusController;
+
+  Timer? _pingTimer;
+  Timer? _reconnectTimer;
+
+  int _reconnectAttempts = 0;
+  bool _isExplicitlyClosed = false;
+  bool _isConnecting = false;
+  Map<String, String> _connectionHeaders = const {};
+  String? _currentUrl;
 
   Stream<Map<String, dynamic>> get messageStream => _messageController!.stream;
   Stream<WsConnectionStatus> get statusStream => _statusController!.stream;
+  bool get isConnected => _socket != null || _channel != null;
 
-  void connect(String url) {
+  Future<void> connect(String url, {Map<String, String>? headers}) async {
+    final normalizedHeaders = headers ?? const <String, String>{};
+
+    if (_isConnecting && _currentUrl == url) {
+      return;
+    }
+
+    if (_socket != null || _channel != null) {
+      if (_currentUrl == url) {
+        return;
+      }
+      await disconnect();
+    }
+
     _currentUrl = url;
+    _connectionHeaders = normalizedHeaders;
     _isExplicitlyClosed = false;
-    _establishConnection();
-  }
-
-  void _establishConnection() {
-    if (_currentUrl == null) return;
-
+    _isConnecting = true;
     _statusController?.add(WsConnectionStatus.connecting);
-    _logger.i('[WS] Łączenie z URL: $_currentUrl');
+    _logger.i('[WS] Łączenie z URL: $url');
 
     try {
-      _channel = WebSocketChannel.connect(Uri.parse(_currentUrl!));
-      _statusController?.add(WsConnectionStatus.connected);
-      _reconnectAttempts = 0;
-      _startPingTimer();
+      if (kIsWeb) {
+        _channel = WebSocketChannel.connect(Uri.parse(url));
+        _attachChannelStream();
+        return;
+      }
 
-      _channel!.stream.listen(
-        (dynamic rawData) {
-          _handleIncomingMessage(rawData);
-        },
+      final socket = await io.WebSocket.connect(
+        url,
+        headers: _connectionHeaders,
+      );
+      _socket = socket;
+      _reconnectAttempts = 0;
+      _statusController?.add(WsConnectionStatus.connected);
+      _startPingTimer();
+      _socketSubscription = socket.listen(
+        _handleIncomingMessage,
         onError: (Object error) {
           _logger.e('[WS] Błąd połączenia: $error');
           _handleDisconnect();
@@ -61,17 +85,48 @@ class AppWebSocketClient {
         cancelOnError: true,
       );
     } catch (e, stack) {
-      _logger.e('[WS] Nie udało się nawiązać połączenia', error: e, stackTrace: stack);
+      _logger.e(
+        '[WS] Nie udało się nawiązać połączenia',
+        error: e,
+        stackTrace: stack,
+      );
       _handleDisconnect();
+    } finally {
+      _isConnecting = false;
     }
+  }
+
+  void _attachChannelStream() {
+    _reconnectAttempts = 0;
+    _statusController?.add(WsConnectionStatus.connected);
+    _startPingTimer();
+    _channel!.stream.listen(
+      _handleIncomingMessage,
+      onError: (Object error) {
+        _logger.e('[WS] Błąd połączenia: $error');
+        _handleDisconnect();
+      },
+      onDone: () {
+        _logger.w('[WS] Połączenie zamknięte przez serwer.');
+        _handleDisconnect();
+      },
+      cancelOnError: true,
+    );
   }
 
   void _handleIncomingMessage(dynamic rawData) {
     try {
       if (rawData is String) {
-        if (rawData == 'pong') return; // Heartbeat response
-        final data = jsonDecode(rawData) as Map<String, dynamic>;
-        _messageController?.add(data);
+        if (rawData == 'pong') return;
+        final decoded = jsonDecode(rawData);
+        if (decoded is Map<String, dynamic>) {
+          _messageController?.add(decoded);
+          return;
+        }
+        if (decoded is Map) {
+          _messageController?.add(Map<String, dynamic>.from(decoded));
+          return;
+        }
       }
     } catch (e) {
       _logger.e('[WS] Błąd parsowania ramki JSON: $rawData', error: e);
@@ -79,17 +134,24 @@ class AppWebSocketClient {
   }
 
   void send(Map<String, dynamic> data) {
-    if (_channel != null) {
-      _channel!.sink.add(jsonEncode(data));
-    } else {
-      _logger.w('[WS] Próba wysłania wiadomości przy braku połączenia!');
+    final encoded = jsonEncode(data);
+    if (_socket != null) {
+      _socket!.add(encoded);
+      return;
     }
+    if (_channel != null) {
+      _channel!.sink.add(encoded);
+      return;
+    }
+    _logger.w('[WS] Próba wysłania wiadomości przy braku połączenia!');
   }
 
   void _startPingTimer() {
     _pingTimer?.cancel();
     _pingTimer = Timer.periodic(const Duration(seconds: 25), (_) {
-      if (_channel != null) {
+      if (_socket != null) {
+        _socket!.add('ping');
+      } else if (_channel != null) {
         _channel!.sink.add('ping');
       }
     });
@@ -107,13 +169,13 @@ class AppWebSocketClient {
   void _scheduleReconnect() {
     _reconnectTimer?.cancel();
     _reconnectAttempts++;
-    
-    // Exponential backoff: max 30 sekund
+
     final delaySeconds = (_reconnectAttempts * 2).clamp(2, 30);
     _logger.i('[WS] Rekonstrukcja połączenia za $delaySeconds sek...');
 
     _reconnectTimer = Timer(Duration(seconds: delaySeconds), () {
-      _establishConnection();
+      if (_currentUrl == null) return;
+      unawaited(connect(_currentUrl!, headers: _connectionHeaders));
     });
   }
 
@@ -122,19 +184,30 @@ class AppWebSocketClient {
     _pingTimer = null;
   }
 
-  void disconnect() {
+  Future<void> disconnect() async {
     _isExplicitlyClosed = true;
     _stopPingTimer();
     _reconnectTimer?.cancel();
-    _channel?.sink.close();
-    _channel = null;
+
+    if (_socket != null) {
+      await _socket!.close();
+      _socket = null;
+    }
+
+    if (_channel != null) {
+      await _channel!.sink.close();
+      _channel = null;
+    }
+
+    _socketSubscription?.cancel();
+    _socketSubscription = null;
     _statusController?.add(WsConnectionStatus.disconnected);
     _logger.i('[WS] Połączenie rozłączone na żądanie.');
   }
 
-  void dispose() {
-    disconnect();
-    _messageController?.close();
-    _statusController?.close();
+  Future<void> dispose() async {
+    await disconnect();
+    await _messageController?.close();
+    await _statusController?.close();
   }
 }

@@ -34,10 +34,10 @@ class StorageInitTask implements StartupTask {
       //   storage.clearAll(),
       //   prefs.clearAll(),
       // ]);
-      storage.clearAll();
-      prefs.clearAll();
-      database.clearSignalStore();
-      database.clearDatabase();
+      // storage.clearAll();
+      // prefs.clearAll();
+      // database.clearSignalStore();
+      // database.clearDatabase();
 
       // await database.clearSignalStore();
       // await database.clearDatabase();
