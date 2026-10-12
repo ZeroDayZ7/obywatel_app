@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/application/websocket_message_handler.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/screens/contacts_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/screens/conversations_screen.dart';
@@ -72,6 +73,7 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
   @override
   Widget build(BuildContext context) {
     ref.watch(chatWebSocketSessionProvider);
+    ref.watch(webSocketMessageHandlerProvider);
     final wsStatusValue = ref.watch(chatsWsStatusProvider);
     final wsStatus = kDebugMode
         ? switch (wsStatusValue) {

@@ -4,6 +4,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'websocket_message_handler.g.dart';
@@ -11,7 +12,7 @@ part 'websocket_message_handler.g.dart';
 class WebSocketMessageHandler {
   final ChatsWsClient _wsClient;
   final AppLogger _logger;
-  final Future<void> Function() _onSignalReceived;
+  final Future<void> Function(String type) _onSignalReceived;
   StreamSubscription<Map<String, dynamic>>? _subscription;
 
   WebSocketMessageHandler(
@@ -22,7 +23,7 @@ class WebSocketMessageHandler {
 
   void init() {
     _subscription = _wsClient.rawMessagesStream.listen(
-      _handleRawMessage,
+      handleIncomingMessage,
       onError: (error) {
         _logger.e(
           'Błąd na strumieniu WebSocket',
@@ -33,19 +34,23 @@ class WebSocketMessageHandler {
     );
   }
 
-  void _handleRawMessage(Map<String, dynamic> json) {
+  void handleIncomingMessage(Map<String, dynamic> json) {
     try {
-      final type = json['type'] as String?;
+      final type = (json['type'] ?? '').toString();
+      if (type.isEmpty) {
+        _logger.i('Pusty typ wiadomości WS', module: 'WSHandler');
+        return;
+      }
 
       switch (type) {
         case 'new_message':
         case 'conversation_updated':
         case 'contact_updated':
           _logger.i(
-            'Odebrano sygnał WS typu $type. Uruchamianie delta sync.',
+            'Odebrano sygnał WS typu $type. Uruchamianie odpowiedniej synchronizacji.',
             module: 'WSHandler',
           );
-          unawaited(_onSignalReceived());
+          unawaited(_onSignalReceived(type));
           break;
         default:
           _logger.i('Nieznany typ wiadomości WS: $type', module: 'WSHandler');
@@ -73,8 +78,18 @@ WebSocketMessageHandler webSocketMessageHandler(Ref ref) {
   final handler = WebSocketMessageHandler(
     wsClient,
     logger,
-    () async {
-      await ref.read(chatSyncServiceProvider).syncPendingData();
+    (type) async {
+      switch (type) {
+        case 'contact_updated':
+          await ref.read(contactsSyncProvider.notifier).sync();
+          return;
+        case 'new_message':
+        case 'conversation_updated':
+          await ref.read(chatSyncServiceProvider).syncPendingData();
+          return;
+        default:
+          return;
+      }
     },
   );
   handler.init();
