@@ -163,7 +163,7 @@ class E2eeCryptoService {
     if (trimmed.isEmpty) {
       if (fallback != null) return fallback;
       throw const FormatException(
-        'Signal device id is missing; never pass an empty app UUID into Signal session routing',
+        'Signal device id is missing; the bundle must include a positive numeric device id.',
       );
     }
 
@@ -178,7 +178,7 @@ class E2eeCryptoService {
 
     if (fallback != null) return fallback;
     throw const FormatException(
-      'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id',
+      'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id.',
     );
   }
 
@@ -204,26 +204,72 @@ class E2eeCryptoService {
 
   static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) {
     final registrationIdValue = json['registrationId'];
-    final registrationId = registrationIdValue is int
-        ? registrationIdValue
-        : int.tryParse(registrationIdValue?.toString() ?? '') ?? 0;
+    final int registrationId;
+    if (registrationIdValue is int) {
+      registrationId = registrationIdValue;
+    } else if (registrationIdValue == null) {
+      throw const FormatException(
+        'Missing required Signal bundle field: registrationId',
+      );
+    } else {
+      final parsed = int.tryParse(registrationIdValue.toString());
+      if (parsed == null) {
+        throw const FormatException(
+          'Missing required Signal bundle field: registrationId',
+        );
+      }
+      registrationId = parsed;
+    }
+    if (registrationId <= 0) {
+      throw const FormatException(
+        'Signal bundle registrationId must be a positive integer.',
+      );
+    }
 
     final rawDeviceId = json['deviceId'];
-    final deviceId = rawDeviceId is int
-        ? resolveSignalDeviceId(rawDeviceId.toString())
-        : rawDeviceId is String
-        ? resolveSignalDeviceId(rawDeviceId)
-        : throw const FormatException('Missing deviceId in Signal bundle');
+    final int deviceId;
+    if (rawDeviceId is int) {
+      deviceId = resolveSignalDeviceId(rawDeviceId.toString());
+    } else if (rawDeviceId is String) {
+      deviceId = resolveSignalDeviceId(rawDeviceId);
+    } else {
+      throw const FormatException(
+        'Missing required Signal bundle field: deviceId',
+      );
+    }
 
     final preKeyIdValue = json['preKeyId'];
-    final preKeyId = preKeyIdValue is int
-        ? preKeyIdValue
-        : int.tryParse(preKeyIdValue?.toString() ?? '') ?? 0;
+    final int? preKeyId;
+    if (preKeyIdValue == null || preKeyIdValue.toString().trim().isEmpty) {
+      preKeyId = null;
+    } else if (preKeyIdValue is int) {
+      preKeyId = preKeyIdValue;
+    } else {
+      preKeyId = int.tryParse(preKeyIdValue.toString());
+    }
 
     final signedPreKeyIdValue = json['signedPreKeyId'];
-    final signedPreKeyId = signedPreKeyIdValue is int
-        ? signedPreKeyIdValue
-        : int.tryParse(signedPreKeyIdValue?.toString() ?? '') ?? 1;
+    final int signedPreKeyId;
+    if (signedPreKeyIdValue is int) {
+      signedPreKeyId = signedPreKeyIdValue;
+    } else if (signedPreKeyIdValue == null) {
+      throw const FormatException(
+        'Missing required Signal bundle field: signedPreKeyId',
+      );
+    } else {
+      final parsed = int.tryParse(signedPreKeyIdValue.toString());
+      if (parsed == null) {
+        throw const FormatException(
+          'Missing required Signal bundle field: signedPreKeyId',
+        );
+      }
+      signedPreKeyId = parsed;
+    }
+    if (signedPreKeyId <= 0) {
+      throw const FormatException(
+        'Signal bundle signedPreKeyId must be a positive integer.',
+      );
+    }
 
     final identityKeyRaw = json['identityKey'];
     final identityKeyBytes =

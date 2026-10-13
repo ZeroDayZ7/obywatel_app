@@ -138,10 +138,32 @@ void main() {
       expect(bundle.getRegistrationId(), 123);
       expect(bundle.getDeviceId(), 1);
       expect(bundle.getSignedPreKeyId(), 1);
+      expect(bundle.getPreKeyId(), 7);
       expect(
         bundle.getIdentityKey().serialize(),
         identity.getPublicKey().serialize(),
       );
+    });
+
+    test('accepts a bundle without an optional one-time pre-key', () {
+      final identity = generateIdentityKeyPair();
+      final signedPreKey = generateSignedPreKey(identity, 1);
+
+      final bundle = E2eeCryptoService.fromPreKeyBundleJson({
+        'registrationId': 123,
+        'deviceId': 'device-1',
+        'signedPreKeyId': 1,
+        'signedPreKeyPublic': base64Encode(
+          signedPreKey.getKeyPair().publicKey.serialize(),
+        ),
+        'signedPreKeySignature': base64Encode(signedPreKey.signature),
+        'identityKey': base64Encode(identity.getPublicKey().serialize()),
+      });
+
+      expect(bundle.getRegistrationId(), 123);
+      expect(bundle.getDeviceId(), 1);
+      expect(bundle.getPreKeyId(), isNull);
+      expect(bundle.getSignedPreKeyId(), 1);
     });
 
     test(

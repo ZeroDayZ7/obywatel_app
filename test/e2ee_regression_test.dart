@@ -24,15 +24,15 @@ class _StubDeviceInfoService extends DeviceInfoService {
 
 class _StubApiClient extends ApiClient {
   _StubApiClient({required Map<String, dynamic> bundle})
-      : _bundle = bundle,
-        super(
-          dio: Dio(),
-          storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            AppLogger(),
-          ),
-          logger: AppLogger(),
-        );
+    : _bundle = bundle,
+      super(
+        dio: Dio(),
+        storage: SecureStorageService(
+          const FlutterSecureStorage(),
+          AppLogger(),
+        ),
+        logger: AppLogger(),
+      );
 
   final Map<String, dynamic> _bundle;
 
@@ -114,55 +114,98 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   group('E2EE regression', () {
-    test('local identity and registration id remain stable for the same database', () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      final storeA = DriftSignalProtocolStore(db);
-      final firstRegistrationId = await storeA.getLocalRegistrationId();
-      final firstIdentity = await storeA.getIdentityKeyPair();
+    test(
+      'local identity and registration id remain stable for the same database',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        final storeA = DriftSignalProtocolStore(db);
+        final firstRegistrationId = await storeA.getLocalRegistrationId();
+        final firstIdentity = await storeA.getIdentityKeyPair();
 
-      final storeB = DriftSignalProtocolStore(db);
-      final secondRegistrationId = await storeB.getLocalRegistrationId();
-      final secondIdentity = await storeB.getIdentityKeyPair();
+        final storeB = DriftSignalProtocolStore(db);
+        final secondRegistrationId = await storeB.getLocalRegistrationId();
+        final secondIdentity = await storeB.getIdentityKeyPair();
 
-      expect(secondRegistrationId, equals(firstRegistrationId));
-      expect(secondIdentity.serialize(), equals(firstIdentity.serialize()));
-    });
+        expect(secondRegistrationId, equals(firstRegistrationId));
+        expect(secondIdentity.serialize(), equals(firstIdentity.serialize()));
+      },
+    );
 
-    test('session record is readable after storing it at the same address', () async {
-      final db = AppDatabase(NativeDatabase.memory());
-      final store = DriftSignalProtocolStore(db);
-      final address = SignalProtocolAddress('user', 1561500965);
-      final record = SessionRecord();
+    test(
+      'session record is readable after storing it at the same address',
+      () async {
+        final db = AppDatabase(NativeDatabase.memory());
+        final store = DriftSignalProtocolStore(db);
+        final address = SignalProtocolAddress('user', 1561500965);
+        final record = SessionRecord();
 
-      await store.storeSession(address, record);
+        await store.storeSession(address, record);
 
-      expect(await store.containsSession(address), isTrue);
-      expect((await store.loadSession(address)).serialize(), equals(record.serialize()));
-    });
+        expect(await store.containsSession(address), isTrue);
+        expect(
+          (await store.loadSession(address)).serialize(),
+          equals(record.serialize()),
+        );
+      },
+    );
 
-    test('encryptOutboundMessage uses bundle device id instead of stale fallback 1', () async {
-      final aliceDb = AppDatabase(NativeDatabase.memory());
-      final bobDb = AppDatabase(NativeDatabase.memory());
+    test('rejects a Signal bundle when deviceId is missing', () {
+      final identity = generateIdentityKeyPair();
+      final signedPreKey = generateSignedPreKey(identity, 1);
+      final oneTimePreKey = generatePreKeys(1, 1).first;
 
-      final aliceStore = DriftSignalProtocolStore(aliceDb);
-      final bobStore = DriftSignalProtocolStore(bobDb);
-      final bobBundle = await _buildBundleForStore(bobStore, userId: 'bob', deviceId: 1561500965);
-
-      final apiClient = _StubApiClient(bundle: _bundleToJson(bobBundle));
-      final service = E2eeCryptoService(
-        SecureStorageService(const FlutterSecureStorage(), AppLogger()),
-        AppLogger(),
-        apiClient,
-        _StubDeviceInfoService(),
-        aliceStore,
+      expect(
+        () => E2eeCryptoService.fromPreKeyBundleJson({
+          'registrationId': 123,
+          'deviceId': '',
+          'preKeyId': 7,
+          'preKeyPublic': base64Encode(
+            oneTimePreKey.getKeyPair().publicKey.serialize(),
+          ),
+          'signedPreKeyId': 1,
+          'signedPreKeyPublic': base64Encode(
+            signedPreKey.getKeyPair().publicKey.serialize(),
+          ),
+          'signedPreKeySignature': base64Encode(signedPreKey.signature),
+          'identityKey': base64Encode(identity.getPublicKey().serialize()),
+        }),
+        throwsA(isA<FormatException>()),
       );
-
-      final envelope = await service.encryptOutboundMessage('bob', 'hello');
-
-      expect(envelope.ciphertext, isNotEmpty);
-      expect(envelope.recipientUserId, equals('bob'));
-      expect(envelope.recipientDeviceId, equals(bobBundle.getDeviceId().toString()));
     });
+
+    test(
+      'encryptOutboundMessage uses bundle device id instead of stale fallback 1',
+      () async {
+        final aliceDb = AppDatabase(NativeDatabase.memory());
+        final bobDb = AppDatabase(NativeDatabase.memory());
+
+        final aliceStore = DriftSignalProtocolStore(aliceDb);
+        final bobStore = DriftSignalProtocolStore(bobDb);
+        final bobBundle = await _buildBundleForStore(
+          bobStore,
+          userId: 'bob',
+          deviceId: 1561500965,
+        );
+
+        final apiClient = _StubApiClient(bundle: _bundleToJson(bobBundle));
+        final service = E2eeCryptoService(
+          SecureStorageService(const FlutterSecureStorage(), AppLogger()),
+          AppLogger(),
+          apiClient,
+          _StubDeviceInfoService(),
+          aliceStore,
+        );
+
+        final envelope = await service.encryptOutboundMessage('bob', 'hello');
+
+        expect(envelope.ciphertext, isNotEmpty);
+        expect(envelope.recipientUserId, equals('bob'));
+        expect(
+          envelope.recipientDeviceId,
+          equals(bobBundle.getDeviceId().toString()),
+        );
+      },
+    );
 
     test('A can encrypt to B and B can decrypt the message', () async {
       final aliceDb = AppDatabase(NativeDatabase.memory());
@@ -171,23 +214,45 @@ void main() {
       final aliceStore = DriftSignalProtocolStore(aliceDb);
       final bobStore = DriftSignalProtocolStore(bobDb);
 
-      final aliceBundle = await _buildBundleForStore(aliceStore, userId: 'alice', deviceId: 1);
-      final bobBundle = await _buildBundleForStore(bobStore, userId: 'bob', deviceId: 1561500965);
+      final aliceBundle = await _buildBundleForStore(
+        aliceStore,
+        userId: 'alice',
+        deviceId: 1,
+      );
+      final bobBundle = await _buildBundleForStore(
+        bobStore,
+        userId: 'bob',
+        deviceId: 1561500965,
+      );
 
-      final aliceAddress = SignalProtocolAddress('bob', bobBundle.getDeviceId());
-      final bobAddress = SignalProtocolAddress('alice', aliceBundle.getDeviceId());
+      final aliceAddress = SignalProtocolAddress(
+        'bob',
+        bobBundle.getDeviceId(),
+      );
+      final bobAddress = SignalProtocolAddress(
+        'alice',
+        aliceBundle.getDeviceId(),
+      );
 
-      await SessionBuilder.fromSignalStore(aliceStore, aliceAddress)
-          .processPreKeyBundle(bobBundle);
-      await SessionBuilder.fromSignalStore(bobStore, bobAddress)
-          .processPreKeyBundle(aliceBundle);
+      await SessionBuilder.fromSignalStore(
+        aliceStore,
+        aliceAddress,
+      ).processPreKeyBundle(bobBundle);
+      await SessionBuilder.fromSignalStore(
+        bobStore,
+        bobAddress,
+      ).processPreKeyBundle(aliceBundle);
 
       final aliceCipher = SessionCipher.fromStore(aliceStore, aliceAddress);
-      final ciphertext = await aliceCipher.encrypt(Uint8List.fromList(utf8.encode('hello')));
+      final ciphertext = await aliceCipher.encrypt(
+        Uint8List.fromList(utf8.encode('hello')),
+      );
       expect(ciphertext, isA<PreKeySignalMessage>());
 
       final bobCipher = SessionCipher.fromStore(bobStore, bobAddress);
-      final plaintext = await bobCipher.decrypt(ciphertext as PreKeySignalMessage);
+      final plaintext = await bobCipher.decrypt(
+        ciphertext as PreKeySignalMessage,
+      );
 
       expect(String.fromCharCodes(plaintext), equals('hello'));
     });

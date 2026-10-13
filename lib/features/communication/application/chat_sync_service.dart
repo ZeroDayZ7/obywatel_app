@@ -100,21 +100,27 @@ class ChatSyncService {
       final hasConversationId = message.conversationId.trim().isNotEmpty;
       final hasCiphertext = message.encryptedPayload.trim().isNotEmpty;
       final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
-      final hasValidServerConversationId = Uuid.isValidUUID(
-        fromString: message.conversationId,
-      );
+      final conversationParts = message.conversationId
+          .split(':')
+          .map((part) => part.trim())
+          .where((part) => part.isNotEmpty)
+          .toList();
+      final hasValidConversationIdFormat =
+          hasConversationId &&
+          (Uuid.isValidUUID(fromString: message.conversationId) ||
+              conversationParts.length == 2);
       final isReadyForServerDelivery =
           hasConversationId &&
           hasCiphertext &&
           hasValidMessageUuid &&
-          hasValidServerConversationId;
+          hasValidConversationIdFormat;
 
       if (!hasValidMessageUuid || (!hasCiphertext && !hasConversationId)) {
         _logger.w(
           '[OUTBOX-FLOW-3] irrecoverably invalid pending event detected and will be dropped: '
-          'message_id=${message.id} conversation_id=${message.conversationId} '
+          'message_id=${message.id} conversationId=${message.conversationId} '
           'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'server_conversation_uuid=$hasValidServerConversationId',
+          'conversationId_format_valid=$hasValidConversationIdFormat',
           module: 'ChatSync',
         );
         invalidMessageIds.add(message.id);
@@ -124,9 +130,9 @@ class ChatSyncService {
       if (!isReadyForServerDelivery) {
         _logger.w(
           '[OUTBOX-FLOW-3] unresolved pending message held for later retry: '
-          'message_id=${message.id} conversation_id=${message.conversationId} '
+          'message_id=${message.id} conversationId=${message.conversationId} '
           'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'server_conversation_uuid=$hasValidServerConversationId',
+          'conversationId_format_valid=$hasValidConversationIdFormat',
           module: 'ChatSync',
         );
         continue;

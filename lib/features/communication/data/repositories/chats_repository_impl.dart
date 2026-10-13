@@ -726,7 +726,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final createdAt = DateTime.now();
     final senderAppDeviceId = await _deviceInfoService.getOrCreateDeviceId();
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversation_id=$conversationId local_user_id=$_currentUserId app_device_id=$senderAppDeviceId content_length=${content.length}',
+      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversationId=$conversationId local_user_id=$_currentUserId app_device_id=$senderAppDeviceId content_length=${content.length}',
       module: 'ChatsRepository',
     );
 
@@ -765,7 +765,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     _logger.i(
-      '[E2EE_ENCRYPT_START] operation_id=$operationId conversation_id=$effectiveConversationId remote_user_id=$remoteUserId',
+      '[E2EE_ENCRYPT_START] operation_id=$operationId conversationId=$effectiveConversationId remote_user_id=$remoteUserId',
       module: 'ChatsRepository',
     );
 
@@ -777,12 +777,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
         operationId: operationId,
       );
       _logger.i(
-        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_success event=success conversation_id=$effectiveConversationId remote_user_id=$remoteUserId ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
+        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_success event=success conversationId=$effectiveConversationId remote_user_id=$remoteUserId ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
         module: 'ChatsRepository',
       );
     } catch (error, stackTrace) {
       _logger.e(
-        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_error event=error conversation_id=$effectiveConversationId remote_user_id=$remoteUserId error_type=${error.runtimeType} error_message=${error.toString()}',
+        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_error event=error conversationId=$effectiveConversationId remote_user_id=$remoteUserId error_type=${error.runtimeType} error_message=${error.toString()}',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
@@ -810,7 +810,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final hasCiphertextPayload = encrypted.ciphertextBase64.trim().isNotEmpty;
     if (!hasValidServerConversation || !hasCiphertextPayload) {
       _logger.w(
-        '[OUTBOX-FLOW-4] refusing to enqueue invalid outbox event without clearing data: message_id=${message.id} conversation_id=$effectiveConversationId ciphertext_present=$hasCiphertextPayload',
+        '[OUTBOX-FLOW-4] refusing to enqueue invalid outbox event without clearing data: message_id=${message.id} conversationId=$effectiveConversationId ciphertext_present=$hasCiphertextPayload',
         module: 'ChatsRepository',
       );
       final localOnlyMessage = message.copyWith(status: 'pending');
@@ -832,7 +832,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     if (shouldPersistLocallyOnly || !isServerBackedConversation) {
       _logger.i(
-        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversation_id=$effectiveConversationId status=pending',
+        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversationId=$effectiveConversationId status=pending',
         module: 'ChatsRepository',
       );
       final localOnlyMessage = message.copyWith(status: 'pending');
@@ -876,7 +876,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       effectiveConversationId,
     );
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversation_id=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderAppDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
+      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversationId=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderAppDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
       module: 'ChatsRepository',
     );
 
@@ -885,7 +885,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       response = await _apiClient.post(requestUri, data: requestPayload);
     } catch (error, stackTrace) {
       _logger.w(
-        '[HTTP_POST_MESSAGE_ERROR] uri=$requestUri conversation_id=$effectiveConversationId keeping_message_pending',
+        '[HTTP_POST_MESSAGE_ERROR] uri=$requestUri conversationId=$effectiveConversationId keeping_message_pending',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
@@ -894,7 +894,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_response event=success conversation_id=$effectiveConversationId remote_user_id=$remoteUserId uri=$requestUri status_code=${response.statusCode}',
+      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_response event=success conversationId=$effectiveConversationId remote_user_id=$remoteUserId uri=$requestUri status_code=${response.statusCode}',
       module: 'ChatsRepository',
     );
 
@@ -902,7 +902,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         response.statusCode! < 200 ||
         response.statusCode! >= 300) {
       _logger.w(
-        '[HTTP_POST_MESSAGE_REJECTED] uri=$requestUri conversation_id=$effectiveConversationId status_code=${response.statusCode} keeping_message_pending',
+        '[HTTP_POST_MESSAGE_REJECTED] uri=$requestUri conversationId=$effectiveConversationId status_code=${response.statusCode} keeping_message_pending',
         module: 'ChatsRepository',
       );
       return;
@@ -915,7 +915,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       _registerPlaintextAlias(message.id, serverMessageId);
       await _persistPlaintextForMessage(serverMessageId, content);
       _logger.i(
-        '[MESSAGE_ID_ALIAS_RESOLVED] local_id=${message.id} server_id=$serverMessageId conversation_id=$effectiveConversationId',
+        '[MESSAGE_ID_ALIAS_RESOLVED] local_id=${message.id} server_id=$serverMessageId conversationId=$effectiveConversationId',
         module: 'ChatsRepository',
       );
     }
@@ -930,13 +930,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
     await _db.outboxDao.deleteEvents([message.id]);
     _logger.i(
-      '[MESSAGE_DB_STATUS_UPDATED] message_id=${message.id} conversation_id=$effectiveConversationId status=sent',
+      '[MESSAGE_DB_STATUS_UPDATED] message_id=${message.id} conversationId=$effectiveConversationId status=sent',
       module: 'ChatsRepository',
     );
 
     final sentMessage = message.copyWith(status: 'sent');
     _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_persist_success event=success conversation_id=$effectiveConversationId message_id=${message.id} status=sent',
+      '[E2EE_TRACE] operation_id=$operationId stage=message_persist_success event=success conversationId=$effectiveConversationId message_id=${message.id} status=sent',
       module: 'ChatsRepository',
     );
     _incomingMessagesController.add(sentMessage);
@@ -1022,13 +1022,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
           if (decrypted != null) {
             await _persistPlaintextForMessage(dto.id, decrypted);
             _logger.i(
-              '[CHAT-FLOW-4.1] inbound delta message decrypted conversation_id=${dto.conversationId} message_id=${dto.id}',
+              '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
               module: 'ChatsRepository',
             );
           } else {
             _logger.w(
               'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
-              'conversation_id=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
+              'conversationId=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
               module: 'ChatsRepository',
             );
           }
@@ -1204,7 +1204,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     if (ciphertext.isEmpty) {
       _logger.w(
-        'Odrzucam wiadomość wejściową bez ciphertext: message_id=${dto.id} conversation_id=${dto.conversationId}',
+        'Odrzucam wiadomość wejściową bez ciphertext: message_id=${dto.id} conversationId=${dto.conversationId}',
         module: 'ChatsRepository',
       );
       return null;
@@ -1212,7 +1212,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     if (senderDeviceId == null || senderDeviceId.isEmpty) {
       _logger.w(
-        'Odrzucam wiadomość wejściową bez senderDeviceId: message_id=${dto.id} conversation_id=${dto.conversationId}',
+        'Odrzucam wiadomość wejściową bez senderDeviceId: message_id=${dto.id} conversationId=${dto.conversationId}',
         module: 'ChatsRepository',
       );
       return null;
