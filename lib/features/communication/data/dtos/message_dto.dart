@@ -5,14 +5,19 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'message_dto.freezed.dart';
 part 'message_dto.g.dart';
 
+String _stringFromJson(Object? value) => value?.toString() ?? '';
+String? _nullableStringFromJson(Object? value) => value?.toString();
+
 @freezed
 abstract class MessageDto with _$MessageDto {
   const factory MessageDto({
-    @JsonKey(name: 'id') required String id,
-    @JsonKey(name: 'conversationId') required String conversationId,
-    @JsonKey(name: 'senderId') required String senderId,
-    @JsonKey(name: 'senderDeviceId') String? senderDeviceId,
-    @JsonKey(name: 'type') required String type,
+    @JsonKey(name: 'id', fromJson: _stringFromJson) required String id,
+    @JsonKey(name: 'conversationId', fromJson: _stringFromJson)
+    required String conversationId,
+    @JsonKey(name: 'senderId', fromJson: _stringFromJson) required String senderId,
+    @JsonKey(name: 'senderDeviceId', fromJson: _nullableStringFromJson)
+    String? senderDeviceId,
+    @JsonKey(name: 'type', fromJson: _stringFromJson) required String type,
     @JsonKey(name: 'sequence') @Default(0) int sequence,
     @JsonKey(name: 'version') @Default(1) int version,
     @JsonKey(name: 'encryptedPayload') @Default('') String encryptedPayload,

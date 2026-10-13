@@ -6,17 +6,22 @@ part of 'message_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+String _safeStringFromJson(Object? value) => value?.toString() ?? '';
+String? _safeNullableStringFromJson(Object? value) => value?.toString();
+
 _MessageDto _$MessageDtoFromJson(Map<String, dynamic> json) => _MessageDto(
-  id: json['id'] as String,
-  conversationId: json['conversationId'] as String,
-  senderId: json['senderId'] as String,
-  senderDeviceId: json['senderDeviceId'] as String?,
-  type: json['type'] as String,
+  id: _safeStringFromJson(json['id']),
+  conversationId: _safeStringFromJson(json['conversationId']),
+  senderId: _safeStringFromJson(json['senderId']),
+  senderDeviceId: _safeNullableStringFromJson(json['senderDeviceId']),
+  type: _safeStringFromJson(json['type']),
   sequence: (json['sequence'] as num?)?.toInt() ?? 0,
   version: (json['version'] as num?)?.toInt() ?? 1,
-  encryptedPayload: json['encryptedPayload'] as String? ?? '',
-  nonce: json['nonce'] as String?,
-  createdAt: DateTime.parse(json['createdAt'] as String),
+  encryptedPayload: _safeNullableStringFromJson(json['encryptedPayload']) ?? '',
+  nonce: _safeNullableStringFromJson(json['nonce']),
+  createdAt: json['createdAt'] == null
+      ? DateTime.fromMillisecondsSinceEpoch(0)
+      : DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$MessageDtoToJson(_MessageDto instance) =>

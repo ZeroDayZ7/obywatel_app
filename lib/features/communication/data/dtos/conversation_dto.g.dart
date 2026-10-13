@@ -6,13 +6,16 @@ part of 'conversation_dto.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+String _safeStringFromJson(Object? value) => value?.toString() ?? '';
+String? _safeNullableStringFromJson(Object? value) => value?.toString();
+
 _ConversationMemberDto _$ConversationMemberDtoFromJson(
   Map<String, dynamic> json,
 ) => _ConversationMemberDto(
-  id: json['id'] as String,
-  conversationId: json['conversationId'] as String,
-  userId: json['userId'] as String,
-  role: json['role'] as String,
+  id: _safeStringFromJson(json['id']),
+  conversationId: _safeStringFromJson(json['conversationId']),
+  userId: _safeStringFromJson(json['userId']),
+  role: _safeStringFromJson(json['role']),
   lastReadSequence: (json['lastReadSequence'] as num?)?.toInt() ?? 0,
 );
 
@@ -28,9 +31,9 @@ Map<String, dynamic> _$ConversationMemberDtoToJson(
 
 _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
     _ConversationDto(
-      id: json['id'] as String,
-      type: json['type'] as String,
-      title: json['title'] as String?,
+      id: _safeStringFromJson(json['id']),
+      type: _safeStringFromJson(json['type']),
+      title: _safeNullableStringFromJson(json['title']),
       lastSequence: (json['lastSequence'] as num?)?.toInt() ?? 0,
       members:
           (json['members'] as List<dynamic>?)
