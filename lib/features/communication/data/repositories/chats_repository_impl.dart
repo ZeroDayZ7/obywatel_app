@@ -1025,8 +1025,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
 
       final updatedContacts =
-          payload['updated_contacts'] as List<dynamic>? ?? const [];
-      final newMessages = payload['new_messages'] as List<dynamic>? ?? const [];
+          payload['updatedContacts'] as List<dynamic>? ?? const [];
+      final newMessages = payload['newMessages'] as List<dynamic>? ?? const [];
       final remoteMessageDtos = _orderMessageDtos(
         parseRemoteMessageDtos(newMessages),
       );

@@ -103,13 +103,15 @@ class ChatSyncService {
       final hasValidServerConversationId = Uuid.isValidUUID(
         fromString: message.conversationId,
       );
+      final isReadyForServerDelivery =
+          hasConversationId &&
+          hasCiphertext &&
+          hasValidMessageUuid &&
+          hasValidServerConversationId;
 
-      if (!hasConversationId ||
-          !hasCiphertext ||
-          !hasValidMessageUuid ||
-          !hasValidServerConversationId) {
+      if (!hasValidMessageUuid || (!hasCiphertext && !hasConversationId)) {
         _logger.w(
-          '[OUTBOX-FLOW-3] invalid pending event detected and will be cleared: '
+          '[OUTBOX-FLOW-3] irrecoverably invalid pending event detected and will be dropped: '
           'message_id=${message.id} conversation_id=${message.conversationId} '
           'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
           'server_conversation_uuid=$hasValidServerConversationId',
@@ -119,20 +121,31 @@ class ChatSyncService {
         continue;
       }
 
+      if (!isReadyForServerDelivery) {
+        _logger.w(
+          '[OUTBOX-FLOW-3] unresolved pending message held for later retry: '
+          'message_id=${message.id} conversation_id=${message.conversationId} '
+          'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
+          'server_conversation_uuid=$hasValidServerConversationId',
+          module: 'ChatSync',
+        );
+        continue;
+      }
+
       validMessages.add(message);
     }
 
     if (invalidMessageIds.isNotEmpty) {
       await _repository.db.outboxDao.deleteEvents(invalidMessageIds);
       _logger.i(
-        '[OUTBOX-FLOW-3.1] cleared ${invalidMessageIds.length} invalid pending entries from outbox',
+        '[OUTBOX-FLOW-3.1] dropped ${invalidMessageIds.length} irrecoverably invalid pending entries from outbox',
         module: 'ChatSync',
       );
     }
 
     if (validMessages.isEmpty) {
       _logger.w(
-        '[OUTBOX-FLOW-3.2] no valid pending outbox entries to flush after cleanup',
+        '[OUTBOX-FLOW-3.2] no valid pending outbox entries ready to flush; unresolved local entries remain queued for retry',
         module: 'ChatSync',
       );
       return;
