@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/communication/application/contact_invite_error_mapper.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
 import 'package:obywatel_plus/features/communication/domain/models/contact_identifier.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
@@ -21,7 +22,9 @@ enum _AddContactTab { sendRequest, myQr }
 class _AddContactModalState extends ConsumerState<AddContactModal> {
   _AddContactTab _selectedTab = _AddContactTab.sendRequest;
   // final _controller = TextEditingController();
-  final _controller = TextEditingController(text: 'a2f6b8c9-1122-4a55-8822-b98765432101');
+  final _controller = TextEditingController(
+    text: 'a2f6b8c9-1122-4a55-8822-b98765432101',
+  );
   bool _isLoading = false;
   String _myUserId = '';
 
@@ -52,6 +55,18 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
     super.dispose();
   }
 
+  void _showFormError(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Theme.of(context).colorScheme.error,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   Future<void> _submitRequest(String userId) async {
     final trimmed = userId.trim();
     if (trimmed.isEmpty) return;
@@ -59,24 +74,21 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
     late final ContactIdentifier identifier;
     try {
       identifier = ContactIdentifier.parse(trimmed);
-    } on FormatException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    } on FormatException {
+      _showFormError('Sprawdź identyfikator użytkownika.');
       return;
     }
 
     setState(() => _isLoading = true);
-    debugPrint('[ContactsModal] submitRequest click: target=$trimmed normalized=${identifier.normalized}');
+    debugPrint(
+      '[ContactsModal] submitRequest click: target=$trimmed normalized=${identifier.normalized}',
+    );
 
     try {
       await ref.read(contactsServiceProvider).addContact(identifier.normalized);
-      debugPrint('[ContactsModal] submitRequest: backend request completed for ${identifier.normalized}');
+      debugPrint(
+        '[ContactsModal] submitRequest: backend request completed for ${identifier.normalized}',
+      );
       if (mounted) {
         final statusColors = context.statusColors;
         Navigator.of(context).pop();
@@ -88,16 +100,8 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
           ),
         );
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Błąd dodawania kontaktów: $e'),
-            backgroundColor: Theme.of(context).colorScheme.error,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+    } catch (error) {
+      _showFormError(mapContactInviteError(error));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -134,7 +138,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxHeight),
               child: SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(20.0),
                   child: Column(
@@ -187,7 +193,8 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                           enabled: !_isLoading,
                           decoration: InputDecoration(
                             labelText: 'ID / tag / QR',
-                            hintText: 'Wpisz identyfikator UUID, tag lub kod QR...',
+                            hintText:
+                                'Wpisz identyfikator UUID, tag lub kod QR...',
                             prefixIcon: const Icon(Icons.person_search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -203,7 +210,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.send),
                           label: const Text('Wyślij zaproszenie'),
@@ -255,7 +264,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: colorScheme.shadow.withValues(alpha: 0.05),
+                                    color: colorScheme.shadow.withValues(
+                                      alpha: 0.05,
+                                    ),
                                     blurRadius: 10,
                                     spreadRadius: 2,
                                   ),
@@ -274,7 +285,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                               Clipboard.setData(ClipboardData(text: _myUserId));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Skopiowano Twoje ID do schowka!'),
+                                  content: Text(
+                                    'Skopiowano Twoje ID do schowka!',
+                                  ),
                                   duration: Duration(seconds: 2),
                                 ),
                               );

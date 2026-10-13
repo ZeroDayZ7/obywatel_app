@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
@@ -13,20 +14,30 @@ class ContactsService {
   ContactsService(this._repository);
 
   Future<void> addContact(String userId) async {
-    _logger.i('[CONTACTS-INVITE-01] UI: wysyłanie zaproszenia do userId=$userId');
+    _logger.i(
+      '[CONTACTS-INVITE-01] UI: wysyłanie zaproszenia do userId=$userId',
+    );
     try {
       await _repository.sendRequest(userId);
       _logger.i('[CONTACTS-INVITE-06] UI: zaproszenie wysłane userId=$userId');
     } catch (error, stackTrace) {
-      _logger.e('[CONTACTS-INVITE-99] UI: błąd wysyłki zaproszenia userId=$userId', error: error, stackTrace: stackTrace);
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'contacts_service',
-          context: ErrorDescription('Contact request failed'),
-        ),
+      _logger.e(
+        '[CONTACTS-INVITE-99] UI: błąd wysyłki zaproszenia userId=$userId',
+        error: error,
+        stackTrace: stackTrace,
       );
+
+      final isExpectedAppError = error is AppException;
+      if (!isExpectedAppError) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'contacts_service',
+            context: ErrorDescription('Contact request failed'),
+          ),
+        );
+      }
       rethrow;
     }
   }
