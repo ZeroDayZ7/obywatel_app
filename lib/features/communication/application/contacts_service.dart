@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
@@ -27,7 +28,9 @@ class ContactsService {
         stackTrace: stackTrace,
       );
 
-      final isExpectedAppError = error is AppException;
+      final isExpectedAppError =
+          error is AppException ||
+          (error is DioException && error.error is AppException);
       if (!isExpectedAppError) {
         FlutterError.reportError(
           FlutterErrorDetails(
