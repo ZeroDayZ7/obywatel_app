@@ -24,8 +24,12 @@ class ContactsSyncNotifier extends _$ContactsSyncNotifier {
 
   Future<void> sync() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(
+
+    final value = await AsyncValue.guard(
       () => ref.read(contactsRepositoryProvider).fetchAndSyncContacts(),
     );
+
+    if (!ref.mounted) return;
+    state = value;
   }
 }
