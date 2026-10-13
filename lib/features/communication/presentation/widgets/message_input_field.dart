@@ -58,38 +58,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.only(bottom: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(2),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.sync_rounded,
-                    size: 12,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      'OUTBOX: queue stable • sending batch • delivered',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        letterSpacing: 0.2,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
             Row(
               children: [
                 IconButton(

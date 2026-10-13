@@ -1,13 +1,65 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
 import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
 
-class ContactDetailsSheet extends StatelessWidget {
+class ContactDetailsSheet extends ConsumerWidget {
   final Contact contact;
 
   const ContactDetailsSheet({super.key, required this.contact});
 
+  Future<void> _updateAlias(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    final controller = TextEditingController(text: contact.localAlias ?? '');
+    final newAlias = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Zmień lokalny alias'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(
+              hintText: 'Wpisz alias kontaktu',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newAlias == null || !context.mounted) {
+      return;
+    }
+
+    final alias = newAlias.trim();
+    if (alias.isEmpty) {
+      return;
+    }
+
+    await ref.read(contactsServiceProvider).updateLocalAlias(
+      contact.contactUserId,
+      alias,
+    );
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final fingerprint = contact.contactUserId
@@ -151,6 +203,15 @@ class ContactDetailsSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _updateAlias(context, ref),
+                icon: const Icon(Icons.edit_rounded),
+                label: const Text('Zmień lokalny alias'),
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(

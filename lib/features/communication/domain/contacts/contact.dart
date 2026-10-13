@@ -18,16 +18,29 @@ abstract class Contact with _$Contact {
     DateTime? createdAt,
   }) = _Contact;
 
-  factory Contact.fromEntity(ContactEntity entity) {
+  factory Contact.fromEntity(
+    ContactEntity entity, {
+    String? currentUserId,
+  }) {
+    final currentUser = (currentUserId ?? '').trim();
+    final peerUserId = switch (currentUser.isEmpty) {
+      true => entity.contactId,
+      false => () {
+        if (entity.ownerId == currentUser) return entity.contactId;
+        if (entity.contactId == currentUser) return entity.ownerId;
+        return entity.contactId;
+      }(),
+    };
+
     final normalizedAlias = (entity.localAlias ?? '').trim();
     final resolvedDisplayName = normalizedAlias.isNotEmpty
         ? normalizedAlias
-        : 'Użytkownik ${entity.contactId.length >= 4 ? entity.contactId.substring(0, 4) : entity.contactId}';
+        : 'Użytkownik ${peerUserId.length >= 4 ? peerUserId.substring(0, 4) : peerUserId}';
 
     return Contact(
       id: entity.id,
       ownerId: entity.ownerId,
-      contactUserId: entity.contactId,
+      contactUserId: peerUserId,
       status: entity.status,
       direction: entity.direction,
       localAlias: normalizedAlias.isNotEmpty ? normalizedAlias : null,

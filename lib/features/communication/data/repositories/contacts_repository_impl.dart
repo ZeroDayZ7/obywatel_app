@@ -70,7 +70,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
     return _dao.watchAcceptedContacts().map((entities) {
-      final contacts = entities.map(Contact.fromEntity).toList();
+      final contacts = entities
+          .map(
+            (entity) => Contact.fromEntity(
+              entity,
+              currentUserId: _currentUserId,
+            ),
+          )
+          .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
           ? contacts
           : _dedupeContactsByPeer(contacts);
@@ -80,7 +87,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Stream<List<Contact>> watchPendingContacts() {
     return _dao.watchPendingContacts().map((entities) {
-      final contacts = entities.map(Contact.fromEntity).toList();
+      final contacts = entities
+          .map(
+            (entity) => Contact.fromEntity(
+              entity,
+              currentUserId: _currentUserId,
+            ),
+          )
+          .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
           ? contacts
           : _dedupeContactsByPeer(contacts);
