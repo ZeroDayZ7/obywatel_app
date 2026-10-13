@@ -52,16 +52,17 @@ abstract class Contact with _$Contact {
 
 extension ContactPeerUserIdX on Contact {
   String peerUserIdForCurrentUser(String currentUserId) {
-    if (ownerId == currentUserId) {
+    final trimmedCurrent = currentUserId.trim();
+    if (trimmedCurrent.isEmpty) {
       return contactUserId;
     }
-    if (contactUserId == currentUserId) {
+    if (ownerId == trimmedCurrent) {
+      return contactUserId;
+    }
+    if (contactUserId == trimmedCurrent) {
       return ownerId;
     }
-    throw ArgumentError.value(
-      currentUserId,
-      'currentUserId',
-      'The provided user is not a participant in this contact relation',
-    );
+    // Bezpieczny fallback zamiast rzucania wyjątku zrywającego strumień Riverpod
+    return contactUserId;
   }
 }

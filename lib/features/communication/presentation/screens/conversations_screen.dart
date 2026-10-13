@@ -2,8 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
-import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/conversations_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/screens/chat_room_screen.dart';
 
@@ -15,59 +13,11 @@ Widget build(BuildContext context, WidgetRef ref) {
   final theme = Theme.of(context);
   final colorScheme = theme.colorScheme;
   final conversationsState = ref.watch(conversationsProvider);
-  final syncStatus = ref.watch(chatSyncStatusControllerProvider);
-
-  final syncColor = switch (syncStatus) {
-    SyncStatus.idle => colorScheme.primary,
-    SyncStatus.syncing => colorScheme.tertiary,
-    SyncStatus.offline => colorScheme.error,
-    SyncStatus.error => colorScheme.error,
-  };
-
-  final syncLabel = switch (syncStatus) {
-    SyncStatus.idle => 'CONNECTED',
-    SyncStatus.syncing => 'SYNCING',
-    SyncStatus.offline => 'OFFLINE',
-    SyncStatus.error => 'ERROR',
-  };
 
   // Zwracamy bezpośrednio Column zamiast Scaffold, 
   // ponieważ rodzic (CommunicationScreen) dostarcza już Scaffold i AppBar.
   return Column(
     children: [
-      Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          border: Border(
-            bottom: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: syncColor,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'SYNC STATUS: $syncLabel',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-                letterSpacing: 0.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
       Expanded(
         child: conversationsState.when(
           data: (conversations) {
