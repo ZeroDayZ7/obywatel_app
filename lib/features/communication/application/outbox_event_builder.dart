@@ -61,20 +61,6 @@ Map<String, dynamic> buildOutboxEventPayload(
     );
   }
 
-  final nestedPayload = {
-    'event_id': safeOutboxEventId,
-    'idempotency_key': safeOutboxEventId,
-    'message_id': safeMessageId,
-    'event_type': 'SEND_MESSAGE',
-    'conversation_id': normalizedConversationId,
-    'sender_device_id': sanitizedAppDeviceId,
-    'device_id': sanitizedAppDeviceId,
-    'ciphertext': ciphertext,
-    'type': signalType,
-    'created_at': createdAt,
-    'outbox_event_id': safeOutboxEventId,
-  };
-
   return {
     'event_id': safeOutboxEventId,
     'idempotency_key': safeOutboxEventId,
@@ -82,10 +68,8 @@ Map<String, dynamic> buildOutboxEventPayload(
     'event_type': 'SEND_MESSAGE',
     'conversation_id': normalizedConversationId,
     'sender_device_id': sanitizedAppDeviceId,
-    'device_id': sanitizedAppDeviceId,
-    'payload': nestedPayload,
+    'ciphertext': ciphertext,
     'type': signalType,
     'created_at': createdAt,
-    'outbox_event_id': safeOutboxEventId,
   };
 }

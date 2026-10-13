@@ -49,9 +49,9 @@ class SignalCiphertextEnvelope {
   Map<String, dynamic> toJson() => {
     'type': type,
     'ciphertext': ciphertext,
-    'senderDeviceId': senderDeviceId,
-    'recipientUserId': recipientUserId,
-    'recipientDeviceId': recipientDeviceId,
+    'sender_device_id': senderDeviceId,
+    'recipient_user_id': recipientUserId,
+    'recipient_device_id': recipientDeviceId,
   };
 
   factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
@@ -61,14 +61,9 @@ class SignalCiphertextEnvelope {
           ? typeValue
           : int.tryParse(typeValue.toString()) ?? 1,
       ciphertext: (json['ciphertext'] ?? '').toString(),
-      senderDeviceId: (json['senderDeviceId'] ?? json['sender_device_id'] ?? '')
-          .toString(),
-      recipientUserId:
-          (json['recipientUserId'] ?? json['recipient_user_id'] ?? '')
-              .toString(),
-      recipientDeviceId:
-          (json['recipientDeviceId'] ?? json['recipient_device_id'] ?? '1')
-              .toString(),
+      senderDeviceId: (json['sender_device_id'] ?? '').toString(),
+      recipientUserId: (json['recipient_user_id'] ?? '').toString(),
+      recipientDeviceId: (json['recipient_device_id'] ?? '1').toString(),
     );
   }
 }

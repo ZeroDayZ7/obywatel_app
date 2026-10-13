@@ -6,37 +6,6 @@ import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart'
 part 'conversation_dto.freezed.dart';
 part 'conversation_dto.g.dart';
 
-Map<String, dynamic> _normalizeConversationJson(Map<String, dynamic> json) {
-  final normalized = <String, dynamic>{};
-
-  for (final entry in json.entries) {
-    final rawKey = entry.key.trim();
-    final key = switch (rawKey) {
-      'ID' || 'id' => 'id',
-      'ConversationID' ||
-      'conversation_id' ||
-      'conversationId' => 'conversation_id',
-      'UserID' || 'user_id' || 'userId' => 'user_id',
-      'Role' || 'role' => 'role',
-      'LastReadSequence' ||
-      'last_read_sequence' ||
-      'lastReadSequence' => 'last_read_sequence',
-      'Type' || 'type' => 'type',
-      'Title' || 'title' => 'title',
-      'LastSequence' || 'last_sequence' || 'lastSequence' => 'last_sequence',
-      'Members' || 'members' => 'members',
-      'Messages' || 'messages' => 'messages',
-      'created_at' || 'createdAt' => 'created_at',
-      'updated_at' || 'updatedAt' => 'updated_at',
-      _ => rawKey,
-    };
-
-    normalized[key] = entry.value;
-  }
-
-  return normalized;
-}
-
 @freezed
 abstract class ConversationMemberDto with _$ConversationMemberDto {
   const factory ConversationMemberDto({
@@ -48,7 +17,7 @@ abstract class ConversationMemberDto with _$ConversationMemberDto {
   }) = _ConversationMemberDto;
 
   factory ConversationMemberDto.fromJson(Map<String, dynamic> json) =>
-      _$ConversationMemberDtoFromJson(_normalizeConversationJson(json));
+      _$ConversationMemberDtoFromJson(json);
 }
 
 @freezed
@@ -65,5 +34,5 @@ abstract class ConversationDto with _$ConversationDto {
   }) = _ConversationDto;
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) =>
-      _$ConversationDtoFromJson(_normalizeConversationJson(json));
+      _$ConversationDtoFromJson(json);
 }

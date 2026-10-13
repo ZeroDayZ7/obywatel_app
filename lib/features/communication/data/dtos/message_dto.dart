@@ -5,38 +5,6 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 part 'message_dto.freezed.dart';
 part 'message_dto.g.dart';
 
-Map<String, dynamic> _normalizeMessageJson(Map<String, dynamic> json) {
-  final normalized = <String, dynamic>{};
-
-  for (final entry in json.entries) {
-    final rawKey = entry.key.trim();
-    final key = switch (rawKey) {
-      'ID' || 'id' => 'id',
-      'ConversationID' ||
-      'conversation_id' ||
-      'conversationId' => 'conversation_id',
-      'SenderID' || 'sender_id' || 'senderId' => 'sender_id',
-      'SenderDeviceID' ||
-      'sender_device_id' ||
-      'senderDeviceId' => 'sender_device_id',
-      'Type' || 'type' => 'type',
-      'Sequence' || 'sequence' => 'sequence',
-      'Version' || 'version' => 'version',
-      'EncryptedPayload' ||
-      'encrypted_payload' ||
-      'encryptedPayload' ||
-      'ciphertext' => 'encrypted_payload',
-      'Nonce' || 'nonce' => 'nonce',
-      'created_at' || 'createdAt' => 'created_at',
-      _ => rawKey,
-    };
-
-    normalized[key] = entry.value;
-  }
-
-  return normalized;
-}
-
 @freezed
 abstract class MessageDto with _$MessageDto {
   const factory MessageDto({
@@ -53,5 +21,5 @@ abstract class MessageDto with _$MessageDto {
   }) = _MessageDto;
 
   factory MessageDto.fromJson(Map<String, dynamic> json) =>
-      _$MessageDtoFromJson(_normalizeMessageJson(json));
+      _$MessageDtoFromJson(json);
 }
