@@ -77,10 +77,7 @@ class OneTimePreKeyRegistration {
     required this.publicKey,
   });
 
-  Map<String, dynamic> toJson() => {
-    'keyId': keyId,
-    'publicKey': publicKey,
-  };
+  Map<String, dynamic> toJson() => {'keyId': keyId, 'publicKey': publicKey};
 }
 
 class DeviceKeyBundle {
@@ -142,7 +139,9 @@ class E2eeCryptoService {
   }) {
     final normalized = (rawAppDeviceId ?? '').trim();
     if (normalized.isEmpty) {
-      throw FormatException('Missing $context; raw app device UUID is required');
+      throw FormatException(
+        'Missing $context; raw app device UUID is required',
+      );
     }
     return normalized;
   }
@@ -203,88 +202,53 @@ class E2eeCryptoService {
     return digest.toString();
   }
 
-  static int _readIntValue(
-    Map<String, dynamic> json,
-    List<String> keys, {
-    int fallback = 0,
-  }) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value == null) continue;
-      if (value is int) return value;
-      if (value is String) {
-        final parsed = int.tryParse(value);
-        if (parsed != null) return parsed;
-        return resolveSignalDeviceId(value, fallback: fallback);
-      }
-    }
-    return fallback;
-  }
-
-  static Uint8List? _readBytesValue(
-    Map<String, dynamic> json,
-    List<String> keys,
-  ) {
-    for (final key in keys) {
-      final value = json[key];
-      if (value == null) continue;
-      if (value is String && value.isNotEmpty) {
-        return base64Decode(value);
-      }
-      if (value is List) {
-        return Uint8List.fromList(
-          value.map((item) {
-            if (item is int) return item;
-            return int.tryParse(item.toString()) ?? 0;
-          }).toList(),
-        );
-      }
-    }
-    return null;
-  }
-
   static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) {
-    final registrationId = _readIntValue(json, [
-      'registrationId',
-      'registration_id',
-    ], fallback: 0);
-    final rawDeviceId = json['deviceId'] ?? json['device_id'];
-    final deviceId = rawDeviceId is String || rawDeviceId is int
-        ? resolveSignalDeviceId(rawDeviceId?.toString())
-        : throw const FormatException('Missing deviceId in Signal bundle');
-    final preKeyId = _readIntValue(json, [
-      'preKeyId',
-      'pre_key_id',
-      'oneTimePreKeyId',
-      'one_time_pre_key_id',
-    ], fallback: 0);
-    final signedPreKeyId = _readIntValue(json, [
-      'signedPreKeyId',
-      'signed_pre_key_id',
-    ], fallback: 1);
+    final registrationIdValue = json['registrationId'];
+    final registrationId = registrationIdValue is int
+        ? registrationIdValue
+        : int.tryParse(registrationIdValue?.toString() ?? '') ?? 0;
 
-    final identityKeyBytes = _readBytesValue(json, [
-      'identityKey',
-      'identity_key',
-    ]);
-    final signedPreKeyPublicBytes = _readBytesValue(json, [
-      'signedPreKeyPublic',
-      'signed_pre_key_public',
-      'signedPreKey',
-      'signed_pre_key',
-    ]);
-    final signedPreKeySignatureBytes = _readBytesValue(json, [
-      'signedPreKeySignature',
-      'signed_pre_key_signature',
-      'signedPreKeySig',
-      'signed_pre_key_sig',
-    ]);
-    final preKeyPublicBytes = _readBytesValue(json, [
-      'preKeyPublic',
-      'pre_key_public',
-      'oneTimePreKey',
-      'one_time_pre_key',
-    ]);
+    final rawDeviceId = json['deviceId'];
+    final deviceId = rawDeviceId is int
+        ? resolveSignalDeviceId(rawDeviceId.toString())
+        : rawDeviceId is String
+        ? resolveSignalDeviceId(rawDeviceId)
+        : throw const FormatException('Missing deviceId in Signal bundle');
+
+    final preKeyIdValue = json['preKeyId'];
+    final preKeyId = preKeyIdValue is int
+        ? preKeyIdValue
+        : int.tryParse(preKeyIdValue?.toString() ?? '') ?? 0;
+
+    final signedPreKeyIdValue = json['signedPreKeyId'];
+    final signedPreKeyId = signedPreKeyIdValue is int
+        ? signedPreKeyIdValue
+        : int.tryParse(signedPreKeyIdValue?.toString() ?? '') ?? 1;
+
+    final identityKeyRaw = json['identityKey'];
+    final identityKeyBytes =
+        identityKeyRaw is String && identityKeyRaw.isNotEmpty
+        ? base64Decode(identityKeyRaw)
+        : null;
+
+    final signedPreKeyPublicRaw = json['signedPreKeyPublic'];
+    final signedPreKeyPublicBytes =
+        signedPreKeyPublicRaw is String && signedPreKeyPublicRaw.isNotEmpty
+        ? base64Decode(signedPreKeyPublicRaw)
+        : null;
+
+    final signedPreKeySignatureRaw = json['signedPreKeySignature'];
+    final signedPreKeySignatureBytes =
+        signedPreKeySignatureRaw is String &&
+            signedPreKeySignatureRaw.isNotEmpty
+        ? base64Decode(signedPreKeySignatureRaw)
+        : null;
+
+    final preKeyPublicRaw = json['preKeyPublic'];
+    final preKeyPublicBytes =
+        preKeyPublicRaw is String && preKeyPublicRaw.isNotEmpty
+        ? base64Decode(preKeyPublicRaw)
+        : null;
 
     if (identityKeyBytes == null ||
         signedPreKeyPublicBytes == null ||
@@ -438,12 +402,17 @@ class E2eeCryptoService {
         operationId: effectiveOperationId,
       );
       final bundleSignalDeviceId = remoteBundle.getDeviceId();
-      final bundleAddress = SignalProtocolAddress(remoteUserId, bundleSignalDeviceId);
+      final bundleAddress = SignalProtocolAddress(
+        remoteUserId,
+        bundleSignalDeviceId,
+      );
       _logger.i(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_decision event=success remote_user_id=$remoteUserId bundle_device_id=$bundleSignalDeviceId bundle_identity_fingerprint=${fingerprintIdentityKey(remoteBundle.getIdentityKey())}',
         module: 'E2eeCrypto',
       );
-      final hasSessionForBundle = await _signalStore.containsSession(bundleAddress);
+      final hasSessionForBundle = await _signalStore.containsSession(
+        bundleAddress,
+      );
       if (hasSessionForBundle) {
         _logger.i(
           '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse_bundle event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(bundleAddress)}',
@@ -463,7 +432,8 @@ class E2eeCryptoService {
         module: 'E2eeCrypto',
       );
     } catch (error, stackTrace) {
-      final fallbackAddress = explicitAddress ?? const SignalProtocolAddress('', 0);
+      final fallbackAddress =
+          explicitAddress ?? const SignalProtocolAddress('', 0);
       _logger.e(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(fallbackAddress)} error_type=${error.runtimeType} error_message=${error.toString()}',
         error: error,
@@ -485,8 +455,10 @@ class E2eeCryptoService {
   Future<bool> _hasPersistedDeviceIdentityMaterial() async {
     final hasSignedPreKey = await _signalStore.containsSignedPreKey(1);
     final preKeyChecks = await Future.wait(
-      List<int>.generate(10, (index) => index + 1)
-          .map((preKeyId) => _signalStore.containsPreKey(preKeyId)),
+      List<int>.generate(
+        10,
+        (index) => index + 1,
+      ).map((preKeyId) => _signalStore.containsPreKey(preKeyId)),
     );
     final hasOneTimePreKeys = preKeyChecks.every((exists) => exists);
     return hasSignedPreKey && hasOneTimePreKeys;
@@ -505,9 +477,7 @@ class E2eeCryptoService {
           final record = await _signalStore.loadPreKey(preKeyId);
           return OneTimePreKeyRegistration(
             keyId: preKeyId,
-            publicKey: base64Encode(
-              record.getKeyPair().publicKey.serialize(),
-            ),
+            publicKey: base64Encode(record.getKeyPair().publicKey.serialize()),
           );
         }),
       );
@@ -537,9 +507,7 @@ class E2eeCryptoService {
         .map(
           (record) => OneTimePreKeyRegistration(
             keyId: record.id,
-            publicKey: base64Encode(
-              record.getKeyPair().publicKey.serialize(),
-            ),
+            publicKey: base64Encode(record.getKeyPair().publicKey.serialize()),
           ),
         )
         .toList();
@@ -591,12 +559,12 @@ class E2eeCryptoService {
         );
         final bundle = await ensureDeviceIdentityBundle();
         final marker = {
-          'device_id': bundle.deviceId,
-          'registration_id': bundle.registrationId,
-          'public_key_fingerprint': sha256
+          'deviceId': bundle.deviceId,
+          'registrationId': bundle.registrationId,
+          'publicKeyFingerprint': sha256
               .convert(base64Decode(bundle.publicKey))
               .toString(),
-          'signed_pre_key_id': bundle.signedPreKeyId,
+          'signedPreKeyId': bundle.signedPreKeyId,
         }.toString();
 
         if (persistedMarker != null) {
@@ -787,7 +755,9 @@ class E2eeCryptoService {
       candidateDeviceIds.add(resolveSignalDeviceId(trimmedSenderDeviceId));
     }
 
-    final knownDeviceIds = await _signalStore.getSubDeviceSessions(senderUserId);
+    final knownDeviceIds = await _signalStore.getSubDeviceSessions(
+      senderUserId,
+    );
     for (final knownDeviceId in knownDeviceIds) {
       if (knownDeviceId > 0) {
         candidateDeviceIds.add(knownDeviceId);

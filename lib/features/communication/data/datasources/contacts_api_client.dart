@@ -33,16 +33,27 @@ class ContactsApiClient {
   }
 
   Future<void> sendContactRequest(String targetUserId) async {
-    _logger.i('[CONTACTS-INVITE-01] HTTP: POST /contacts/request start targetUserId=$targetUserId');
-    final payload = {'target_user_id': targetUserId};
+    _logger.i(
+      '[CONTACTS-INVITE-01] HTTP: POST /contacts/request start targetUserId=$targetUserId',
+    );
+    final payload = {'targetUserId': targetUserId};
     await _apiClient.post('/contacts/request', data: payload);
-    _logger.i('[CONTACTS-INVITE-02] HTTP: POST /contacts/request success targetUserId=$targetUserId');
+    _logger.i(
+      '[CONTACTS-INVITE-02] HTTP: POST /contacts/request success targetUserId=$targetUserId',
+    );
   }
 
   Future<void> respondToRequest(String requestId, bool accept) async {
-    _logger.i('[CONTACTS-RESPOND-01] HTTP: PUT /contacts/request/$requestId/respond start accept=$accept');
-    await _apiClient.put('/contacts/request/$requestId/respond', data: {'accept': accept});
-    _logger.i('[CONTACTS-RESPOND-02] HTTP: PUT /contacts/request/$requestId/respond success accept=$accept');
+    _logger.i(
+      '[CONTACTS-RESPOND-01] HTTP: PUT /contacts/request/$requestId/respond start accept=$accept',
+    );
+    await _apiClient.put(
+      '/contacts/request/$requestId/respond',
+      data: {'accept': accept},
+    );
+    _logger.i(
+      '[CONTACTS-RESPOND-02] HTTP: PUT /contacts/request/$requestId/respond success accept=$accept',
+    );
   }
 }
 

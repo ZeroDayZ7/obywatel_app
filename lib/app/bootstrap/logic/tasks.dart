@@ -30,17 +30,17 @@ class StorageInitTask implements StartupTask {
       // Manual debug-only reset helper for intentional first-run / clean-install simulation.
       // This block is intentionally commented and MUST NOT run during normal startup.
 
-      // await Future.wait([
-      //   storage.clearAll(),
-      //   prefs.clearAll(),
-      // ]);
-      // storage.clearAll();
-      // prefs.clearAll();
-      // database.clearSignalStore();
-      // database.clearDatabase();
+      await Future.wait([
+        storage.clearAll(),
+        prefs.clearAll(),
+      ]);
+      storage.clearAll();
+      prefs.clearAll();
+      database.clearSignalStore();
+      database.clearDatabase();
 
-      // await database.clearSignalStore();
-      // await database.clearDatabase();
+      await database.clearSignalStore();
+      await database.clearDatabase();
       
       await storage.debugPrintAll();
       await prefs.debugPrintAll();

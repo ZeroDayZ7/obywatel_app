@@ -72,10 +72,8 @@ class ContactsRepositoryImpl implements ContactsRepository {
     return _dao.watchAcceptedContacts().map((entities) {
       final contacts = entities
           .map(
-            (entity) => Contact.fromEntity(
-              entity,
-              currentUserId: _currentUserId,
-            ),
+            (entity) =>
+                Contact.fromEntity(entity, currentUserId: _currentUserId),
           )
           .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
@@ -89,10 +87,8 @@ class ContactsRepositoryImpl implements ContactsRepository {
     return _dao.watchPendingContacts().map((entities) {
       final contacts = entities
           .map(
-            (entity) => Contact.fromEntity(
-              entity,
-              currentUserId: _currentUserId,
-            ),
+            (entity) =>
+                Contact.fromEntity(entity, currentUserId: _currentUserId),
           )
           .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
@@ -210,12 +206,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
           conversationId: const Value.absent(),
           payload: Value(
             jsonEncode({
-              'entity_type': 'CONTACT',
-              'entity_id': normalized,
-              'event_type': 'ADD_CONTACT',
+              'entityType': 'CONTACT',
+              'entityId': normalized,
+              'eventType': 'ADD_CONTACT',
               'action': 'request',
-              'target_user_id': normalized,
-              'created_at': now.toUtc().toIso8601String(),
+              'targetUserId': normalized,
+              'createdAt': now.toUtc().toIso8601String(),
             }),
           ),
           status: const Value('pending'),
@@ -307,12 +303,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
           conversationId: const Value.absent(),
           payload: Value(
             jsonEncode({
-              'entity_type': 'CONTACT',
-              'entity_id': requestId,
-              'event_type': accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT',
+              'entityType': 'CONTACT',
+              'entityId': requestId,
+              'eventType': accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT',
               'action': accept ? 'ACCEPT' : 'REJECT',
               'accepted': accept,
-              'created_at': now.toUtc().toIso8601String(),
+              'createdAt': now.toUtc().toIso8601String(),
             }),
           ),
           status: const Value('pending'),

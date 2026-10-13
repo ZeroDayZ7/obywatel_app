@@ -175,11 +175,7 @@ int resolveLastKnownContactVersion(
 
   for (final item in contactList) {
     final contactMap = item as Map<String, dynamic>?;
-    final version =
-        int.tryParse(
-          (contactMap?['version'] ?? contactMap?['Version'] ?? 0).toString(),
-        ) ??
-        0;
+    final version = int.tryParse((contactMap?['version'] ?? 0).toString()) ?? 0;
     if (version > maxVersion) {
       maxVersion = version;
     }
@@ -268,8 +264,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
   String? _extractServerMessageIdFromResponse(dynamic responseData) {
     dynamic value = responseData;
     if (value is Map<String, dynamic>) {
-      final direct = _readMessageIdField(value);
-      if (direct != null) return direct;
+      final direct = value['messageId'];
+      if (direct is String) {
+        final trimmed = direct.trim();
+        if (trimmed.isNotEmpty) return trimmed;
+      }
       if (value.containsKey('data')) {
         return _extractServerMessageIdFromResponse(value['data']);
       }
@@ -280,35 +279,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
       final converted = value.map(
         (key, nestedValue) => MapEntry(key.toString(), nestedValue),
       );
-      final direct = _readMessageIdField(converted);
-      if (direct != null) return direct;
+      final direct = converted['messageId'];
+      if (direct is String) {
+        final trimmed = direct.trim();
+        if (trimmed.isNotEmpty) return trimmed;
+      }
       if (converted.containsKey('data')) {
         return _extractServerMessageIdFromResponse(converted['data']);
       }
       return null;
-    }
-
-    return null;
-  }
-
-  String? _readMessageIdField(Map<String, dynamic> data) {
-    final candidates = [
-      'id',
-      'message_id',
-      'messageId',
-      'MessageID',
-      'server_message_id',
-      'serverMessageId',
-    ];
-
-    for (final key in candidates) {
-      final candidate = data[key];
-      if (candidate is String) {
-        final trimmed = candidate.trim();
-        if (trimmed.isNotEmpty) {
-          return trimmed;
-        }
-      }
     }
 
     return null;
@@ -343,7 +322,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     for (final relatedId in relatedIds) {
-      for (final aliasId in relatedIds.where((candidate) => candidate != relatedId)) {
+      for (final aliasId in relatedIds.where(
+        (candidate) => candidate != relatedId,
+      )) {
         _registerPlaintextAlias(relatedId, aliasId);
       }
     }
@@ -693,9 +674,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         ),
       );
       if (local.isNotEmpty) {
-        await _hydratePlaintextCacheForIds(
-          local.map((message) => message.id),
-        );
+        await _hydratePlaintextCacheForIds(local.map((message) => message.id));
         _logger.i(
           '[CHAT-FLOW-2.1] local history returned for conversationId=$conversationId count=${local.length}',
           module: 'ChatsRepository',
@@ -825,7 +804,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final isServerBackedConversation = Uuid.isValidUUID(
       fromString: effectiveConversationId,
     );
-    final hasValidServerConversation = effectiveConversationId.trim().isNotEmpty;
+    final hasValidServerConversation = effectiveConversationId
+        .trim()
+        .isNotEmpty;
     final hasCiphertextPayload = encrypted.ciphertextBase64.trim().isNotEmpty;
     if (!hasValidServerConversation || !hasCiphertextPayload) {
       _logger.w(
@@ -1074,14 +1055,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
 
       _logger.i(
-        '[CHAT-FLOW-4] syncDeltaFromRemote complete remote_messages=${remoteMessageDtos.length} updated_contacts=${updatedContacts.length}',
+        '[CHAT-FLOW-4] syncDeltaFromRemote complete remoteMessages=${remoteMessageDtos.length} updatedContacts=${updatedContacts.length}',
         module: 'ChatsRepository',
       );
 
       return [
         {
-          'updated_contacts': updatedContacts.length,
-          'new_messages': remoteMessageDtos.length,
+          'updatedContacts': updatedContacts.length,
+          'newMessages': remoteMessageDtos.length,
         },
       ];
     } catch (e, st) {
@@ -1156,9 +1137,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
       final remoteMessages = _orderMessageDtos(
         dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
-      )
-          .map(_messageDtoToCompanion)
-          .toList();
+      ).map(_messageDtoToCompanion).toList();
       if (remoteMessages.isNotEmpty) {
         await _db.chatsDao.upsertMessages(remoteMessages);
       }
@@ -1346,8 +1325,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    final fallbackContent =
-        status == 'failed' ? 'Nie można odszyfrować wiadomości' : 'Nie można odszyfrować wiadomości';
+    final fallbackContent = status == 'failed'
+        ? 'Nie można odszyfrować wiadomości'
+        : 'Nie można odszyfrować wiadomości';
 
     return Message(
       id: entity.id,
