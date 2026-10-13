@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ConversationMemberDto {
 
-@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversation_id') String get conversationId;@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'role') String get role;@JsonKey(name: 'last_read_sequence') int get lastReadSequence;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversationId') String get conversationId;@JsonKey(name: 'userId') String get userId;@JsonKey(name: 'role') String get role;@JsonKey(name: 'lastReadSequence') int get lastReadSequence;
 /// Create a copy of ConversationMemberDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)

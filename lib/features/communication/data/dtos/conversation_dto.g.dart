@@ -10,20 +10,20 @@ _ConversationMemberDto _$ConversationMemberDtoFromJson(
   Map<String, dynamic> json,
 ) => _ConversationMemberDto(
   id: json['id'] as String,
-  conversationId: json['conversation_id'] as String,
-  userId: json['user_id'] as String,
+  conversationId: json['conversationId'] as String,
+  userId: json['userId'] as String,
   role: json['role'] as String,
-  lastReadSequence: (json['last_read_sequence'] as num?)?.toInt() ?? 0,
+  lastReadSequence: (json['lastReadSequence'] as num?)?.toInt() ?? 0,
 );
 
 Map<String, dynamic> _$ConversationMemberDtoToJson(
   _ConversationMemberDto instance,
 ) => <String, dynamic>{
   'id': instance.id,
-  'conversation_id': instance.conversationId,
-  'user_id': instance.userId,
+  'conversationId': instance.conversationId,
+  'userId': instance.userId,
   'role': instance.role,
-  'last_read_sequence': instance.lastReadSequence,
+  'lastReadSequence': instance.lastReadSequence,
 };
 
 _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
@@ -31,7 +31,7 @@ _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
       id: json['id'] as String,
       type: json['type'] as String,
       title: json['title'] as String?,
-      lastSequence: (json['last_sequence'] as num?)?.toInt() ?? 0,
+      lastSequence: (json['lastSequence'] as num?)?.toInt() ?? 0,
       members:
           (json['members'] as List<dynamic>?)
               ?.map(
@@ -47,12 +47,12 @@ _ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
                 : MessageDto.fromJson(e as Map<String, dynamic>),
           )
           .toList(),
-      createdAt: json['created_at'] == null
+      createdAt: json['createdAt'] == null
           ? null
-          : DateTime.parse(json['created_at'] as String),
-      updatedAt: json['updated_at'] == null
+          : DateTime.parse(json['createdAt'] as String),
+      updatedAt: json['updatedAt'] == null
           ? null
-          : DateTime.parse(json['updated_at'] as String),
+          : DateTime.parse(json['updatedAt'] as String),
     );
 
 Map<String, dynamic> _$ConversationDtoToJson(_ConversationDto instance) =>
@@ -60,9 +60,9 @@ Map<String, dynamic> _$ConversationDtoToJson(_ConversationDto instance) =>
       'id': instance.id,
       'type': instance.type,
       'title': instance.title,
-      'last_sequence': instance.lastSequence,
+      'lastSequence': instance.lastSequence,
       'members': instance.members,
       'messages': instance.messages,
-      'created_at': instance.createdAt?.toIso8601String(),
-      'updated_at': instance.updatedAt?.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };

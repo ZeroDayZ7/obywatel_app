@@ -884,12 +884,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
 
     final requestPayload = {
-      'message_id': message.id,
-      'conversation_id': effectiveConversationId,
-      'sender_device_id': senderAppDeviceId,
+      'messageId': message.id,
+      'conversationId': effectiveConversationId,
+      'senderDeviceId': senderAppDeviceId,
       'ciphertext': encrypted.ciphertextBase64,
       'type': encrypted.type,
-      'idempotency_key': message.id,
+      'idempotencyKey': message.id,
     };
     final requestUri = ApiEndpoints.conversationMessages(
       effectiveConversationId,
@@ -970,21 +970,21 @@ class ChatsRepositoryImpl implements ChatsRepository {
           ? payload['payload'] as Map<String, dynamic>
           : const <String, dynamic>{};
       final directEnvelope =
-          payload['ciphertext'] != null || payload['conversation_id'] != null
+          payload['ciphertext'] != null || payload['conversationId'] != null
           ? payload
           : nestedPayload;
 
       final createdAtValue =
-          (directEnvelope['created_at'] as String?) ??
-          (payload['created_at'] as String?) ??
-          (nestedPayload['created_at'] as String?);
+          (directEnvelope['createdAt'] as String?) ??
+          (payload['createdAt'] as String?) ??
+          (nestedPayload['createdAt'] as String?);
       final conversationId =
-          (directEnvelope['conversation_id'] as String?) ??
-          (payload['conversation_id'] as String?) ??
+          (directEnvelope['conversationId'] as String?) ??
+          (payload['conversationId'] as String?) ??
           (event.conversationId ?? '');
       final messageId =
-          (directEnvelope['message_id'] as String?) ??
-          (payload['event_id'] as String?) ??
+          (directEnvelope['messageId'] as String?) ??
+          (payload['eventId'] as String?) ??
           event.id;
       final ciphertext =
           (directEnvelope['ciphertext'] as String?) ??

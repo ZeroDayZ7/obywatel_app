@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessageDto {
 
-@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversation_id') String get conversationId;@JsonKey(name: 'sender_id') String get senderId;@JsonKey(name: 'sender_device_id') String? get senderDeviceId;@JsonKey(name: 'type') String get type;@JsonKey(name: 'sequence') int get sequence;@JsonKey(name: 'version') int get version;@JsonKey(name: 'encrypted_payload') String get encryptedPayload;@JsonKey(name: 'nonce') String? get nonce;@JsonKey(name: 'created_at') DateTime get createdAt;
+@JsonKey(name: 'id') String get id;@JsonKey(name: 'conversationId') String get conversationId;@JsonKey(name: 'senderId') String get senderId;@JsonKey(name: 'senderDeviceId') String? get senderDeviceId;@JsonKey(name: 'type') String get type;@JsonKey(name: 'sequence') int get sequence;@JsonKey(name: 'version') int get version;@JsonKey(name: 'encryptedPayload') String get encryptedPayload;@JsonKey(name: 'nonce') String? get nonce;@JsonKey(name: 'createdAt') DateTime get createdAt;
 /// Create a copy of MessageDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)

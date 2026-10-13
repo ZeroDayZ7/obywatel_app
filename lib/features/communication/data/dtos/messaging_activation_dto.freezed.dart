@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessagingActivationDto {
 
-@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'status') String get status;@JsonKey(name: 'consent_accepted') bool get consentAccepted;@JsonKey(name: 'terms_version') String get termsVersion;@JsonKey(name: 'current_terms_version') String get currentTermsVersion;@JsonKey(name: 'requires_terms_acceptance') bool get requiresTermsAcceptance;@JsonKey(name: 'device_id') String? get deviceId;@JsonKey(name: 'activated_at') DateTime? get activatedAt;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+@JsonKey(name: 'userId') String get userId;@JsonKey(name: 'status') String get status;@JsonKey(name: 'consentAccepted') bool get consentAccepted;@JsonKey(name: 'termsVersion') String get termsVersion;@JsonKey(name: 'currentTermsVersion') String get currentTermsVersion;@JsonKey(name: 'requiresTermsAcceptance') bool get requiresTermsAcceptance;@JsonKey(name: 'deviceId') String? get deviceId;@JsonKey(name: 'activatedAt') DateTime? get activatedAt;@JsonKey(name: 'createdAt') DateTime? get createdAt;@JsonKey(name: 'updatedAt') DateTime? get updatedAt;
 /// Create a copy of MessagingActivationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)

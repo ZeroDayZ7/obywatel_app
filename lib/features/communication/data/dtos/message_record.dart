@@ -32,17 +32,17 @@ class MessageRecord {
   factory MessageRecord.fromJson(Map<String, dynamic> json) {
     return MessageRecord(
       id: (json['id'] as String?) ?? json['id']?.toString(),
-      messageId: (json['messageId'] ?? json['message_id']) as String?,
-      conversationId: (json['conversationId'] ?? json['conversation_id']) as String?,
-      senderUserId: (json['senderUserId'] ?? json['sender_user_id']) as String?,
-      senderDeviceId: (json['senderDeviceId'] ?? json['sender_device_id']) as String?,
-      recipientUserId: (json['recipientUserId'] ?? json['recipient_user_id']) as String?,
-      recipientDeviceId: (json['recipientDeviceId'] ?? json['recipient_device_id']) as String?,
+      messageId: json['messageId'] as String?,
+      conversationId: json['conversationId'] as String?,
+      senderUserId: json['senderUserId'] as String?,
+      senderDeviceId: json['senderDeviceId'] as String?,
+      recipientUserId: json['recipientUserId'] as String?,
+      recipientDeviceId: json['recipientDeviceId'] as String?,
       ciphertext: (json['ciphertext'] as String?) ?? json['ciphertext']?.toString(),
       type: (json['type'] as String?) ?? json['type']?.toString(),
-      createdAt: _parseDate(json['createdAt'] ?? json['created_at']),
-      expiresAt: _parseDate(json['expiresAt'] ?? json['expires_at']),
-      isDelivered: ((json['isDelivered'] ?? json['is_delivered']) as bool?) ?? false,
+      createdAt: _parseDate(json['createdAt']),
+      expiresAt: _parseDate(json['expiresAt']),
+      isDelivered: (json['isDelivered'] as bool?) ?? false,
       version: (json['version'] as int?) ?? 1,
     );
   }

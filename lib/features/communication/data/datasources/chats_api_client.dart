@@ -31,7 +31,7 @@ class ChatsApiClient {
   }) async {
     final queryParams = <String, dynamic>{
       'limit': limit,
-      'before_id': beforeId,
+      'beforeId': beforeId,
     };
 
     final response = await _apiClient.get(
@@ -56,7 +56,7 @@ class ChatsApiClient {
       data: {
         'type': type,
         'title': title ?? 'Kontakt',
-        'recipient_ids': recipientIds,
+        'recipientIds': recipientIds,
       },
     );
 
@@ -81,8 +81,8 @@ class ChatsApiClient {
     final response = await _apiClient.post(
       ApiEndpoints.syncDelta,
       data: {
-        'last_known_contact_version': lastKnownContactVersion,
-        'last_known_message_version': lastKnownMessageVersion,
+        'lastKnownContactVersion': lastKnownContactVersion,
+        'lastKnownMessageVersion': lastKnownMessageVersion,
       },
     );
 
@@ -108,7 +108,7 @@ class ChatsApiClient {
     final response = await _apiClient.get(
       ApiEndpoints.messageHistory,
       queryParams: {
-        'conversation_id': conversationId,
+        'conversationId': conversationId,
         'since': since,
         'limit': limit,
       },

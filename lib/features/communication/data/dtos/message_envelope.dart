@@ -29,17 +29,17 @@ class MessageEnvelope {
 
   factory MessageEnvelope.fromJson(Map<String, dynamic> json) {
     return MessageEnvelope(
-      messageId: (json['messageId'] ?? json['message_id']) as String?,
-      conversationId: (json['conversationId'] ?? json['conversation_id']) as String?,
-      senderUserId: (json['senderUserId'] ?? json['sender_user_id']) as String?,
-      senderDeviceId: (json['senderDeviceId'] ?? json['sender_device_id']) as String?,
-      recipientUserId: (json['recipientUserId'] ?? json['recipient_user_id']) as String?,
-      recipientDeviceId: (json['recipientDeviceId'] ?? json['recipient_device_id']) as String?,
+      messageId: json['messageId'] as String?,
+      conversationId: json['conversationId'] as String?,
+      senderUserId: json['senderUserId'] as String?,
+      senderDeviceId: json['senderDeviceId'] as String?,
+      recipientUserId: json['recipientUserId'] as String?,
+      recipientDeviceId: json['recipientDeviceId'] as String?,
       ciphertext: (json['ciphertext'] as String?) ?? json['ciphertext']?.toString(),
-      type: (json['type'] ?? json['signal_message_type']) as int?,
+      type: json['type'] as int?,
       nonce: (json['nonce'] as String?) ?? json['nonce']?.toString(),
-      createdAt: _parseDate(json['createdAt'] ?? json['created_at']),
-      expiresAt: _parseDate(json['expiresAt'] ?? json['expires_at']),
+      createdAt: _parseDate(json['createdAt']),
+      expiresAt: _parseDate(json['expiresAt']),
       version: (json['version'] as int?) ?? 1,
     );
   }

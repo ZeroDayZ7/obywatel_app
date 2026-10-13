@@ -49,21 +49,21 @@ class SignalCiphertextEnvelope {
   Map<String, dynamic> toJson() => {
     'type': type,
     'ciphertext': ciphertext,
-    'sender_device_id': senderDeviceId,
-    'recipient_user_id': recipientUserId,
-    'recipient_device_id': recipientDeviceId,
+    'senderDeviceId': senderDeviceId,
+    'recipientUserId': recipientUserId,
+    'recipientDeviceId': recipientDeviceId,
   };
 
   factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
-    final typeValue = json['type'] ?? json['signal_message_type'] ?? 1;
+    final typeValue = json['type'] ?? 1;
     return SignalCiphertextEnvelope(
       type: typeValue is int
           ? typeValue
           : int.tryParse(typeValue.toString()) ?? 1,
       ciphertext: (json['ciphertext'] ?? '').toString(),
-      senderDeviceId: (json['sender_device_id'] ?? '').toString(),
-      recipientUserId: (json['recipient_user_id'] ?? '').toString(),
-      recipientDeviceId: (json['recipient_device_id'] ?? '1').toString(),
+      senderDeviceId: (json['senderDeviceId'] ?? '').toString(),
+      recipientUserId: (json['recipientUserId'] ?? '').toString(),
+      recipientDeviceId: (json['recipientDeviceId'] ?? '1').toString(),
     );
   }
 }
@@ -78,8 +78,8 @@ class OneTimePreKeyRegistration {
   });
 
   Map<String, dynamic> toJson() => {
-    'key_id': keyId,
-    'public_key': publicKey,
+    'keyId': keyId,
+    'publicKey': publicKey,
   };
 }
 
@@ -615,14 +615,14 @@ class E2eeCryptoService {
         }
 
         final payload = {
-          'device_id': bundle.deviceId,
-          'registration_id': bundle.registrationId,
-          'identity_public_key': bundle.publicKey,
-          'public_key': bundle.publicKey,
-          'signed_pre_key': bundle.signedPreKey,
-          'signed_pre_key_sig': bundle.signedPreKeySignature,
-          'signed_pre_key_id': bundle.signedPreKeyId,
-          'one_time_pre_keys': bundle.oneTimePreKeys
+          'deviceId': bundle.deviceId,
+          'registrationId': bundle.registrationId,
+          'identityPublicKey': bundle.publicKey,
+          'publicKey': bundle.publicKey,
+          'signedPreKey': bundle.signedPreKey,
+          'signedPreKeySig': bundle.signedPreKeySignature,
+          'signedPreKeyId': bundle.signedPreKeyId,
+          'oneTimePreKeys': bundle.oneTimePreKeys
               .map((preKey) => preKey.toJson())
               .toList(),
         };
@@ -637,7 +637,7 @@ class E2eeCryptoService {
 
         final headers = {'X-Operation-Id': effectiveOperationId};
         _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_request event=start payload_fields=${payload.keys.toList()} registration_id=${payload['registration_id']} device_id=${payload['device_id']} signed_pre_key_id=${payload['signed_pre_key_id']}',
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_request event=start payload_fields=${payload.keys.toList()} registrationId=${payload['registrationId']} deviceId=${payload['deviceId']} signedPreKeyId=${payload['signedPreKeyId']}',
           module: 'E2eeCrypto',
         );
         await _apiClient.post(

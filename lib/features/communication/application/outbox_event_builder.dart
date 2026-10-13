@@ -62,14 +62,14 @@ Map<String, dynamic> buildOutboxEventPayload(
   }
 
   return {
-    'event_id': safeOutboxEventId,
-    'idempotency_key': safeOutboxEventId,
-    'message_id': safeMessageId,
-    'event_type': 'SEND_MESSAGE',
-    'conversation_id': normalizedConversationId,
-    'sender_device_id': sanitizedAppDeviceId,
+    'eventId': safeOutboxEventId,
+    'idempotencyKey': safeOutboxEventId,
+    'messageId': safeMessageId,
+    'eventType': 'SEND_MESSAGE',
+    'conversationId': normalizedConversationId,
+    'senderDeviceId': sanitizedAppDeviceId,
     'ciphertext': ciphertext,
     'type': signalType,
-    'created_at': createdAt,
+    'createdAt': createdAt,
   };
 }

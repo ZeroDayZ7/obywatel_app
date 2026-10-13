@@ -14,10 +14,10 @@ abstract class ContactDto with _$ContactDto {
     @JsonKey(name: 'ContactID') required String contactId,
     @JsonKey(name: 'Status') required String status,
     @JsonKey(name: 'Direction') required String direction,
-    @JsonKey(name: 'local_alias') String? localAlias,
+    @JsonKey(name: 'localAlias') String? localAlias,
     @JsonKey(name: 'Version') required int version,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'createdAt') DateTime? createdAt,
+    @JsonKey(name: 'updatedAt') DateTime? updatedAt,
   }) = _ContactDto;
 
   factory ContactDto.fromJson(Map<String, dynamic> json) =>

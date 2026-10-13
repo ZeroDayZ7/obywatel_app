@@ -9,51 +9,51 @@ part of 'messaging_activation_dto.dart';
 _MessagingActivationDto _$MessagingActivationDtoFromJson(
   Map<String, dynamic> json,
 ) => _MessagingActivationDto(
-  userId: json['user_id'] as String,
+  userId: json['userId'] as String,
   status: json['status'] as String,
-  consentAccepted: json['consent_accepted'] as bool? ?? false,
-  termsVersion: json['terms_version'] as String? ?? '',
-  currentTermsVersion: json['current_terms_version'] as String? ?? '',
-  requiresTermsAcceptance: json['requires_terms_acceptance'] as bool? ?? false,
-  deviceId: json['device_id'] as String?,
-  activatedAt: json['activated_at'] == null
+  consentAccepted: json['consentAccepted'] as bool? ?? false,
+  termsVersion: json['termsVersion'] as String? ?? '',
+  currentTermsVersion: json['currentTermsVersion'] as String? ?? '',
+  requiresTermsAcceptance: json['requiresTermsAcceptance'] as bool? ?? false,
+  deviceId: json['deviceId'] as String?,
+  activatedAt: json['activatedAt'] == null
       ? null
-      : DateTime.parse(json['activated_at'] as String),
-  createdAt: json['created_at'] == null
+      : DateTime.parse(json['activatedAt'] as String),
+  createdAt: json['createdAt'] == null
       ? null
-      : DateTime.parse(json['created_at'] as String),
-  updatedAt: json['updated_at'] == null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
       ? null
-      : DateTime.parse(json['updated_at'] as String),
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$MessagingActivationDtoToJson(
   _MessagingActivationDto instance,
 ) => <String, dynamic>{
-  'user_id': instance.userId,
+  'userId': instance.userId,
   'status': instance.status,
-  'consent_accepted': instance.consentAccepted,
-  'terms_version': instance.termsVersion,
-  'current_terms_version': instance.currentTermsVersion,
-  'requires_terms_acceptance': instance.requiresTermsAcceptance,
-  'device_id': instance.deviceId,
-  'activated_at': instance.activatedAt?.toIso8601String(),
-  'created_at': instance.createdAt?.toIso8601String(),
-  'updated_at': instance.updatedAt?.toIso8601String(),
+  'consentAccepted': instance.consentAccepted,
+  'termsVersion': instance.termsVersion,
+  'currentTermsVersion': instance.currentTermsVersion,
+  'requiresTermsAcceptance': instance.requiresTermsAcceptance,
+  'deviceId': instance.deviceId,
+  'activatedAt': instance.activatedAt?.toIso8601String(),
+  'createdAt': instance.createdAt?.toIso8601String(),
+  'updatedAt': instance.updatedAt?.toIso8601String(),
 };
 
 _MessagingTermsDto _$MessagingTermsDtoFromJson(Map<String, dynamic> json) =>
     _MessagingTermsDto(
       version: json['version'] as String,
       text: json['text'] as String,
-      publishedAt: json['published_at'] == null
+      publishedAt: json['publishedAt'] == null
           ? null
-          : DateTime.parse(json['published_at'] as String),
+          : DateTime.parse(json['publishedAt'] as String),
     );
 
 Map<String, dynamic> _$MessagingTermsDtoToJson(_MessagingTermsDto instance) =>
     <String, dynamic>{
       'version': instance.version,
       'text': instance.text,
-      'published_at': instance.publishedAt?.toIso8601String(),
+      'publishedAt': instance.publishedAt?.toIso8601String(),
     };

@@ -10,10 +10,10 @@ part 'conversation_dto.g.dart';
 abstract class ConversationMemberDto with _$ConversationMemberDto {
   const factory ConversationMemberDto({
     @JsonKey(name: 'id') required String id,
-    @JsonKey(name: 'conversation_id') required String conversationId,
-    @JsonKey(name: 'user_id') required String userId,
+    @JsonKey(name: 'conversationId') required String conversationId,
+    @JsonKey(name: 'userId') required String userId,
     @JsonKey(name: 'role') required String role,
-    @JsonKey(name: 'last_read_sequence') @Default(0) int lastReadSequence,
+    @JsonKey(name: 'lastReadSequence') @Default(0) int lastReadSequence,
   }) = _ConversationMemberDto;
 
   factory ConversationMemberDto.fromJson(Map<String, dynamic> json) =>
@@ -26,11 +26,11 @@ abstract class ConversationDto with _$ConversationDto {
     @JsonKey(name: 'id') required String id,
     @JsonKey(name: 'type') required String type,
     @JsonKey(name: 'title') String? title,
-    @JsonKey(name: 'last_sequence') @Default(0) int lastSequence,
+    @JsonKey(name: 'lastSequence') @Default(0) int lastSequence,
     @JsonKey(name: 'members') @Default([]) List<ConversationMemberDto> members,
     @JsonKey(name: 'messages') List<MessageDto?>? messages,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    @JsonKey(name: 'createdAt') DateTime? createdAt,
+    @JsonKey(name: 'updatedAt') DateTime? updatedAt,
   }) = _ConversationDto;
 
   factory ConversationDto.fromJson(Map<String, dynamic> json) =>
