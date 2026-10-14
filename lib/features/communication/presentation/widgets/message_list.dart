@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/communication/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/date_divider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
 
@@ -7,11 +7,7 @@ class MessageList extends StatelessWidget {
   final List<Message> messages;
   final ScrollController? controller;
 
-  const MessageList({
-    super.key,
-    required this.messages,
-    this.controller,
-  });
+  const MessageList({super.key, required this.messages, this.controller});
 
   List<Message> get _orderedMessages {
     final ordered = [...messages];

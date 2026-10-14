@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 
 class ContactDetailsSheet extends ConsumerWidget {
   final Contact contact;
 
   const ContactDetailsSheet({super.key, required this.contact});
 
-  Future<void> _updateAlias(
-    BuildContext context,
-    WidgetRef ref,
-  ) async {
+  Future<void> _updateAlias(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController(text: contact.localAlias ?? '');
     final newAlias = await showDialog<String>(
       context: context,
@@ -21,9 +18,7 @@ class ContactDetailsSheet extends ConsumerWidget {
           content: TextField(
             controller: controller,
             autofocus: true,
-            decoration: const InputDecoration(
-              hintText: 'Wpisz alias kontaktu',
-            ),
+            decoration: const InputDecoration(hintText: 'Wpisz alias kontaktu'),
           ),
           actions: [
             TextButton(
@@ -48,10 +43,9 @@ class ContactDetailsSheet extends ConsumerWidget {
       return;
     }
 
-    await ref.read(contactsServiceProvider).updateLocalAlias(
-      contact.contactUserId,
-      alias,
-    );
+    await ref
+        .read(contactsServiceProvider)
+        .updateLocalAlias(contact.contactUserId, alias);
 
     if (context.mounted) {
       Navigator.of(context).pop();

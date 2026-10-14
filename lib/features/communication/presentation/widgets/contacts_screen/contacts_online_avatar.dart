@@ -1,6 +1,6 @@
 // lib/features/contacts/presentation/widgets/contacts_screen/contacts_online_avatar.dart
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 
 class ContactsOnlineAvatar extends StatelessWidget {
   final Contact contact;
@@ -40,9 +40,7 @@ class ContactsOnlineAvatar extends StatelessWidget {
             child: CircleAvatar(
               backgroundColor: colorScheme.surfaceContainerHighest,
               child: Text(
-                _getInitials(
-                  contact.displayName,
-                ),
+                _getInitials(contact.displayName),
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,

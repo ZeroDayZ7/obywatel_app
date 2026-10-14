@@ -908,55 +908,6 @@ class E2eeCryptoService {
       );
     }
   }
-
-  Future<String?> decryptMessage(
-    String conversationId,
-    String ciphertextBase64,
-    String nonceBase64,
-  ) async {
-    _logger.w(
-      'Błąd odszyfrowywania wiadomości Signal: brak peerDeviceId; nie można zgadywać adresu Signal z konwersacji lub ciphertextu.',
-      module: 'E2eeCrypto',
-    );
-    return null;
-  }
-
-  Future<String?> decryptMessageWithPeerDevice(
-    String conversationId,
-    String peerDeviceId,
-    String ciphertextBase64,
-    String nonceBase64,
-  ) async {
-    try {
-      final ciphertextBytes = base64Decode(ciphertextBase64);
-      final peerAddress = SignalProtocolAddress(
-        conversationId,
-        resolveSignalDeviceId(peerDeviceId),
-      );
-      final sessionCipher = SessionCipher.fromStore(_signalStore, peerAddress);
-
-      Uint8List plaintext;
-      try {
-        plaintext = await sessionCipher.decrypt(
-          PreKeySignalMessage(ciphertextBytes),
-        );
-      } catch (_) {
-        plaintext = await sessionCipher.decryptFromSignal(
-          SignalMessage.fromSerialized(ciphertextBytes),
-        );
-      }
-
-      return utf8.decode(plaintext);
-    } catch (e, st) {
-      _logger.e(
-        'Błąd odszyfrowywania wiadomości Signal',
-        error: e,
-        stackTrace: st,
-        module: 'E2eeCrypto',
-      );
-      return null;
-    }
-  }
 }
 
 @riverpod

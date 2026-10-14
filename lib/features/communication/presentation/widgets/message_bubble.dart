@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/communication/domain/models/message.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
 class MessageBubble extends StatelessWidget {
   final Message message;
@@ -27,7 +27,9 @@ class MessageBubble extends StatelessWidget {
     final bubbleColor = isMine
         ? colorScheme.primaryContainer
         : colorScheme.surfaceContainerHighest;
-    final textColor = isMine ? colorScheme.onPrimaryContainer : colorScheme.onSurface;
+    final textColor = isMine
+        ? colorScheme.onPrimaryContainer
+        : colorScheme.onSurface;
     final metaColor = isMine
         ? colorScheme.onPrimaryContainer.withValues(alpha: 0.8)
         : colorScheme.onSurfaceVariant;
@@ -102,11 +104,7 @@ class MessageBubble extends StatelessWidget {
                   ),
                   if (isMine) ...[
                     const SizedBox(width: 8),
-                    Icon(
-                      statusIcon,
-                      size: 12,
-                      color: metaColor,
-                    ),
+                    Icon(statusIcon, size: 12, color: metaColor),
                   ],
                 ],
               ),

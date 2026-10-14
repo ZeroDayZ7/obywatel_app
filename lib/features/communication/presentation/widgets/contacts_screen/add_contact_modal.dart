@@ -6,7 +6,7 @@ import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/contact_invite_error_mapper.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact_identifier.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact_identifier.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -188,7 +188,8 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                           icon: const Icon(Icons.close_rounded),
                           onPressed: () => Navigator.of(context).pop(),
                           style: IconButton.styleFrom(
-                            backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                            backgroundColor: colorScheme.surfaceContainerHighest
+                                .withValues(alpha: 0.5),
                           ),
                         ),
                       ],
@@ -237,10 +238,12 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                             borderRadius: BorderRadius.circular(16),
                           ),
                           filled: true,
-                          fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                          fillColor: colorScheme.surfaceContainerHighest
+                              .withValues(alpha: 0.4),
                         ),
                       ),
-                      if (_inlineError != null) _buildErrorBox(context, _inlineError!),
+                      if (_inlineError != null)
+                        _buildErrorBox(context, _inlineError!),
                       const SizedBox(height: 24),
                       FilledButton.icon(
                         onPressed: _isLoading
@@ -311,7 +314,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: colorScheme.shadow.withValues(alpha: 0.08),
+                                  color: colorScheme.shadow.withValues(
+                                    alpha: 0.08,
+                                  ),
                                   blurRadius: 16,
                                   offset: const Offset(0, 4),
                                 ),
@@ -340,7 +345,9 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                               Clipboard.setData(ClipboardData(text: _myUserId));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Skopiowano Twoje ID do schowka!'),
+                                  content: Text(
+                                    'Skopiowano Twoje ID do schowka!',
+                                  ),
                                   duration: Duration(seconds: 2),
                                   behavior: SnackBarBehavior.floating,
                                 ),
