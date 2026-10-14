@@ -33,11 +33,11 @@ class StorageInitTask implements StartupTask {
       debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
 
       try {
-        // await storage.clearAll();
-        // await prefs.clearAll();
+        await storage.clearAll();
+        await prefs.clearAll();
 
-        // await database.clearSignalStore();
-        // await database.clearDatabase();
+        await database.clearSignalStore();
+        await database.clearDatabase();
 
         // await database.close();
         

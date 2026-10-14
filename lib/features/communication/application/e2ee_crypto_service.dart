@@ -545,8 +545,6 @@ class E2eeCryptoService {
     final explicitDeviceId = int.tryParse(trimmedSenderDeviceId);
     if (explicitDeviceId != null && explicitDeviceId > 0) {
       candidateDeviceIds.add(explicitDeviceId);
-    } else if (Uuid.isValidUUID(fromString: trimmedSenderDeviceId)) {
-      candidateDeviceIds.add(resolveSignalDeviceId(trimmedSenderDeviceId));
     }
 
     final knownDeviceIds = await _signalStore.getSubDeviceSessions(

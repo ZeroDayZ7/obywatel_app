@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
-import 'package:uuid/uuid.dart';
 
 String requireAppDeviceUuid(
   String? rawAppDeviceId, {
@@ -14,15 +13,6 @@ String requireAppDeviceUuid(
     throw FormatException('Missing $context; raw app device UUID is required');
   }
   return normalized;
-}
-
-SignalDeviceId hashUuidToSignalDeviceId(String uuid) {
-  final digestHex = sha256.convert(utf8.encode(uuid)).toString();
-  final numeric = BigInt.parse('0x${digestHex.substring(0, 16)}');
-  final maxSignalDeviceId = BigInt.from(2147483646);
-  final candidate = (numeric % maxSignalDeviceId) + BigInt.one;
-  final resolved = candidate.toInt();
-  return resolved == 1 ? 2 : resolved;
 }
 
 SignalDeviceId resolveSignalDeviceId(
@@ -42,13 +32,9 @@ SignalDeviceId resolveSignalDeviceId(
     return numeric;
   }
 
-  if (Uuid.isValidUUID(fromString: trimmed)) {
-    return hashUuidToSignalDeviceId(trimmed);
-  }
-
   if (fallback != null) return fallback;
   throw const FormatException(
-    'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id.',
+    'Signal device id is invalid; it must be a positive integer. UUID-based device hashing is not allowed because it creates collisions between different app devices of the same user.',
   );
 }
 
@@ -56,11 +42,14 @@ SignalDeviceId resolveSignalDeviceIdFromAppUuid(
   AppDeviceUuid? rawAppDeviceUuid, {
   SignalDeviceId? fallback,
 }) {
-  final appDeviceUuid = requireAppDeviceUuid(
+  requireAppDeviceUuid(
     rawAppDeviceUuid,
     context: 'app_device_id',
   );
-  return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
+  if (fallback != null) return fallback;
+  throw const FormatException(
+    'App device UUID is not a Signal device id; the server must supply a numeric signal device id from the device registration bundle.',
+  );
 }
 
 String fingerprintIdentityKey(IdentityKey? identityKey) {
