@@ -9,7 +9,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
-import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
@@ -300,12 +299,21 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         size: pending.bytes.length,
       );
 
-      final dioClient = ref.read(apiClientProvider).dio;
-      await dioClient.put(
+      final uploadClient = Dio(
+        BaseOptions(
+          connectTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+          validateStatus: (status) => status != null && status >= 200 && status < 300,
+          headers: {'Content-Type': pending.mimeType},
+        ),
+      );
+
+      await uploadClient.put(
         response.uploadUrl,
         data: pending.bytes,
         options: Options(
           headers: {'Content-Type': pending.mimeType},
+          followRedirects: false,
         ),
       );
 
@@ -316,10 +324,22 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       );
 
       return finalAttachment.id;
-    } catch (error) {
+    } catch (error, stackTrace) {
+      debugPrint('Attachment upload failed: $error');
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'message_input_field',
+          context: ErrorDescription('Attachment upload failed'),
+        ),
+      );
+
       if (!mounted) return null;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nie udało się wysłać załącznika: $error')),
+        const SnackBar(
+          content: Text('Nie udało się wysłać załącznika. Spróbuj ponownie.'),
+        ),
       );
       return null;
     }
