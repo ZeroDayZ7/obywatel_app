@@ -21,6 +21,7 @@ abstract class ChatsRepository {
   Future<void> sendMessage({
     required String conversationId,
     required String content,
+    String? attachmentId,
   });
   Stream<Message> get incomingMessagesStream;
 

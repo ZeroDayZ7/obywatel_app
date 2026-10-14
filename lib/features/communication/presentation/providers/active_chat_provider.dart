@@ -37,14 +37,16 @@ class ActiveChat extends _$ActiveChat {
     return repository.watchMessagesForConversation(conversationId);
   }
 
-  Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  Future<void> sendMessage(String text, {String? attachmentId}) async {
+    final normalizedText = text.trim();
+    if (normalizedText.isEmpty && attachmentId == null) return;
 
     final repository = ref.read(chatsRepositoryProvider);
 
     await repository.sendMessage(
       conversationId: conversationId,
-      content: text,
+      content: normalizedText,
+      attachmentId: attachmentId,
     );
   }
 }

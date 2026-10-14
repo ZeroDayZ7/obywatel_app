@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/attachment_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_envelope.dart';
@@ -29,10 +30,7 @@ class ChatsApiClient {
     String? beforeId,
     int limit = 50,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-      'beforeId': beforeId,
-    };
+    final queryParams = <String, dynamic>{'limit': limit, 'beforeId': beforeId};
 
     final response = await _apiClient.get(
       ApiEndpoints.conversationMessages(conversationId),
@@ -130,6 +128,57 @@ class ChatsApiClient {
   Future<Map<String, dynamic>> getUserPreKeys(String userId) async {
     final response = await _apiClient.get(ApiEndpoints.userPreKeys(userId));
     return response.data as Map<String, dynamic>;
+  }
+
+  Future<AttachmentUploadResponseDto> prepareAttachmentUpload({
+    required String conversationId,
+    required String fileName,
+    required String contentType,
+    required int size,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.attachmentUpload,
+      data: {
+        'conversationId': conversationId,
+        'fileName': fileName,
+        'contentType': contentType,
+        'size': size,
+      },
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentUploadResponseDto.fromJson(payload);
+  }
+
+  Future<AttachmentDto> finalizeAttachmentUpload({
+    required String attachmentId,
+    required int size,
+    String? sha256,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.attachmentFinalize,
+      data: {
+        'attachmentId': attachmentId,
+        'size': size,
+        if (sha256 != null && sha256.trim().isNotEmpty) 'sha256': sha256,
+      },
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDto.fromJson(payload);
+  }
+
+  Future<AttachmentDto> getAttachment(String attachmentId) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.attachmentById(attachmentId),
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDto.fromJson(payload);
+  }
+
+  Future<void> deleteAttachment(String attachmentId) async {
+    await _apiClient.delete(ApiEndpoints.attachmentById(attachmentId));
   }
 }
 

@@ -509,6 +509,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   Future<void> sendMessage({
     required String conversationId,
     required String content,
+    String? attachmentId,
   }) async {
     final operationId = const Uuid().v4();
     final createdAt = DateTime.now();
@@ -588,6 +589,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       createdAt: createdAt,
       status: 'pending',
       isEncrypted: true,
+      attachmentId: attachmentId,
     );
     final isServerBackedConversation = Uuid.isValidUUID(
       fromString: effectiveConversationId,
@@ -656,6 +658,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'messageId': message.id,
       'conversationId': effectiveConversationId,
       'senderDeviceId': senderAppDeviceId,
+      'attachmentId': attachmentId,
       'ciphertext': encrypted.ciphertextBase64,
       'type': encrypted.type,
       'idempotencyKey': message.id,

@@ -76,6 +76,11 @@ abstract class ApiEndpoints {
   static String get messageHistory => '/messages/history';
   static String get messages => '/messages';
 
+  // --- ATTACHMENTS ---
+  static String get attachmentUpload => '/attachments/upload';
+  static String get attachmentFinalize => '/attachments/finalize';
+  static String attachmentById(String id) => '/attachments/$id';
+
   // ===========================================================================
   // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---
   // ===========================================================================
