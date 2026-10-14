@@ -629,14 +629,16 @@ class AuthController extends _$AuthController {
     final securityState = ref.read(securityServiceProvider);
     final pendingSession = ref.read(pendingSessionProvider);
     final freshToken = await ref.read(authFreshProvider).token;
+    final accessPresent = freshToken?.accessToken.isNotEmpty ?? false;
+    final refreshPresent = freshToken?.refreshToken?.isNotEmpty ?? false;
 
     log.i('''
 🧠 ===== AKTUALNY STAN PAMIĘCI RAM =====
 1. AuthState: $authState
 2. SecurityState: $securityState
 3. Fresh OAuth2Token (RAM):
-   • AccessToken: ${freshToken?.accessToken ?? 'BRAK'}
-   • RefreshToken: ${freshToken?.refreshToken ?? 'BRAK'}
+   • AccessToken present: $accessPresent
+   • RefreshToken present: $refreshPresent
 4. PendingSession: $pendingSession
 ========================================
 ''', module: 'DIAGNOSTICS');

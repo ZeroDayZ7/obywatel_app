@@ -39,6 +39,9 @@ class MessagingActivationState {
       status!.consentAccepted == true;
 
   bool get shouldShowOnboarding {
+    if (errorMessage != null && status == null && terms == null) {
+      return false;
+    }
     if (status == null && terms == null) {
       return true;
     }
@@ -56,21 +59,15 @@ class MessagingActivationState {
 }
 
 class MessagingActivationController extends AsyncNotifier<MessagingActivationState> {
-  late final MessagingActivationApiClient _apiClient;
-  late final DeviceInfoService _deviceInfoService;
-  late final E2eeCryptoService _cryptoService;
-
   @override
   FutureOr<MessagingActivationState> build() async {
-    _apiClient = ref.read(messagingActivationApiClientProvider);
-    _deviceInfoService = ref.read(deviceInfoServiceProvider);
-    _cryptoService = ref.read(e2eeCryptoServiceProvider);
-    return await _loadStatus();
+    return const MessagingActivationState();
   }
 
   Future<MessagingActivationState> _loadStatus() async {
-    final status = await _apiClient.getActivationStatus();
-    final terms = await _apiClient.getCurrentTerms();
+    final apiClient = ref.read(messagingActivationApiClientProvider);
+    final status = await apiClient.getActivationStatus();
+    final terms = await apiClient.getCurrentTerms();
     return MessagingActivationState(status: status, terms: terms);
   }
 
@@ -83,7 +80,8 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
     }
 
     try {
-      await _cryptoService.registerDeviceIdentity();
+      final cryptoService = ref.read(e2eeCryptoServiceProvider);
+      await cryptoService.registerDeviceIdentity();
       return activationState;
     } catch (error) {
       return activationState.copyWith(
@@ -94,22 +92,31 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
   }
 
   Future<void> load() async {
+    final currentState = state.value ?? const MessagingActivationState();
     state = const AsyncLoading();
+
     try {
       final nextState = await _loadStatus();
       final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
       state = AsyncData(resolvedState);
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+    } catch (error) {
+      state = AsyncData(
+        currentState.copyWith(
+          errorMessage: 'Nie udało się pobrać stanu komunikatora. Został odczytany lokalny stan aplikacji.',
+        ),
+      );
     }
   }
 
   Future<void> acceptCurrentTerms() async {
+    final currentState = state.value ?? const MessagingActivationState();
+    state = const AsyncLoading();
     try {
-      final currentState = state.value ?? const MessagingActivationState();
-      final terms = currentState.terms ?? await _apiClient.getCurrentTerms();
-      final deviceId = await _deviceInfoService.getOrCreateDeviceId();
-      final updatedStatus = await _apiClient.acceptTerms(
+      final apiClient = ref.read(messagingActivationApiClientProvider);
+      final deviceInfoService = ref.read(deviceInfoServiceProvider);
+      final terms = currentState.terms ?? await apiClient.getCurrentTerms();
+      final deviceId = await deviceInfoService.getOrCreateDeviceId();
+      final updatedStatus = await apiClient.acceptTerms(
         deviceId: deviceId,
         termsVersion: terms.version,
       );
@@ -120,8 +127,12 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
       );
       final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
       state = AsyncData(resolvedState);
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+    } catch (error) {
+      state = AsyncData(
+        currentState.copyWith(
+          errorMessage: 'Nie można aktywować komunikatora bez dostępności serwera.',
+        ),
+      );
     }
   }
 

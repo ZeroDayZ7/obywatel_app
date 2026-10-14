@@ -84,12 +84,13 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
     final state = ref.watch(messagingActivationControllerProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
-    if (state.isLoading) {
+    final activationState = state.value ?? const MessagingActivationState();
+
+    if (state.isLoading && activationState.status == null && activationState.terms == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (state.hasError) {
-      final error = state.error;
+    if (state.hasError && activationState.status == null && activationState.terms == null) {
       return Scaffold(
         body: Center(
           child: Padding(
@@ -104,12 +105,16 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Nie udało się pobrać stanu komunikatora.',
+                  'Komunikator działa w trybie lokalnym.',
                   style: Theme.of(context).textTheme.titleMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
-                Text(error.toString(), textAlign: TextAlign.center),
+                Text(
+                  activationState.errorMessage ??
+                      'Serwer jest chwilowo niedostępny; zapisane dane pozostają dostępne lokalnie.',
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 20),
                 FilledButton(
                   onPressed: () => ref
@@ -124,7 +129,6 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
       );
     }
 
-    final activationState = state.value ?? const MessagingActivationState();
     if (activationState.shouldShowOnboarding) {
       return const MessagingOnboardingScreen();
     }
