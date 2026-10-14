@@ -39,7 +39,7 @@ class StorageInitTask implements StartupTask {
         await database.clearSignalStore();
         await database.clearDatabase();
 
-        await database.close();
+        // await database.close();
         
         debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
       } catch (e, st) {

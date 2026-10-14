@@ -12,12 +12,6 @@ class MessageBubble extends StatelessWidget {
     return 'Nie można odszyfrować wiadomości';
   }
 
-  String get _senderLabel {
-    if (message.isMine) return 'Ty';
-    if (message.senderId.trim().isEmpty) return 'Kontakt';
-    return 'Kontakt';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -73,17 +67,6 @@ class MessageBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (!isMine)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Text(
-                    _senderLabel,
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
               Text(
                 _displayContent,
                 style: theme.textTheme.bodyMedium?.copyWith(
