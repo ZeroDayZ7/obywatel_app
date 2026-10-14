@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,7 +19,25 @@ Map<String, dynamic> messageToOutboxJson(
   Message message,
   String deviceId, {
   int signalType = 1,
-}) => buildOutboxEventPayload(message, deviceId, signalType: signalType);
+  String? messageId,
+  String? outboxEventId,
+}) {
+  final resolvedMessageId = (messageId != null && messageId.trim().isNotEmpty)
+      ? messageId
+      : message.id;
+  final resolvedEventId =
+      (outboxEventId != null && outboxEventId.trim().isNotEmpty)
+      ? outboxEventId
+      : message.id;
+
+  return buildOutboxEventPayload(
+    message.copyWith(id: resolvedMessageId),
+    deviceId,
+    encryptedContent: message.encryptedPayload,
+    outboxEventId: resolvedEventId,
+    signalType: signalType,
+  );
+}
 
 class ChatSyncService {
   final ChatsApiClient _apiClient;
@@ -95,6 +114,29 @@ class ChatSyncService {
     final pendingMessages = await _repository.getPendingOutboxMessages();
     if (pendingMessages.isEmpty) return;
 
+    final rawOutboxEvents = await _repository.db.outboxDao
+        .getRetryEligibleEvents();
+    final rawPayloadByMessageId = <String, Map<String, dynamic>>{};
+    for (final event in rawOutboxEvents) {
+      if (event.payload.trim().isEmpty) {
+        continue;
+      }
+
+      try {
+        final decoded = jsonDecode(event.payload);
+        if (decoded is Map) {
+          rawPayloadByMessageId[event.id] = Map<String, dynamic>.from(decoded);
+        }
+      } catch (error, stackTrace) {
+        _logger.w(
+          '[OUTBOX-FLOW-INVALID-JSON] skipping malformed retry payload while preparing batch. message_id=${event.id}',
+          error: error,
+          stackTrace: stackTrace,
+          module: 'ChatSync',
+        );
+      }
+    }
+
     final invalidMessageIds = <String>[];
     final validMessages = <Message>[];
 
@@ -104,7 +146,8 @@ class ChatSyncService {
       final hasCiphertext = message.encryptedPayload.trim().isNotEmpty;
       final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
       final hasValidConversationUuid =
-          hasConversationId && Uuid.isValidUUID(fromString: trimmedConversationId);
+          hasConversationId &&
+          Uuid.isValidUUID(fromString: trimmedConversationId);
       final isReadyForServerDelivery =
           hasConversationId &&
           hasCiphertext &&
@@ -171,9 +214,28 @@ class ChatSyncService {
       module: 'ChatSync',
     );
 
-    final payload = validMessages
-        .map((message) => messageToOutboxJson(message, deviceId))
-        .toList();
+    final payload = validMessages.map((message) {
+      final metadata = rawPayloadByMessageId[message.id];
+      final storedType = metadata != null
+          ? metadata['type'] ?? metadata['signalType']
+          : null;
+      final storedEventId = metadata != null
+          ? metadata['eventId'] ?? metadata['outboxEventId']
+          : null;
+      final storedMessageId = metadata != null
+          ? metadata['messageId'] ?? message.id
+          : message.id;
+
+      return messageToOutboxJson(
+        message,
+        deviceId,
+        signalType: storedType == null
+            ? 1
+            : normalizeSignalType(storedType.toString()),
+        messageId: storedMessageId?.toString(),
+        outboxEventId: storedEventId?.toString(),
+      );
+    }).toList();
 
     try {
       await _apiClient.sendOutboxBatch(payload);

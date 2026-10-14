@@ -942,48 +942,111 @@ class ChatsRepositoryImpl implements ChatsRepository {
     _incomingMessagesController.add(sentMessage);
   }
 
+  String? _readOutboxString(dynamic value) {
+    if (value == null) return null;
+    final normalized = value.toString().trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  Map<String, dynamic>? _decodeOutboxPayload(String rawPayload) {
+    if (rawPayload.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(rawPayload);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+      if (decoded is Map) {
+        return Map<String, dynamic>.from(decoded);
+      }
+      return null;
+    } catch (error, stackTrace) {
+      _logger.w(
+        '[OUTBOX-FLOW-INVALID-JSON] skipping malformed outbox payload. payload_prefix=${rawPayload.length > 128 ? rawPayload.substring(0, 128) : rawPayload}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      return null;
+    }
+  }
+
   @override
   Future<List<Message>> getPendingOutboxMessages() async {
     final events = await _db.outboxDao.getRetryEligibleEvents();
-    return events.map((event) {
-      final payload = jsonDecode(event.payload) as Map<String, dynamic>? ?? {};
-      final nestedPayload = payload['payload'] is Map<String, dynamic>
-          ? payload['payload'] as Map<String, dynamic>
+
+    final messages = <Message>[];
+    for (final event in events) {
+      final payload = _decodeOutboxPayload(event.payload);
+      if (payload == null) {
+        continue;
+      }
+
+      final nestedPayload = payload['payload'] is Map
+          ? Map<String, dynamic>.from(payload['payload'] as Map)
           : const <String, dynamic>{};
       final directEnvelope =
-          payload['ciphertext'] != null || payload['conversationId'] != null
+          payload['ciphertext'] != null ||
+              payload['conversationId'] != null ||
+              payload['messageId'] != null
           ? payload
           : nestedPayload;
 
       final createdAtValue =
-          (directEnvelope['createdAt'] as String?) ??
-          (payload['createdAt'] as String?) ??
-          (nestedPayload['createdAt'] as String?);
+          _readOutboxString(directEnvelope['createdAt']) ??
+          _readOutboxString(payload['createdAt']) ??
+          _readOutboxString(nestedPayload['createdAt']);
       final conversationId =
-          (directEnvelope['conversationId'] as String?) ??
-          (payload['conversationId'] as String?) ??
-          (event.conversationId ?? '');
+          _readOutboxString(directEnvelope['conversationId']) ??
+          _readOutboxString(payload['conversationId']) ??
+          _readOutboxString(event.conversationId) ??
+          '';
       final messageId =
-          (directEnvelope['messageId'] as String?) ??
-          (payload['eventId'] as String?) ??
+          _readOutboxString(directEnvelope['messageId']) ??
+          _readOutboxString(payload['messageId']) ??
+          _readOutboxString(event.id) ??
           event.id;
       final ciphertext =
-          (directEnvelope['ciphertext'] as String?) ??
-          (nestedPayload['ciphertext'] as String?) ??
+          _readOutboxString(directEnvelope['ciphertext']) ??
+          _readOutboxString(nestedPayload['ciphertext']) ??
           '';
+      final signalTypeString =
+          _readOutboxString(directEnvelope['type']) ??
+          _readOutboxString(payload['type']) ??
+          _readOutboxString(directEnvelope['signalType']) ??
+          _readOutboxString(payload['signalType']) ??
+          '1';
 
-      return Message(
-        id: messageId,
-        conversationId: conversationId,
-        senderId: (directEnvelope['sender_id'] as String?) ?? _currentUserId,
-        content: ciphertext,
-        isMine: true,
-        createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
-        status: 'pending',
-        isEncrypted: true,
-        encryptedPayload: ciphertext,
+      final normalizedSignalType = normalizeSignalType(signalTypeString);
+      if (normalizedSignalType <= 0) {
+        _logger.w(
+          '[OUTBOX-FLOW-INVALID-SIGNAL-TYPE] skipping pending outbox entry with unsupported signal type. message_id=$messageId conversationId=$conversationId signal_type=$signalTypeString',
+          module: 'ChatsRepository',
+        );
+        continue;
+      }
+
+      messages.add(
+        Message(
+          id: messageId,
+          conversationId: conversationId,
+          senderId:
+              _readOutboxString(directEnvelope['sender_id']) ??
+              _readOutboxString(directEnvelope['senderId']) ??
+              _currentUserId,
+          content: ciphertext,
+          isMine: true,
+          createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
+          status: 'pending',
+          isEncrypted: true,
+          encryptedPayload: ciphertext,
+        ),
       );
-    }).toList();
+    }
+
+    return messages;
   }
 
   @override
@@ -1080,16 +1143,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
   Future<void> clearSentOutboxMessages(List<String> messageIds) async {
     if (messageIds.isEmpty) return;
 
-    await (_db.update(
-      _db.messages,
-    )..where((tbl) => tbl.id.isIn(messageIds))).write(
-      MessagesCompanion(
-        status: const Value('sent'),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+    await _db.transaction(() async {
+      await (_db.update(
+        _db.messages,
+      )..where((tbl) => tbl.id.isIn(messageIds))).write(
+        MessagesCompanion(
+          status: const Value('sent'),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
 
-    await _db.outboxDao.deleteEvents(messageIds);
+      await _db.outboxDao.deleteEvents(messageIds);
+    });
+
     _logger.i(
       'Usunięto ${messageIds.length} wysłanych wiadomości z outboxa',
       module: 'ChatsRepository',
