@@ -43,4 +43,38 @@ void main() {
 
     expect(triggered, ['contact_updated']);
   });
+
+  test('asynchroniczny błąd callbacka jest obsłużony i nie wywołuje crasha', () async {
+    final handler = WebSocketMessageHandler(
+      _buildWsClient(),
+      AppLogger(),
+      (type) async {
+        await Future<void>.delayed(const Duration(milliseconds: 1));
+        throw StateError('boom');
+      },
+    );
+
+    expect(
+      () => handler.handleIncomingMessage({'type': 'new_message'}),
+      returnsNormally,
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+  });
+
+  test('pusty i nieznany typ nie uruchamia callbacka', () async {
+    final triggered = <String>[];
+    final handler = WebSocketMessageHandler(
+      _buildWsClient(),
+      AppLogger(),
+      (type) async {
+        triggered.add(type);
+      },
+    );
+
+    handler.handleIncomingMessage({'type': ''});
+    handler.handleIncomingMessage({'type': 'unknown_type'});
+    await Future<void>.delayed(Duration.zero);
+
+    expect(triggered, isEmpty);
+  });
 }

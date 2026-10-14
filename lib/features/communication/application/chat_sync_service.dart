@@ -43,6 +43,11 @@ class ChatSyncService {
 
   SyncStatus get currentStatus => _currentStatus;
 
+  void _setCurrentStatus(SyncStatus status) {
+    _currentStatus = status;
+    _updateStatus(status);
+  }
+
   void init() {
     _statusSubscription = _wsClient.statusStream.listen(_onStatusChanged);
   }
@@ -60,24 +65,21 @@ class ChatSyncService {
   Future<void> syncPendingData() async {
     if (_isSyncing) return;
     _isSyncing = true;
-    _updateStatus(SyncStatus.syncing);
+    _setCurrentStatus(SyncStatus.syncing);
 
     try {
       await _flushOutbox();
       await _fetchDeltaSync();
       await _fetchLatestConversations();
-      _currentStatus = SyncStatus.idle;
-      _updateStatus(SyncStatus.idle);
+      _setCurrentStatus(SyncStatus.idle);
     } on SocketException {
-      _currentStatus = SyncStatus.offline;
-      _updateStatus(SyncStatus.offline);
+      _setCurrentStatus(SyncStatus.offline);
       _logger.w(
         'Brak połączenia z serwerem. Tryb offline.',
         module: 'ChatSync',
       );
     } catch (e, st) {
-      _currentStatus = SyncStatus.error;
-      _updateStatus(SyncStatus.error);
+      _setCurrentStatus(SyncStatus.error);
       _logger.e(
         'Błąd podczas synchronizacji czatu',
         error: e,
@@ -97,42 +99,47 @@ class ChatSyncService {
     final validMessages = <Message>[];
 
     for (final message in pendingMessages) {
-      final hasConversationId = message.conversationId.trim().isNotEmpty;
+      final trimmedConversationId = message.conversationId.trim();
+      final hasConversationId = trimmedConversationId.isNotEmpty;
       final hasCiphertext = message.encryptedPayload.trim().isNotEmpty;
       final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
-      final conversationParts = message.conversationId
-          .split(':')
-          .map((part) => part.trim())
-          .where((part) => part.isNotEmpty)
-          .toList();
-      final hasValidConversationIdFormat =
-          hasConversationId &&
-          (Uuid.isValidUUID(fromString: message.conversationId) ||
-              conversationParts.length == 2);
+      final hasValidConversationUuid =
+          hasConversationId && Uuid.isValidUUID(fromString: trimmedConversationId);
       final isReadyForServerDelivery =
           hasConversationId &&
           hasCiphertext &&
           hasValidMessageUuid &&
-          hasValidConversationIdFormat;
+          hasValidConversationUuid;
 
       if (!hasValidMessageUuid || (!hasCiphertext && !hasConversationId)) {
         _logger.w(
           '[OUTBOX-FLOW-3] irrecoverably invalid pending event detected and will be dropped: '
           'message_id=${message.id} conversationId=${message.conversationId} '
           'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'conversationId_format_valid=$hasValidConversationIdFormat',
+          'conversationId_format_valid=$hasValidConversationUuid',
           module: 'ChatSync',
         );
         invalidMessageIds.add(message.id);
         continue;
       }
 
-      if (!isReadyForServerDelivery) {
+      if (!hasValidConversationUuid) {
         _logger.w(
           '[OUTBOX-FLOW-3] unresolved pending message held for later retry: '
           'message_id=${message.id} conversationId=${message.conversationId} '
           'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'conversationId_format_valid=$hasValidConversationIdFormat',
+          'conversationId_format_valid=$hasValidConversationUuid',
+          module: 'ChatSync',
+        );
+        continue;
+      }
+
+      if (!isReadyForServerDelivery) {
+        _logger.w(
+          '[OUTBOX-FLOW-3] pending message is not ready for delivery yet: '
+          'message_id=${message.id} conversationId=${message.conversationId} '
+          'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
+          'conversationId_format_valid=$hasValidConversationUuid',
           module: 'ChatSync',
         );
         continue;

@@ -13,19 +13,23 @@ class MessagingActivationState {
     this.errorMessage,
   });
 
+  static const Object _sentinel = Object();
+
   final MessagingActivationDto? status;
   final MessagingTermsDto? terms;
   final String? errorMessage;
 
   MessagingActivationState copyWith({
-    MessagingActivationDto? status,
-    MessagingTermsDto? terms,
-    String? errorMessage,
+    Object? status = _sentinel,
+    Object? terms = _sentinel,
+    Object? errorMessage = _sentinel,
   }) {
     return MessagingActivationState(
-      status: status ?? this.status,
-      terms: terms ?? this.terms,
-      errorMessage: errorMessage ?? this.errorMessage,
+      status: status == _sentinel ? this.status : status as MessagingActivationDto?,
+      terms: terms == _sentinel ? this.terms : terms as MessagingTermsDto?,
+      errorMessage: errorMessage == _sentinel
+          ? this.errorMessage
+          : errorMessage as String?,
     );
   }
 

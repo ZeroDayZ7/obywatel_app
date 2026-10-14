@@ -34,7 +34,7 @@ class WebSocketMessageHandler {
     );
   }
 
-  void handleIncomingMessage(Map<String, dynamic> json) {
+  Future<void> _handleIncomingMessageAsync(Map<String, dynamic> json) async {
     try {
       final type = (json['type'] ?? '').toString();
       if (type.isEmpty) {
@@ -50,8 +50,8 @@ class WebSocketMessageHandler {
             'Odebrano sygnał WS typu $type. Uruchamianie odpowiedniej synchronizacji.',
             module: 'WSHandler',
           );
-          unawaited(_onSignalReceived(type));
-          break;
+          await _onSignalReceived(type);
+          return;
         default:
           _logger.i('Nieznany typ wiadomości WS: $type', module: 'WSHandler');
       }
@@ -63,6 +63,10 @@ class WebSocketMessageHandler {
         module: 'WSHandler',
       );
     }
+  }
+
+  void handleIncomingMessage(Map<String, dynamic> json) {
+    unawaited(_handleIncomingMessageAsync(json));
   }
 
   void dispose() {
