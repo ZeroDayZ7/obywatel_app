@@ -20,6 +20,9 @@ final chatE2eeSessionStatusProvider = FutureProvider.family<
     final remoteUserId = await repository.resolvePeerUserIdForConversation(
       conversationId,
     );
+    if (remoteUserId == conversationId.trim()) {
+      return E2eeSessionUiStatus.ready;
+    }
     await repository.ensureE2eeSessionForContact(remoteUserId);
     return E2eeSessionUiStatus.ready;
   } on ArgumentError {

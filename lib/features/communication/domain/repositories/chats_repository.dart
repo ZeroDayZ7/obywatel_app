@@ -8,6 +8,7 @@ abstract class ChatsRepository {
 
   Future<List<Conversation>> getConversations();
   Future<String> resolvePeerUserIdForConversation(String conversationId);
+  Future<String> ensureSelfConversation();
   Future<String> ensureConversationForContact(
     String contactUserId, {
     String? title,

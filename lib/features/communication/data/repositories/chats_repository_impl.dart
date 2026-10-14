@@ -238,6 +238,54 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   @override
+  Future<String> ensureSelfConversation() async {
+    final existingId = await _findExistingSelfConversationId();
+    if (existingId != null) {
+      return existingId;
+    }
+
+    final createdConversation = await _apiClient.createConversation(
+      type: 'direct',
+      recipientIds: [_currentUserId],
+      title: 'Chat ze sobą',
+    );
+
+    final selfConversationId = createdConversation.id.trim();
+    if (!Uuid.isValidUUID(fromString: selfConversationId)) {
+      throw StateError(
+        'Backend returned invalid self-conversation UUID: $selfConversationId',
+      );
+    }
+
+    await saveConversationsFromRemote([createdConversation]);
+    return selfConversationId;
+  }
+
+  Future<String?> _findExistingSelfConversationId() async {
+    final rows = await (_db.select(_db.conversationMembers)
+          ..where((t) => t.userId.equals(_currentUserId)))
+        .get();
+
+    final byConversation = <String, Set<String>>{};
+    for (final row in rows) {
+      final conversationId = row.conversationId.trim();
+      if (!Uuid.isValidUUID(fromString: conversationId)) {
+        continue;
+      }
+      byConversation.putIfAbsent(conversationId, () => <String>{}).add(row.userId);
+    }
+
+    for (final entry in byConversation.entries) {
+      final members = entry.value;
+      if (members.length == 1 && members.contains(_currentUserId)) {
+        return entry.key;
+      }
+    }
+
+    return null;
+  }
+
+  @override
   Future<String> resolvePeerUserIdForConversation(String conversationId) async {
     final trimmedConversationId = conversationId.trim();
     if (trimmedConversationId.isEmpty) {
@@ -258,11 +306,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
           .where((userId) => userId != _currentUserId)
           .toSet();
 
-      if (peerUserIds.length == 1) {
-        final peerUserId = peerUserIds.single;
-        if (members.length == 2) {
-          return peerUserId;
-        }
+      if (peerUserIds.isEmpty && members.length <= 1) {
+        return _currentUserId;
+      }
+
+      if (peerUserIds.length == 1 && members.length == 2) {
+        return peerUserIds.single;
       }
 
       throw ArgumentError.value(
@@ -274,11 +323,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     if (!trimmedConversationId.contains(':')) {
       if (trimmedConversationId == _currentUserId) {
-        throw ArgumentError.value(
-          conversationId,
-          'conversationId',
-          'Conversation does not contain a different peer user id',
-        );
+        return _currentUserId;
       }
       return trimmedConversationId;
     }
@@ -514,6 +559,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final operationId = const Uuid().v4();
     final createdAt = DateTime.now();
     final senderAppDeviceId = await _deviceInfoService.getOrCreateDeviceId();
+
+    final normalizedConversationId = conversationId.trim();
+    final remoteUserId = await resolvePeerUserIdForConversation(
+      normalizedConversationId,
+    );
+
     _logger.i(
       '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversationId=$conversationId local_user_id=$_currentUserId app_device_id=$senderAppDeviceId content_length=${content.length}',
       module: 'ChatsRepository',
@@ -523,13 +574,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
-    final normalizedConversationId = conversationId.trim();
     final bool isExistingServerConversation = Uuid.isValidUUID(
       fromString: normalizedConversationId,
-    );
-
-    final remoteUserId = await resolvePeerUserIdForConversation(
-      normalizedConversationId,
     );
 
     String? existingServerConversationId;
@@ -868,10 +914,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
       if (remoteMessageDtos.isNotEmpty) {
         for (final dto in remoteMessageDtos) {
-          if (dto.senderId == _currentUserId) {
-            continue;
-          }
-
           final decrypted = await _decryptInboundMessage(dto);
           if (decrypted != null) {
             await _persistPlaintextForMessage(dto.id, decrypted);
