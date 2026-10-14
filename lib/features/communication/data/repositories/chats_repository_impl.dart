@@ -570,7 +570,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       module: 'ChatsRepository',
     );
 
-    if (content.trim().isEmpty) {
+    final hasTextContent = content.trim().isNotEmpty;
+    final hasAttachment = attachmentId != null && attachmentId.trim().isNotEmpty;
+    if (!hasTextContent && !hasAttachment) {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
 
@@ -1149,6 +1151,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId: Value(dto.conversationId),
       senderId: Value(dto.senderId),
       senderDeviceId: Value(dto.senderDeviceId ?? ''),
+      attachmentId: Value(dto.attachmentId),
       type: Value(dto.type),
       sequence: Value(BigInt.from(dto.sequence)),
       encryptedPayload: Value(utf8.encode(dto.encryptedPayload)),
@@ -1173,6 +1176,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       conversationId: Value(message.conversationId),
       senderId: Value(message.senderId),
       senderDeviceId: Value(senderDeviceId ?? 'unknown-device'),
+      attachmentId: Value(message.attachmentId),
       type: Value(signalType?.toString() ?? 'text'),
       sequence: const Value.absent(),
       encryptedPayload: Value(utf8.encode(ciphertext)),
@@ -1207,6 +1211,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         createdAt: entity.createdAt,
         status: status,
         isEncrypted: !isPlainTextMessage,
+        attachmentId: entity.attachmentId,
       );
     }
 
@@ -1221,6 +1226,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         createdAt: entity.createdAt,
         status: status,
         isEncrypted: false,
+        attachmentId: entity.attachmentId,
       );
     }
 
@@ -1238,6 +1244,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       createdAt: entity.createdAt,
       status: status,
       isEncrypted: true,
+      attachmentId: entity.attachmentId,
     );
   }
 }

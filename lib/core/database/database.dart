@@ -60,7 +60,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 10;
+  int get schemaVersion => 11;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -114,6 +114,9 @@ class AppDatabase extends _$AppDatabase {
           'FROM messages_old;',
         );
         await customStatement('DROP TABLE messages_old;');
+      }
+      if (from < 11) {
+        await m.addColumn(messages, messages.attachmentId);
       }
     },
     beforeOpen: (details) async {

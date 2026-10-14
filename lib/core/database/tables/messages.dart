@@ -6,7 +6,8 @@ class Messages extends Table {
   TextColumn get conversationId => text()();
   TextColumn get senderId => text()();
   TextColumn get senderDeviceId => text()();
-  
+  TextColumn get attachmentId => text().nullable()();
+
   // Typ wiadomości: 'text', 'media', 'system'
   TextColumn get type => text().withDefault(const Constant('text'))();
   

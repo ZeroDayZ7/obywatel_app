@@ -3,6 +3,15 @@ import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart'
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
+bool isMessageSendAllowed({
+  required String content,
+  required String? attachmentId,
+}) {
+  final hasText = content.trim().isNotEmpty;
+  final hasAttachment = attachmentId != null && attachmentId.trim().isNotEmpty;
+  return hasText || hasAttachment;
+}
+
 String buildDirectConversationId(String userIdA, String userIdB) {
   final values = [userIdA.trim(), userIdB.trim()]
       .where((value) => value.isNotEmpty)
@@ -94,6 +103,7 @@ Message mapMessageFromDto(MessageDto dto, String currentUserId) {
     createdAt: dto.createdAt,
     status: 'sent',
     isEncrypted: true,
+    attachmentId: dto.attachmentId,
   );
 }
 

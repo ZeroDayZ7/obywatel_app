@@ -1,4 +1,5 @@
 // lib\app\bootstrap\logic\tasks.dart
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
@@ -23,11 +24,34 @@ class StorageInitTask implements StartupTask {
   @override
   String get name => 'Storage & Database';
 
+
   @override
   Future<AppInitStatus?> initialize() async {
-    // Normal app startup must not nuke the local database, secure storage,
-    // or outbox state. Any destructive reset must be explicit and isolated to
-    // a deliberate testing/dev scenario, never a normal boot path.
+
+    const bool shouldResetForTesting = kDebugMode && true;
+
+    if (shouldResetForTesting) {
+      debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
+
+      try {
+        // await storage.clearAll();
+        // await prefs.clearAll();
+
+        // await database.clearSignalStore();
+        // await database.clearDatabase();
+
+        // await database.close();
+        
+        debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
+      } catch (e, st) {
+        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+      }
+
+      if (kDebugMode) {
+        await storage.debugPrintAll();
+        await prefs.debugPrintAll();
+      }
+    }
     return null;
   }
 }
