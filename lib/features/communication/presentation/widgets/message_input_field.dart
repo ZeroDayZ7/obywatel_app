@@ -1,5 +1,6 @@
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
@@ -17,19 +18,29 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
   bool _isEmojiPickerVisible = false;
+  TextSelection? _lastValidSelection;
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController();
     _focusNode = FocusNode();
+    _controller.addListener(_syncSelection);
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_syncSelection);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _syncSelection() {
+    final selection = _controller.selection;
+    if (selection.isValid) {
+      _lastValidSelection = selection;
+    }
   }
 
   void _updateTextState(String value) {
@@ -38,44 +49,55 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         .updateText(value);
   }
 
-  void _insertEmoji(String emoji) {
-    final value = _controller.value;
-    final text = value.text;
-    final selection = value.selection;
-
-    final int start;
-    final int end;
-
-    if (!selection.isValid) {
-      start = text.length;
-      end = text.length;
-    } else {
-      start = selection.start.clamp(0, text.length);
-      end = selection.end.clamp(start, text.length);
+  void _closeEmojiPicker() {
+    if (!_isEmojiPickerVisible) {
+      return;
     }
 
+    setState(() {
+      _isEmojiPickerVisible = false;
+    });
+  }
+
+  void _insertEmoji(String emoji) {
+    final text = _controller.text;
+    final selection = _controller.selection.isValid
+        ? _controller.selection
+        : (_lastValidSelection ?? TextSelection.collapsed(offset: text.length));
+
+    final start = selection.start.clamp(0, text.length);
+    final end = selection.end.clamp(start, text.length);
+
     final newText = text.replaceRange(start, end, emoji);
-    final cursorPosition = start + emoji.length;
+    final newSelection = TextSelection.collapsed(
+      offset: start + emoji.length,
+      affinity: selection.affinity,
+    );
 
     _controller.value = TextEditingValue(
       text: newText,
-      selection: TextSelection.collapsed(offset: cursorPosition),
+      selection: newSelection,
       composing: TextRange.empty,
     );
-
+    _lastValidSelection = newSelection;
     _updateTextState(newText);
   }
 
   void _toggleEmojiPicker() {
-    setState(() {
-      _isEmojiPickerVisible = !_isEmojiPickerVisible;
-    });
-
     if (_isEmojiPickerVisible) {
-      _focusNode.unfocus();
-    } else {
+      _closeEmojiPicker();
       _focusNode.requestFocus();
+      return;
     }
+
+    _focusNode.unfocus();
+    Future.microtask(() {
+      if (!mounted) return;
+      setState(() {
+        _isEmojiPickerVisible = true;
+      });
+    });
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
   }
 
   void _sendMessage() {
@@ -86,10 +108,10 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         .read(activeChatProvider(widget.conversationId).notifier)
         .sendMessage(text);
     _controller.clear();
+    _lastValidSelection = const TextSelection.collapsed(offset: 0);
     _updateTextState('');
-    setState(() {
-      _isEmojiPickerVisible = false;
-    });
+    _closeEmojiPicker();
+    _focusNode.unfocus();
   }
 
   @override
@@ -136,6 +158,11 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                   child: TextField(
                     controller: _controller,
                     focusNode: _focusNode,
+                    onTap: () {
+                      if (_isEmojiPickerVisible) {
+                        _closeEmojiPicker();
+                      }
+                    },
                     onChanged: (val) {
                       _updateTextState(val);
                     },
@@ -143,7 +170,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     maxLines: 4,
                     style: theme.textTheme.bodyMedium,
                     decoration: InputDecoration(
-                      hintText: 'Wpisz komunikat...',
+                      hintText: 'Napisz wiadomość...',
                       hintStyle: theme.textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
