@@ -7,8 +7,8 @@ import 'package:obywatel_plus/features/auth/application/session/session_service.
 import 'package:obywatel_plus/features/communication/application/contact_invite_error_mapper.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact_identifier.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/add_contact_qr_view.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 
 class AddContactModal extends ConsumerStatefulWidget {
   const AddContactModal({super.key});
@@ -145,6 +145,19 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
       _controller.text = scannedCode;
       _submitRequest(scannedCode);
     }
+  }
+
+  Future<void> _copyMyUserId() async {
+    await Clipboard.setData(ClipboardData(text: _myUserId));
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Skopiowano Twoje ID do schowka!'),
+        duration: Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   @override
@@ -286,87 +299,10 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                         ),
                       ),
                     ] else ...[
-                      Text(
-                        'Zeskanuj ten kod na drugim urządzeniu, aby szybko nawiązać kontakt.',
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
+                      AddContactQrView(
+                        myUserId: _myUserId,
+                        onCopy: _copyMyUserId,
                       ),
-                      const SizedBox(height: 20),
-                      if (_myUserId.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                        )
-                      else ...[
-                        Center(
-                          child: Container(
-                            padding: const EdgeInsets.all(20),
-                            decoration: BoxDecoration(
-                              // WYMUSZONE BIAŁE TŁO DLA KODU QR, ABY BYŁ ZAWSZE CZYTELNY
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colorScheme.shadow.withValues(
-                                    alpha: 0.08,
-                                  ),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: QrImageView(
-                              data: _myUserId,
-                              version: QrVersions.auto,
-                              size: 190.0,
-                              // Jawne ustawienie koloru elementów QR na smolistą czerń dla idealnego kontrastu
-                              eyeStyle: const QrEyeStyle(
-                                eyeShape: QrEyeShape.square,
-                                color: Colors.black,
-                              ),
-                              dataModuleStyle: const QrDataModuleStyle(
-                                dataModuleShape: QrDataModuleShape.square,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Center(
-                          child: FilledButton.tonalIcon(
-                            onPressed: () {
-                              Clipboard.setData(ClipboardData(text: _myUserId));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Skopiowano Twoje ID do schowka!',
-                                  ),
-                                  duration: Duration(seconds: 2),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.copy_rounded, size: 18),
-                            label: const Text('Kopiuj moje ID'),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
                     ],
                   ],
                 ),

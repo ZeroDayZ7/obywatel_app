@@ -12,6 +12,7 @@ import 'package:obywatel_plus/features/communication/application/sync_status.dar
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:uuid/uuid.dart';
 

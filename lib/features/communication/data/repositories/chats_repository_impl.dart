@@ -16,189 +16,15 @@ import 'package:obywatel_plus/features/communication/application/outbox_event_bu
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'chats_repository_impl.g.dart';
-
-String buildDirectConversationId(String userIdA, String userIdB) {
-  final values = [
-    userIdA.trim(),
-    userIdB.trim(),
-  ].where((value) => value.isNotEmpty).toList();
-
-  if (values.length != 2) {
-    throw ArgumentError.value(
-      '$userIdA:$userIdB',
-      'userIds',
-      'Direct conversation requires exactly two user ids',
-    );
-  }
-
-  final sorted = [...values]..sort();
-  return sorted.join(':');
-}
-
-String resolveRemoteUserIdForConversation(
-  String conversationId,
-  String currentUserId,
-) {
-  final trimmedConversationId = conversationId.trim();
-  if (trimmedConversationId.isEmpty) {
-    throw ArgumentError.value(
-      conversationId,
-      'conversationId',
-      'Conversation ID cannot be empty',
-    );
-  }
-
-  final members = trimmedConversationId
-      .split(':')
-      .map((member) => member.trim())
-      .where((member) => member.isNotEmpty)
-      .toList();
-
-  if (members.length == 1) {
-    final remoteUserId = members.first;
-    if (remoteUserId == currentUserId) {
-      throw ArgumentError.value(
-        conversationId,
-        'conversationId',
-        'Conversation does not contain a different peer user id',
-      );
-    }
-    return remoteUserId;
-  }
-
-  if (members.length != 2) {
-    throw ArgumentError.value(
-      conversationId,
-      'conversationId',
-      'Conversation must contain exactly two members for direct peer messaging',
-    );
-  }
-
-  if (!members.contains(currentUserId)) {
-    throw ArgumentError.value(
-      conversationId,
-      'conversationId',
-      'Current user is not part of this conversation',
-    );
-  }
-
-  final remoteUserId = members.firstWhere(
-    (member) => member != currentUserId,
-    orElse: () => '',
-  );
-
-  if (remoteUserId.isEmpty || remoteUserId == currentUserId) {
-    throw ArgumentError.value(
-      conversationId,
-      'conversationId',
-      'Conversation does not contain a different peer user id',
-    );
-  }
-
-  return remoteUserId;
-}
-
-Message mapMessageFromDto(MessageDto dto, String currentUserId) {
-  return Message(
-    id: dto.id,
-    conversationId: dto.conversationId,
-    senderId: dto.senderId,
-    content: dto.encryptedPayload,
-    encryptedPayload: dto.encryptedPayload,
-    isMine: dto.senderId == currentUserId,
-    createdAt: dto.createdAt,
-    status: 'sent',
-    isEncrypted: true,
-  );
-}
-
-Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
-  return Conversation(
-    id: dto.id,
-    type: dto.type,
-    title: dto.title,
-    lastSequence: dto.lastSequence,
-    members: dto.members
-        .map(
-          (m) => ConversationMember(
-            id: m.id,
-            conversationId: m.conversationId,
-            userId: m.userId,
-            role: m.role,
-            lastReadSequence: m.lastReadSequence,
-          ),
-        )
-        .toList(),
-    messages: dto.messages
-        ?.whereType<MessageDto>()
-        .map((m) => mapMessageFromDto(m, currentUserId))
-        .toList(),
-    updatedAt: dto.updatedAt ?? DateTime.now(),
-  );
-}
-
-List<MessageDto> parseRemoteMessageDtos(dynamic rawMessages) {
-  final messageList = rawMessages as List<dynamic>? ?? const [];
-  return messageList
-      .map((item) => MessageDto.fromJson(item as Map<String, dynamic>))
-      .toList();
-}
-
-int resolveLastKnownMessageVersion(
-  Iterable<MessageDto> remoteMessages,
-  int fallbackVersion,
-) {
-  var maxVersion = fallbackVersion;
-
-  for (final dto in remoteMessages) {
-    if (dto.version > maxVersion) {
-      maxVersion = dto.version;
-    }
-  }
-
-  return maxVersion;
-}
-
-int resolveLastKnownContactVersion(
-  dynamic updatedContacts,
-  int fallbackVersion,
-) {
-  final contactList = updatedContacts as List<dynamic>? ?? const [];
-  var maxVersion = fallbackVersion;
-
-  for (final item in contactList) {
-    final contactMap = item as Map<String, dynamic>?;
-    final version = int.tryParse((contactMap?['version'] ?? 0).toString()) ?? 0;
-    if (version > maxVersion) {
-      maxVersion = version;
-    }
-  }
-
-  return maxVersion;
-}
-
-int normalizeSignalType(String? rawType, {int fallback = 1}) {
-  if (rawType == null || rawType.trim().isEmpty) {
-    return fallback;
-  }
-
-  final parsed = int.tryParse(rawType.trim());
-  if (parsed != null) {
-    return parsed;
-  }
-
-  final normalized = rawType.trim().toLowerCase();
-  if (normalized.contains('pre')) return 3;
-  if (normalized.contains('signal') || normalized.contains('cipher')) return 2;
-  return fallback;
-}
 
 class ChatsRepositoryImpl implements ChatsRepository {
   final ChatsApiClient _apiClient;
@@ -210,56 +36,18 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
   final SecureStorageService _secureStorage;
-  final Map<String, String> _localPlaintextCache = <String, String>{};
-  final Map<String, Set<String>> _plaintextIdAliases = <String, Set<String>>{};
+  final LocalPlaintextMessageCache _plaintextStore = LocalPlaintextMessageCache();
 
   AppDatabase get db => _db;
 
-  Set<String> _collectRelatedMessageIds(String messageId) {
-    final normalizedId = messageId.trim();
-    if (normalizedId.isEmpty) {
-      return <String>{};
-    }
+  Set<String> _collectRelatedMessageIds(String messageId) =>
+      _plaintextStore.collectRelatedMessageIds(messageId);
 
-    final related = <String>{normalizedId};
-    final queue = <String>[normalizedId];
+  void _registerPlaintextAlias(String firstId, String secondId) =>
+      _plaintextStore.registerAlias(firstId, secondId);
 
-    while (queue.isNotEmpty) {
-      final current = queue.removeLast();
-      final aliases = _plaintextIdAliases[current] ?? const <String>{};
-      for (final alias in aliases) {
-        final normalizedAlias = alias.trim();
-        if (normalizedAlias.isNotEmpty && related.add(normalizedAlias)) {
-          queue.add(normalizedAlias);
-        }
-      }
-    }
-
-    return related;
-  }
-
-  void _registerPlaintextAlias(String firstId, String secondId) {
-    final left = firstId.trim();
-    final right = secondId.trim();
-
-    if (left.isEmpty || right.isEmpty || left == right) {
-      return;
-    }
-
-    _plaintextIdAliases.putIfAbsent(left, () => <String>{}).add(right);
-    _plaintextIdAliases.putIfAbsent(right, () => <String>{}).add(left);
-  }
-
-  String? _resolvePlaintextByMessageId(String messageId) {
-    final relatedIds = _collectRelatedMessageIds(messageId);
-    for (final candidate in relatedIds) {
-      final value = _localPlaintextCache[candidate];
-      if (value != null && value.trim().isNotEmpty) {
-        return value;
-      }
-    }
-    return null;
-  }
+  String? _resolvePlaintextByMessageId(String messageId) =>
+      _plaintextStore.resolve(messageId);
 
   String? _extractServerMessageIdFromResponse(dynamic responseData) {
     dynamic value = responseData;
@@ -318,7 +106,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final relatedIds = _collectRelatedMessageIds(messageId)..add(messageId);
     for (final relatedId in relatedIds) {
-      _localPlaintextCache[relatedId] = normalized;
+      _plaintextStore.plaintextCache[relatedId] = normalized;
     }
 
     for (final relatedId in relatedIds) {
@@ -357,7 +145,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     for (final messageId in ids) {
-      if (_localPlaintextCache.containsKey(messageId)) {
+      if (_plaintextStore.plaintextCache.containsKey(messageId)) {
         continue;
       }
 
@@ -365,7 +153,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         key: _plaintextStorageKey(messageId),
       );
       if (persisted != null && persisted.trim().isNotEmpty) {
-        _localPlaintextCache[messageId] = persisted.trim();
+        _plaintextStore.plaintextCache[messageId] = persisted.trim();
       }
     }
   }

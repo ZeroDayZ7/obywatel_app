@@ -11,96 +11,13 @@ import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/communication/data/mappers/e2ee_crypto_mapper.dart'
+    as e2ee_crypto_mapper;
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'e2ee_crypto_service.g.dart';
-
-typedef AppDeviceUuid = String;
-typedef SignalDeviceId = int;
-
-class EncryptedData {
-  final String ciphertextBase64;
-  final String nonceBase64;
-  final int type;
-
-  const EncryptedData({
-    required this.ciphertextBase64,
-    required this.nonceBase64,
-    required this.type,
-  });
-}
-
-class SignalCiphertextEnvelope {
-  final int type;
-  final String ciphertext;
-  final String senderDeviceId;
-  final String recipientUserId;
-  final String recipientDeviceId;
-
-  const SignalCiphertextEnvelope({
-    required this.type,
-    required this.ciphertext,
-    required this.senderDeviceId,
-    required this.recipientUserId,
-    required this.recipientDeviceId,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'type': type,
-    'ciphertext': ciphertext,
-    'senderDeviceId': senderDeviceId,
-    'recipientUserId': recipientUserId,
-    'recipientDeviceId': recipientDeviceId,
-  };
-
-  factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
-    final typeValue = json['type'] ?? 1;
-    return SignalCiphertextEnvelope(
-      type: typeValue is int
-          ? typeValue
-          : int.tryParse(typeValue.toString()) ?? 1,
-      ciphertext: (json['ciphertext'] ?? '').toString(),
-      senderDeviceId: (json['senderDeviceId'] ?? '').toString(),
-      recipientUserId: (json['recipientUserId'] ?? '').toString(),
-      recipientDeviceId: (json['recipientDeviceId'] ?? '1').toString(),
-    );
-  }
-}
-
-class OneTimePreKeyRegistration {
-  final int keyId;
-  final String publicKey;
-
-  const OneTimePreKeyRegistration({
-    required this.keyId,
-    required this.publicKey,
-  });
-
-  Map<String, dynamic> toJson() => {'keyId': keyId, 'publicKey': publicKey};
-}
-
-class DeviceKeyBundle {
-  final String deviceId;
-  final int registrationId;
-  final String publicKey;
-  final String privateKey;
-  final String signedPreKey;
-  final String signedPreKeySignature;
-  final int signedPreKeyId;
-  final List<OneTimePreKeyRegistration> oneTimePreKeys;
-
-  const DeviceKeyBundle({
-    required this.deviceId,
-    required this.registrationId,
-    required this.publicKey,
-    required this.privateKey,
-    required this.signedPreKey,
-    required this.signedPreKeySignature,
-    required this.signedPreKeyId,
-    required this.oneTimePreKeys,
-  });
-}
 
 class EncryptionFailureException implements Exception {
   final String message;
@@ -120,6 +37,25 @@ class E2eeCryptoService {
     this._signalStore,
   );
 
+  static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) =>
+      e2ee_crypto_mapper.fromPreKeyBundleJson(json);
+
+  static SignalDeviceId resolveSignalDeviceId(
+    String? rawDeviceId, {
+    SignalDeviceId? fallback,
+  }) => e2ee_crypto_mapper.resolveSignalDeviceId(rawDeviceId, fallback: fallback);
+
+  static String fingerprintIdentityKey(IdentityKey? identityKey) =>
+      e2ee_crypto_mapper.fingerprintIdentityKey(identityKey);
+
+  static String requireAppDeviceUuid(
+    String? rawAppDeviceId, {
+    String context = 'app_device_id',
+  }) => e2ee_crypto_mapper.requireAppDeviceUuid(
+    rawAppDeviceId,
+    context: context,
+  );
+
   final SecureStorageService _secureStorage;
   final AppLogger _logger;
   final ApiClient _apiClient;
@@ -133,194 +69,6 @@ class E2eeCryptoService {
   static String _signalAddressName(SignalProtocolAddress address) =>
       '${address.getName()}@${address.getDeviceId()}';
 
-  static AppDeviceUuid requireAppDeviceUuid(
-    String? rawAppDeviceId, {
-    String context = 'app_device_id',
-  }) {
-    final normalized = (rawAppDeviceId ?? '').trim();
-    if (normalized.isEmpty) {
-      throw FormatException(
-        'Missing $context; raw app device UUID is required',
-      );
-    }
-    return normalized;
-  }
-
-  static SignalDeviceId _hashUuidToSignalDeviceId(String uuid) {
-    final digestHex = sha256.convert(utf8.encode(uuid)).toString();
-    final numeric = BigInt.parse('0x${digestHex.substring(0, 16)}');
-    final maxSignalDeviceId = BigInt.from(2147483646);
-    final candidate = (numeric % maxSignalDeviceId) + BigInt.one;
-    final resolved = candidate.toInt();
-    return resolved == 1 ? 2 : resolved;
-  }
-
-  static SignalDeviceId resolveSignalDeviceId(
-    String? rawDeviceId, {
-    SignalDeviceId? fallback,
-  }) {
-    final trimmed = (rawDeviceId ?? '').trim();
-    if (trimmed.isEmpty) {
-      if (fallback != null) return fallback;
-      throw const FormatException(
-        'Signal device id is missing; the bundle must include a positive numeric device id.',
-      );
-    }
-
-    final numeric = int.tryParse(trimmed);
-    if (numeric != null && numeric > 0) {
-      return numeric;
-    }
-
-    if (Uuid.isValidUUID(fromString: trimmed)) {
-      return _hashUuidToSignalDeviceId(trimmed);
-    }
-
-    if (fallback != null) return fallback;
-    throw const FormatException(
-      'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id.',
-    );
-  }
-
-  static SignalDeviceId resolveSignalDeviceIdFromAppUuid(
-    AppDeviceUuid? rawAppDeviceUuid, {
-    SignalDeviceId? fallback,
-  }) {
-    final appDeviceUuid = requireAppDeviceUuid(
-      rawAppDeviceUuid,
-      context: 'app_device_id',
-    );
-    return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
-  }
-
-  static String fingerprintIdentityKey(IdentityKey? identityKey) {
-    if (identityKey == null) {
-      return 'missing';
-    }
-
-    final digest = sha256.convert(identityKey.serialize());
-    return digest.toString();
-  }
-
-  static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) {
-    final registrationIdValue = json['registrationId'];
-    final int registrationId;
-    if (registrationIdValue is int) {
-      registrationId = registrationIdValue;
-    } else if (registrationIdValue == null) {
-      throw const FormatException(
-        'Missing required Signal bundle field: registrationId',
-      );
-    } else {
-      final parsed = int.tryParse(registrationIdValue.toString());
-      if (parsed == null) {
-        throw const FormatException(
-          'Missing required Signal bundle field: registrationId',
-        );
-      }
-      registrationId = parsed;
-    }
-    if (registrationId <= 0) {
-      throw const FormatException(
-        'Signal bundle registrationId must be a positive integer.',
-      );
-    }
-
-    final rawDeviceId = json['deviceId'];
-    final int deviceId;
-    if (rawDeviceId is int) {
-      deviceId = resolveSignalDeviceId(rawDeviceId.toString());
-    } else if (rawDeviceId is String) {
-      deviceId = resolveSignalDeviceId(rawDeviceId);
-    } else {
-      throw const FormatException(
-        'Missing required Signal bundle field: deviceId',
-      );
-    }
-
-    final preKeyIdValue = json['preKeyId'];
-    final int? preKeyId;
-    if (preKeyIdValue == null || preKeyIdValue.toString().trim().isEmpty) {
-      preKeyId = null;
-    } else if (preKeyIdValue is int) {
-      preKeyId = preKeyIdValue;
-    } else {
-      preKeyId = int.tryParse(preKeyIdValue.toString());
-    }
-
-    final signedPreKeyIdValue = json['signedPreKeyId'];
-    final int signedPreKeyId;
-    if (signedPreKeyIdValue is int) {
-      signedPreKeyId = signedPreKeyIdValue;
-    } else if (signedPreKeyIdValue == null) {
-      throw const FormatException(
-        'Missing required Signal bundle field: signedPreKeyId',
-      );
-    } else {
-      final parsed = int.tryParse(signedPreKeyIdValue.toString());
-      if (parsed == null) {
-        throw const FormatException(
-          'Missing required Signal bundle field: signedPreKeyId',
-        );
-      }
-      signedPreKeyId = parsed;
-    }
-    if (signedPreKeyId <= 0) {
-      throw const FormatException(
-        'Signal bundle signedPreKeyId must be a positive integer.',
-      );
-    }
-
-    final identityKeyRaw = json['identityKey'];
-    final identityKeyBytes =
-        identityKeyRaw is String && identityKeyRaw.isNotEmpty
-        ? base64Decode(identityKeyRaw)
-        : null;
-
-    final signedPreKeyPublicRaw = json['signedPreKeyPublic'];
-    final signedPreKeyPublicBytes =
-        signedPreKeyPublicRaw is String && signedPreKeyPublicRaw.isNotEmpty
-        ? base64Decode(signedPreKeyPublicRaw)
-        : null;
-
-    final signedPreKeySignatureRaw = json['signedPreKeySignature'];
-    final signedPreKeySignatureBytes =
-        signedPreKeySignatureRaw is String &&
-            signedPreKeySignatureRaw.isNotEmpty
-        ? base64Decode(signedPreKeySignatureRaw)
-        : null;
-
-    final preKeyPublicRaw = json['preKeyPublic'];
-    final preKeyPublicBytes =
-        preKeyPublicRaw is String && preKeyPublicRaw.isNotEmpty
-        ? base64Decode(preKeyPublicRaw)
-        : null;
-
-    if (identityKeyBytes == null ||
-        signedPreKeyPublicBytes == null ||
-        signedPreKeySignatureBytes == null) {
-      throw const FormatException(
-        'Missing required Signal pre-key bundle fields',
-      );
-    }
-
-    final identityKey = IdentityKey.fromBytes(identityKeyBytes, 0);
-    final signedPreKeyPublic = Curve.decodePoint(signedPreKeyPublicBytes, 0);
-    final preKeyPublic = preKeyPublicBytes == null
-        ? null
-        : Curve.decodePoint(preKeyPublicBytes, 0);
-
-    return PreKeyBundle(
-      registrationId,
-      deviceId,
-      preKeyId == 0 ? null : preKeyId,
-      preKeyPublic,
-      signedPreKeyId,
-      signedPreKeyPublic,
-      signedPreKeySignatureBytes,
-      identityKey,
-    );
-  }
 
   Future<PreKeyBundle> fetchRemotePreKeyBundle(
     String remoteUserId, {
