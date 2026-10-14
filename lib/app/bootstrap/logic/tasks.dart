@@ -26,38 +26,30 @@ class StorageInitTask implements StartupTask {
 
   @override
   Future<AppInitStatus?> initialize() async {
-    if (kDebugMode) {
-      // Manual debug-only reset helper for intentional first-run / clean-install simulation.
-      // This block is intentionally commented and MUST NOT run during normal startup.
 
-      await Future.wait([
-        storage.clearAll(),
-        prefs.clearAll(),
-      ]);
-      storage.clearAll();
-      prefs.clearAll();
-      database.clearSignalStore();
-      database.clearDatabase();
+    const bool shouldResetForTesting = kDebugMode && true;
 
-      await database.clearSignalStore();
-      await database.clearDatabase();
-      
-      await storage.debugPrintAll();
-      await prefs.debugPrintAll();
+    if (shouldResetForTesting) {
+      debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
 
-      final signalIdentityCount = await database
-          .select(database.signalIdentityKeys)
-          .get();
-      final signalPreKeyCount = await database
-          .select(database.signalPreKeys)
-          .get();
-      final signalSessionCount = await database
-          .select(database.signalSessions)
-          .get();
+      try {
+        await storage.clearAll();
+        await prefs.clearAll();
 
-      debugPrint(
-        '[StorageInitTask] Signal store integrity: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
-      );
+        await database.clearSignalStore();
+        await database.clearDatabase();
+
+        await database.close();
+        
+        debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
+      } catch (e, st) {
+        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+      }
+
+      if (kDebugMode) {
+        await storage.debugPrintAll();
+        await prefs.debugPrintAll();
+      }
     }
 
     return null;

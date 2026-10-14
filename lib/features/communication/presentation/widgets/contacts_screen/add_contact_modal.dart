@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
-import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
-import 'package:obywatel_plus/features/communication/application/contact_invite_error_mapper.dart';
-import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
-import 'package:obywatel_plus/features/communication/domain/contacts/contact_identifier.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/add_contact_form_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/add_contact_qr_view.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 
@@ -24,9 +21,6 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   final _controller = TextEditingController(
     text: 'a2f6b8c9-1122-4a55-8822-b98765432101',
   );
-  bool _isLoading = false;
-  String _myUserId = '';
-  String? _inlineError;
 
   bool get _isMobilePlatform =>
       !kIsWeb &&
@@ -40,23 +34,13 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   }
 
   Future<void> _loadCurrentUserId() async {
-    final cachedUser = await ref.read(sessionServiceProvider).getCachedUser();
-    if (!mounted) return;
-
-    setState(() {
-      _myUserId = cachedUser?.id ?? '';
-    });
+    await ref.read(addContactFormProvider.notifier).loadCurrentUserId();
   }
 
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-  }
-
-  void _showFormError(String message) {
-    if (!mounted) return;
-    setState(() => _inlineError = message);
   }
 
   Widget _buildErrorBox(BuildContext context, String message) {
@@ -100,40 +84,22 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   }
 
   Future<void> _submitRequest(String userId) async {
-    final trimmed = userId.trim();
-    if (trimmed.isEmpty) return;
+    final succeeded = await ref
+        .read(addContactFormProvider.notifier)
+        .submit(userId);
 
-    late final ContactIdentifier identifier;
-    try {
-      identifier = ContactIdentifier.parse(trimmed);
-    } on FormatException {
-      _showFormError('Sprawdź identyfikator użytkownika.');
-      return;
-    }
+    if (!mounted) return;
+    if (!succeeded) return;
 
-    setState(() {
-      _inlineError = null;
-      _isLoading = true;
-    });
-
-    try {
-      await ref.read(contactsServiceProvider).addContact(identifier.normalized);
-      if (mounted) {
-        final statusColors = context.statusColors;
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Zaproszenie wysłane pomyślnie!'),
-            backgroundColor: statusColors.success,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
-    } catch (error) {
-      _showFormError(mapContactInviteError(error));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
+    final statusColors = context.statusColors;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Zaproszenie wysłane pomyślnie!'),
+        backgroundColor: statusColors.success,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _openQrScanner() async {
@@ -147,8 +113,10 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
     }
   }
 
-  Future<void> _copyMyUserId() async {
-    await Clipboard.setData(ClipboardData(text: _myUserId));
+  Future<void> _copyMyUserId(String userId) async {
+    if (userId.isEmpty) return;
+
+    await Clipboard.setData(ClipboardData(text: userId));
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -164,7 +132,11 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final formState = ref.watch(addContactFormProvider);
     final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    final isLoading = formState.isSubmitting;
+    final inlineError = formState.error;
+    final myUserId = formState.currentUserId;
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -234,11 +206,11 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                     if (_selectedTab == _AddContactTab.sendRequest) ...[
                       TextField(
                         controller: _controller,
-                        enabled: !_isLoading,
+                        enabled: !isLoading,
                         onChanged: (_) {
-                          if (_inlineError != null) {
-                            setState(() => _inlineError = null);
-                          }
+                          ref
+                              .read(addContactFormProvider.notifier)
+                              .clearError();
                         },
                         minLines: 1,
                         maxLines: 2,
@@ -255,14 +227,14 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                               .withValues(alpha: 0.4),
                         ),
                       ),
-                      if (_inlineError != null)
-                        _buildErrorBox(context, _inlineError!),
+                      if (inlineError != null)
+                        _buildErrorBox(context, inlineError),
                       const SizedBox(height: 24),
                       FilledButton.icon(
-                        onPressed: _isLoading
+                        onPressed: isLoading
                             ? null
                             : () => _submitRequest(_controller.text),
-                        icon: _isLoading
+                        icon: isLoading
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
@@ -282,7 +254,7 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                       ),
                       const SizedBox(height: 12),
                       OutlinedButton.icon(
-                        onPressed: (_isLoading || !_isMobilePlatform)
+                        onPressed: (isLoading || !_isMobilePlatform)
                             ? null
                             : _openQrScanner,
                         icon: const Icon(Icons.qr_code_scanner_rounded),
@@ -300,8 +272,8 @@ class _AddContactModalState extends ConsumerState<AddContactModal> {
                       ),
                     ] else ...[
                       AddContactQrView(
-                        myUserId: _myUserId,
-                        onCopy: _copyMyUserId,
+                        myUserId: myUserId,
+                        onCopy: () => _copyMyUserId(myUserId),
                       ),
                     ],
                   ],

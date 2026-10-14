@@ -38,30 +38,37 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     super.dispose();
   }
 
-  void _scrollToBottomIfNeeded(List<Message> messages) {
-    if (!_scrollController.hasClients || messages.isEmpty) return;
-
-    final lastMessageId = messages.last.id;
-    final nearBottom = _scrollController.position.maxScrollExtent -
-            _scrollController.offset <=
-        220;
-
-    if (_lastRenderedMessageId == null ||
-        lastMessageId != _lastRenderedMessageId ||
-        nearBottom) {
-      _lastRenderedMessageId = lastMessageId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!_scrollController.hasClients) return;
-        final maxScroll = _scrollController.position.maxScrollExtent;
-        if (maxScroll > 0) {
-          _scrollController.animateTo(
-            maxScroll,
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-          );
-        }
-      });
+  bool _shouldAutoScrollToBottom(List<Message> messages) {
+    if (!_scrollController.hasClients || messages.isEmpty) {
+      return false;
     }
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    final atBottom = maxScroll - _scrollController.offset <= 220;
+
+    if (_lastRenderedMessageId == null) {
+      return true;
+    }
+
+    return messages.last.id != _lastRenderedMessageId && atBottom;
+  }
+
+  void _scrollToBottomIfNeeded(List<Message> messages) {
+    if (!_shouldAutoScrollToBottom(messages)) return;
+
+    _lastRenderedMessageId = messages.last.id;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scrollController.hasClients) return;
+
+      final maxScroll = _scrollController.position.maxScrollExtent;
+      if (maxScroll > 0) {
+        _scrollController.animateTo(
+          maxScroll,
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
   }
 
   @override
@@ -70,7 +77,9 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
     final colorScheme = theme.colorScheme;
     final chatState = ref.watch(activeChatProvider(widget.conversationId));
     final syncStatus = ref.watch(chatSyncStatusControllerProvider);
-    final e2eeStatus = ref.watch(chatE2eeSessionStatusProvider(widget.conversationId));
+    final e2eeStatus = ref.watch(
+      chatE2eeSessionStatusProvider(widget.conversationId),
+    );
 
     final e2eeSubtitle = e2eeStatus.maybeWhen(
       data: (status) {
