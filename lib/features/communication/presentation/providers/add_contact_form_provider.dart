@@ -1,11 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+// lib/features/communication/presentation/providers/add_contact_form_provider.dart
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/contact_invite_error_mapper.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact_identifier.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-const Object _sentinel = Object();
+part 'add_contact_form_provider.g.dart';
 
+// Zwykła klasa stanu (możesz też zostawić copyWith, albo użyć @freezed)
 class AddContactFormState {
   const AddContactFormState({
     this.currentUserId = '',
@@ -20,24 +22,19 @@ class AddContactFormState {
   AddContactFormState copyWith({
     String? currentUserId,
     bool? isSubmitting,
-    Object? error = _sentinel,
+    String? error,
+    bool clearError = false,
   }) {
-    final resolvedError = error == _sentinel ? this.error : error as String?;
-
     return AddContactFormState(
       currentUserId: currentUserId ?? this.currentUserId,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      error: resolvedError,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
 
-final addContactFormProvider =
-    NotifierProvider<AddContactFormNotifier, AddContactFormState>(
-      AddContactFormNotifier.new,
-    );
-
-class AddContactFormNotifier extends Notifier<AddContactFormState> {
+@riverpod
+class AddContactForm extends _$AddContactForm {
   @override
   AddContactFormState build() => const AddContactFormState();
 
@@ -61,11 +58,11 @@ class AddContactFormNotifier extends Notifier<AddContactFormState> {
       return false;
     }
 
-    state = state.copyWith(error: null, isSubmitting: true);
+    state = state.copyWith(clearError: true, isSubmitting: true);
 
     try {
       await ref.read(contactsServiceProvider).addContact(identifier.normalized);
-      state = state.copyWith(isSubmitting: false, error: null);
+      state = state.copyWith(isSubmitting: false, clearError: true);
       return true;
     } catch (error) {
       state = state.copyWith(
@@ -78,6 +75,6 @@ class AddContactFormNotifier extends Notifier<AddContactFormState> {
 
   void clearError() {
     if (state.error == null) return;
-    state = state.copyWith(error: null);
+    state = state.copyWith(clearError: true);
   }
 }

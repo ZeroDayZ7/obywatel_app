@@ -1,68 +1,26 @@
-class MessageEnvelope {
-  const MessageEnvelope({
-    this.messageId,
-    this.conversationId,
-    this.senderUserId,
-    this.senderDeviceId,
-    this.recipientUserId,
-    this.recipientDeviceId,
-    this.ciphertext,
-    this.type,
-    this.nonce,
-    this.createdAt,
-    this.expiresAt,
-    this.version = 1,
-  });
+// lib/features/communication/data/dtos/message_envelope.dart
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  final String? messageId;
-  final String? conversationId;
-  final String? senderUserId;
-  final String? senderDeviceId;
-  final String? recipientUserId;
-  final String? recipientDeviceId;
-  final String? ciphertext;
-  final int? type;
-  final String? nonce;
-  final DateTime? createdAt;
-  final DateTime? expiresAt;
-  final int version;
+part 'message_envelope.freezed.dart';
+part 'message_envelope.g.dart';
 
-  factory MessageEnvelope.fromJson(Map<String, dynamic> json) {
-    return MessageEnvelope(
-      messageId: json['messageId'] as String?,
-      conversationId: json['conversationId'] as String?,
-      senderUserId: json['senderUserId'] as String?,
-      senderDeviceId: json['senderDeviceId'] as String?,
-      recipientUserId: json['recipientUserId'] as String?,
-      recipientDeviceId: json['recipientDeviceId'] as String?,
-      ciphertext: (json['ciphertext'] as String?) ?? json['ciphertext']?.toString(),
-      type: json['type'] as int?,
-      nonce: (json['nonce'] as String?) ?? json['nonce']?.toString(),
-      createdAt: _parseDate(json['createdAt']),
-      expiresAt: _parseDate(json['expiresAt']),
-      version: (json['version'] as int?) ?? 1,
-    );
-  }
+@freezed
+abstract class MessageEnvelope with _$MessageEnvelope {
+  const factory MessageEnvelope({
+    String? messageId,
+    String? conversationId,
+    String? senderUserId,
+    String? senderDeviceId,
+    String? recipientUserId,
+    String? recipientDeviceId,
+    String? ciphertext,
+    int? type,
+    String? nonce,
+    DateTime? createdAt,
+    DateTime? expiresAt,
+    @Default(1) int version,
+  }) = _MessageEnvelope;
 
-  Map<String, dynamic> toJson() => {
-        'messageId': messageId,
-        'conversationId': conversationId,
-        'senderUserId': senderUserId,
-        'senderDeviceId': senderDeviceId,
-        'recipientUserId': recipientUserId,
-        'recipientDeviceId': recipientDeviceId,
-        'ciphertext': ciphertext,
-        'type': type,
-        'nonce': nonce,
-        'createdAt': createdAt?.toIso8601String(),
-        'expiresAt': expiresAt?.toIso8601String(),
-        'version': version,
-      };
-
-  static DateTime? _parseDate(dynamic value) {
-    if (value == null) return null;
-    if (value is DateTime) return value;
-    if (value is String) return DateTime.tryParse(value);
-    return null;
-  }
+  factory MessageEnvelope.fromJson(Map<String, dynamic> json) =>
+      _$MessageEnvelopeFromJson(json);
 }

@@ -80,6 +80,7 @@ abstract class ApiEndpoints {
   static String get attachmentUpload => '/attachments/upload';
   static String get attachmentFinalize => '/attachments/finalize';
   static String attachmentById(String id) => '/attachments/$id';
+  static String attachmentDownload(String id) => '/attachments/$id/download';
 
   // ===========================================================================
   // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---

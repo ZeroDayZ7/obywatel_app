@@ -1,11 +1,16 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:cryptography/cryptography.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
-class MessageBubble extends StatelessWidget {
+class MessageBubble extends ConsumerWidget {
   final Message message;
 
   const MessageBubble({super.key, required this.message});
@@ -19,52 +24,110 @@ class MessageBubble extends StatelessWidget {
     return 'Nie można odszyfrować wiadomości';
   }
 
-  Widget _previewWidget(BuildContext context) {
+  Future<Uint8List?> _resolvePreviewBytes(WidgetRef ref, String attachmentId) async {
+    final storage = ref.read(secureStorageProvider);
+
+    final cachedPreview = await storage.read(key: '$attachmentId-attachment-preview');
+    if (cachedPreview != null && cachedPreview.trim().isNotEmpty) {
+      try {
+        final decoded = base64Decode(cachedPreview);
+        if (decoded.isNotEmpty) {
+          return Uint8List.fromList(decoded);
+        }
+      } catch (_) {
+        // ignore and continue to fetch remote preview
+      }
+    }
+
+    final metadata = await storage.read(key: '$attachmentId-attachment-meta');
+    if (metadata == null || metadata.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decodedMetadata = jsonDecode(metadata);
+      if (decodedMetadata is! Map) {
+        return null;
+      }
+
+      final key = decodedMetadata['key']?.toString().trim();
+      final contentType =
+          (decodedMetadata['originalContentType'] ?? decodedMetadata['contentType'])
+              .toString();
+      if (key == null || key.isEmpty || !contentType.toLowerCase().startsWith('image/')) {
+        return null;
+      }
+
+      final apiClient = ref.read(chatsApiClientProvider);
+      final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
+      if (download.downloadUrl.trim().isEmpty) {
+        return null;
+      }
+
+      final response = await Dio().get(
+        download.downloadUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      final encryptedBytes = response.data is List<int>
+          ? response.data as List<int>
+          : const <int>[];
+      if (encryptedBytes.isEmpty) {
+        return null;
+      }
+
+      final decryptedBytes = await ref.read(symmetricCryptoProvider).decryptBytes(
+        encryptedBase64: base64Encode(encryptedBytes),
+        secretKey: SecretKey(base64Decode(key)),
+      );
+
+      await storage.write(
+        key: '$attachmentId-attachment-preview',
+        value: base64Encode(decryptedBytes),
+      );
+
+      return decryptedBytes;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Widget _previewWidget(BuildContext context, WidgetRef ref) {
     final attachmentId = message.attachmentId?.trim();
     if (attachmentId == null || attachmentId.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    final storage = ProviderScope.containerOf(context, listen: false)
-        .read(secureStorageProvider);
-
-    return FutureBuilder<String?>(
-      future: storage.read(key: '$attachmentId-attachment-preview'),
+    return FutureBuilder<Uint8List?>(
+      future: _resolvePreviewBytes(ref, attachmentId),
       builder: (context, snapshot) {
-        final bytesString = snapshot.data?.trim();
-        if (!snapshot.hasData || bytesString == null || bytesString.isEmpty) {
+        final previewBytes = snapshot.data;
+        if (!snapshot.hasData || previewBytes == null || previewBytes.isEmpty) {
           return const SizedBox.shrink();
         }
 
-        try {
-          final previewBytes = base64Decode(bytesString);
-          if (previewBytes.isEmpty) {
-            return const SizedBox.shrink();
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 220, maxHeight: 220),
-                child: Image.memory(
-                  previewBytes,
-                  fit: BoxFit.cover,
-                  gaplessPlayback: true,
-                ),
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 220, maxHeight: 220),
+              child: Image.memory(
+                previewBytes,
+                fit: BoxFit.cover,
+                gaplessPlayback: true,
               ),
             ),
-          );
-        } catch (_) {
-          return const SizedBox.shrink();
-        }
+          ),
+        );
       },
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isMine = message.isMine;
@@ -118,7 +181,7 @@ class MessageBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _previewWidget(context),
+              _previewWidget(context, ref),
               if (_displayContent.isNotEmpty)
                 Text(
                   _displayContent,

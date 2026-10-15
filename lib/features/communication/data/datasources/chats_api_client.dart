@@ -179,6 +179,17 @@ class ChatsApiClient {
     return AttachmentDto.fromJson(payload);
   }
 
+  Future<AttachmentDownloadResponseDto> getAttachmentDownloadUrl(
+    String attachmentId,
+  ) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.attachmentDownload(attachmentId),
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDownloadResponseDto.fromJson(payload);
+  }
+
   Future<void> deleteAttachment(String attachmentId) async {
     await _apiClient.delete(ApiEndpoints.attachmentById(attachmentId));
   }
