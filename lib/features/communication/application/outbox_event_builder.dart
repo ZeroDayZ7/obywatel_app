@@ -48,6 +48,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   final normalizedConversationId = _normalizeConversationIdForServer(
     message.conversationId,
   );
+  final normalizedAttachmentId = (message.attachmentId ?? '').trim();
 
   if (normalizedConversationId == null || normalizedConversationId.isEmpty) {
     throw StateError(
@@ -68,6 +69,7 @@ Map<String, dynamic> buildOutboxEventPayload(
     'eventType': 'SEND_MESSAGE',
     'conversationId': normalizedConversationId,
     'senderDeviceId': sanitizedAppDeviceId,
+    'attachmentId': normalizedAttachmentId.isEmpty ? null : normalizedAttachmentId,
     'ciphertext': ciphertext,
     'type': signalType,
     'createdAt': createdAt,

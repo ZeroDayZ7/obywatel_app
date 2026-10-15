@@ -336,9 +336,13 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         ),
       );
 
+      debugPrint(
+        'Attachment upload diagnostics: attachmentId=${response.attachment.id}, originalSize=${pending.bytes.length}, encryptedSize=${encryptedBytes.length}, finalizeSize=${pending.bytes.length}, sha256=${encryptedSha256.substring(0, 16)}...',
+      );
+
       final finalAttachment = await apiClient.finalizeAttachmentUpload(
         attachmentId: response.attachment.id,
-        size: encryptedBytes.length,
+        size: pending.bytes.length,
         sha256: encryptedSha256,
         metadata: {
           'version': 1,
