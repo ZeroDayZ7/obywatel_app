@@ -1,23 +1,47 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 
 class MessagingActivationState {
-  const MessagingActivationState({
-    this.status,
-    this.terms,
-    this.errorMessage,
-  });
+  const MessagingActivationState({this.status, this.terms, this.errorMessage});
 
   static const Object _sentinel = Object();
+  static const String storageKey = 'messaging_activation_state_v1';
 
   final MessagingActivationDto? status;
   final MessagingTermsDto? terms;
   final String? errorMessage;
+
+  Map<String, dynamic> toJson() => {
+    'status': status?.toJson(),
+    'terms': terms?.toJson(),
+    'errorMessage': errorMessage,
+  };
+
+  factory MessagingActivationState.fromJson(Map<String, dynamic> json) {
+    final statusJson = json['status'];
+    final termsJson = json['terms'];
+
+    return MessagingActivationState(
+      status: statusJson == null
+          ? null
+          : MessagingActivationDto.fromJson(
+              Map<String, dynamic>.from(statusJson as Map),
+            ),
+      terms: termsJson == null
+          ? null
+          : MessagingTermsDto.fromJson(
+              Map<String, dynamic>.from(termsJson as Map),
+            ),
+      errorMessage: json['errorMessage'] as String?,
+    );
+  }
 
   MessagingActivationState copyWith({
     Object? status = _sentinel,
@@ -25,7 +49,9 @@ class MessagingActivationState {
     Object? errorMessage = _sentinel,
   }) {
     return MessagingActivationState(
-      status: status == _sentinel ? this.status : status as MessagingActivationDto?,
+      status: status == _sentinel
+          ? this.status
+          : status as MessagingActivationDto?,
       terms: terms == _sentinel ? this.terms : terms as MessagingTermsDto?,
       errorMessage: errorMessage == _sentinel
           ? this.errorMessage
@@ -49,7 +75,8 @@ class MessagingActivationState {
       return false;
     }
 
-    final currentTermsVersion = status?.currentTermsVersion ?? terms?.version ?? '';
+    final currentTermsVersion =
+        status?.currentTermsVersion ?? terms?.version ?? '';
     final acceptedVersion = status?.termsVersion ?? '';
     return status == null ||
         status!.status == 'not_started' ||
@@ -58,10 +85,56 @@ class MessagingActivationState {
   }
 }
 
-class MessagingActivationController extends AsyncNotifier<MessagingActivationState> {
+class MessagingActivationController
+    extends AsyncNotifier<MessagingActivationState> {
+  static const String _storageKey = MessagingActivationState.storageKey;
+
+  Future<void> _persistState(MessagingActivationState state) async {
+    final storage = ref.read(secureStorageProvider);
+    await storage.write(key: _storageKey, value: jsonEncode(state.toJson()));
+  }
+
+  Future<MessagingActivationState?> _restoreState() async {
+    final storage = ref.read(secureStorageProvider);
+    final raw = await storage.read(key: _storageKey);
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        return null;
+      }
+      return MessagingActivationState.fromJson(
+        Map<String, dynamic>.from(decoded),
+      );
+    } catch (_) {
+      await storage.delete(key: _storageKey);
+      return null;
+    }
+  }
+
+  Future<void> _clearPersistedState() async {
+    final storage = ref.read(secureStorageProvider);
+    await storage.delete(key: _storageKey);
+  }
+
   @override
   FutureOr<MessagingActivationState> build() async {
-    return const MessagingActivationState();
+    final cachedState = await _restoreState();
+    if (cachedState != null) {
+      unawaited(_refreshInBackground());
+      return cachedState;
+    }
+
+    try {
+      final nextState = await _loadStatus();
+      await _persistState(nextState);
+      return nextState;
+    } catch (_) {
+      return const MessagingActivationState();
+    }
   }
 
   Future<MessagingActivationState> _loadStatus() async {
@@ -69,6 +142,16 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
     final status = await apiClient.getActivationStatus();
     final terms = await apiClient.getCurrentTerms();
     return MessagingActivationState(status: status, terms: terms);
+  }
+
+  Future<void> _refreshInBackground() async {
+    try {
+      final nextState = await _loadStatus();
+      await _persistState(nextState);
+      state = AsyncData(nextState);
+    } catch (_) {
+      // Offline: keep the persisted local state and do not reset the UI.
+    }
   }
 
   Future<MessagingActivationState> _ensureDeviceIdentityReady({
@@ -92,24 +175,36 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
   }
 
   Future<void> load() async {
-    final currentState = state.value ?? const MessagingActivationState();
+    final currentState =
+        state.value ??
+        (await _restoreState()) ??
+        const MessagingActivationState();
     state = const AsyncLoading();
 
     try {
       final nextState = await _loadStatus();
-      final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
+      await _persistState(nextState);
+      final resolvedState = await _ensureDeviceIdentityReady(
+        nextState: nextState,
+      );
       state = AsyncData(resolvedState);
     } catch (error) {
+      final fallbackState = await _restoreState() ?? currentState;
       state = AsyncData(
-        currentState.copyWith(
-          errorMessage: 'Nie udało się pobrać stanu komunikatora. Został odczytany lokalny stan aplikacji.',
+        fallbackState.copyWith(
+          errorMessage:
+              fallbackState.errorMessage ??
+              'Nie udało się pobrać stanu komunikatora. Został odczytany lokalny stan aplikacji.',
         ),
       );
     }
   }
 
   Future<void> acceptCurrentTerms() async {
-    final currentState = state.value ?? const MessagingActivationState();
+    final currentState =
+        state.value ??
+        (await _restoreState()) ??
+        const MessagingActivationState();
     state = const AsyncLoading();
     try {
       final apiClient = ref.read(messagingActivationApiClientProvider);
@@ -125,29 +220,39 @@ class MessagingActivationController extends AsyncNotifier<MessagingActivationSta
         terms: terms,
         errorMessage: null,
       );
-      final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
+      final resolvedState = await _ensureDeviceIdentityReady(
+        nextState: nextState,
+      );
+      await _persistState(resolvedState);
       state = AsyncData(resolvedState);
     } catch (error) {
       state = AsyncData(
         currentState.copyWith(
-          errorMessage: 'Nie można aktywować komunikatora bez dostępności serwera.',
+          errorMessage:
+              'Nie można aktywować komunikatora bez dostępności serwera.',
         ),
       );
     }
   }
 
   Future<void> declineTerms() async {
-    final currentState = state.value ?? const MessagingActivationState();
+    final currentState =
+        state.value ??
+        (await _restoreState()) ??
+        const MessagingActivationState();
+    await _clearPersistedState();
     state = AsyncData(
       currentState.copyWith(
         status: null,
-        errorMessage: 'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
+        errorMessage:
+            'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
       ),
     );
   }
 }
 
 final messagingActivationControllerProvider =
-    AsyncNotifierProvider<MessagingActivationController, MessagingActivationState>(
-  MessagingActivationController.new,
-);
+    AsyncNotifierProvider<
+      MessagingActivationController,
+      MessagingActivationState
+    >(MessagingActivationController.new);

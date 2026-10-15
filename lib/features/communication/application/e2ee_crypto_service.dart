@@ -43,7 +43,8 @@ class E2eeCryptoService {
   static SignalDeviceId resolveSignalDeviceId(
     String? rawDeviceId, {
     SignalDeviceId? fallback,
-  }) => e2ee_crypto_mapper.resolveSignalDeviceId(rawDeviceId, fallback: fallback);
+  }) =>
+      e2ee_crypto_mapper.resolveSignalDeviceId(rawDeviceId, fallback: fallback);
 
   static String fingerprintIdentityKey(IdentityKey? identityKey) =>
       e2ee_crypto_mapper.fingerprintIdentityKey(identityKey);
@@ -51,10 +52,8 @@ class E2eeCryptoService {
   static String requireAppDeviceUuid(
     String? rawAppDeviceId, {
     String context = 'app_device_id',
-  }) => e2ee_crypto_mapper.requireAppDeviceUuid(
-    rawAppDeviceId,
-    context: context,
-  );
+  }) =>
+      e2ee_crypto_mapper.requireAppDeviceUuid(rawAppDeviceId, context: context);
 
   final SecureStorageService _secureStorage;
   final AppLogger _logger;
@@ -68,7 +67,6 @@ class E2eeCryptoService {
 
   static String _signalAddressName(SignalProtocolAddress address) =>
       '${address.getName()}@${address.getDeviceId()}';
-
 
   Future<PreKeyBundle> fetchRemotePreKeyBundle(
     String remoteUserId, {
@@ -531,11 +529,9 @@ class E2eeCryptoService {
     }
   }
 
-  Future<String> decryptInboundMessage({
+  Future<Set<int>> resolveInboundSignalDeviceCandidates({
     required String senderUserId,
     required String senderDeviceId,
-    required String ciphertextBase64,
-    required int type,
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
@@ -556,14 +552,62 @@ class E2eeCryptoService {
       }
     }
 
+    if (candidateDeviceIds.isNotEmpty) {
+      return candidateDeviceIds;
+    }
+
+    if (!Uuid.isValidUUID(fromString: trimmedSenderDeviceId)) {
+      return candidateDeviceIds;
+    }
+
+    try {
+      final remoteBundle = await fetchRemotePreKeyBundle(
+        senderUserId,
+        operationId: effectiveOperationId,
+      );
+      final resolvedDeviceId = remoteBundle.getDeviceId();
+      if (resolvedDeviceId > 0) {
+        candidateDeviceIds.add(resolvedDeviceId);
+        _logger.i(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_resolve_uuid_bundle event=success sender_user_id=$senderUserId sender_app_device_id=$trimmedSenderDeviceId resolved_signal_device_id=$resolvedDeviceId',
+          module: 'E2eeCrypto',
+        );
+      }
+    } catch (error, stackTrace) {
+      _logger.w(
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_resolve_uuid_bundle event=warning sender_user_id=$senderUserId sender_app_device_id=$trimmedSenderDeviceId error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'E2eeCrypto',
+      );
+    }
+
+    return candidateDeviceIds;
+  }
+
+  Future<String> decryptInboundMessage({
+    required String senderUserId,
+    required String senderDeviceId,
+    required String ciphertextBase64,
+    required int type,
+    String? operationId,
+  }) async {
+    final effectiveOperationId = operationId ?? const Uuid().v4();
+    final trimmedSenderDeviceId = senderDeviceId.trim();
+    final candidateDeviceIds = await resolveInboundSignalDeviceCandidates(
+      senderUserId: senderUserId,
+      senderDeviceId: senderDeviceId,
+      operationId: effectiveOperationId,
+    );
+
     if (candidateDeviceIds.isEmpty) {
       final senderAppDeviceId = requireAppDeviceUuid(
         trimmedSenderDeviceId,
         context: 'sender_device_id',
       );
       if (Uuid.isValidUUID(fromString: senderAppDeviceId)) {
-        throw const FormatException(
-          'Inbound sender app UUID cannot be used as a Signal device id; no valid local numeric Signal session exists for this sender',
+        throw FormatException(
+          'Inbound sender app UUID was not resolvable to a numeric Signal device id. The app must use the remote pre-key bundle or saved session mapping before decrypting.',
         );
       }
       throw const FormatException(

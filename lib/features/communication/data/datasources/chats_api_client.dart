@@ -154,6 +154,7 @@ class ChatsApiClient {
     required String attachmentId,
     required int size,
     String? sha256,
+    Map<String, dynamic>? metadata,
   }) async {
     final response = await _apiClient.post(
       ApiEndpoints.attachmentFinalize,
@@ -161,6 +162,7 @@ class ChatsApiClient {
         'attachmentId': attachmentId,
         'size': size,
         if (sha256 != null && sha256.trim().isNotEmpty) 'sha256': sha256,
+        if (metadata != null && metadata.isNotEmpty) 'metadata': metadata,
       },
     );
 

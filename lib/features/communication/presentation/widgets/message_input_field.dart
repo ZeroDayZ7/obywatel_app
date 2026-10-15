@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
@@ -9,6 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
@@ -290,6 +293,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     }
 
     final apiClient = ref.read(chatsApiClientProvider);
+    final crypto = ref.read(symmetricCryptoProvider);
+    final storage = ref.read(secureStorageProvider);
 
     try {
       final response = await apiClient.prepareAttachmentUpload(
@@ -297,6 +302,20 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         fileName: pending.fileName,
         contentType: pending.mimeType,
         size: pending.bytes.length,
+      );
+
+      final attachmentKey = await crypto.generateMasterKey();
+      final encryptedBase64 = await crypto.encryptBytes(
+        clearBytes: pending.bytes,
+        secretKey: attachmentKey,
+      );
+      final encryptedBytes = base64Decode(encryptedBase64);
+      final encryptedSha256 = sha256.convert(encryptedBytes).toString();
+      final keyBytes = await attachmentKey.extractBytes();
+      final keyRef = '${response.attachment.id}-attachment-key';
+      await storage.write(
+        key: keyRef,
+        value: base64Encode(keyBytes),
       );
 
       final uploadClient = Dio(
@@ -310,7 +329,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
       await uploadClient.put(
         response.uploadUrl,
-        data: pending.bytes,
+        data: encryptedBytes,
         options: Options(
           headers: {'Content-Type': pending.mimeType},
           followRedirects: false,
@@ -319,8 +338,16 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
       final finalAttachment = await apiClient.finalizeAttachmentUpload(
         attachmentId: response.attachment.id,
-        size: pending.bytes.length,
-        sha256: pending.fileHash,
+        size: encryptedBytes.length,
+        sha256: encryptedSha256,
+        metadata: {
+          'version': 1,
+          'ciphertextAlgorithm': 'AES-256-GCM',
+          'keyRef': keyRef,
+          'keyStoredLocally': true,
+          'originalContentType': pending.mimeType,
+          'originalFilename': pending.fileName,
+        },
       );
 
       return finalAttachment.id;
