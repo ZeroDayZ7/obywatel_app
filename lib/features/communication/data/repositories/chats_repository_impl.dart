@@ -36,19 +36,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
   final SecureStorageService _secureStorage;
-  final LocalPlaintextMessageCache _plaintextStore =
-      LocalPlaintextMessageCache();
 
   AppDatabase get db => _db;
-
-  Set<String> _collectRelatedMessageIds(String messageId) =>
-      _plaintextStore.collectRelatedMessageIds(messageId);
-
-  void _registerPlaintextAlias(String firstId, String secondId) =>
-      _plaintextStore.registerAlias(firstId, secondId);
-
-  String? _resolvePlaintextByMessageId(String messageId) =>
-      _plaintextStore.resolve(messageId);
 
   String? _extractServerMessageIdFromResponse(dynamic responseData) {
     dynamic value = responseData;
@@ -200,78 +189,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     this._secureStorage,
   ) : _currentUserId = currentUserId;
 
-  String _plaintextStorageKey(String messageId) {
-    return 'chat_plaintext_$messageId';
-  }
-
-  Future<void> _persistPlaintextForMessage(
-    String messageId,
-    String plaintext,
-  ) async {
-    final normalized = plaintext.trim();
-    if (normalized.isEmpty) {
-      return;
-    }
-
-    _logger.i(
-      '[CHAT-FLOW-STORE] Persisting plaintext for message_id=$messageId content_length=${normalized.length}',
-      module: 'ChatsRepository',
-    );
-
-    final relatedIds = _collectRelatedMessageIds(messageId)..add(messageId);
-    for (final relatedId in relatedIds) {
-      _plaintextStore.plaintextCache[relatedId] = normalized;
-    }
-
-    for (final relatedId in relatedIds) {
-      for (final aliasId in relatedIds.where(
-        (candidate) => candidate != relatedId,
-      )) {
-        _registerPlaintextAlias(relatedId, aliasId);
-      }
-    }
-
-    for (final relatedId in relatedIds) {
-      try {
-        await _secureStorage.write(
-          key: _plaintextStorageKey(relatedId),
-          value: normalized,
-        );
-      } catch (error, stackTrace) {
-        _logger.w(
-          'Unable to persist plaintext for message $relatedId in secure storage; keeping in-memory fallback only',
-          error: error,
-          stackTrace: stackTrace,
-          module: 'ChatsRepository',
-        );
-      }
-    }
-  }
-
-  Future<void> _hydratePlaintextCacheForIds(Iterable<String> messageIds) async {
-    final ids = <String>{};
-    for (final messageId in messageIds) {
-      final normalizedId = messageId.trim();
-      if (normalizedId.isEmpty) {
-        continue;
-      }
-      ids.addAll(_collectRelatedMessageIds(normalizedId));
-    }
-
-    for (final messageId in ids) {
-      if (_plaintextStore.plaintextCache.containsKey(messageId)) {
-        continue;
-      }
-
-      final persisted = await _secureStorage.read(
-        key: _plaintextStorageKey(messageId),
-      );
-      if (persisted != null && persisted.trim().isNotEmpty) {
-        _plaintextStore.plaintextCache[messageId] = persisted.trim();
-      }
-    }
-  }
-
   @override
   Stream<Message> get incomingMessagesStream =>
       _incomingMessagesController.stream;
@@ -284,9 +201,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         final messages = await _db.chatsDao.getMessagesForConversation(
           entity.id,
           limit: 20,
-        );
-        await _hydratePlaintextCacheForIds(
-          messages.map((message) => message.id),
         );
         list.add(
           Conversation(
@@ -457,9 +371,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return _db.chatsDao
         .watchMessagesForConversation(requestedConversationId)
         .asyncMap((entities) async {
-          await _hydratePlaintextCacheForIds(
-            entities.map((entity) => entity.id),
-          );
           final localMessages = entities.map(_messageFromEntity).toList();
           if (localMessages.isNotEmpty) {
             return localMessages;
@@ -477,9 +388,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
           final relatedMessages = await _db.chatsDao.getMessagesForConversation(
             resolvedConversationId,
-          );
-          await _hydratePlaintextCacheForIds(
-            relatedMessages.map((message) => message.id),
           );
           return relatedMessages.map(_messageFromEntity).toList();
         });
@@ -623,7 +531,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         ),
       );
       if (local.isNotEmpty) {
-        await _hydratePlaintextCacheForIds(local.map((message) => message.id));
         _logger.i(
           '[CHAT-FLOW-2.1] local history returned for conversationId=$conversationId count=${local.length}',
           module: 'ChatsRepository',
@@ -821,7 +728,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final outboxEventId = buildOutboxEventIdForMessage(message: message);
-    await _persistPlaintextForMessage(message.id, effectiveDisplayContent);
 
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(
@@ -915,8 +821,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     if (serverMessageId != null &&
         serverMessageId.trim().isNotEmpty &&
         serverMessageId != message.id) {
-      _registerPlaintextAlias(message.id, serverMessageId);
-      await _persistPlaintextForMessage(serverMessageId, content);
       _logger.i(
         '[MESSAGE_ID_ALIAS_RESOLVED] local_id=${message.id} server_id=$serverMessageId conversationId=$effectiveConversationId',
         module: 'ChatsRepository',
@@ -1082,7 +986,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         for (final dto in remoteMessageDtos) {
           final decrypted = await _decryptInboundMessage(dto);
           if (decrypted != null) {
-            await _persistPlaintextForMessage(dto.id, decrypted);
             _logger.i(
               '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
               module: 'ChatsRepository',
@@ -1327,12 +1230,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
           }
         }
 
-        // NAPRAWA 2: Zapisujemy plaintext (nawet wygenerowany dla załącznika)
-        if (text.isNotEmpty) {
-          await _persistPlaintextForMessage(dto.id, text);
-        }
-
-        // NAPRAWA 3: Aktualizujemy bazę Drift, aby przypisać attachmentId do wiadomości
+        // Zapisujemy tylko metadata załącznika i nie tworzmy trwałej kopii plaintextu.
         if (extractedAttachmentId != null &&
             extractedAttachmentId.trim().isNotEmpty) {
           await (_db.update(
@@ -1349,10 +1247,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
       }
 
       // Fallback dla wiadomości bez struktury JSON
-      if (decrypted.trim().isNotEmpty) {
-        await _persistPlaintextForMessage(dto.id, decrypted);
-      }
-
       return decrypted;
     } catch (error, stackTrace) {
       _logger.w(
@@ -1430,31 +1324,10 @@ MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
       allowMalformed: true,
     );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
-    final localPlaintext = _resolvePlaintextByMessageId(entity.id);
     final normalizedType = entity.type.trim().toLowerCase();
     final isPlainTextMessage =
         normalizedType == 'text' || normalizedType == 'plain';
     final hasAttachment = (entity.attachmentId ?? '').trim().isNotEmpty;
-
-    _logger.i(
-      '[CHAT-FLOW-RENDER] Mapping message entity id=${entity.id} has_local_plaintext=${localPlaintext != null} attachmentId=${entity.attachmentId}',
-      module: 'ChatsRepository',
-    );
-
-    if (localPlaintext != null) {
-      return Message(
-        id: entity.id,
-        conversationId: entity.conversationId,
-        senderId: entity.senderId,
-        content: localPlaintext,
-        encryptedPayload: ciphertext,
-        isMine: entity.senderId == _currentUserId,
-        createdAt: entity.createdAt,
-        status: status,
-        isEncrypted: !isPlainTextMessage,
-        attachmentId: entity.attachmentId,
-      );
-    }
 
     if (isPlainTextMessage) {
       return Message(
