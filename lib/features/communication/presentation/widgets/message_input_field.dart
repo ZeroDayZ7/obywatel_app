@@ -313,9 +313,24 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       final encryptedSha256 = sha256.convert(encryptedBytes).toString();
       final keyBytes = await attachmentKey.extractBytes();
       final keyRef = '${response.attachment.id}-attachment-key';
+      final attachmentMetadata = {
+        'version': 1,
+        'attachmentId': response.attachment.id,
+        'key': base64Encode(keyBytes),
+        'keyRef': keyRef,
+        'ciphertextAlgorithm': 'AES-256-GCM',
+        'originalContentType': pending.mimeType,
+        'originalFilename': pending.fileName,
+        'size': pending.bytes.length,
+        'sha256': encryptedSha256,
+      };
       await storage.write(
         key: keyRef,
-        value: base64Encode(keyBytes),
+        value: attachmentMetadata['key'] as String,
+      );
+      await storage.write(
+        key: '${response.attachment.id}-attachment-meta',
+        value: jsonEncode(attachmentMetadata),
       );
 
       final uploadClient = Dio(

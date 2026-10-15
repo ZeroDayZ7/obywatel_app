@@ -81,6 +81,115 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return null;
   }
 
+  static const int _signalPlaintextVersion = 1;
+
+  Map<String, dynamic> _buildSignalPlaintext({
+    required String text,
+    String? attachmentId,
+    String? attachmentKey,
+    String? attachmentFileName,
+    String? attachmentContentType,
+    int? attachmentSize,
+    String? attachmentSha256,
+  }) {
+    final normalizedAttachmentId = (attachmentId ?? '').trim();
+    final normalizedAttachmentKey = (attachmentKey ?? '').trim();
+    final payload = <String, dynamic>{
+      'v': _signalPlaintextVersion,
+      'text': text,
+    };
+
+    if (normalizedAttachmentId.isNotEmpty || normalizedAttachmentKey.isNotEmpty) {
+      if (normalizedAttachmentId.isEmpty || normalizedAttachmentKey.isEmpty) {
+        throw const FormatException(
+          'Attachment metadata is incomplete: both attachmentId and key are required inside the encrypted message',
+        );
+      }
+
+      payload['attachment'] = {
+        'id': normalizedAttachmentId,
+        'key': normalizedAttachmentKey,
+        'size': attachmentSize ?? 0,
+        'sha256': attachmentSha256 ?? '',
+        'contentType': attachmentContentType ?? '',
+        'fileName': attachmentFileName ?? '',
+      };
+    }
+
+    return payload;
+  }
+
+  Map<String, dynamic>? _decodeSignalPlaintext(String plaintext) {
+    final trimmed = plaintext.trim();
+    if (trimmed.isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(trimmed);
+      if (decoded is! Map) {
+        return null;
+      }
+
+      final normalized = decoded.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+      final hasEnvelopeMarker =
+          normalized.containsKey('v') ||
+          normalized.containsKey('text') ||
+          normalized.containsKey('attachment');
+      if (!hasEnvelopeMarker) {
+        return null;
+      }
+
+      final attachment = normalized['attachment'];
+      if (attachment != null && attachment is! Map) {
+        return null;
+      }
+
+      return {
+        'text': normalized['text']?.toString() ?? '',
+        'attachment': attachment,
+      };
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _readAttachmentMetadataForMessage(
+    String attachmentId,
+  ) async {
+    final normalized = attachmentId.trim();
+    if (normalized.isEmpty) {
+      return null;
+    }
+
+    final stored = await _secureStorage.read(
+      key: '$normalized-attachment-meta',
+    );
+    if (stored == null || stored.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decoded = jsonDecode(stored);
+      if (decoded is! Map) {
+        return null;
+      }
+      return decoded.map(
+        (key, value) => MapEntry(key.toString(), value),
+      );
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Attachment metadata exists but is unreadable for $normalized',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      return null;
+    }
+  }
+
   ChatsRepositoryImpl(
     this._apiClient,
     this._db,
@@ -606,11 +715,46 @@ class ChatsRepositoryImpl implements ChatsRepository {
       module: 'ChatsRepository',
     );
 
+    String signalPlaintext = content;
+    if (hasAttachment) {
+      final attachmentMetadata = await _readAttachmentMetadataForMessage(
+        attachmentId,
+      );
+      final attachmentKey = attachmentMetadata?['key']?.toString().trim();
+      if (attachmentKey == null || attachmentKey.isEmpty) {
+        throw const FormatException(
+          'Attachment metadata missing: no valid key can be embedded in the encrypted message for this attachment.',
+        );
+      }
+
+      signalPlaintext = jsonEncode(
+        _buildSignalPlaintext(
+          text: content,
+          attachmentId: attachmentId,
+          attachmentKey: attachmentKey,
+          attachmentFileName: attachmentMetadata?['originalFilename']?.toString() ??
+              attachmentMetadata?['fileName']?.toString() ?? '',
+          attachmentContentType:
+              attachmentMetadata?['originalContentType']?.toString() ??
+                  attachmentMetadata?['contentType']?.toString() ?? '',
+          attachmentSize: int.tryParse(
+                (attachmentMetadata?['size'] ?? 0).toString(),
+              ) ??
+              0,
+          attachmentSha256: attachmentMetadata?['sha256']?.toString() ?? '',
+        ),
+      );
+    } else {
+      signalPlaintext = jsonEncode(
+        _buildSignalPlaintext(text: content),
+      );
+    }
+
     late final EncryptedData encrypted;
     try {
       encrypted = await _cryptoService.encryptMessage(
         remoteUserId,
-        content,
+        signalPlaintext,
         operationId: operationId,
       );
       _logger.i(
@@ -1098,45 +1242,76 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return ordered;
   }
 
-  Future<String?> _decryptInboundMessage(MessageDto dto) async {
+Future<String?> _decryptInboundMessage(MessageDto dto) async {
     final ciphertext = dto.encryptedPayload.trim();
     final senderDeviceId = dto.senderDeviceId?.trim();
     final signalType = normalizeSignalType(dto.type);
 
-    if (ciphertext.isEmpty) {
-      _logger.w(
-        'Odrzucam wiadomość wejściową bez ciphertext: message_id=${dto.id} conversationId=${dto.conversationId}',
-        module: 'ChatsRepository',
-      );
-      return null;
-    }
-
-    if (senderDeviceId == null || senderDeviceId.isEmpty) {
-      _logger.w(
-        'Odrzucam wiadomość wejściową bez senderDeviceId: message_id=${dto.id} conversationId=${dto.conversationId}',
-        module: 'ChatsRepository',
-      );
-      return null;
-    }
-
-    if (signalType <= 0) {
-      _logger.w(
-        'Odrzucam wiadomość wejściową z niepoprawnym wiadomoType: message_id=${dto.id} type=${dto.type}',
-        module: 'ChatsRepository',
-      );
+    if (ciphertext.isEmpty || senderDeviceId == null || senderDeviceId.isEmpty || signalType <= 0) {
       return null;
     }
 
     try {
-      return await _cryptoService.decryptInboundMessage(
+      final decrypted = await _cryptoService.decryptInboundMessage(
         senderUserId: dto.senderId,
         senderDeviceId: senderDeviceId,
         ciphertextBase64: ciphertext,
         type: signalType,
       );
+
+      final parsed = _decodeSignalPlaintext(decrypted);
+      if (parsed != null) {
+        final text = parsed['text']?.toString() ?? '';
+        final attachment = parsed['attachment'];
+        
+        // 1. Obsługa klucza załącznika w SecureStorage (jeśli występuje)
+        if (attachment is Map) {
+          final attachmentId = attachment['id']?.toString();
+          final attachmentKey = attachment['key']?.toString();
+          
+          if (attachmentId != null && attachmentId.trim().isNotEmpty &&
+              attachmentKey != null && attachmentKey.trim().isNotEmpty) {
+            
+            final keyRef = '$attachmentId-attachment-key';
+            await _secureStorage.write(key: keyRef, value: attachmentKey);
+            
+            final attachmentMetadata = {
+              'version': 1,
+              'attachmentId': attachmentId,
+              'key': attachmentKey,
+              'keyRef': keyRef,
+              'ciphertextAlgorithm': 'AES-256-GCM',
+              'originalContentType': attachment['contentType'] ?? '',
+              'originalFilename': attachment['fileName'] ?? '',
+              'size': attachment['size'] ?? 0,
+              'sha256': attachment['sha256'] ?? '',
+            };
+            
+            await _secureStorage.write(
+              key: '$attachmentId-attachment-meta',
+              value: jsonEncode(attachmentMetadata),
+            );
+          }
+        }
+
+        // 2. KLUCZOWY ELEMENT: Zapisz odszyfrowany tekst w pamięci podręcznej i SecureStorage,
+        // aby UI mógł go odczytać pod kluczem chat_plaintext_${dto.id}
+        if (text.isNotEmpty) {
+          await _persistPlaintextForMessage(dto.id, text);
+        }
+
+        return text;
+      }
+
+      // Fallback dla zwykłych wiadomości tekstowych bez JSON envelope
+      if (decrypted.trim().isNotEmpty) {
+        await _persistPlaintextForMessage(dto.id, decrypted);
+      }
+
+      return decrypted;
     } catch (error, stackTrace) {
       _logger.w(
-        'Inbound decrypt rejected for message ${dto.id}; device_id=$senderDeviceId type=$signalType',
+        'Inbound decrypt rejected for message ${dto.id}',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',

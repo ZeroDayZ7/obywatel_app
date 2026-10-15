@@ -34,11 +34,11 @@ class StorageInitTask implements StartupTask {
       debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
 
       try {
-        await storage.clearAll();
-        await prefs.clearAll();
+        // await storage.clearAll();
+        // await prefs.clearAll();
 
-        await database.clearSignalStore();
-        await database.clearDatabase();
+        // await database.clearSignalStore();
+        // await database.clearDatabase();
 
         // await database.close();
         
@@ -47,10 +47,10 @@ class StorageInitTask implements StartupTask {
         debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
       }
 
-      if (kDebugMode) {
-        await storage.debugPrintAll();
-        await prefs.debugPrintAll();
-      }
+      // if (kDebugMode) {
+      //   await storage.debugPrintAll();
+      //   await prefs.debugPrintAll();
+      // }
     }
     return null;
   }
