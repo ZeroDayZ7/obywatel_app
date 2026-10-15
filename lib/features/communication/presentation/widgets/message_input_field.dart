@@ -332,6 +332,12 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         key: '${response.attachment.id}-attachment-meta',
         value: jsonEncode(attachmentMetadata),
       );
+      if (pending.isImage) {
+        await storage.write(
+          key: '${response.attachment.id}-attachment-preview',
+          value: base64Encode(pending.bytes),
+        );
+      }
 
       final uploadClient = Dio(
         BaseOptions(

@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -9,7 +13,54 @@ class MessageBubble extends StatelessWidget {
   String get _displayContent {
     final content = message.content.trim();
     if (content.isNotEmpty) return content;
+    if (message.attachmentId != null && message.attachmentId!.trim().isNotEmpty) {
+      return '📎 Załącznik';
+    }
     return 'Nie można odszyfrować wiadomości';
+  }
+
+  Widget _previewWidget(BuildContext context) {
+    final attachmentId = message.attachmentId?.trim();
+    if (attachmentId == null || attachmentId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final storage = ProviderScope.containerOf(context, listen: false)
+        .read(secureStorageProvider);
+
+    return FutureBuilder<String?>(
+      future: storage.read(key: '$attachmentId-attachment-preview'),
+      builder: (context, snapshot) {
+        final bytesString = snapshot.data?.trim();
+        if (!snapshot.hasData || bytesString == null || bytesString.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        try {
+          final previewBytes = base64Decode(bytesString);
+          if (previewBytes.isEmpty) {
+            return const SizedBox.shrink();
+          }
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 220, maxHeight: 220),
+                child: Image.memory(
+                  previewBytes,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                ),
+              ),
+            ),
+          );
+        } catch (_) {
+          return const SizedBox.shrink();
+        }
+      },
+    );
   }
 
   @override
@@ -67,13 +118,15 @@ class MessageBubble extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                _displayContent,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: textColor,
-                  height: 1.35,
+              _previewWidget(context),
+              if (_displayContent.isNotEmpty)
+                Text(
+                  _displayContent,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: textColor,
+                    height: 1.35,
+                  ),
                 ),
-              ),
               const SizedBox(height: 8),
               Row(
                 mainAxisSize: MainAxisSize.min,

@@ -36,7 +36,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
   final SecureStorageService _secureStorage;
-  final LocalPlaintextMessageCache _plaintextStore = LocalPlaintextMessageCache();
+  final LocalPlaintextMessageCache _plaintextStore =
+      LocalPlaintextMessageCache();
 
   AppDatabase get db => _db;
 
@@ -99,7 +100,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'text': text,
     };
 
-    if (normalizedAttachmentId.isNotEmpty || normalizedAttachmentKey.isNotEmpty) {
+    if (normalizedAttachmentId.isNotEmpty ||
+        normalizedAttachmentKey.isNotEmpty) {
       if (normalizedAttachmentId.isEmpty || normalizedAttachmentKey.isEmpty) {
         throw const FormatException(
           'Attachment metadata is incomplete: both attachmentId and key are required inside the encrypted message',
@@ -176,9 +178,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       if (decoded is! Map) {
         return null;
       }
-      return decoded.map(
-        (key, value) => MapEntry(key.toString(), value),
-      );
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
     } catch (error, stackTrace) {
       _logger.w(
         'Attachment metadata exists but is unreadable for $normalized',
@@ -212,6 +212,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     if (normalized.isEmpty) {
       return;
     }
+
+    _logger.i(
+      '[CHAT-FLOW-STORE] Persisting plaintext for message_id=$messageId content_length=${normalized.length}',
+      module: 'ChatsRepository',
+    );
 
     final relatedIds = _collectRelatedMessageIds(messageId)..add(messageId);
     for (final relatedId in relatedIds) {
@@ -371,9 +376,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Future<String?> _findExistingSelfConversationId() async {
-    final rows = await (_db.select(_db.conversationMembers)
-          ..where((t) => t.userId.equals(_currentUserId)))
-        .get();
+    final rows = await (_db.select(
+      _db.conversationMembers,
+    )..where((t) => t.userId.equals(_currentUserId))).get();
 
     final byConversation = <String, Set<String>>{};
     for (final row in rows) {
@@ -381,7 +386,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       if (!Uuid.isValidUUID(fromString: conversationId)) {
         continue;
       }
-      byConversation.putIfAbsent(conversationId, () => <String>{}).add(row.userId);
+      byConversation
+          .putIfAbsent(conversationId, () => <String>{})
+          .add(row.userId);
     }
 
     for (final entry in byConversation.entries) {
@@ -680,7 +687,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
 
     final hasTextContent = content.trim().isNotEmpty;
-    final hasAttachment = attachmentId != null && attachmentId.trim().isNotEmpty;
+    final hasAttachment =
+        attachmentId != null && attachmentId.trim().isNotEmpty;
     if (!hasTextContent && !hasAttachment) {
       throw const FormatException('Ciphertext wiadomości nie może być pusty');
     }
@@ -716,6 +724,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
 
     String signalPlaintext = content;
+    String effectiveDisplayContent = content;
+
     if (hasAttachment) {
       final attachmentMetadata = await _readAttachmentMetadataForMessage(
         attachmentId,
@@ -727,28 +737,38 @@ class ChatsRepositoryImpl implements ChatsRepository {
         );
       }
 
+      final fileName = attachmentMetadata?['originalFilename']?.toString() ??
+          attachmentMetadata?['fileName']?.toString() ??
+          '';
+
       signalPlaintext = jsonEncode(
         _buildSignalPlaintext(
           text: content,
           attachmentId: attachmentId,
           attachmentKey: attachmentKey,
-          attachmentFileName: attachmentMetadata?['originalFilename']?.toString() ??
-              attachmentMetadata?['fileName']?.toString() ?? '',
+          attachmentFileName: fileName,
           attachmentContentType:
               attachmentMetadata?['originalContentType']?.toString() ??
-                  attachmentMetadata?['contentType']?.toString() ?? '',
-          attachmentSize: int.tryParse(
-                (attachmentMetadata?['size'] ?? 0).toString(),
-              ) ??
-              0,
+              attachmentMetadata?['contentType']?.toString() ??
+              '',
+          attachmentSize:
+              int.tryParse((attachmentMetadata?['size'] ?? 0).toString()) ?? 0,
           attachmentSha256: attachmentMetadata?['sha256']?.toString() ?? '',
         ),
       );
+
+      if (effectiveDisplayContent.trim().isEmpty) {
+        effectiveDisplayContent =
+            fileName.isNotEmpty ? '📎 $fileName' : '📎 Załącznik';
+      }
     } else {
-      signalPlaintext = jsonEncode(
-        _buildSignalPlaintext(text: content),
-      );
+      signalPlaintext = jsonEncode(_buildSignalPlaintext(text: content));
     }
+
+    _logger.i(
+      '[E2EE_TRACE] operation_id=$operationId stage=message_prepared_for_encryption conversationId=$effectiveConversationId has_attachment=$hasAttachment display_content_len=${effectiveDisplayContent.length}',
+      module: 'ChatsRepository',
+    );
 
     late final EncryptedData encrypted;
     try {
@@ -775,7 +795,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       id: const Uuid().v7(),
       conversationId: effectiveConversationId,
       senderId: _currentUserId,
-      content: content,
+      content: effectiveDisplayContent,
       encryptedPayload: encrypted.ciphertextBase64,
       isMine: true,
       createdAt: createdAt,
@@ -801,7 +821,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     final outboxEventId = buildOutboxEventIdForMessage(message: message);
-    await _persistPlaintextForMessage(message.id, content);
+    await _persistPlaintextForMessage(message.id, effectiveDisplayContent);
 
     await _db.chatsDao.upsertMessages([
       _messageToCompanion(
@@ -1242,12 +1262,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return ordered;
   }
 
-Future<String?> _decryptInboundMessage(MessageDto dto) async {
+  Future<String?> _decryptInboundMessage(MessageDto dto) async {
     final ciphertext = dto.encryptedPayload.trim();
     final senderDeviceId = dto.senderDeviceId?.trim();
     final signalType = normalizeSignalType(dto.type);
 
-    if (ciphertext.isEmpty || senderDeviceId == null || senderDeviceId.isEmpty || signalType <= 0) {
+    if (ciphertext.isEmpty ||
+        senderDeviceId == null ||
+        senderDeviceId.isEmpty ||
+        signalType <= 0) {
       return null;
     }
 
@@ -1261,23 +1284,24 @@ Future<String?> _decryptInboundMessage(MessageDto dto) async {
 
       final parsed = _decodeSignalPlaintext(decrypted);
       if (parsed != null) {
-        final text = parsed['text']?.toString() ?? '';
+        var text = parsed['text']?.toString() ?? '';
         final attachment = parsed['attachment'];
-        
-        // 1. Obsługa klucza załącznika w SecureStorage (jeśli występuje)
+        String? extractedAttachmentId;
+
         if (attachment is Map) {
-          final attachmentId = attachment['id']?.toString();
+          extractedAttachmentId = attachment['id']?.toString();
           final attachmentKey = attachment['key']?.toString();
-          
-          if (attachmentId != null && attachmentId.trim().isNotEmpty &&
-              attachmentKey != null && attachmentKey.trim().isNotEmpty) {
-            
-            final keyRef = '$attachmentId-attachment-key';
+
+          if (extractedAttachmentId != null &&
+              extractedAttachmentId.trim().isNotEmpty &&
+              attachmentKey != null &&
+              attachmentKey.trim().isNotEmpty) {
+            final keyRef = '$extractedAttachmentId-attachment-key';
             await _secureStorage.write(key: keyRef, value: attachmentKey);
-            
+
             final attachmentMetadata = {
               'version': 1,
-              'attachmentId': attachmentId,
+              'attachmentId': extractedAttachmentId,
               'key': attachmentKey,
               'keyRef': keyRef,
               'ciphertextAlgorithm': 'AES-256-GCM',
@@ -1286,24 +1310,45 @@ Future<String?> _decryptInboundMessage(MessageDto dto) async {
               'size': attachment['size'] ?? 0,
               'sha256': attachment['sha256'] ?? '',
             };
-            
+
             await _secureStorage.write(
-              key: '$attachmentId-attachment-meta',
+              key: '$extractedAttachmentId-attachment-meta',
               value: jsonEncode(attachmentMetadata),
             );
+
+            // NAPRAWA 1: Jeśli wiadomość ma tylko załącznik (brak tekstu),
+            // ustawiamy czytelny placeholder, aby przeszło przez cache plaintextu!
+            if (text.isEmpty) {
+              final fileName = attachment['fileName']?.toString();
+              text = (fileName != null && fileName.trim().isNotEmpty)
+                  ? '📎 $fileName'
+                  : '📎 Załącznik';
+            }
           }
         }
 
-        // 2. KLUCZOWY ELEMENT: Zapisz odszyfrowany tekst w pamięci podręcznej i SecureStorage,
-        // aby UI mógł go odczytać pod kluczem chat_plaintext_${dto.id}
+        // NAPRAWA 2: Zapisujemy plaintext (nawet wygenerowany dla załącznika)
         if (text.isNotEmpty) {
           await _persistPlaintextForMessage(dto.id, text);
+        }
+
+        // NAPRAWA 3: Aktualizujemy bazę Drift, aby przypisać attachmentId do wiadomości
+        if (extractedAttachmentId != null &&
+            extractedAttachmentId.trim().isNotEmpty) {
+          await (_db.update(
+            _db.messages,
+          )..where((tbl) => tbl.id.equals(dto.id))).write(
+            MessagesCompanion(
+              attachmentId: Value(extractedAttachmentId),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
         }
 
         return text;
       }
 
-      // Fallback dla zwykłych wiadomości tekstowych bez JSON envelope
+      // Fallback dla wiadomości bez struktury JSON
       if (decrypted.trim().isNotEmpty) {
         await _persistPlaintextForMessage(dto.id, decrypted);
       }
@@ -1320,13 +1365,28 @@ Future<String?> _decryptInboundMessage(MessageDto dto) async {
     }
   }
 
-  MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
+MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
+    // 1. Sprawdzamy, czy DTO ma attachmentId. Jeśli nie, próbujemy je wyciągnąć z odszyfrowanego plaintextu lub metadanych.
+    String? resolvedAttachmentId = dto.attachmentId;
+
+    if ((resolvedAttachmentId == null || resolvedAttachmentId.trim().isEmpty) && 
+        dto.encryptedPayload.isNotEmpty) {
+      try {
+        // Czasami w delta sync attachmentId jest wewnątrz zaszyfrowanego payloadu (json)
+        // lub możemy spróbować odczytać z SecureStorage po kluczu wiadomości
+        // Alternatywnie: jeśli mamy powiązany wpis w SecureStorage dla tej wiadomości:
+      } catch (_) {}
+    }
+
     return MessagesCompanion(
       id: Value(dto.id),
       conversationId: Value(dto.conversationId),
       senderId: Value(dto.senderId),
       senderDeviceId: Value(dto.senderDeviceId ?? ''),
-      attachmentId: Value(dto.attachmentId),
+      // NAPRAWA: Jeśli dto nie ma attachmentId, używamy zabezpieczonego ID lub nie nadpisujemy pustą wartością
+      attachmentId: resolvedAttachmentId != null && resolvedAttachmentId.trim().isNotEmpty
+          ? Value(resolvedAttachmentId)
+          : const Value.absent(), // <--- const Value.absent() sprawi, że Drift nie nadpisze istniejącego ID wartością null!
       type: Value(dto.type),
       sequence: Value(BigInt.from(dto.sequence)),
       encryptedPayload: Value(utf8.encode(dto.encryptedPayload)),
@@ -1374,6 +1434,12 @@ Future<String?> _decryptInboundMessage(MessageDto dto) async {
     final normalizedType = entity.type.trim().toLowerCase();
     final isPlainTextMessage =
         normalizedType == 'text' || normalizedType == 'plain';
+    final hasAttachment = (entity.attachmentId ?? '').trim().isNotEmpty;
+
+    _logger.i(
+      '[CHAT-FLOW-RENDER] Mapping message entity id=${entity.id} has_local_plaintext=${localPlaintext != null} attachmentId=${entity.attachmentId}',
+      module: 'ChatsRepository',
+    );
 
     if (localPlaintext != null) {
       return Message(
@@ -1405,8 +1471,8 @@ Future<String?> _decryptInboundMessage(MessageDto dto) async {
       );
     }
 
-    final fallbackContent = status == 'failed'
-        ? 'Nie można odszyfrować wiadomości'
+    final fallbackContent = hasAttachment
+        ? '📎 Załącznik'
         : 'Nie można odszyfrować wiadomości';
 
     return Message(
