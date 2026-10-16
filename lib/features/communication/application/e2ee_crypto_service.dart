@@ -114,9 +114,6 @@ class E2eeCryptoService {
     }
     final address = SignalProtocolAddress(remoteUserId, resolvedDeviceId);
     final bundleIdentity = remoteBundle.getIdentityKey();
-    // final existingIdentity = await _signalStore.getIdentity(address);
-    // final existingFingerprint = fingerprintIdentityKey(existingIdentity);
-    // final bundleFingerprint = fingerprintIdentityKey(bundleIdentity);
 
     try {
       final builder = SessionBuilder.fromSignalStore(_signalStore, address);
@@ -369,6 +366,88 @@ class E2eeCryptoService {
     return _secureStorage.read(key: '$_sessionKeyPrefix$conversationId');
   }
 
+  Future<SignalProtocolAddress> resolveOrCreateSessionAddress(
+    String recipientUserId,
+    int? recipientDeviceId,
+    String operationId,
+  ) async {
+    var resolvedDeviceId = recipientDeviceId;
+    if (resolvedDeviceId == null || resolvedDeviceId <= 0) {
+      final knownSessionDeviceIds = await _signalStore.getSubDeviceSessions(
+        recipientUserId,
+      );
+      resolvedDeviceId = knownSessionDeviceIds.firstWhere(
+        (deviceId) => deviceId > 0,
+        orElse: () => 0,
+      );
+
+      if (resolvedDeviceId <= 0) {
+        final remoteBundle = await fetchRemotePreKeyBundle(
+          recipientUserId,
+          operationId: operationId,
+        );
+        resolvedDeviceId = remoteBundle.getDeviceId();
+        final address = SignalProtocolAddress(
+          recipientUserId,
+          resolvedDeviceId,
+        );
+
+        if (!await _signalStore.containsSession(address)) {
+          await initializeSessionForPeer(
+            recipientUserId,
+            remoteBundle: remoteBundle,
+            deviceId: resolvedDeviceId,
+            operationId: operationId,
+          );
+        }
+      }
+    }
+
+    if (resolvedDeviceId <= 0) {
+      throw const FormatException('Signal recipient device id is required');
+    }
+
+    final address = SignalProtocolAddress(recipientUserId, resolvedDeviceId);
+    if (!await _signalStore.containsSession(address)) {
+      await registerDeviceIdentityWithOperation(operationId);
+      final remoteBundle = await fetchRemotePreKeyBundle(
+        recipientUserId,
+        operationId: operationId,
+      );
+      final bundleSignalDeviceId = remoteBundle.getDeviceId();
+      final bundleAddress = SignalProtocolAddress(
+        recipientUserId,
+        bundleSignalDeviceId,
+      );
+
+      if (!await _signalStore.containsSession(bundleAddress)) {
+        await initializeSessionForPeer(
+          recipientUserId,
+          remoteBundle: remoteBundle,
+          deviceId: bundleSignalDeviceId,
+          operationId: operationId,
+        );
+      }
+
+      return bundleAddress;
+    }
+
+    return address;
+  }
+
+  Future<SessionCipher> getOrCreateSessionCipher(
+    String recipientUserId,
+    int? recipientDeviceId,
+    String operationId,
+  ) async {
+    final address = await resolveOrCreateSessionAddress(
+      recipientUserId,
+      recipientDeviceId,
+      operationId,
+    );
+    return SessionCipher.fromStore(_signalStore, address);
+  }
+
   Future<SignalCiphertextEnvelope> encryptOutboundMessage(
     String recipientUserId,
     String plaintext, {
@@ -377,58 +456,16 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = _resolveOperationId(operationId);
-    var resolvedRecipientDeviceId = recipientDeviceId;
-    if (resolvedRecipientDeviceId == null || resolvedRecipientDeviceId <= 0) {
-      final knownSessionDeviceIds = await _signalStore.getSubDeviceSessions(
-        recipientUserId,
-      );
-      int? preferredKnownSessionDeviceId;
-      for (final deviceId in knownSessionDeviceIds) {
-        if (deviceId > 0) {
-          preferredKnownSessionDeviceId = deviceId;
-          break;
-        }
-      }
-      if (preferredKnownSessionDeviceId != null) {
-        resolvedRecipientDeviceId = preferredKnownSessionDeviceId;
-      } else {
-        final remoteBundle = await fetchRemotePreKeyBundle(
-          recipientUserId,
-          operationId: effectiveOperationId,
-        );
-        resolvedRecipientDeviceId = remoteBundle.getDeviceId();
-      }
-    }
-    if (resolvedRecipientDeviceId <= 0) {
-      throw const FormatException('Signal recipient device id is required');
-    }
+    var address = const SignalProtocolAddress('', 0);
 
-    var address = SignalProtocolAddress(
-      recipientUserId,
-      resolvedRecipientDeviceId,
-    );
     try {
-      final sessionExists = await _signalStore.containsSession(address);
-      if (!sessionExists) {
-        await registerDeviceIdentityWithOperation(effectiveOperationId);
-        final remoteBundle = await fetchRemotePreKeyBundle(
-          recipientUserId,
-          operationId: effectiveOperationId,
-        );
-        resolvedRecipientDeviceId = remoteBundle.getDeviceId();
-        address = SignalProtocolAddress(
-          recipientUserId,
-          resolvedRecipientDeviceId,
-        );
-        await initializeSessionForPeer(
-          recipientUserId,
-          remoteBundle: remoteBundle,
-          deviceId: resolvedRecipientDeviceId,
-          operationId: effectiveOperationId,
-        );
-      }
-
+      address = await resolveOrCreateSessionAddress(
+        recipientUserId,
+        recipientDeviceId,
+        effectiveOperationId,
+      );
       final sessionCipher = SessionCipher.fromStore(_signalStore, address);
+
       final cipherText = await sessionCipher.encrypt(
         Uint8List.fromList(utf8.encode(plaintext)),
       );
@@ -541,7 +578,6 @@ class E2eeCryptoService {
     for (final candidateDeviceId in candidateDeviceIds) {
       final address = SignalProtocolAddress(senderUserId, candidateDeviceId);
       try {
-        // final trustedIdentity = await _signalStore.getIdentity(address);
         final ciphertextBytes = base64Decode(ciphertextBase64);
         final sessionCipher = SessionCipher.fromStore(_signalStore, address);
 
@@ -616,7 +652,7 @@ E2eeCryptoService e2eeCryptoService(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final db = ref.watch(appDatabaseProvider);
-final signalStore = DriftSignalProtocolStore(db, logger: logger);
+  final signalStore = DriftSignalProtocolStore(db, logger: logger);
 
   return E2eeCryptoService(
     secureStorage,
