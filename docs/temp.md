@@ -88,7 +88,7 @@ Punkty 13–24 · krytyczne dla niezawodności komunikatora
 
 <!-- 17\. Usunąć powielone parsowanie payloadu. `rawPayloadByMessageId` i alternatywne odczyty `type`, `signalType`, `eventId` oraz `outboxEventId` wskazują na kilka wariantów tego samego kontraktu. W pierwszej wersji należy wybrać jeden kanoniczny format. -->
 
-18\. Nie stosować automatycznego fallbacku Signal type na `1` dla niepoprawnych danych. W `ChatSyncService` brak `type` prowadzi do wartości domyślnej. Brak wymaganych danych powinien zostać wykryty podczas walidacji, a nie zamieniony w pozornie prawidłową wiadomość.
+<!-- 18\. Nie stosować automatycznego fallbacku Signal type na `1` dla niepoprawnych danych. W `ChatSyncService` brak `type` prowadzi do wartości domyślnej. Brak wymaganych danych powinien zostać wykryty podczas walidacji, a nie zamieniony w pozornie prawidłową wiadomość. -->
 
 19\. Nie usuwać wiadomości z outboxa przed potwierdzeniem trwałego zapisu. Zweryfikować, czy `sendOutboxBatch()` zwraca potwierdzenie dla każdego zdarzenia, czy tylko dla całej paczki. W przypadku częściowego sukcesu nie wolno utracić niepotwierdzonych wiadomości.
 

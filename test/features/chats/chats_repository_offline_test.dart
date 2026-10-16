@@ -21,6 +21,7 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_api_
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
@@ -186,7 +187,9 @@ void main() {
           type: const Value('text'),
           sequence: Value(BigInt.one),
           content: Value('wartość jawna z bazy'),
-          encryptedPayload: Value(utf8.encode('ciphertext-zostawiony-dla-legacy')),
+          encryptedPayload: Value(
+            utf8.encode('ciphertext-zostawiony-dla-legacy'),
+          ),
           mediaHeader: const Value.absent(),
           version: Value(BigInt.one),
           status: const Value('sent'),
@@ -196,11 +199,36 @@ void main() {
         ),
       ]);
 
-      final loaded = await repository.watchMessagesForConversation('peer-user').first;
+      final loaded = await repository
+          .watchMessagesForConversation('peer-user')
+          .first;
       expect(loaded.single.content, 'wartość jawna z bazy');
       expect(loaded.single.isEncrypted, isFalse);
     },
   );
+
+  test('message mapping prefers explicit plaintext for owned messages', () {
+    final dto = MessageDto(
+      id: 'msg-owned-plain',
+      conversationId: 'conv-1',
+      senderId: 'user-a',
+      senderDeviceId: 'device-1',
+      type: 'text',
+      sequence: 1,
+      version: 1,
+      encryptedPayload: 'ciphertext-base64',
+      createdAt: DateTime.utc(2024, 1, 2, 9, 30),
+    );
+
+    final message = mapMessageFromDto(
+      dto,
+      'user-a',
+      plaintext: 'hello from me',
+    );
+
+    expect(message.content, 'hello from me');
+    expect(message.isMine, isTrue);
+  });
 
   test(
     'device bundle persists generated signed and one-time prekeys in Drift before session setup',
@@ -250,72 +278,81 @@ void main() {
       isEncrypted: true,
     );
 
-    final payload = buildOutboxEventPayload(
-      message,
-      'device-1',
-      signalType: 2,
-    );
+    final payload = buildOutboxEventPayload(message, 'device-1', signalType: 2);
 
     expect(payload['content'], equals(null));
     expect(payload['payload']['content'], equals(null));
     expect(payload['payload']['ciphertext'], 'ciphertext-base64');
   });
 
-  testWidgets('message list orders oldest messages first and keeps deterministic chronology', (tester) async {
-    final messages = [
-      Message(
-        id: 'msg-2',
-        conversationId: 'conv-1',
-        senderId: 'user-a',
-        content: 'newer',
-        encryptedPayload: 'newer',
-        isMine: true,
-        createdAt: DateTime.utc(2024, 1, 1, 12, 5),
-        status: 'sent',
-        isEncrypted: false,
-      ),
-      Message(
-        id: 'msg-1',
+  testWidgets(
+    'message list orders oldest messages first and keeps deterministic chronology',
+    (tester) async {
+      final messages = [
+        Message(
+          id: 'msg-2',
+          conversationId: 'conv-1',
+          senderId: 'user-a',
+          content: 'newer',
+          encryptedPayload: 'newer',
+          isMine: true,
+          createdAt: DateTime.utc(2024, 1, 1, 12, 5),
+          status: 'sent',
+          isEncrypted: false,
+        ),
+        Message(
+          id: 'msg-1',
+          conversationId: 'conv-1',
+          senderId: 'user-b',
+          content: 'older',
+          encryptedPayload: 'older',
+          isMine: false,
+          createdAt: DateTime.utc(2024, 1, 1, 11, 55),
+          status: 'sent',
+          isEncrypted: false,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MessageList(messages: messages)),
+        ),
+      );
+
+      final rendered = tester.widgetList<Text>(find.byType(Text)).toList();
+      expect(
+        rendered.map((text) => text.data).toList(),
+        containsAll(['older', 'newer']),
+      );
+      expect(find.text('older'), findsOneWidget);
+      expect(find.text('newer'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'message bubble renders placeholder instead of an empty ghost bubble',
+    (tester) async {
+      final message = Message(
+        id: 'msg-empty',
         conversationId: 'conv-1',
         senderId: 'user-b',
-        content: 'older',
-        encryptedPayload: 'older',
+        content: '',
+        encryptedPayload: 'ciphertext',
         isMine: false,
-        createdAt: DateTime.utc(2024, 1, 1, 11, 55),
+        createdAt: DateTime.utc(2024, 1, 1, 12, 0),
         status: 'sent',
-        isEncrypted: false,
-      ),
-    ];
+        isEncrypted: true,
+      );
 
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: MessageList(messages: messages)),
-      ),
-    );
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MessageBubble(message: message)),
+        ),
+      );
 
-    final rendered = tester.widgetList<Text>(find.byType(Text)).toList();
-    expect(rendered.map((text) => text.data).toList(), containsAll(['older', 'newer']));
-    expect(find.text('older'), findsOneWidget);
-    expect(find.text('newer'), findsOneWidget);
-  });
-
-  testWidgets('message bubble renders placeholder instead of an empty ghost bubble', (tester) async {
-    final message = Message(
-      id: 'msg-empty',
-      conversationId: 'conv-1',
-      senderId: 'user-b',
-      content: '',
-      encryptedPayload: 'ciphertext',
-      isMine: false,
-      createdAt: DateTime.utc(2024, 1, 1, 12, 0),
-      status: 'sent',
-      isEncrypted: true,
-    );
-
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MessageBubble(message: message))));
-
-    expect(find.text('Nie można odszyfrować wiadomości'), findsOneWidget);
-  });
+      expect(find.text('Nie można odszyfrować wiadomości'), findsOneWidget);
+    },
+  );
 
   tearDown(() async {
     await database.close();
@@ -824,16 +861,19 @@ void main() {
     },
   );
 
-  test('signal device id is stable for UUID device ids and does not collapse to 1', () {
-    const uuidDeviceId = '8e681e7c-6ccc-4854-8fc6-b6dd5074f39e';
+  test(
+    'signal device id is stable for UUID device ids and does not collapse to 1',
+    () {
+      const uuidDeviceId = '8e681e7c-6ccc-4854-8fc6-b6dd5074f39e';
 
-    final first = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
-    final second = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+      final first = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+      final second = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
 
-    expect(first, isNot(1));
-    expect(second, equals(first));
-    expect(first, isPositive);
-  });
+      expect(first, isNot(1));
+      expect(second, equals(first));
+      expect(first, isPositive);
+    },
+  );
 
   test('device identity should stay stable per installation', () async {
     const secureStorage = FlutterSecureStorage();
@@ -932,11 +972,7 @@ void main() {
       );
 
       expect(
-        () => buildOutboxEventPayload(
-          message,
-          'device-abc',
-          signalType: 2,
-        ),
+        () => buildOutboxEventPayload(message, 'device-abc', signalType: 2),
         throwsA(isA<StateError>()),
       );
     },

@@ -229,6 +229,34 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
   }
 
+  bool _isCurrentUserMessage(MessageDto dto) =>
+      dto.senderId.trim() == _currentUserId.trim();
+
+  Future<String?> _resolvePersistedPlaintextForOwnedMessage(
+    MessageDto dto,
+  ) async {
+    final messageId = dto.id.trim();
+    if (messageId.isEmpty) {
+      return null;
+    }
+
+    final cached = _plaintextStore.resolve(messageId);
+    if (cached != null && cached.trim().isNotEmpty) {
+      return cached;
+    }
+
+    final row = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.id.equals(messageId))).getSingleOrNull();
+    final stored = row?.content.trim() ?? '';
+    if (stored.isNotEmpty) {
+      _plaintextStore.store(messageId, stored);
+      return stored;
+    }
+
+    return null;
+  }
+
   Future<String?> _resolvePlaintextForEntity(MessageEntity entity) async {
     final persistedPlaintext = entity.content.trim();
     if (persistedPlaintext.isNotEmpty) {
@@ -703,13 +731,22 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
 
       final newMessages = <MessagesCompanion>[];
+      final resolvedMessages = <Message>[];
       for (final dto in dtos) {
-        final decrypted = await _decryptInboundMessage(dto);
+        final isOwnMessage = _isCurrentUserMessage(dto);
+        final decrypted = isOwnMessage
+            ? await _resolvePersistedPlaintextForOwnedMessage(dto)
+            : await _decryptInboundMessage(dto);
+
+        if (isOwnMessage && decrypted != null && decrypted.trim().isNotEmpty) {
+          await _persistPlaintextForMessage(dto.id, decrypted);
+        }
+
         newMessages.add(
-          _messageDtoToCompanion(
-            dto,
-            decryptedContent: decrypted ?? '',
-          ),
+          _messageDtoToCompanion(dto, decryptedContent: decrypted ?? ''),
+        );
+        resolvedMessages.add(
+          mapMessageFromDto(dto, _currentUserId, plaintext: decrypted ?? ''),
         );
       }
 
@@ -725,7 +762,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         '[CHAT-FLOW-2.3] history loaded from backend conversationId=$conversationId count=${dtos.length}',
         module: 'ChatsRepository',
       );
-      return dtos.map((dto) => mapMessageFromDto(dto, _currentUserId)).toList();
+      return resolvedMessages;
     } catch (e, st) {
       _logger.e(
         'Błąd podczas pobierania historii wiadomości',
@@ -1111,26 +1148,29 @@ class ChatsRepositoryImpl implements ChatsRepository {
         final persistedCompanions = <MessagesCompanion>[];
 
         for (final dto in remoteMessageDtos) {
-          final decrypted = await _decryptInboundMessage(dto);
-          if (decrypted != null) {
+          final isOwnMessage = _isCurrentUserMessage(dto);
+          final decrypted = isOwnMessage
+              ? await _resolvePersistedPlaintextForOwnedMessage(dto)
+              : await _decryptInboundMessage(dto);
+
+          if (!isOwnMessage && decrypted != null) {
             await _persistPlaintextForMessage(dto.id, decrypted);
             _logger.i(
               '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
               module: 'ChatsRepository',
             );
-          } else {
+          } else if (!isOwnMessage) {
             _logger.w(
               'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
               'conversationId=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
               module: 'ChatsRepository',
             );
+          } else if (decrypted != null && decrypted.trim().isNotEmpty) {
+            await _persistPlaintextForMessage(dto.id, decrypted);
           }
 
           persistedCompanions.add(
-            _messageDtoToCompanion(
-              dto,
-              decryptedContent: decrypted ?? '',
-            ),
+            _messageDtoToCompanion(dto, decryptedContent: decrypted ?? ''),
           );
         }
 
@@ -1236,9 +1276,23 @@ class ChatsRepositoryImpl implements ChatsRepository {
         );
       }
 
-      final remoteMessages = _orderMessageDtos(
+      final remoteMessages = <MessagesCompanion>[];
+      for (final messageDto in _orderMessageDtos(
         dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
-      ).map(_messageDtoToCompanion).toList();
+      )) {
+        final isOwnMessage = _isCurrentUserMessage(messageDto);
+        final resolvedPlaintext = isOwnMessage
+            ? await _resolvePersistedPlaintextForOwnedMessage(messageDto)
+            : null;
+
+        remoteMessages.add(
+          _messageDtoToCompanion(
+            messageDto,
+            decryptedContent: resolvedPlaintext ?? '',
+          ),
+        );
+      }
+
       if (remoteMessages.isNotEmpty) {
         await _db.chatsDao.upsertMessages(remoteMessages);
       }
@@ -1473,7 +1527,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       allowMalformed: true,
     );
     final status = entity.status.isEmpty ? 'pending' : entity.status;
-    final localPlaintext = _resolvePlaintextByMessageId(entity.id);
+    final localPlaintext = entity.content.trim().isNotEmpty
+        ? entity.content.trim()
+        : _resolvePlaintextByMessageId(entity.id);
     final normalizedType = entity.type.trim().toLowerCase();
     final isPlainTextMessage =
         normalizedType == 'text' || normalizedType == 'plain';

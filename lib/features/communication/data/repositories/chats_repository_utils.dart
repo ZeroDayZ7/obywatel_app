@@ -116,12 +116,20 @@ String resolveRemoteUserIdForConversation(
   return remoteUserId;
 }
 
-Message mapMessageFromDto(MessageDto dto, String currentUserId) {
+Message mapMessageFromDto(
+  MessageDto dto,
+  String currentUserId, {
+  String? plaintext,
+}) {
+  final resolvedPlaintext = (plaintext ?? dto.encryptedPayload).trim();
+
   return Message(
     id: dto.id,
     conversationId: dto.conversationId,
     senderId: dto.senderId,
-    content: dto.encryptedPayload,
+    content: resolvedPlaintext.isNotEmpty
+        ? resolvedPlaintext
+        : dto.encryptedPayload,
     encryptedPayload: dto.encryptedPayload,
     isMine: dto.senderId == currentUserId,
     createdAt: normalizeTransportTimestamp(dto.createdAt),

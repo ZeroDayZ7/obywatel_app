@@ -44,7 +44,7 @@ class StorageInitTask implements StartupTask {
         
         // debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
       } catch (e, st) {
-        // debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
       }
 
       // if (kDebugMode) {
