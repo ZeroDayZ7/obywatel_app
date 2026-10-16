@@ -18,6 +18,7 @@ import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/decrypted_message_content.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
@@ -211,7 +212,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     _logger.i(
-      '[CHAT-FLOW-STORE] caching plaintext in memory only for message_id=$messageId content_length=${normalized.length}',
+      '[CHAT-FLOW-STORE] persisting plaintext for message_id=$messageId content_length=${normalized.length}',
       module: 'ChatsRepository',
     );
 
@@ -226,6 +227,24 @@ class ChatsRepositoryImpl implements ChatsRepository {
       )) {
         _registerPlaintextAlias(relatedId, aliasId);
       }
+    }
+
+    try {
+      await (_db.update(
+        _db.messages,
+      )..where((tbl) => tbl.id.equals(messageId))).write(
+        MessagesCompanion(
+          content: Value(normalized),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Unable to persist plaintext into Drift for message $messageId',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
     }
   }
 
@@ -257,6 +276,26 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return null;
   }
 
+  Future<String?> _resolveAttachmentFallbackText(String? attachmentId) async {
+    final normalizedAttachmentId = (attachmentId ?? '').trim();
+    if (normalizedAttachmentId.isEmpty) {
+      return null;
+    }
+
+    final metadata = await _readAttachmentMetadataForMessage(
+      normalizedAttachmentId,
+    );
+    if (metadata == null) {
+      return '📎 Załącznik';
+    }
+
+    final fileName = metadata['originalFilename']?.toString().trim() ??
+        metadata['fileName']?.toString().trim() ??
+        '';
+
+    return fileName.isNotEmpty ? '📎 $fileName' : '📎 Załącznik';
+  }
+
   Future<String?> _resolvePlaintextForEntity(MessageEntity entity) async {
     final persistedPlaintext = entity.content.trim();
     if (persistedPlaintext.isNotEmpty) {
@@ -266,6 +305,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final cached = _plaintextStore.resolve(entity.id);
     if (cached != null && cached.trim().isNotEmpty) {
       return cached;
+    }
+
+    final attachmentFallback = await _resolveAttachmentFallbackText(
+      entity.attachmentId,
+    );
+    if (attachmentFallback != null) {
+      _plaintextStore.store(entity.id, attachmentFallback);
+      await _persistPlaintextForMessage(entity.id, attachmentFallback);
+      return attachmentFallback;
     }
 
     final ciphertext = utf8.decode(
@@ -734,19 +782,26 @@ class ChatsRepositoryImpl implements ChatsRepository {
       final resolvedMessages = <Message>[];
       for (final dto in dtos) {
         final isOwnMessage = _isCurrentUserMessage(dto);
-        final decrypted = isOwnMessage
+        final persistedPlaintext = isOwnMessage
             ? await _resolvePersistedPlaintextForOwnedMessage(dto)
+            : null;
+        final decryptedContent = isOwnMessage
+            ? null
             : await _decryptInboundMessage(dto);
 
-        if (isOwnMessage && decrypted != null && decrypted.trim().isNotEmpty) {
-          await _persistPlaintextForMessage(dto.id, decrypted);
+        final decryptedText = isOwnMessage
+            ? persistedPlaintext ?? ''
+            : decryptedContent?.text ?? '';
+
+        if (isOwnMessage && decryptedText.trim().isNotEmpty) {
+          await _persistPlaintextForMessage(dto.id, decryptedText);
         }
 
         newMessages.add(
-          _messageDtoToCompanion(dto, decryptedContent: decrypted ?? ''),
+          _messageDtoToCompanion(dto, decryptedContent: decryptedText),
         );
         resolvedMessages.add(
-          mapMessageFromDto(dto, _currentUserId, plaintext: decrypted ?? ''),
+          mapMessageFromDto(dto, _currentUserId, plaintext: decryptedText),
         );
       }
 
@@ -1149,12 +1204,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
         for (final dto in remoteMessageDtos) {
           final isOwnMessage = _isCurrentUserMessage(dto);
-          final decrypted = isOwnMessage
+          final persistedPlaintext = isOwnMessage
               ? await _resolvePersistedPlaintextForOwnedMessage(dto)
+              : null;
+          final decryptedContent = isOwnMessage
+              ? null
               : await _decryptInboundMessage(dto);
 
-          if (!isOwnMessage && decrypted != null) {
-            await _persistPlaintextForMessage(dto.id, decrypted);
+          final decryptedText = isOwnMessage
+              ? persistedPlaintext ?? ''
+              : decryptedContent?.text ?? '';
+
+          if (!isOwnMessage && decryptedContent != null) {
+            await _persistPlaintextForMessage(dto.id, decryptedText);
             _logger.i(
               '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
               module: 'ChatsRepository',
@@ -1165,12 +1227,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
               'conversationId=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
               module: 'ChatsRepository',
             );
-          } else if (decrypted != null && decrypted.trim().isNotEmpty) {
-            await _persistPlaintextForMessage(dto.id, decrypted);
+          } else if (decryptedText.trim().isNotEmpty) {
+            await _persistPlaintextForMessage(dto.id, decryptedText);
           }
 
           persistedCompanions.add(
-            _messageDtoToCompanion(dto, decryptedContent: decrypted ?? ''),
+            _messageDtoToCompanion(dto, decryptedContent: decryptedText),
           );
         }
 
@@ -1352,7 +1414,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return ordered;
   }
 
-  Future<String?> _decryptInboundMessage(MessageDto dto) async {
+  Future<DecryptedMessageContent?> _decryptInboundMessage(MessageDto dto) async {
     final ciphertext = dto.encryptedPayload.trim();
     final senderDeviceId = dto.senderDeviceId?.trim();
     final signalType = normalizeSignalType(dto.type);
@@ -1374,24 +1436,29 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
       final parsed = _decodeSignalPlaintext(decrypted);
       if (parsed != null) {
-        var text = parsed['text']?.toString() ?? '';
         final attachment = parsed['attachment'];
-        String? extractedAttachmentId;
+        final text = parsed['text']?.toString() ?? '';
+
+        var decryptedContent =
+            parseDecryptedMessageContent(jsonEncode(parsed)) ??
+                DecryptedMessageContent(text: text);
+
+        String? extractedAttachmentId = decryptedContent.attachmentId;
 
         if (attachment is Map) {
-          extractedAttachmentId = attachment['id']?.toString();
           final attachmentKey = attachment['key']?.toString();
+          final normalizedAttachmentId =
+              (extractedAttachmentId ?? '').trim();
 
-          if (extractedAttachmentId != null &&
-              extractedAttachmentId.trim().isNotEmpty &&
+          if (normalizedAttachmentId.isNotEmpty &&
               attachmentKey != null &&
               attachmentKey.trim().isNotEmpty) {
-            final keyRef = '$extractedAttachmentId-attachment-key';
+            final keyRef = '$normalizedAttachmentId-attachment-key';
             await _secureStorage.write(key: keyRef, value: attachmentKey);
 
             final attachmentMetadata = {
               'version': 1,
-              'attachmentId': extractedAttachmentId,
+              'attachmentId': normalizedAttachmentId,
               'key': attachmentKey,
               'keyRef': keyRef,
               'ciphertextAlgorithm': 'AES-256-GCM',
@@ -1402,27 +1469,25 @@ class ChatsRepositoryImpl implements ChatsRepository {
             };
 
             await _secureStorage.write(
-              key: '$extractedAttachmentId-attachment-meta',
+              key: '$normalizedAttachmentId-attachment-meta',
               value: jsonEncode(attachmentMetadata),
             );
 
-            // NAPRAWA 1: Jeśli wiadomość ma tylko załącznik (brak tekstu),
-            // ustawiamy czytelny placeholder, aby przeszło przez cache plaintextu!
-            if (text.isEmpty) {
+            if (decryptedContent.text.isEmpty) {
               final fileName = attachment['fileName']?.toString();
-              text = (fileName != null && fileName.trim().isNotEmpty)
-                  ? '📎 $fileName'
-                  : '📎 Załącznik';
+              final normalizedText =
+                  (fileName != null && fileName.trim().isNotEmpty)
+                      ? '📎 $fileName'
+                      : '📎 Załącznik';
+              decryptedContent = decryptedContent.copyWith(text: normalizedText);
             }
           }
         }
 
-        // NAPRAWA 2: Zapisujemy plaintext (nawet wygenerowany dla załącznika)
-        if (text.isNotEmpty) {
-          await _persistPlaintextForMessage(dto.id, text);
+        if (decryptedContent.text.isNotEmpty) {
+          await _persistPlaintextForMessage(dto.id, decryptedContent.text);
         }
 
-        // NAPRAWA 3: Aktualizujemy bazę Drift, aby przypisać attachmentId do wiadomości
         if (extractedAttachmentId != null &&
             extractedAttachmentId.trim().isNotEmpty) {
           await (_db.update(
@@ -1435,15 +1500,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
           );
         }
 
-        return text;
+        return decryptedContent;
       }
 
-      // Fallback dla wiadomości bez struktury JSON
       if (decrypted.trim().isNotEmpty) {
         await _persistPlaintextForMessage(dto.id, decrypted);
       }
 
-      return decrypted;
+      return DecryptedMessageContent(text: decrypted);
     } catch (error, stackTrace) {
       _logger.w(
         'Inbound decrypt rejected for message ${dto.id}',
@@ -1459,15 +1523,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
     MessageDto dto, {
     String? decryptedContent,
   }) {
-    String? resolvedAttachmentId = dto.attachmentId;
-
-    if ((resolvedAttachmentId == null || resolvedAttachmentId.trim().isEmpty) &&
-        dto.encryptedPayload.isNotEmpty) {
-      try {
-        // Czasami w delta sync attachmentId jest wewnątrz zaszyfrowanego payloadu (json)
-        // lub możemy spróbować odczytać z SecureStorage po kluczu wiadomości
-        // Alternatywnie: jeśli mamy powiązany wpis w SecureStorage dla tej wiadomości:
-      } catch (_) {}
+    final parsedContent = parseDecryptedMessageContent(decryptedContent);
+    String? resolvedAttachmentId = dto.attachmentId ?? parsedContent?.attachmentId;
+    if (resolvedAttachmentId != null) {
+      resolvedAttachmentId = resolvedAttachmentId.trim();
     }
 
     final persistedPlaintext = (decryptedContent ?? '').trim();

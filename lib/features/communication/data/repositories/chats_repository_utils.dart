@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
+import 'package:obywatel_plus/features/communication/domain/chats/decrypted_message_content.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
 bool isMessageSendAllowed({
@@ -51,6 +54,48 @@ DateTime? parseTransportTimestamp(String? rawValue) {
   }
 
   return parsed.toUtc();
+}
+
+DecryptedMessageContent? parseDecryptedMessageContent(String? rawContent) {
+  final trimmed = rawContent?.trim() ?? '';
+  if (trimmed.isEmpty) {
+    return null;
+  }
+
+  try {
+    final decoded = jsonDecode(trimmed);
+    if (decoded is! Map) {
+      return DecryptedMessageContent(text: trimmed);
+    }
+
+    final normalized = decoded.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+
+    final attachment = normalized['attachment'];
+    final text = normalized['text']?.toString() ?? '';
+
+    if (attachment == null || attachment is! Map) {
+      return DecryptedMessageContent(text: text);
+    }
+
+    final attachmentId = attachment['id']?.toString().trim();
+    final attachmentKey = attachment['key']?.toString().trim();
+
+    return DecryptedMessageContent(
+      text: text,
+      attachmentId:
+          attachmentId != null && attachmentId.isNotEmpty ? attachmentId : null,
+      attachmentKey:
+          attachmentKey != null && attachmentKey.isNotEmpty ? attachmentKey : null,
+      fileName: attachment['fileName']?.toString(),
+      contentType: attachment['contentType']?.toString(),
+      size: int.tryParse('${attachment['size']}'),
+      sha256: attachment['sha256']?.toString(),
+    );
+  } catch (_) {
+    return null;
+  }
 }
 
 String resolveRemoteUserIdForConversation(
@@ -121,21 +166,28 @@ Message mapMessageFromDto(
   String currentUserId, {
   String? plaintext,
 }) {
-  final resolvedPlaintext = (plaintext ?? dto.encryptedPayload).trim();
+  final rawContent = plaintext ?? dto.encryptedPayload;
+  final parsedContent = parseDecryptedMessageContent(rawContent);
+  final resolvedAttachmentId =
+      (dto.attachmentId ?? parsedContent?.attachmentId)?.trim();
+  final resolvedPlaintext =
+      (parsedContent?.text.isNotEmpty == true ? parsedContent!.text : rawContent)
+          .trim();
 
   return Message(
     id: dto.id,
     conversationId: dto.conversationId,
     senderId: dto.senderId,
-    content: resolvedPlaintext.isNotEmpty
-        ? resolvedPlaintext
-        : dto.encryptedPayload,
+    content: resolvedPlaintext.isNotEmpty ? resolvedPlaintext : dto.encryptedPayload,
     encryptedPayload: dto.encryptedPayload,
     isMine: dto.senderId == currentUserId,
     createdAt: normalizeTransportTimestamp(dto.createdAt),
     status: 'sent',
     isEncrypted: true,
-    attachmentId: dto.attachmentId,
+    attachmentId:
+        resolvedAttachmentId != null && resolvedAttachmentId.isNotEmpty
+            ? resolvedAttachmentId
+            : null,
   );
 }
 

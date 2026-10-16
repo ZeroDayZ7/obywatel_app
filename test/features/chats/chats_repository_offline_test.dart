@@ -230,6 +230,65 @@ void main() {
     expect(message.isMine, isTrue);
   });
 
+  test('attachment-only message falls back to filename when Drift content is empty', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+
+    final attachmentId = 'att-fallback-1';
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    await secureStorage.write(
+      key: '$attachmentId-attachment-meta',
+      value: jsonEncode({
+        'key': base64Encode(List<int>.filled(32, 7)),
+        'originalFilename': 'S (1).jpg',
+        'originalContentType': 'image/jpeg',
+        'size': 42,
+      }),
+    );
+
+    await database.chatsDao.upsertConversations([
+      ConversationsCompanion(
+        id: const Value('conv-attachment-fallback'),
+        type: const Value('direct'),
+        title: const Value('Peer'),
+        lastSequence: Value(BigInt.zero),
+        updatedAt: Value(DateTime.now()),
+        createdAt: Value(DateTime.now()),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    await database.chatsDao.upsertMessages([
+      MessagesCompanion(
+        id: const Value('msg-attachment-empty-content'),
+        conversationId: const Value('conv-attachment-fallback'),
+        senderId: const Value('peer-user'),
+        senderDeviceId: const Value('device-2'),
+        attachmentId: Value(attachmentId),
+        type: const Value('signal'),
+        sequence: Value(BigInt.one),
+        content: const Value(''),
+        encryptedPayload: Value(utf8.encode('fake-ciphertext')), 
+        mediaHeader: const Value.absent(),
+        version: Value(BigInt.one),
+        status: const Value('sent'),
+        createdAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+        updatedAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+        deletedAt: const Value.absent(),
+      ),
+    ]);
+
+    final messages = await repository
+        .watchMessagesForConversation('conv-attachment-fallback')
+        .first;
+    expect(messages.single.content, '📎 S (1).jpg');
+  });
+
   test(
     'device bundle persists generated signed and one-time prekeys in Drift before session setup',
     () async {
