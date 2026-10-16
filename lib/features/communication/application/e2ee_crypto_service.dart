@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:crypto/crypto.dart';
+import 'package:collection/collection.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
@@ -90,7 +90,7 @@ class E2eeCryptoService {
       return fromPreKeyBundleJson(map);
     } catch (error, stackTrace) {
       _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_fetch_error event=error remote_user_id=$remoteUserId error_type=${error.runtimeType} error_message=${error.toString()}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_fetch_error event=error remote_user_id=$remoteUserId error_type=${error.runtimeType}',
         error: error,
         stackTrace: stackTrace,
         module: 'E2eeCrypto',
@@ -122,7 +122,7 @@ class E2eeCryptoService {
       return address;
     } catch (error, stackTrace) {
       _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_initialize_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} error_type=${error.runtimeType} error_message=${error.toString()}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_initialize_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} error_type=${error.runtimeType}',
         error: error,
         stackTrace: stackTrace,
         module: 'E2eeCrypto',
@@ -176,7 +176,7 @@ class E2eeCryptoService {
       final fallbackAddress =
           explicitAddress ?? const SignalProtocolAddress('', 0);
       _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(fallbackAddress)} error_type=${error.runtimeType} error_message=${error.toString()}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_error event=error remote_user_id=$remoteUserId signal_address=${_signalAddressName(fallbackAddress)} error_type=${error.runtimeType}',
         error: error,
         stackTrace: stackTrace,
         module: 'E2eeCrypto',
@@ -194,6 +194,13 @@ class E2eeCryptoService {
   }
 
   Future<bool> _hasPersistedDeviceIdentityMaterial() async {
+    final registrationId = await _signalStore.getLocalRegistrationId();
+    final identityKeyPair = await _signalStore.getIdentityKeyPair();
+    final hasRegistrationId = registrationId > 0;
+    final hasIdentityKey = identityKeyPair
+        .getPublicKey()
+        .serialize()
+        .isNotEmpty;
     final hasSignedPreKey = await _signalStore.containsSignedPreKey(1);
     final preKeyChecks = await Future.wait(
       List<int>.generate(
@@ -201,11 +208,14 @@ class E2eeCryptoService {
         (index) => index + 1,
       ).map((preKeyId) => _signalStore.containsPreKey(preKeyId)),
     );
-    final hasOneTimePreKeys = preKeyChecks.every((exists) => exists);
-    return hasSignedPreKey && hasOneTimePreKeys;
+    final hasOneTimePreKeys = preKeyChecks.any((exists) => exists);
+    return hasRegistrationId &&
+        hasIdentityKey &&
+        hasSignedPreKey &&
+        hasOneTimePreKeys;
   }
 
-  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+  Future<LocalDeviceIdentityMaterial> ensureDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final registrationId = await _signalStore.getLocalRegistrationId();
     final identityKeyPair = await _signalStore.getIdentityKeyPair();
@@ -213,8 +223,15 @@ class E2eeCryptoService {
 
     if (hasPersistedState) {
       final signedPreKey = await _signalStore.loadSignedPreKey(1);
-      final oneTimePreKeys = await Future.wait(
+      final keyIds = await Future.wait(
         List<int>.generate(10, (index) => index + 1).map((preKeyId) async {
+          final exists = await _signalStore.containsPreKey(preKeyId);
+          return exists ? preKeyId : null;
+        }),
+      );
+      final availablePreKeyIds = keyIds.whereType<int>().toList()..sort();
+      final oneTimePreKeys = await Future.wait(
+        availablePreKeyIds.map((preKeyId) async {
           final record = await _signalStore.loadPreKey(preKeyId);
           return OneTimePreKeyRegistration(
             keyId: preKeyId,
@@ -223,10 +240,12 @@ class E2eeCryptoService {
         }),
       );
 
-      return DeviceKeyBundle(
+      return LocalDeviceIdentityMaterial(
         deviceId: deviceId,
         registrationId: registrationId,
-        publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
+        identityPublicKey: base64Encode(
+          identityKeyPair.getPublicKey().serialize(),
+        ),
         privateKey: base64Encode(identityKeyPair.getPrivateKey().serialize()),
         signedPreKey: base64Encode(
           signedPreKey.getKeyPair().publicKey.serialize(),
@@ -253,10 +272,12 @@ class E2eeCryptoService {
         )
         .toList();
 
-    return DeviceKeyBundle(
+    return LocalDeviceIdentityMaterial(
       deviceId: deviceId,
       registrationId: registrationId,
-      publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
+      identityPublicKey: base64Encode(
+        identityKeyPair.getPublicKey().serialize(),
+      ),
       privateKey: base64Encode(identityKeyPair.getPrivateKey().serialize()),
       signedPreKey: base64Encode(
         signedPreKey.getKeyPair().publicKey.serialize(),
@@ -283,51 +304,29 @@ class E2eeCryptoService {
 
     _deviceIdentityRegistrationTask = () async {
       try {
-        final persistedMarker = await _secureStorage.read(
+        final localMaterial = await ensureDeviceIdentityBundle();
+        final marker = DeviceRegistrationMarker.fromLocalMaterial(
+          localMaterial,
+        );
+        final persistedMarkerValue = await _secureStorage.read(
           key: 'e2ee_device_registration_marker',
         );
-        final bundle = await ensureDeviceIdentityBundle();
-        final marker = {
-          'deviceId': bundle.deviceId,
-          'registrationId': bundle.registrationId,
-          'publicKeyFingerprint': sha256
-              .convert(base64Decode(bundle.publicKey))
-              .toString(),
-          'signedPreKeyId': bundle.signedPreKeyId,
-        }.toString();
 
-        if (persistedMarker != null) {
-          if (persistedMarker == marker) {
+        if (persistedMarkerValue != null) {
+          final persistedMarker = DeviceRegistrationMarker.fromStored(
+            persistedMarkerValue,
+          );
+          if (persistedMarker.matches(localMaterial)) {
             _deviceIdentityRegistered = true;
             return;
           }
 
           throw StateError(
-            'Persisted device registration marker exists but does not match the current local Signal identity material. Explicit re-registration is required; no silent regeneration or trust reset is allowed.',
+            'Persisted E2EE registration marker does not match the current local Signal identity material and no silent trust reset is allowed.',
           );
         }
 
-        final payload = {
-          'deviceId': bundle.deviceId,
-          'registrationId': bundle.registrationId,
-          'identityPublicKey': bundle.publicKey,
-          'publicKey': bundle.publicKey,
-          'signedPreKey': bundle.signedPreKey,
-          'signedPreKeySig': bundle.signedPreKeySignature,
-          'signedPreKeyId': bundle.signedPreKeyId,
-          'oneTimePreKeys': bundle.oneTimePreKeys
-              .map((preKey) => preKey.toJson())
-              .toList(),
-        };
-
-        if (payload.containsKey('private_key') ||
-            payload.containsKey('device_private_key') ||
-            payload.containsValue(bundle.privateKey)) {
-          throw StateError(
-            'Private E2EE keys must never be sent to the backend',
-          );
-        }
-
+        final payload = localMaterial.toRegistrationRequest().toJson();
         final headers = {'X-Operation-Id': effectiveOperationId};
         await _apiClient.post(
           '/crypto/keys/device',
@@ -336,12 +335,12 @@ class E2eeCryptoService {
         );
         await _secureStorage.write(
           key: 'e2ee_device_registration_marker',
-          value: marker,
+          value: marker.toPersistedValue(),
         );
         _deviceIdentityRegistered = true;
       } catch (error, stackTrace) {
         _logger.e(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_error event=error error_type=${error.runtimeType} error_message=${error.toString()}',
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_error event=error error_type=${error.runtimeType}',
           error: error,
           stackTrace: stackTrace,
           module: 'E2eeCrypto',
@@ -481,7 +480,7 @@ class E2eeCryptoService {
       return envelope;
     } catch (e, st) {
       _logger.e(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=encrypt_error event=error recipient_user_id=$recipientUserId signal_address=${_signalAddressName(address)} error_type=${e.runtimeType} error_message=${e.toString()}',
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=encrypt_error event=error recipient_user_id=$recipientUserId signal_address=${_signalAddressName(address)} error_type=${e.runtimeType}',
         error: e,
         stackTrace: st,
         module: 'E2eeCrypto',
@@ -541,7 +540,13 @@ class E2eeCryptoService {
       );
     }
 
-    return candidateDeviceIds;
+    _logger.w(
+      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_mapping_failed event=warning sender_user_id=$senderUserId signal_device_id_candidate=$trimmedSenderDeviceId',
+      module: 'E2eeCrypto',
+    );
+    throw FormatException(
+      'No valid Signal device mapping was found for $senderUserId; device ids must be numeric or must already exist in the local session store.',
+    );
   }
 
   Future<String> decryptInboundMessage({
@@ -597,7 +602,7 @@ class E2eeCryptoService {
       } catch (e, st) {
         lastError = e;
         _logger.w(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_candidate_failed event=warning sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} signal_device_id=$candidateDeviceId signal_type=$type error_type=${e.runtimeType} error_message=${e.toString()}',
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_candidate_failed event=warning sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} signal_device_id=$candidateDeviceId signal_type=$type error_type=${e.runtimeType}',
           error: e,
           stackTrace: st,
           module: 'E2eeCrypto',
@@ -605,9 +610,9 @@ class E2eeCryptoService {
       }
     }
 
-    final lastErrorMessage = lastError?.toString() ?? 'unknown';
+    final lastErrorType = lastError?.runtimeType.toString() ?? 'unknown';
     throw EncryptionFailureException(
-      'Nie można odszyfrować wiadomości od użytkownika $senderUserId. Nie ma poprawnego numeru Signal device id dla sesji lokalnej i nie wolno zgadywać UUID jako device id. Ostatni błąd: $lastErrorMessage',
+      'Nie można odszyfrować wiadomości od użytkownika $senderUserId. Brak poprawnego numeru Signal device id dla lokalnej sesji. Ostatni błąd: $lastErrorType',
     );
   }
 

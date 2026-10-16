@@ -234,7 +234,7 @@ void main() {
         );
 
         final bundle = await service.ensureDeviceIdentityBundle();
-        final decodedPublicKey = base64Decode(bundle.publicKey);
+        final decodedPublicKey = base64Decode(bundle.identityPublicKey);
 
         expect(
           decodedPublicKey.length,
