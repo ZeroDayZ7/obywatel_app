@@ -122,7 +122,7 @@ void main() {
 
       final bundle = E2eeCryptoService.fromPreKeyBundleJson({
         'registrationId': 123,
-        'deviceId': 'device-1',
+        'deviceId': '1',
         'preKeyId': 7,
         'preKeyPublic': base64Encode(
           oneTimePreKey.getKeyPair().publicKey.serialize(),
@@ -151,7 +151,7 @@ void main() {
 
       final bundle = E2eeCryptoService.fromPreKeyBundleJson({
         'registrationId': 123,
-        'deviceId': 'device-1',
+        'deviceId': '1',
         'signedPreKeyId': 1,
         'signedPreKeyPublic': base64Encode(
           signedPreKey.getKeyPair().publicKey.serialize(),

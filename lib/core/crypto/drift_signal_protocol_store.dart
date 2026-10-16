@@ -4,19 +4,23 @@ import 'package:collection/collection.dart';
 import 'package:drift/drift.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/database/database.dart';
+import 'package:obywatel_plus/core/logger/app_logger.dart';
 
 class DriftSignalProtocolStore implements SignalProtocolStore {
   DriftSignalProtocolStore(
     this.db, {
     IdentityKeyPair? identityKeyPair,
     int? localRegistrationId,
-  })  : _identityKeyPair = identityKeyPair ?? generateIdentityKeyPair(),
+    AppLogger? logger,
+  })  : _logger = logger ?? AppLogger(),
+        _identityKeyPair = identityKeyPair ?? generateIdentityKeyPair(),
         _localRegistrationId =
             localRegistrationId ?? generateRegistrationId(false) {
     unawaited(_ensureLocalIdentityLoaded());
   }
 
   final AppDatabase db;
+  final AppLogger _logger;
   IdentityKeyPair _identityKeyPair;
   int _localRegistrationId;
   bool _localIdentityLoaded = false;
@@ -58,7 +62,6 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     }
   }
 
-
   Future<SignalLocalIdentityData?> _loadLocalIdentity() async {
     return (db.select(db.signalLocalIdentity)
           ..where((row) => row.id.equals('local')))
@@ -67,19 +70,17 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<IdentityKeyPair> getIdentityKeyPair() async {
-    final startedAt = DateTime.now();
     try {
       await _ensureLocalIdentityLoaded();
       return _identityKeyPair;
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=store_local_identity_read_error event=error error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print('[E2EE_TRACE] stage=store_local_identity_read event=complete duration_ms=$durationMs');
     }
   }
 
@@ -94,10 +95,10 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     SignalProtocolAddress address,
     IdentityKey? identityKey,
   ) async {
-    final startedAt = DateTime.now();
     if (identityKey == null) {
-      print(
+      _logger.w(
         '[E2EE_TRACE] stage=store_identity_save_skipped event=warning signal_address=${address.getName()}@${address.getDeviceId()} reason=identity_null',
+        module: 'DriftSignalProtocolStore',
       );
       return false;
     }
@@ -107,9 +108,6 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
       final serialized = identityKey.serialize();
       if (current != null &&
           const ListEquality<int>().equals(current.serialize(), serialized)) {
-        print(
-          '[E2EE_TRACE] stage=store_identity_save_unchanged event=success signal_address=${address.getName()}@${address.getDeviceId()} identity_bytes=${serialized.length}',
-        );
         return false;
       }
 
@@ -120,22 +118,15 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
           identityKey: Value(serialized),
         ),
       );
-
-      print(
-        '[E2EE_TRACE] stage=store_identity_save event=success signal_address=${address.getName()}@${address.getDeviceId()} identity_bytes=${serialized.length}',
-      );
       return true;
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=store_identity_save_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=store_identity_save_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 
@@ -145,42 +136,34 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     IdentityKey? identityKey,
     Direction direction,
   ) async {
-    final startedAt = DateTime.now();
     if (identityKey == null) {
-      print(
+      _logger.w(
         '[E2EE_TRACE] stage=identity_trust_check event=warning signal_address=${address.getName()}@${address.getDeviceId()} direction=${direction.name} result=false reason=identity_null',
+        module: 'DriftSignalProtocolStore',
       );
       return false;
     }
 
     try {
       final trusted = await getIdentity(address);
-      final result = trusted == null ||
+      return trusted == null ||
           const ListEquality<int>().equals(
             trusted.serialize(),
             identityKey.serialize(),
           );
-      print(
-        '[E2EE_TRACE] stage=identity_trust_check event=success signal_address=${address.getName()}@${address.getDeviceId()} direction=${direction.name} result=$result trusted_present=${trusted != null}',
-      );
-      return result;
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=identity_trust_check_error event=error signal_address=${address.getName()}@${address.getDeviceId()} direction=${direction.name} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=identity_trust_check_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
-    final startedAt = DateTime.now();
     try {
       final row = (db.select(db.signalIdentityKeys)
             ..where(
@@ -192,34 +175,23 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
       final result = await row;
       if (result == null) {
-        print(
-          '[E2EE_TRACE] stage=identity_read_missing event=success signal_address=${address.getName()}@${address.getDeviceId()} result=missing',
-        );
         return null;
       }
 
-      final key = IdentityKey.fromBytes(result.identityKey, 0);
-      print(
-        '[E2EE_TRACE] stage=identity_read event=success signal_address=${address.getName()}@${address.getDeviceId()} identity_bytes=${result.identityKey.length}',
-      );
-      return key;
+      return IdentityKey.fromBytes(result.identityKey, 0);
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=identity_read_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=identity_read_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 
   @override
   Future<PreKeyRecord> loadPreKey(int preKeyId) async {
-    final startedAt = DateTime.now();
     try {
       final row = (db.select(db.signalPreKeys)
             ..where((entry) => entry.id.equals(preKeyId)))
@@ -230,70 +202,54 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
         throw InvalidKeyIdException('Missing pre-key: $preKeyId');
       }
 
-      final preKey = PreKeyRecord.fromBuffer(record.record);
-      print(
-        '[E2EE_TRACE] stage=prekey_load event=success pre_key_id=$preKeyId record_bytes=${record.record.length}',
-      );
-      return preKey;
+      return PreKeyRecord.fromBuffer(record.record);
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=prekey_load_error event=error pre_key_id=$preKeyId error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print('[E2EE_TRACE] stage=prekey_load_complete event=complete pre_key_id=$preKeyId duration_ms=$durationMs');
     }
   }
 
   @override
   Future<void> storePreKey(int preKeyId, PreKeyRecord record) async {
-    final startedAt = DateTime.now();
-    final serialized = record.serialize();
     try {
+      final serialized = record.serialize();
       await db.into(db.signalPreKeys).insertOnConflictUpdate(
         SignalPreKeysCompanion(
           id: Value(preKeyId),
           record: Value(serialized),
         ),
       );
-      print(
-        '[E2EE_TRACE] stage=prekey_store event=success pre_key_id=$preKeyId record_bytes=${serialized.length}',
-      );
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=prekey_store_error event=error pre_key_id=$preKeyId error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print('[E2EE_TRACE] stage=prekey_store_complete event=complete pre_key_id=$preKeyId duration_ms=$durationMs');
     }
   }
 
   @override
   Future<bool> containsPreKey(int preKeyId) async {
-    final startedAt = DateTime.now();
     try {
       final row = (db.select(db.signalPreKeys)
             ..where((entry) => entry.id.equals(preKeyId)))
           .getSingleOrNull();
-      final exists = await row != null;
-      print(
-        '[E2EE_TRACE] stage=prekey_contains event=success pre_key_id=$preKeyId exists=$exists',
-      );
-      return exists;
+      return await row != null;
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=prekey_contains_error event=error pre_key_id=$preKeyId error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print('[E2EE_TRACE] stage=prekey_contains_complete event=complete pre_key_id=$preKeyId duration_ms=$durationMs');
     }
   }
 
@@ -306,7 +262,6 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
-    final startedAt = DateTime.now();
     try {
       final row = (db.select(db.signalSessions)
             ..where(
@@ -318,28 +273,18 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
       final result = await row;
       if (result == null) {
-        print(
-          '[E2EE_TRACE] stage=session_load_missing event=success signal_address=${address.getName()}@${address.getDeviceId()} result=missing',
-        );
         return SessionRecord();
       }
 
-      final session = SessionRecord.fromSerialized(result.record);
-      print(
-        '[E2EE_TRACE] stage=session_load event=success signal_address=${address.getName()}@${address.getDeviceId()} record_bytes=${result.record.length}',
-      );
-      return session;
+      return SessionRecord.fromSerialized(result.record);
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=session_load_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=session_load_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 
@@ -357,9 +302,8 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     SignalProtocolAddress address,
     SessionRecord record,
   ) async {
-    final startedAt = DateTime.now();
-    final serialized = record.serialize();
     try {
+      final serialized = record.serialize();
       await db.into(db.signalSessions).insertOnConflictUpdate(
         SignalSessionsCompanion(
           name: Value(address.getName()),
@@ -367,26 +311,19 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
           record: Value(serialized),
         ),
       );
-      print(
-        '[E2EE_TRACE] stage=session_store event=success signal_address=${address.getName()}@${address.getDeviceId()} record_bytes=${serialized.length}',
-      );
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=session_store_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=session_store_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
-    final startedAt = DateTime.now();
     try {
       final row = (db.select(db.signalSessions)
             ..where(
@@ -395,22 +332,15 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
                   entry.deviceId.equals(address.getDeviceId()),
             ))
           .getSingleOrNull();
-      final exists = await row != null;
-      print(
-        '[E2EE_TRACE] stage=session_contains event=success signal_address=${address.getName()}@${address.getDeviceId()} exists=$exists',
-      );
-      return exists;
+      return await row != null;
     } catch (error, stackTrace) {
-      print(
+      _logger.e(
         '[E2EE_TRACE] stage=session_contains_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'DriftSignalProtocolStore',
       );
-      print(stackTrace);
       rethrow;
-    } finally {
-      final durationMs = DateTime.now().difference(startedAt).inMilliseconds;
-      print(
-        '[E2EE_TRACE] stage=session_contains_complete event=complete signal_address=${address.getName()}@${address.getDeviceId()} duration_ms=$durationMs',
-      );
     }
   }
 

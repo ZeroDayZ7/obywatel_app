@@ -10,6 +10,7 @@ import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
@@ -25,13 +26,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
+  final AppLogger _logger;
   final String? _currentUserId;
-  final AppLogger _logger = AppLogger();
 
   ContactsRepositoryImpl(
     this._apiClient,
     this._dao,
-    this._outboxDao, [
+    this._outboxDao,
+    this._logger, [
     this._currentUserId,
   ]);
 
@@ -350,11 +352,13 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
+  final logger = ref.watch(appLoggerProvider);
   final currentUserId = ref.watch(authControllerProvider).userId;
   return ContactsRepositoryImpl(
     apiClient,
     db.contactsDao,
     db.outboxDao,
+    logger,
     currentUserId,
   );
 }

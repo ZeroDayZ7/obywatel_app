@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
@@ -357,10 +358,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         ),
       );
 
-      debugPrint(
-        'Attachment upload diagnostics: attachmentId=${response.attachment.id}, originalSize=${pending.bytes.length}, encryptedSize=${encryptedBytes.length}, finalizeSize=${pending.bytes.length}, sha256=${encryptedSha256.substring(0, 16)}...',
-      );
-
       final finalAttachment = await apiClient.finalizeAttachmentUpload(
         attachmentId: response.attachment.id,
         size: pending.bytes.length,
@@ -377,7 +374,12 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
       return finalAttachment.id;
     } catch (error, stackTrace) {
-      debugPrint('Attachment upload failed: $error');
+      ref.read(appLoggerProvider).e(
+        'Attachment upload failed for conversation ${widget.conversationId}',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'MessageInputField',
+      );
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,

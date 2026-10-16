@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -10,9 +11,9 @@ part 'contacts_service.g.dart';
 
 class ContactsService {
   final ContactsRepository _repository;
-  final AppLogger _logger = AppLogger();
+  final AppLogger _logger;
 
-  ContactsService(this._repository);
+  ContactsService(this._repository, this._logger);
 
   Future<void> addContact(String userId) async {
     _logger.i(
@@ -57,5 +58,6 @@ class ContactsService {
 @riverpod
 ContactsService contactsService(Ref ref) {
   final repo = ref.watch(contactsRepositoryProvider);
-  return ContactsService(repo);
+  final logger = ref.watch(appLoggerProvider);
+  return ContactsService(repo, logger);
 }

@@ -1,5 +1,6 @@
 // lib/features/communication/data/datasources/contacts_api_client.dart
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
@@ -9,9 +10,9 @@ part 'contacts_api_client.g.dart';
 
 class ContactsApiClient {
   final ApiClient _apiClient;
-  final AppLogger _logger = AppLogger();
+  final AppLogger _logger;
 
-  ContactsApiClient(this._apiClient);
+  ContactsApiClient(this._apiClient, this._logger);
 
   Future<List<ContactDto>> getContacts() async {
     _logger.i('[CONTACTS-03] HTTP: GET /contacts rozpoczęty');
@@ -60,5 +61,6 @@ class ContactsApiClient {
 @riverpod
 ContactsApiClient contactsApiClient(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
-  return ContactsApiClient(apiClient);
+  final logger = ref.watch(appLoggerProvider);
+  return ContactsApiClient(apiClient, logger);
 }

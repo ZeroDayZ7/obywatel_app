@@ -681,10 +681,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
       normalizedConversationId,
     );
 
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_send_start event=start conversationId=$conversationId local_user_id=$_currentUserId app_device_id=$senderAppDeviceId content_length=${content.length}',
-      module: 'ChatsRepository',
-    );
 
     final hasTextContent = content.trim().isNotEmpty;
     final hasAttachment =
@@ -712,16 +708,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
         : (existingServerConversationId ?? normalizedConversationId);
 
     if (!isExistingServerConversation && existingServerConversationId != null) {
-      _logger.i(
+      _logger.w(
         '[SERVER_CONVERSATION_RESOLVED] localConversationId=$conversationId remoteUserId=$remoteUserId using=$effectiveConversationId',
         module: 'ChatsRepository',
       );
     }
-
-    _logger.i(
-      '[E2EE_ENCRYPT_START] operation_id=$operationId conversationId=$effectiveConversationId remote_user_id=$remoteUserId',
-      module: 'ChatsRepository',
-    );
 
     String signalPlaintext = content;
     String effectiveDisplayContent = content;
@@ -765,21 +756,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
       signalPlaintext = jsonEncode(_buildSignalPlaintext(text: content));
     }
 
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_prepared_for_encryption conversationId=$effectiveConversationId has_attachment=$hasAttachment display_content_len=${effectiveDisplayContent.length}',
-      module: 'ChatsRepository',
-    );
-
     late final EncryptedData encrypted;
     try {
       encrypted = await _cryptoService.encryptMessage(
         remoteUserId,
         signalPlaintext,
         operationId: operationId,
-      );
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$operationId stage=message_encrypt_success event=success conversationId=$effectiveConversationId remote_user_id=$remoteUserId ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
-        module: 'ChatsRepository',
       );
     } catch (error, stackTrace) {
       _logger.e(
@@ -833,10 +815,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     ]);
 
     if (shouldPersistLocallyOnly || !isServerBackedConversation) {
-      _logger.i(
-        '[LOCAL_MESSAGE_STORED_ONLY] message_id=${message.id} conversationId=$effectiveConversationId status=pending',
-        module: 'ChatsRepository',
-      );
       final localOnlyMessage = message.copyWith(status: 'pending');
       _incomingMessagesController.add(localOnlyMessage);
       return;
@@ -878,11 +856,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final requestUri = ApiEndpoints.conversationMessages(
       effectiveConversationId,
     );
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_request event=start conversationId=$effectiveConversationId remote_user_id=$remoteUserId sender_app_device_id=$senderAppDeviceId uri=$requestUri ciphertext_length=${encrypted.ciphertextBase64.length} signal_type=${encrypted.type}',
-      module: 'ChatsRepository',
-    );
-
     Response<dynamic> response;
     try {
       response = await _apiClient.post(requestUri, data: requestPayload);
@@ -895,11 +868,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
       return;
     }
-
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=transport_send_response event=success conversationId=$effectiveConversationId remote_user_id=$remoteUserId uri=$requestUri status_code=${response.statusCode}',
-      module: 'ChatsRepository',
-    );
 
     if (response.statusCode == null ||
         response.statusCode! < 200 ||
@@ -917,10 +885,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         serverMessageId != message.id) {
       _registerPlaintextAlias(message.id, serverMessageId);
       await _persistPlaintextForMessage(serverMessageId, content);
-      _logger.i(
-        '[MESSAGE_ID_ALIAS_RESOLVED] local_id=${message.id} server_id=$serverMessageId conversationId=$effectiveConversationId',
-        module: 'ChatsRepository',
-      );
     }
 
     await (_db.update(
@@ -932,16 +896,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       ),
     );
     await _db.outboxDao.deleteEvents([message.id]);
-    _logger.i(
-      '[MESSAGE_DB_STATUS_UPDATED] message_id=${message.id} conversationId=$effectiveConversationId status=sent',
-      module: 'ChatsRepository',
-    );
 
     final sentMessage = message.copyWith(status: 'sent');
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$operationId stage=message_persist_success event=success conversationId=$effectiveConversationId message_id=${message.id} status=sent',
-      module: 'ChatsRepository',
-    );
     _incomingMessagesController.add(sentMessage);
   }
 

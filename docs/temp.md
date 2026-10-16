@@ -1,221 +1,389 @@
-prompt na poźniej
+### A. Bezpieczeństwo E2EE i Signal
 
-Przejrzałem diff oraz zapis pracy agenta. Walidacja zaproszeń to dobry pierwszy krok, ale nie uznałbym jeszcze całego mechanizmu kontaktów za produkcyjnie gotowy. Teraz warto zrobić etap 2: spójność zaproszeń, obsługę załączników i refaktor widoków — bez przepisywania całego komunikatora naraz.
+Punkty 1–12 · najwyższy priorytet
 
-## Co jeszcze sprawdzić w obecnych zmianach
+1
 
-1. Czy odbiorca naprawdę istnieje. Nowa walidacja sprawdza aktywację i tożsamość urządzenia. To dobry filtr, ale musimy potwierdzić, że `GetActivationStatus` zwraca brak rekordu dla nieistniejącego użytkownika i że źródło tych danych jest autorytatywne. Sam UUID ani wpis w tabeli aktywacji nie zawsze dowodzą istnienia prawidłowego konta.
+Usunąć trwały zapis plaintextu z `SecureStorage`, jeśli nie jest rzeczywiście konieczny.
 
-2. Czy tożsamość urządzenia jest aktywna. Sprawdzenie `PublicKey` i `GetLatestDeviceIdentityForUser` nie musi oznaczać, że klucz jest aktualny, poprawny kryptograficznie ani przypisany do aktywnego urządzenia. Trzeba sprawdzić istniejący kontrakt i walidację kluczy.
+W `ChatsRepositoryImpl` istnieją metody `_persistPlaintextForMessage` i `_hydratePlaintextCacheForIds`, które przechowują odszyfrowane wiadomości w osobnym magazynie. Trzeba ustalić, czy zawartość powinna znajdować się w bazie Drift, w pamięci, czy w szyfrowanym magazynie lokalnym. Nie utrzymywać niepotrzebnych kopii plaintextu.
 
-3. Akceptacja zaproszenia. Zmiana statusu zaproszenia i utworzenie relacji symetrycznej powinny być atomowe. W przeciwnym razie błąd w połowie operacji może zostawić niespójny stan.
+2
 
-4. Równoczesne zaproszenia. Dwa żądania wysłane niemal jednocześnie mogą przejść sprawdzenie duplikatu. Potrzebne są odpowiednie ograniczenia w bazie i obsługa konfliktów.
+Nie udostępniać klucza prywatnego przez model transportowy.
 
-5. Obsługa błędów i testy. Zapis pracy agenta potwierdza testy pakietu `service`, ale pełny pakiet `messaging-service` nadal ma błędy w innych modułach. Nie traktujmy więc całego serwisu jako zweryfikowanego.
+`ensureDeviceIdentityBundle()` zwraca `privateKey`, choć rejestracja na serwerze korzysta z kluczy publicznych. Rozdzielić model lokalnego materiału kryptograficznego od `DeviceKeyRegistrationRequest`, który nie powinien w ogóle posiadać pola klucza prywatnego.
 
-## Co z menu „…” i załącznikiem?
+3
 
-- Menu „…” — mały, osobny przycisk przy wiadomości lub w nagłówku rozmowy, zależnie od kontekstu. Powinien otwierać menu kontekstowe, a nie uruchamiać niejawne przesyłanie danych.
+Rozdzielić identyfikator urządzenia aplikacji od identyfikatora urządzenia Signal.
 
-- Opcjonalne pakiety diagnostyczne — można dodać osobną funkcję w ustawieniach, domyślnie wyłączoną. Po włączeniu wysyłałaby wyłącznie określone dane diagnostyczne, bez treści wiadomości, kluczy prywatnych, tokenów i sekretów. Użytkownik powinien wiedzieć, co jest wysyłane.
+`senderDeviceId` w API i numeryczny identyfikator w `SignalProtocolAddress` to różne pojęcia. Wprowadzić jednoznaczne typy, np. `AppDeviceId` i `SignalDeviceId`, zamiast przekazywać oba jako `String` lub `int` bez wyraźnej granicy.
 
-- Załącznik — najpierw trzeba prześledzić istniejącą ikonę od widoku po backend. Jeśli jest tylko wizualna albo kończy się na pustym callbacku, należy podłączyć rzeczywisty przepływ: wybór pliku, walidację typu i rozmiaru, przesłanie, stan postępu, obsługę błędów oraz pobieranie.
+4
 
-- Refaktor widoków — dzielimy duże pliki na mniejsze widżety, komponenty i serwisy. Zmiana stanu ma odświeżać tylko potrzebny fragment drzewa widoków, ale sam podział plików nie gwarantuje mniejszego rebuilda. Trzeba dopasować go do używanego w projekcie zarządzania stanem.
+Nie utożsamiać pobrania PreKey Bundle z weryfikacją tożsamości.
 
-## Drugi prompt dla agenta
+`initializeSessionForPeer()` pobiera istniejącą tożsamość i fingerprint, ale należy zweryfikować politykę zmiany klucza. Zmiana klucza partnera powinna być jawnie obsłużona i nie może po cichu oznaczać automatycznego zaakceptowania nowej tożsamości.
 
-Ten prompt kieruje agenta do dalszej pracy na istniejącym kodzie. Ma sprawdzać, naprawiać i implementować, a nie kończyć na audycie ani czekać na ręczne testy.
+5
 
-ETAP 2 — Production hardening komunikatora: kontakty, załączniki i refaktor UI
+Usunąć fallbacki, które ukrywają brak prawidłowego identyfikatora.
 
-# ETAP 2 — Production hardening komunikatora: kontakty, załączniki i refaktor UI
+W `resolveInboundSignalDeviceCandidates()` istnieje ścieżka próbująca rozwiązać identyfikator UUID przez PreKey Bundle. Należy jawnie modelować mapowanie identyfikatora urządzenia aplikacji na identyfikator Signal. Nie próbować deszyfrowania na podstawie zgadywanego identyfikatora.
 
-Pracujesz w istniejącym repozytorium komunikatora. Etap 1 dodał walidację odbiorcy w `platform/services/messaging-service/internal/service/contacts_service.go`, interfejs `ContactTargetValidator`, integrację przez `internal/di/container.go` i testy walidacji.
+6
 
-**Twoje zadanie: przeanalizować istniejący kod, znaleźć kolejne realne błędy i od razu wdrożyć poprawki. Nie twórz wyłącznie raportu. Nie rozpoczynaj ręcznych testów UI — na tym etapie automatyzujemy testy i naprawiamy implementację.**
+Naprawić i przetestować odtwarzanie tożsamości urządzenia.
 
-## Zasady pracy
+`_hasPersistedDeviceIdentityMaterial()` sprawdza podpisany prekey i dziesięć kluczy jednorazowych. Nie jest to pełna walidacja spójności magazynu. Brakujące lub zużyte prekeys powinny prowadzić do kontrolowanego uzupełniania kluczy zgodnie z protokołem, a nie do przypadkowego odtwarzania tożsamości.
 
-1. Najpierw sprawdź aktualny stan repozytorium, diff, testy i implementację po etapie 1. Nie zakładaj, że poprzednia zmiana jest poprawna tylko dlatego, że pojedynczy pakiet przeszedł testy.
+7
 
-2. Zachowaj istniejącą architekturę, konwencje, kontrakty API i sposób zarządzania stanem we Flutterze.
+Zabezpieczyć rejestrację kluczy przed wyścigami.
 
-3. Nie twórz fikcyjnych tabel, usług, endpointów ani abstrakcji bez uzasadnienia w kodzie.
+`_deviceIdentityRegistrationTask` zapobiega części równoległych rejestracji w ramach jednej instancji. Zweryfikować równoległe wywołania z wielu ścieżek, odtworzenie procesu i przypadki błędów po stronie serwera.
 
-4. Pracuj małymi, logicznymi zmianami. Po każdej części uruchom odpowiednie testy, napraw błędy wynikające z Twoich zmian i przejdź dalej.
+8
 
-5. Nie usuwaj działających funkcji i nie zmieniaj niezwiązanych modułów.
+Zastąpić marker rejestracji jednoznacznym stanem lokalnym.
 
-6. Jeśli pełny pakiet testów już wcześniej nie przechodził, ustal, które błędy są bazowe, a które wprowadza Twoja zmiana. Nie ukrywaj awarii.
+`e2ee_device_registration_marker` porównuje `toString()` mapy z zapisanym ciągiem. Lepiej użyć jawnego, stabilnego formatu serializacji i wersjonowanego modelu stanu, bez przechowywania prywatnych danych w markerze.
 
-7. Nie wykonuj destrukcyjnych operacji na danych ani środowisku produkcyjnym.
+9
 
-## CZĘŚĆ A — Spójność i bezpieczeństwo zaproszeń
+Ograniczyć logowanie danych kryptograficznych.
 
-Prześledź pełny przepływ:
+W logach `E2EE_TRACE` pojawiają się fingerprinty, identyfikatory użytkowników, długości plaintextu i szczegóły błędów. Nie logować treści, kluczy, tokenów ani surowych payloadów. Ustalić politykę redakcji identyfikatorów i poziomów logowania dla produkcji.
 
-Flutter → API → handler → ContactsService → repository → baza danych → Redis → WebSocket.
+10
 
-Sprawdź i napraw następujące przypadki:
+Rozdzielić błędy szyfrowania, braku sesji i niepoprawnego ciphertextu.
 
-- Zaproszenie do nieistniejącego użytkownika nie może utworzyć rekordu kontaktu.
+`EncryptionFailureException` jest używany zarówno przy szyfrowaniu, jak i po nieudanych próbach deszyfrowania. Wprowadzić typowane błędy, aby UI mogło rozróżnić brak sesji, nieznany klucz, niepoprawny ciphertext i błąd magazynu.
 
-- Sprawdź, czy aktywacja i tożsamość urządzenia są pobierane z wiarygodnego źródła. Nie uznawaj samego UUID, wpisu aktywacji ani niepustego `PublicKey` za wystarczający dowód istnienia i poprawności konta.
+11
 
-- Sprawdź status urządzenia, ważność tożsamości i istniejące zasady weryfikacji kluczy. Nie wymyślaj własnego protokołu kryptograficznego.
+Ograniczyć przechowywanie kluczy załączników i metadanych.
 
-- Upewnij się, że użytkownik nie może wysłać zaproszenia samemu sobie.
+Zweryfikować użycie `attachment-key`, `attachment-meta` i `attachment-preview`. Klucz powinien być chroniony, metadane nie powinny być duplikowane bez potrzeby, a cache podglądów powinien mieć określone zasady usuwania i ograniczenia rozmiaru.
 
-- Zablokuj duplikaty w obu kierunkach, również przy równoczesnych żądaniach. Jeśli model danych na to pozwala, dodaj właściwe ograniczenia bazodanowe i obsłuż konflikty.
+12
 
-- Zweryfikuj, czy zaakceptować można tylko zaproszenie w prawidłowym stanie i przez uprawnionego odbiorcę.
+Dodać testy bezpieczeństwa dla całego cyklu Signal.
 
-- Sprawdź atomowość akceptacji: zmiana statusu i utworzenie wymaganej relacji symetrycznej nie mogą pozostawić częściowo zapisanych danych. Zastosuj transakcję odpowiednią dla istniejącego repozytorium.
+Testować pierwszą wiadomość, wiadomość po istniejącej sesji, restart aplikacji, zmianę tożsamości partnera, zużycie prekey, brak lokalnej sesji i błędny ciphertext. Testy muszą obejmować dwóch niezależnych użytkowników i osobne magazyny kluczy.
 
-- Zweryfikuj odrzucenie zaproszenia, ponowne żądania i wszystkie przejścia statusów.
+### B. Synchronizacja, outbox i WebSocket
 
-- Upewnij się, że nieudana walidacja nie zapisuje kontaktu ani nie publikuje zdarzenia `contact_updated`.
+Punkty 13–24 · krytyczne dla niezawodności komunikatora
 
-- Sprawdź, czy awaria Redis po zapisie nie powoduje niejawnej utraty aktualizacji UI. Jeśli istniejący mechanizm na to pozwala, zastosuj odpowiedni wzorzec niezawodnego dostarczania zdarzeń; nie przebudowuj całego systemu zdarzeń bez potrzeby.
+13\. Podzielić `ChatSyncService` na mniejsze klasy. Obecna klasa odpowiada za stan synchronizacji, obsługę połączenia, wysyłanie outboxa, parsowanie payloadów i pobieranie danych.
 
-Nie ufaj `ownerID` przekazanemu przez klienta. Ustal, czy tożsamość nadawcy pochodzi z uwierzytelnionego kontekstu JWT i poprawnie zweryfikowanej sesji.
+14\. Wydzielić `OutboxProcessor`. Ma odpowiadać za pobranie zdarzeń, walidację, wysyłkę, retry i potwierdzenie dostarczenia do serwera.
 
-### Testy obowiązkowe
+15\. Wydzielić `DeltaSyncService`. Pobieranie zmian, parsowanie odpowiedzi, deszyfrowanie i aktualizowanie checkpointów nie powinno być rozproszone między jedną metodą synchronizacji a repozytorium.
 
-Dodaj lub popraw testy dla:
+16\. Wprowadzić typowany model zdarzenia outbox. Zamiast wielokrotnie dekodować `Map<String, dynamic>`, stworzyć np. `OutboxMessageEvent` z jawnie określonymi polami i walidacją.
 
-- nieistniejącego i nieaktywnego odbiorcy;
+17\. Usunąć powielone parsowanie payloadu. `rawPayloadByMessageId` i alternatywne odczyty `type`, `signalType`, `eventId` oraz `outboxEventId` wskazują na kilka wariantów tego samego kontraktu. W pierwszej wersji należy wybrać jeden kanoniczny format.
 
-- brakującej lub nieprawidłowej tożsamości urządzenia;
+18\. Nie stosować automatycznego fallbacku Signal type na `1` dla niepoprawnych danych. W `ChatSyncService` brak `type` prowadzi do wartości domyślnej. Brak wymaganych danych powinien zostać wykryty podczas walidacji, a nie zamieniony w pozornie prawidłową wiadomość.
 
-- zaproszenia do samego siebie;
+19\. Nie usuwać wiadomości z outboxa przed potwierdzeniem trwałego zapisu. Zweryfikować, czy `sendOutboxBatch()` zwraca potwierdzenie dla każdego zdarzenia, czy tylko dla całej paczki. W przypadku częściowego sukcesu nie wolno utracić niepotwierdzonych wiadomości.
 
-- duplikatów w obu kierunkach;
+20\. Ujednolicić idempotencję. `eventId`, `messageId` i `idempotencyKey` powinny mieć jasno określone znaczenie. Ponowienie tego samego zdarzenia nie może tworzyć nowej wiadomości ani powodować błędnego potwierdzenia.
 
-- dwóch równoczesnych prób zaproszenia;
+21\. Wprowadzić ograniczone retry z backoffem. Zamiast prostego zwiększania `retryCount` potrzebne są limity, opóźnienie wykładnicze z jitterem, obsługa błędów trwałych i możliwość wznowienia po ponownym połączeniu.
 
-- akceptacji przez nieuprawnionego użytkownika;
+22\. Nie blokować całej synchronizacji przez jeden niegotowy wpis. Wpis z nieznanym `conversationId` powinien pozostać w kolejce i mieć konkretny powód blokady. Musi istnieć sposób jego późniejszego rozwiązania lub zgłoszenia błędu.
 
-- nieprawidłowego przejścia statusu;
+23\. Zapewnić jeden koordynator synchronizacji. `_isSyncing` zabezpiecza przed równoległym wykonaniem w ramach jednej instancji, ale warto sprawdzić kolejkę kolejnych wywołań, wyścigi z WebSocketem i ponowne uruchomienie synchronizacji w trakcie działania.
 
-- błędu zapisu podczas akceptacji;
+24\. Zdefiniować cykl życia połączenia WebSocket. Połączenie, subskrypcje, reconnect, synchronizacja po reconnect i zamykanie zasobów muszą mieć jednoznacznego właściciela. `dispose()` powinno być asynchronicznie i deterministycznie obsłużone tam, gdzie wymagane jest oczekiwanie na zakończenie subskrypcji.
 
-- braku publikacji zdarzenia przy odrzuconym żądaniu;
+### C. Repozytoria, baza lokalna i model domenowy
 
-- zachowania spójności danych przy błędzie części operacji.
+Punkty 25–34
 
-## CZĘŚĆ B — Napraw działanie ikony załącznika
+25\. Rozdzielić `ChatsRepositoryImpl` według odpowiedzialności. Wydzielić obsługę wiadomości, konwersacji, synchronizacji, cache plaintextu oraz załączników. Nie należy tworzyć pięciu repozytoriów, które wszystkie bezpośrednio modyfikują te same tabele.
 
-Przeszukaj cały moduł komunikatora we Flutterze, szczególnie istniejący obszar:
+26\. Ograniczyć dostęp aplikacji do wewnętrznych szczegółów Drift. Kod aplikacyjny nie powinien w wielu miejscach korzystać z `_repository.db.outboxDao`. Repozytorium powinno udostępniać operacje domenowe, np. `getRetryEligibleOutboxEvents()`.
 
-`lib/features/communication`
+27\. Zastąpić mapy dynamiczne modelami DTO. `syncDeltaFromRemote()` zwraca `Future<List<Map<String, dynamic>>>`. Wprowadzić typowany wynik synchronizacji, np. `SyncDeltaResult`, z osobnymi kolekcjami wiadomości, kontaktów i checkpointów.
 
-Znajdź ikonę załącznika i prześledź ją od widgetu do końcowej operacji. Ustal, czy istnieje już picker, serwis przesyłania, endpoint, obsługa plików i model wiadomości z załącznikiem.
+28\. Uprościć cache plaintextu i aliasy ID. `LocalPlaintextMessageCache` tworzy relacje aliasów między identyfikatorami. To sygnał, że model tożsamości wiadomości może być niejednoznaczny. Wiadomość powinna mieć jeden stabilny identyfikator; relację z lokalnym zdarzeniem należy modelować osobno, jeśli faktycznie jest potrzebna.
 
-Następnie:
+29\. Zlikwidować potencjalne zapytania N+1. `watchConversations()` pobiera konwersacje, a potem osobno ostatnie wiadomości każdej z nich i dodatkowo odczytuje cache. Dla wielu konwersacji może to generować kosztowne serie zapytań i operacji I/O.
 
-1. Jeśli funkcja już istnieje, ale nie jest podłączona, podłącz ją do istniejącej implementacji.
+30\. Nie wykonywać zbędnych zapisów w Secure Storage. Sprawdzić, czy plaintext i metadane załączników są zapisywane wielokrotnie przy każdej synchronizacji. Zapisy powinny być idempotentne, ograniczone do rzeczywistych zmian i objęte jasną polityką retencji.
 
-2. Jeśli przepływ jest częściowy, uzupełnij brakujące elementy w ramach istniejącej architektury.
+31\. Ujednolicić walidację UUID. Nie tworzyć osobnych, nieco różniących się walidatorów w outboxie, repozytorium i warstwie E2EE. Wprowadzić jawne typy identyfikatorów oraz wspólną walidację na granicach systemu.
 
-3. Jeśli backend nie obsługuje danego rodzaju załączników, sprawdź dostępne możliwości przed zmianą kontraktu API. Nie implementuj fikcyjnego uploadu, który tylko wygląda na działający.
+32\. Oddzielić stan lokalny od stanu serwera. `pending`, `sent`, `delivered`, `read`, `failed` powinny mieć jednoznaczne znaczenie. Nie opierać ich na przypadkowych stringach w wielu warstwach.
 
-4. Obsłuż wybór pliku, anulowanie, niedozwolone typy, limity rozmiaru, błędy sieci, stan wysyłania i sukces.
+33\. Ujednolicić zapis czasu. Wymagać UTC w kontrakcie transportowym, a strefę lokalną stosować wyłącznie w prezentacji. Nie zastępować błędnej daty `DateTime.now()` bez jawnego oznaczenia, że czas jest nieznany.
 
-5. Nie blokuj interfejsu podczas wysyłania. Nie pokazuj wiadomości jako wysłanej, dopóki backend nie potwierdzi odpowiedniego stanu.
+34\. Zapewnić transakcyjność aktualizacji wiadomości. Zapis ciphertextu, aktualizacja stanu wiadomości, identyfikatora załącznika i checkpointu synchronizacji powinny być spójne. Nie wolno przesuwać checkpointu, jeśli dane, których dotyczy, nie zostały trwale zapisane.
 
-6. Sprawdź autoryzację pobierania plików i to, czy nie można pobrać cudzego załącznika przez podmianę identyfikatora.
+### D. Riverpod, DI i stan aplikacji
 
-7. Jeżeli komunikator używa E2EE, nie wysyłaj treści załączników w postaci jawnej do niezaufanego serwera. Sprawdź istniejący model szyfrowania i dopasuj przepływ do niego.
+Punkty 35–42
 
-8. Nie loguj treści plików, tokenów ani sekretów.
+35\. Ujednolicić generowane i ręcznie deklarowane providery. W kodzie występują `@riverpod`, `NotifierProvider` i `AsyncNotifierProvider`. To nie jest automatycznie błąd, ale warto przyjąć konwencję: generowanie dla standardowych providerów i ręczne deklaracje tylko tam, gdzie faktycznie upraszczają kod.
 
-Dodaj testy dla walidacji pliku, anulowania wyboru, błędu uploadu i poprawnego zakończenia. Jeśli brakuje wymaganej infrastruktury, wdroż bezpieczne części, a dokładny brak opisz jako blokadę zamiast udawać, że funkcja działa.
+36\. Używać `ref.watch` do zależności reaktywnych, `ref.read` do akcji. Provider nie powinien niepotrzebnie reagować na zmianę zależności, jeżeli potrzebuje jej tylko do jednorazowej operacji.
 
-## CZĘŚĆ C — Menu „…” i diagnostyka
+37\. Zadbać o cykl życia usług. `ChatSyncService` rozpoczyna subskrypcję przez `init()`, a następnie jest zwalniany w `ref.onDispose`. Należy określić, czy usługa ma być singletonem w zakresie sesji, czy tworzona na potrzeby konkretnego ekranu.
 
-Sprawdź istniejący układ widoku rozmowy oraz dostępne komponenty menu kontekstowego.
+<!-- 38\. Nie tworzyć loggera bezpośrednio wewnątrz serwisu. `ContactsService` używa `AppLogger()`, mimo że aplikacja posiada `appLoggerProvider`. Wstrzykiwanie zależności poprawi testowalność i spójność konfiguracji. -->
 
-Zaprojektuj i wdroż małe, natywne dla obecnego UI menu „…”:
+39\. Uprościć stan aktywacji komunikatora. `MessagingActivationState` ma osobne statusy, warunki wyświetlania onboardingu i obsługę błędów. Rozdzielić status serwerowy, stan akceptacji regulaminu i stan gotowości E2EE, aby sukces jednej operacji nie maskował porażki innej.
 
-- Umieść je w miejscu wynikającym z istniejącego projektu, bez przypadkowego zaśmiecania interfejsu.
+40\. Unikać ręcznego utrzymywania providerów dla prostych wartości. Jeśli `ChatSyncStatusController` jedynie udostępnia `SyncStatus`, sprawdzić, czy może zostać scalony z kontrolerem synchronizacji. Nie należy jednak łączyć stanu UI z całą logiką transportową.
 
-- Podłącz wyłącznie funkcje, które naprawdę istnieją.
+41\. Zastosować jawne stany ładowania i błędów. Dla kontaktów, rozmów i aktywacji używać spójnych stanów asynchronicznych. Nie zastępować błędu pustą listą, jeśli UI ma odróżniać brak danych od błędu sieci.
 
-- Nie dodawaj martwych przycisków ani pustych callbacków.
+42\. Dodać testy providerów bez uruchamiania całej aplikacji. Testować przejścia stanu, anulowanie subskrypcji, błędy API, wznowienie połączenia i zachowanie po odtworzeniu stanu z magazynu.
 
-- Jeżeli menu dotyczy pojedynczej wiadomości, akcje muszą operować na właściwej wiadomości i respektować uprawnienia.
+### E. UI, podział widgetów i płynność renderowania
 
-Rozpoznaj również, czy warto dodać opcjonalną diagnostykę komunikatora. Jeśli jest uzasadniona, przygotuj ją jako oddzielną funkcję w ustawieniach:
+Punkty 43–52
 
-- domyślnie wyłączoną;
+43\. Rozbić `MessageBubble` na komponenty prezentacyjne. Widoczny kod obsługuje treść, metadane załącznika, pobieranie podglądu, deszyfrowanie pliku i stan ładowania. Docelowo `MessageBubble` powinien przede wszystkim komponować widok, a logikę załączników należy przenieść do kontrolera lub dedykowanej warstwy aplikacyjnej.
 
-- z jasnym opisem zakresu przesyłanych danych;
+44\. Usunąć sieć i kryptografię z `build()`. `FutureBuilder` z `_resolvePreviewBytes()` może uruchamiać ponowne pobieranie i deszyfrowanie przy kolejnych przebudowach widgetu. Zadanie powinno mieć stabilny cykl życia i cache wyników, np. przez odpowiedni provider rodziny.
 
-- z możliwością wyłączenia;
+45\. Nie tworzyć nowego `Dio()` przy pobieraniu każdego podglądu. Wykorzystywać współdzielonego klienta pobierania z timeoutami, kontrolą przekierowań, limitami rozmiaru i anulowaniem żądań.
 
-- bez treści wiadomości, kluczy prywatnych, tokenów, haseł i sekretów;
+46\. Wydzielić `MessageTextContent`, `MessageAttachmentPreview`, `MessageTimestamp` i `MessageStatusIndicator`. Każdy element powinien otrzymywać tylko potrzebne dane. Zmiana statusu wiadomości nie powinna niepotrzebnie przebudowywać ciężkiego podglądu załącznika.
 
-- z minimalizacją danych i odpowiednim mechanizmem zgody.
+47\. Użyć `ListView.builder` lub `SliverList` dla wiadomości. Unikać budowania całej historii naraz. W większych rozmowach dodać paginację historii i stabilne klucze elementów.
 
-Nie wysyłaj żadnych pakietów w tle tylko dlatego, że użytkownik otworzył menu „…”. Nie dodawaj funkcji „wyślij pakiet” bez określonego celu, formatu, odbiorcy i zabezpieczeń. Jeżeli nie istnieje rzeczywista potrzeba diagnostyczna, nie implementuj wysyłania — opisz proponowany kontrakt i pozostaw funkcję poza zakresem.
+48\. Zachować pozycję przewijania. Nowa wiadomość nie powinna wymuszać skoku na dół, jeśli użytkownik przegląda starsze wiadomości. Oddzielić dodanie wiadomości od decyzji UI o przewinięciu.
 
-## CZĘŚĆ D — Refaktor dużych widoków Fluttera
+49\. Rozdzielić stan listy konwersacji od stanu otwartego czatu. Aktualizacja jednej wiadomości nie powinna odświeżać całej listy kontaktów, wszystkich konwersacji i całego ekranu.
 
-Przeanalizuj moduł komunikatora i wskaż największe pliki widoków oraz komponenty, w których jedna klasa odpowiada za zbyt wiele rzeczy.
+50\. Używać `select` tam, gdzie ogranicza przebudowy. Widget, który potrzebuje wyłącznie licznika nieprzeczytanych wiadomości lub jednego statusu, nie powinien obserwować całego obiektu zawierającego wszystkie wiadomości.
 
-Wybierz pierwszy, bezpieczny fragment i wykonaj refaktor:
+51\. Wydzielić czyste widoki stanów ekranów. W kontaktach już występują osobne komponenty błędu i pustego stanu. Ujednolicić podejście dla list rozmów, ładowania historii, braku sesji E2EE, braku sieci i błędu załącznika.
 
-- rozdziel duży ekran na mniejsze, odpowiedzialne za pojedyncze zadania widgety;
+52\. Mierzyć wydajność przed dodaniem optymalizacji. W trybie profile sprawdzić liczbę przebudów, czas budowania listy, czas deszyfrowania załączników, liczbę zapytań Drift i liczbę odczytów Secure Storage. Dopiero potem dodawać `const`, `select`, memoizację i cache tam, gdzie faktycznie pomagają.
 
-- oddziel UI od logiki wysyłania wiadomości, obsługi załączników i połączeń sieciowych tam, gdzie obecna architektura tego wymaga;
+### F. CamelCase, DTO i kontrakty API
 
-- współdziel komponenty, jeśli faktycznie występują w kilku miejscach;
+Punkty 53–58
 
-- zachowaj dotychczasowe zachowanie, routing, style, obsługę błędów i kontrakty;
+53\. Ustalić jeden kanoniczny format JSON. `conversationId`, `messageId`, `senderDeviceId`, `eventId`, `createdAt`, `signalType` — z dokładnym określeniem, które pola należą do danego endpointu.
 
-- nie przenoś logiki do nowych plików tylko po to, by zmniejszyć liczbę linii;
+54\. Usunąć rozproszone odczyty alternatywnych nazw. Przykłady to `sender_id` i `senderId` oraz `type` i `signalType`. Jeśli wybieramy camelCase, kod nie powinien bez końca akceptować wszystkich wariantów historycznych.
 
-- nie twórz nadmiernej liczby małych klas bez samodzielnej odpowiedzialności.
+55\. Nie dodawać globalnego snake-case normalizatora. Każdy DTO ma mieć jawne `fromJson` i `toJson`, a format kontraktu ma być testowany. Niepotrzebne automatyczne konwersje utrudniają wykrycie błędów.
 
-Sprawdź używany w projekcie mechanizm stanu i zależności widgetów. Ogranicz niepotrzebne przebudowywanie widoków przez odpowiednie granice stanu, selektory lub lokalizację `setState` — zgodnie z istniejącą technologią. Sam podział plików nie jest dowodem poprawy wydajności.
+56\. Usunąć duplikaty pól w payloadach rejestracji. `identityPublicKey` i `publicKey` są wysyłane z tą samą wartością. Pozostawić jedno pole kanoniczne po potwierdzeniu zgodności backendu.
 
-Nie przepisuj całego modułu. Po pierwszym refaktorze uruchom testy i analizę statyczną. Jeśli zakres jest większy, rozpisz kolejne fragmenty do następnego etapu.
+57\. Nie mieszać `content`, `ciphertext` i `encryptedPayload`. Wprowadzić jeden model wiadomości transportowej z polem `ciphertext`, a tekst odszyfrowany przechowywać oddzielnie w modelu prezentacyjnym lub lokalnym modelu wiadomości.
 
-## Kolejność wykonania
+58\. Testować kontrakty po obu stronach. Testy Dart i Go powinny potwierdzać te same nazwy pól, typy, wymagane wartości i obsługę niepoprawnych payloadów. Testy powinny wykrywać powrót pól snake_case.
 
-1. Sprawdź stan repozytorium i wyniki testów przed zmianami.
+## 4. Dodatkowe problemy, które warto objąć audytem
 
-2. Dokończ spójność zaproszeń i testy.
+Te punkty wymagają weryfikacji pełnego przepływu, zanim zostaną uznane za błędy produkcyjne.
 
-3. Napraw rzeczywisty przepływ załącznika.
+59\. Obsługa wielu urządzeń na użytkownika. Zweryfikować, czy wiadomość jest szyfrowana dla wszystkich wymaganych urządzeń odbiorcy oraz innych własnych urządzeń nadawcy, zgodnie z przyjętym modelem Signal.
 
-4. Zintegruj menu „…” tylko z istniejącymi i działającymi akcjami; diagnostykę realizuj wyłącznie, jeśli ma określony cel i bezpieczny kontrakt.
+60\. Weryfikacja uprawnień do konwersacji. Backend musi sprawdzać członkostwo nadawcy, uprawnienia urządzenia i dostęp odbiorcy do konkretnej konwersacji. Sam poprawny UUID nie jest autoryzacją.
 
-5. Zrób pierwszy niewielki refaktor dużego widoku.
+61\. Bezpieczne URL-e załączników. Zweryfikować pobieranie z URL-i podpisanych: domeny, przekierowania, limity czasu i rozmiaru, a także to, czy klient nie przesyła przypadkowo tokenu API do obcego hosta.
 
-6. Uruchom `gofmt`, testy Go, formatowanie Fluttera (`dart format`) oraz `flutter analyze` i odpowiednie testy Fluttera, zależnie od zmienionych modułów.
+62\. Weryfikacja integralności załączników. Przed udostępnieniem odszyfrowanego pliku sprawdzać rozmiar i hash zgodnie z protokołem. Nie traktować samego udanego pobrania jako dowodu poprawności pliku.
 
-7. Nie deklaruj sukcesu dla polecenia, którego wynik nie potwierdza poprawnego zakończenia.
+63\. Limity rozmiaru wiadomości i batchy. Ograniczyć liczbę zdarzeń w paczce, rozmiar ciphertextu i liczbę operacji deszyfrowania wykonywanych jednocześnie.
 
-## Raport końcowy
+64\. Paginacja i checkpointy. W backendzie widać `HasMore: false` w odpowiedzi delta sync. Zweryfikować, czy kontrakt rzeczywiście gwarantuje pełny wynik, czy może pomijać wiadomości przy większej historii.
 
-Po wdrożeniu podaj:
+65\. Powiadomienia i zdarzenia WebSocket. Zdarzenie push powinno być sygnałem do aktualizacji danych, a nie jedynym źródłem prawdy. Po reconnect aplikacja powinna móc odtworzyć stan z serwera.
 
-- rzeczywiste znalezione problemy i ich przyczyny;
+66\. Testy izolacji użytkowników. W testach backendu sprawdzić, czy użytkownik nie może odczytać wiadomości, kontaktów, metadanych ani załączników innego użytkownika przez podstawienie identyfikatora.
 
-- zmienione pliki i uzasadnienie każdej grupy zmian;
+67\. Polityka logów produkcyjnych. Ustalić retencję, poziomy logowania, redakcję identyfikatorów i możliwość wyłączenia szczegółowych śladów kryptograficznych bez utraty kluczowych informacji diagnostycznych.
 
-- które funkcje rzeczywiście działają po poprawce;
+68\. Konfiguracja środowisk. Oddzielić adresy API, WebSocket i storage dla środowisk lokalnego, testowego i produkcyjnego. Nie pozwolić, by podgląd załącznika omijał centralną konfigurację sieciową.
 
-- uruchomione polecenia i ich wyniki;
+69\. Testy restartu i trybu offline. Sprawdzić zamknięcie aplikacji podczas wysyłania, brak sieci, ponowne połączenie, restart podczas retry oraz odtworzenie sesji Signal z lokalnej bazy.
 
-- pozostałe błędy bazowe, ryzyka i blokady;
+70\. Testy obciążeniowe i profilowanie. Sprawdzić wiele konwersacji, długie historie, tysiące wiadomości i równoległe pobieranie załączników. Ustalić mierzalne cele wydajnościowe przed optymalizacją.
 
-- kolejne konkretne zadania w kolejności priorytetu.
+## 5. Docelowa struktura katalogów
 
-**Kryterium sukcesu:** żadnych pozornie działających przycisków, żadnych fikcyjnych walidacji, żadnego niejawnego przesyłania danych, żadnych częściowo zapisanych relacji po błędzie. Zmiany mają być zgodne z istniejącą architekturą komunikatora, testowalne i gotowe do późniejszych testów manualnych.
+Nie robiłbym refaktoryzacji przez przeniesienie każdego pliku do kolejnego katalogu. Celem jest oddzielenie odpowiedzialności, przy zachowaniu prostej nawigacji.
 
-Moja rekomendacja: uruchom ten prompt w agencie w katalogu głównym repozytorium, nie w samym katalogu Fluttera — zadania obejmują backend Go i frontend Flutter. Jeśli agent zacznie zmieniać wiele niezależnych obszarów bez testowania pomiędzy nimi, przerwij i każ mu dokończyć najpierw część A.
+Proponuję następujący kierunek dla `features/communication`:
+
+```
+
+features/communication/
+├── domain/
+│   ├── models/
+│   │   ├── message.dart
+│   │   ├── conversation.dart
+│   │   └── contact.dart
+│   ├── repositories/
+│   │   ├── chats_repository.dart
+│   │   └── contacts_repository.dart
+│   └── value_objects/
+│       ├── app_device_id.dart
+│       ├── signal_device_id.dart
+│       └── conversation_id.dart
+│
+├── application/
+│   ├── messaging/
+│   │   ├── send_message_service.dart
+│   │   └── receive_message_service.dart
+│   ├── sync/
+│   │   ├── chat_sync_service.dart
+│   │   ├── delta_sync_service.dart
+│   │   └── sync_status.dart
+│   ├── outbox/
+│   │   ├── outbox_processor.dart
+│   │   ├── outbox_event.dart
+│   │   └── outbox_event_builder.dart
+│   ├── e2ee/
+│   │   ├── e2ee_crypto_service.dart
+│   │   ├── device_identity_service.dart
+│   │   └── session_service.dart
+│   └── contacts/
+│       ├── contacts_service.dart
+│       └── contact_invite_error_mapper.dart
+│
+├── data/
+│   ├── datasources/
+│   │   ├── chats_api_client.dart
+│   │   ├── chats_ws_client.dart
+│   │   └── messaging_activation_api_client.dart
+│   ├── dto/
+│   ├── mappers/
+│   └── repositories/
+│       ├── chats_repository_impl.dart
+│       └── contacts_repository_impl.dart
+│
+└── presentation/
+    ├── providers/
+    ├── screens/
+    └── widgets/
+        ├── messages/
+        │   ├── message_list.dart
+        │   ├── message_bubble.dart
+        │   ├── message_text_content.dart
+        │   ├── message_attachment_preview.dart
+        │   └── message_status_indicator.dart
+        ├── conversations/
+        └── contacts/
+
+```
+
+To jest struktura docelowa, a nie polecenie przeniesienia wszystkiego naraz. Należy dostosować ją do istniejących importów, plików generowanych i testów. Nie duplikować modeli, jeśli istnieją już ich odpowiedniki.
+
+## 6. Co robić najpierw — kolejność wdrażania
+
+Etap 1 — zabezpieczenie fundamentów
+
+P0
+
+Sprawdzić przepływ kluczy prywatnych, trwałe przechowywanie plaintextu, identyfikatory urządzeń Signal, obsługę zmiany tożsamości oraz poprawność deszyfrowania. Dodać testy regresyjne.
+
+Etap 2 — niezawodna wysyłka i synchronizacja
+
+P0
+
+Ustalić kanoniczny kontrakt outbox, idempotencję, potwierdzenia, retry i checkpointy. Nie refaktoryzować jednocześnie logiki konwersacji i UI.
+
+Etap 3 — porządek architektoniczny
+
+P1
+
+Podzielić repozytorium i synchronizację na mniejsze klasy, wprowadzić typowane DTO oraz ujednolicić Riverpod.
+
+Etap 4 — płynne UI i załączniki
+
+P1
+
+Rozbić widgety wiadomości, usunąć kosztowne operacje z renderowania, zoptymalizować zapytania Drift i ograniczyć zbędne przebudowy.
+
+Etap 5 — finalna walidacja
+
+P2
+
+Testy kontraktów Dart/Go, testy dwóch użytkowników, restart aplikacji, offline, załączniki, `flutter analyze`, testy Flutter i profilowanie.
+
+## 7. Gotowy prompt dla agenta kodującego
+
+Ten prompt możesz przekazać agentowi pracującemu na repozytorium. Ma realizować refaktoryzację etapami, a nie tylko wygenerować listę zmian.
+
+# Zadanie: profesjonalna refaktoryzacja komunikatora E2EE w Obywatel Plus
+
+## Cel
+
+Przeprowadź dokładny audyt i etapową refaktoryzację istniejącego komunikatora Flutter + Riverpod + Drift + Signal E2EE oraz powiązanego backendu Go.
+
+Celem jest uzyskanie czytelnej, testowalnej, bezpiecznej i wydajnej architektury produkcyjnej. Nie dodawaj nowych funkcji produktowych. Skup się na poprawności, separacji odpowiedzialności, bezpieczeństwie, niezawodności i jakości kodu.
+
+## Bezwzględne wymagania
+
+1. Nie wprowadzaj migracji bazy danych. To pierwsza wersja, więc schemat, modele i lokalne kontrakty można zmieniać, jeżeli nie ma to negatywnego wpływu na istniejący backend i uruchamialność aplikacji.
+2. Używaj camelCase w kodzie Dart, JSON i kontraktach komunikatora.
+3. Nie twórz globalnych snake_case normalizatorów, automatycznych konwerterów nazw ani rozbudowanej warstwy zgodności z niepotrzebnymi wariantami pól.
+4. W przypadku istniejącego kontraktu snake_case sprawdź wszystkie zależności backendu. Zmień kontrakt jawnie, jeżeli można to zrobić bezpiecznie. Nie łam działających endpointów przez jednostronną zmianę Fluttera.
+5. Nie pozostawiaj wielu alternatywnych nazw tego samego pola, jeżeli nie ma uzasadnionej potrzeby obsługi istniejących danych.
+6. Stosuj Riverpod konsekwentnie. Wykorzystuj generowanie providerów tam, gdzie upraszcza kod, ale nie wykonuj mechanicznej zamiany wszystkich providerów.
+7. Rozbijaj duże klasy i widgety według odpowiedzialności. Nie twórz abstrakcji wyłącznie po to, żeby zwiększyć liczbę plików.
+8. Nie implementuj własnego protokołu kryptograficznego. Zachowaj sprawdzoną bibliotekę Signal.
+9. Nie usuwaj testów, nie wyłączaj asercji i nie maskuj błędów pustymi wartościami.
+10. Nie wykonuj niepowiązanych refaktoryzacji backendu ani innych modułów platformy.
+
+## Zakres audytu
+
+A. E2EE:
+
+- Tożsamość urządzenia i rozdzielenie identyfikatora urządzenia aplikacji od numerycznego identyfikatora Signal.
+- Rejestracja kluczy publicznych i ochrona kluczy prywatnych.
+- Trwałość magazynu Signal, inicjalizacja sesji, zmiany tożsamości, PreKey Bundle i deszyfrowanie.
+- Ograniczenie przechowywania plaintextu i metadanych załączników.
+- Typowane błędy kryptograficzne i bezpieczne logowanie.
+
+B. Wiadomości i synchronizacja:
+
+- ChatSyncService, DeltaSyncService, OutboxProcessor i obsługa WebSocket.
+- Idempotencja, potwierdzenia, retry, checkpointy, kolejność wiadomości i duplikaty.
+- Walidacja payloadów oraz jednoznaczny kontrakt camelCase.
+- Transakcyjność lokalnego zapisu i odporność na restart/offline.
+
+C. Dane:
+
+- ChatsRepositoryImpl i ContactsRepositoryImpl.
+- Rozdzielenie logiki bazy, sieci, kryptografii i prezentacji.
+- Typowane DTO, jawne mapowanie i walidacja identyfikatorów.
+- Usunięcie niepotrzebnego cache, aliasów identyfikatorów i wielokrotnych zapisów.
+
+D. Riverpod:
+
+- Cykl życia usług, subskrypcje i anulowanie.
+- Spójne stany ładowania, błędów, offline i synchronizacji.
+- Ograniczenie zbędnych zależności reaktywnych.
+- Testowalność providerów.
+
+E. UI i wydajność:
+
+- Rozbijanie MessageBubble i podobnych dużych widgetów.
+- Brak pobierania sieciowego, odczytów Secure Storage i ciężkiej kryptografii bezpośrednio w build().
+- ListView\.builder/SliverList, stabilne klucze, paginacja, zachowanie pozycji przewijania.
+- Riverpod select i ograniczanie niepotrzebnych przebudów.
+- Eliminacja zapytań N+1 i zbędnego I/O.
+- Współdzielony klient HTTP dla pobierania załączników.
+
+F. Backend:
+
+- Zgodność kontraktów JSON z Flutterem.
+- Idempotencja zapisu wiadomości i outbox.
+- Autoryzacja członkostwa w konwersacji oraz dostępu do załączników.
+- Prawidłowa paginacja delta sync i dostarczanie zdarzeń WebSocket.
