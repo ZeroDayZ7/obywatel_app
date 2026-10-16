@@ -202,7 +202,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     final companion = ContactsCompanion(
@@ -301,7 +301,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     await _dao.db.transaction(() async {

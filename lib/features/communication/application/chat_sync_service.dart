@@ -215,17 +215,11 @@ class ChatSyncService {
       module: 'ChatSync',
     );
 
-    final payload = validMessages.map((message) {
+   final payload = validMessages.map((message) {
       final metadata = rawPayloadByMessageId[message.id];
-      final storedType = metadata != null
-          ? metadata['type'] ?? metadata['signalType']
-          : null;
-      final storedEventId = metadata != null
-          ? metadata['eventId'] ?? metadata['outboxEventId']
-          : null;
-      final storedMessageId = metadata != null
-          ? metadata['messageId'] ?? message.id
-          : message.id;
+      
+      final storedType = metadata?['type'];
+      final storedEventId = metadata?['eventId'];
 
       return messageToOutboxJson(
         message,
@@ -233,7 +227,6 @@ class ChatSyncService {
         signalType: storedType == null
             ? 1
             : normalizeSignalType(storedType.toString()),
-        messageId: storedMessageId?.toString(),
         outboxEventId: storedEventId?.toString(),
       );
     }).toList();

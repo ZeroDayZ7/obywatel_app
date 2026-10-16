@@ -2,17 +2,17 @@
 
 Punkty 1–12 · najwyższy priorytet
 
-1
+<!-- 1
 
 Usunąć trwały zapis plaintextu z `SecureStorage`, jeśli nie jest rzeczywiście konieczny.
 
-W `ChatsRepositoryImpl` istnieją metody `_persistPlaintextForMessage` i `_hydratePlaintextCacheForIds`, które przechowują odszyfrowane wiadomości w osobnym magazynie. Trzeba ustalić, czy zawartość powinna znajdować się w bazie Drift, w pamięci, czy w szyfrowanym magazynie lokalnym. Nie utrzymywać niepotrzebnych kopii plaintextu.
+W `ChatsRepositoryImpl` istnieją metody `_persistPlaintextForMessage` i `_hydratePlaintextCacheForIds`, które przechowują odszyfrowane wiadomości w osobnym magazynie. Trzeba ustalić, czy zawartość powinna znajdować się w bazie Drift, w pamięci, czy w szyfrowanym magazynie lokalnym. Nie utrzymywać niepotrzebnych kopii plaintextu. -->
 
-2
+<!-- 2
 
 Nie udostępniać klucza prywatnego przez model transportowy.
 
-`ensureDeviceIdentityBundle()` zwraca `privateKey`, choć rejestracja na serwerze korzysta z kluczy publicznych. Rozdzielić model lokalnego materiału kryptograficznego od `DeviceKeyRegistrationRequest`, który nie powinien w ogóle posiadać pola klucza prywatnego.
+`ensureDeviceIdentityBundle()` zwraca `privateKey`, choć rejestracja na serwerze korzysta z kluczy publicznych. Rozdzielić model lokalnego materiału kryptograficznego od `DeviceKeyRegistrationRequest`, który nie powinien w ogóle posiadać pola klucza prywatnego. -->
 
 3
 
@@ -86,7 +86,7 @@ Punkty 13–24 · krytyczne dla niezawodności komunikatora
 
 16\. Wprowadzić typowany model zdarzenia outbox. Zamiast wielokrotnie dekodować `Map<String, dynamic>`, stworzyć np. `OutboxMessageEvent` z jawnie określonymi polami i walidacją.
 
-17\. Usunąć powielone parsowanie payloadu. `rawPayloadByMessageId` i alternatywne odczyty `type`, `signalType`, `eventId` oraz `outboxEventId` wskazują na kilka wariantów tego samego kontraktu. W pierwszej wersji należy wybrać jeden kanoniczny format.
+<!-- 17\. Usunąć powielone parsowanie payloadu. `rawPayloadByMessageId` i alternatywne odczyty `type`, `signalType`, `eventId` oraz `outboxEventId` wskazują na kilka wariantów tego samego kontraktu. W pierwszej wersji należy wybrać jeden kanoniczny format. -->
 
 18\. Nie stosować automatycznego fallbacku Signal type na `1` dla niepoprawnych danych. W `ChatSyncService` brak `type` prowadzi do wartości domyślnej. Brak wymaganych danych powinien zostać wykryty podczas walidacji, a nie zamieniony w pozornie prawidłową wiadomość.
 
@@ -122,7 +122,7 @@ Punkty 25–34
 
 32\. Oddzielić stan lokalny od stanu serwera. `pending`, `sent`, `delivered`, `read`, `failed` powinny mieć jednoznaczne znaczenie. Nie opierać ich na przypadkowych stringach w wielu warstwach.
 
-33\. Ujednolicić zapis czasu. Wymagać UTC w kontrakcie transportowym, a strefę lokalną stosować wyłącznie w prezentacji. Nie zastępować błędnej daty `DateTime.now()` bez jawnego oznaczenia, że czas jest nieznany.
+<!-- 33\. Ujednolicić zapis czasu. Wymagać UTC w kontrakcie transportowym, a strefę lokalną stosować wyłącznie w prezentacji. Nie zastępować błędnej daty `DateTime.now()` bez jawnego oznaczenia, że czas jest nieznany. -->
 
 34\. Zapewnić transakcyjność aktualizacji wiadomości. Zapis ciphertextu, aktualizacja stanu wiadomości, identyfikatora załącznika i checkpointu synchronizacji powinny być spójne. Nie wolno przesuwać checkpointu, jeśli dane, których dotyczy, nie zostały trwale zapisane.
 

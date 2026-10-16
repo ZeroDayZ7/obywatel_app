@@ -13,9 +13,10 @@ bool isMessageSendAllowed({
 }
 
 String buildDirectConversationId(String userIdA, String userIdB) {
-  final values = [userIdA.trim(), userIdB.trim()]
-      .where((value) => value.isNotEmpty)
-      .toList();
+  final values = [
+    userIdA.trim(),
+    userIdB.trim(),
+  ].where((value) => value.isNotEmpty).toList();
 
   if (values.length != 2) {
     throw ArgumentError.value(
@@ -27,6 +28,29 @@ String buildDirectConversationId(String userIdA, String userIdB) {
 
   final sorted = [...values]..sort();
   return sorted.join(':');
+}
+
+DateTime normalizeTransportTimestamp(DateTime? value, {DateTime? fallback}) {
+  final normalized = value?.toUtc() ?? fallback;
+  return normalized ?? DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+}
+
+DateTime? parseTransportTimestamp(String? rawValue) {
+  if (rawValue == null) {
+    return null;
+  }
+
+  final trimmed = rawValue.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+
+  final parsed = DateTime.tryParse(trimmed);
+  if (parsed == null) {
+    return null;
+  }
+
+  return parsed.toUtc();
 }
 
 String resolveRemoteUserIdForConversation(
@@ -100,7 +124,7 @@ Message mapMessageFromDto(MessageDto dto, String currentUserId) {
     content: dto.encryptedPayload,
     encryptedPayload: dto.encryptedPayload,
     isMine: dto.senderId == currentUserId,
-    createdAt: dto.createdAt,
+    createdAt: normalizeTransportTimestamp(dto.createdAt),
     status: 'sent',
     isEncrypted: true,
     attachmentId: dto.attachmentId,
@@ -128,7 +152,9 @@ Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
         ?.whereType<MessageDto>()
         .map((m) => mapMessageFromDto(m, currentUserId))
         .toList(),
-    updatedAt: dto.updatedAt ?? DateTime.now(),
+    updatedAt: dto.updatedAt == null
+        ? null
+        : normalizeTransportTimestamp(dto.updatedAt),
   );
 }
 

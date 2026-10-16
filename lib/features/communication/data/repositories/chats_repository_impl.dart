@@ -229,7 +229,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Future<String?> _resolvePlaintextForEntity(MessageEntity entity) async {
-    final ciphertext = utf8.decode(entity.encryptedPayload, allowMalformed: true);
+    final ciphertext = utf8.decode(
+      entity.encryptedPayload,
+      allowMalformed: true,
+    );
     final normalizedCiphertext = ciphertext.trim();
     if (normalizedCiphertext.isEmpty) {
       return null;
@@ -288,10 +291,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return;
     }
 
-    final entities = await (
-      _db.select(_db.messages)
-        ..where((tbl) => tbl.id.isIn(ids.toList()))
-    ).get();
+    final entities = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.id.isIn(ids.toList()))).get();
 
     for (final entity in entities) {
       if (_plaintextStore.resolve(entity.id) != null) {
@@ -706,14 +708,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String? attachmentId,
   }) async {
     final operationId = const Uuid().v4();
-    final createdAt = DateTime.now();
+    final createdAt = DateTime.now().toUtc();
     final senderAppDeviceId = await _deviceInfoService.getOrCreateDeviceId();
 
     final normalizedConversationId = conversationId.trim();
     final remoteUserId = await resolvePeerUserIdForConversation(
       normalizedConversationId,
     );
-
 
     final hasTextContent = content.trim().isNotEmpty;
     final hasAttachment =
@@ -761,7 +762,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
         );
       }
 
-      final fileName = attachmentMetadata?['originalFilename']?.toString() ??
+      final fileName =
+          attachmentMetadata?['originalFilename']?.toString() ??
           attachmentMetadata?['fileName']?.toString() ??
           '';
 
@@ -782,8 +784,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
 
       if (effectiveDisplayContent.trim().isEmpty) {
-        effectiveDisplayContent =
-            fileName.isNotEmpty ? '📎 $fileName' : '📎 Załącznik';
+        effectiveDisplayContent = fileName.isNotEmpty
+            ? '📎 $fileName'
+            : '📎 Załącznik';
       }
     } else {
       signalPlaintext = jsonEncode(_buildSignalPlaintext(text: content));
@@ -925,7 +928,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     )..where((tbl) => tbl.id.equals(message.id))).write(
       MessagesCompanion(
         status: const Value('sent'),
-        updatedAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
     await _db.outboxDao.deleteEvents([message.id]);
@@ -1030,7 +1033,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
               _currentUserId,
           content: ciphertext,
           isMine: true,
-          createdAt: DateTime.tryParse(createdAtValue ?? '') ?? DateTime.now(),
+          createdAt: normalizeTransportTimestamp(
+            parseTransportTimestamp(createdAtValue),
+          ),
           status: 'pending',
           isEncrypted: true,
           encryptedPayload: ciphertext,
@@ -1137,7 +1142,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       )..where((tbl) => tbl.id.isIn(messageIds))).write(
         MessagesCompanion(
           status: const Value('sent'),
-          updatedAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now().toUtc()),
         ),
       );
 
@@ -1164,8 +1169,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
           type: Value(dto.type),
           title: Value(dto.title),
           lastSequence: Value(BigInt.from(dto.lastSequence)),
-          updatedAt: Value(dto.updatedAt ?? DateTime.now()),
-          createdAt: Value(dto.createdAt ?? DateTime.now()),
+          updatedAt: Value(normalizeTransportTimestamp(dto.updatedAt)),
+          createdAt: Value(normalizeTransportTimestamp(dto.createdAt)),
           deletedAt: const Value.absent(),
         ),
       ]);
@@ -1180,8 +1185,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
                   userId: Value(member.userId),
                   role: Value(member.role),
                   lastReadSequence: Value(BigInt.from(member.lastReadSequence)),
-                  createdAt: Value(DateTime.now()),
-                  updatedAt: Value(DateTime.now()),
+                  createdAt: Value(DateTime.now().toUtc()),
+                  updatedAt: Value(DateTime.now().toUtc()),
                   deletedAt: const Value.absent(),
                 ),
               )
@@ -1329,7 +1334,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
           )..where((tbl) => tbl.id.equals(dto.id))).write(
             MessagesCompanion(
               attachmentId: Value(extractedAttachmentId),
-              updatedAt: Value(DateTime.now()),
+              updatedAt: Value(DateTime.now().toUtc()),
             ),
           );
         }
@@ -1354,11 +1359,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
   }
 
-MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
+  MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
     // 1. Sprawdzamy, czy DTO ma attachmentId. Jeśli nie, próbujemy je wyciągnąć z odszyfrowanego plaintextu lub metadanych.
     String? resolvedAttachmentId = dto.attachmentId;
 
-    if ((resolvedAttachmentId == null || resolvedAttachmentId.trim().isEmpty) && 
+    if ((resolvedAttachmentId == null || resolvedAttachmentId.trim().isEmpty) &&
         dto.encryptedPayload.isNotEmpty) {
       try {
         // Czasami w delta sync attachmentId jest wewnątrz zaszyfrowanego payloadu (json)
@@ -1373,7 +1378,8 @@ MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
       senderId: Value(dto.senderId),
       senderDeviceId: Value(dto.senderDeviceId ?? ''),
       // NAPRAWA: Jeśli dto nie ma attachmentId, używamy zabezpieczonego ID lub nie nadpisujemy pustą wartością
-      attachmentId: resolvedAttachmentId != null && resolvedAttachmentId.trim().isNotEmpty
+      attachmentId:
+          resolvedAttachmentId != null && resolvedAttachmentId.trim().isNotEmpty
           ? Value(resolvedAttachmentId)
           : const Value.absent(), // <--- const Value.absent() sprawi, że Drift nie nadpisze istniejącego ID wartością null!
       type: Value(dto.type),
@@ -1382,8 +1388,8 @@ MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
       mediaHeader: const Value.absent(),
       version: Value(BigInt.from(dto.version)),
       status: const Value('sent'),
-      createdAt: Value(dto.createdAt),
-      updatedAt: Value(dto.createdAt),
+      createdAt: Value(normalizeTransportTimestamp(dto.createdAt)),
+      updatedAt: Value(normalizeTransportTimestamp(dto.createdAt)),
       deletedAt: const Value.absent(),
     );
   }
@@ -1407,8 +1413,8 @@ MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
       mediaHeader: const Value.absent(),
       version: Value(BigInt.one),
       status: Value(message.status),
-      createdAt: Value(message.createdAt),
-      updatedAt: Value(DateTime.now()),
+      createdAt: Value(normalizeTransportTimestamp(message.createdAt)),
+      updatedAt: Value(DateTime.now().toUtc()),
       deletedAt: const Value.absent(),
     );
   }
