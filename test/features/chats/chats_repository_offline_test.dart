@@ -105,10 +105,102 @@ void main() {
     return conversationId;
   }
 
+  Future<ChatsRepositoryImpl> createRepositoryWithSession({
+    required String userId,
+    required String peerId,
+  }) async {
+    final secureStorage = SecureStorageService(
+      const FlutterSecureStorage(),
+      logger,
+    );
+    final aliceApiClient = ApiClient(
+      dio: Dio(),
+      storage: secureStorage,
+      logger: logger,
+    );
+    final aliceStore = DriftSignalProtocolStore(database);
+    final aliceService = E2eeCryptoService(
+      secureStorage,
+      logger,
+      aliceApiClient,
+      DeviceInfoService(logger),
+      aliceStore,
+    );
+
+    final bobDb = AppDatabase(NativeDatabase.memory());
+    addTearDown(() async => bobDb.close());
+    final bobStore = DriftSignalProtocolStore(bobDb);
+
+    final bobIdentity = await bobStore.getIdentityKeyPair();
+    final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+    final bobOneTimePreKey = generatePreKeys(1, 1).first;
+    await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+    await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+    final remoteBundle = PreKeyBundle(
+      await bobStore.getLocalRegistrationId(),
+      1,
+      bobOneTimePreKey.id,
+      bobOneTimePreKey.getKeyPair().publicKey,
+      bobSignedPreKey.id,
+      bobSignedPreKey.getKeyPair().publicKey,
+      bobSignedPreKey.signature,
+      bobIdentity.getPublicKey(),
+    );
+
+    await aliceService.initializeSessionForPeer(
+      peerId,
+      remoteBundle: remoteBundle,
+    );
+
+    return ChatsRepositoryImpl(
+      ChatsApiClient(aliceApiClient),
+      database,
+      logger,
+      userId,
+      DeviceInfoService(logger),
+      aliceService,
+      secureStorage,
+    );
+  }
+
   setUp(() {
     database = AppDatabase(NativeDatabase.memory());
     logger = AppLogger();
   });
+
+  test(
+    'persisted plaintext in Drift is reused without live decrypt on restart',
+    () async {
+      final repository = await createRepositoryWithSession(
+        userId: 'user-a',
+        peerId: 'peer-user',
+      );
+
+      await database.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('msg-restart-plain'),
+          conversationId: const Value('peer-user'),
+          senderId: const Value('peer-user'),
+          senderDeviceId: const Value('device-2'),
+          type: const Value('text'),
+          sequence: Value(BigInt.one),
+          content: Value('wartość jawna z bazy'),
+          encryptedPayload: Value(utf8.encode('ciphertext-zostawiony-dla-legacy')),
+          mediaHeader: const Value.absent(),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(DateTime.utc(2024, 1, 1, 10, 0)),
+          updatedAt: Value(DateTime.utc(2024, 1, 1, 10, 0)),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final loaded = await repository.watchMessagesForConversation('peer-user').first;
+      expect(loaded.single.content, 'wartość jawna z bazy');
+      expect(loaded.single.isEncrypted, isFalse);
+    },
+  );
 
   test(
     'device bundle persists generated signed and one-time prekeys in Drift before session setup',
@@ -228,65 +320,6 @@ void main() {
   tearDown(() async {
     await database.close();
   });
-
-  Future<ChatsRepositoryImpl> createRepositoryWithSession({
-    required String userId,
-    required String peerId,
-  }) async {
-    final secureStorage = SecureStorageService(
-      const FlutterSecureStorage(),
-      logger,
-    );
-    final aliceApiClient = ApiClient(
-      dio: Dio(),
-      storage: secureStorage,
-      logger: logger,
-    );
-    final aliceStore = DriftSignalProtocolStore(database);
-    final aliceService = E2eeCryptoService(
-      secureStorage,
-      logger,
-      aliceApiClient,
-      DeviceInfoService(logger),
-      aliceStore,
-    );
-
-    final bobDb = AppDatabase(NativeDatabase.memory());
-    addTearDown(() async => bobDb.close());
-    final bobStore = DriftSignalProtocolStore(bobDb);
-
-    final bobIdentity = await bobStore.getIdentityKeyPair();
-    final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
-    final bobOneTimePreKey = generatePreKeys(1, 1).first;
-    await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
-    await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
-
-    final remoteBundle = PreKeyBundle(
-      await bobStore.getLocalRegistrationId(),
-      1,
-      bobOneTimePreKey.id,
-      bobOneTimePreKey.getKeyPair().publicKey,
-      bobSignedPreKey.id,
-      bobSignedPreKey.getKeyPair().publicKey,
-      bobSignedPreKey.signature,
-      bobIdentity.getPublicKey(),
-    );
-
-    await aliceService.initializeSessionForPeer(
-      peerId,
-      remoteBundle: remoteBundle,
-    );
-
-    return ChatsRepositoryImpl(
-      ChatsApiClient(aliceApiClient),
-      database,
-      logger,
-      userId,
-      DeviceInfoService(logger),
-      aliceService,
-      secureStorage,
-    );
-  }
 
   test(
     'local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow',

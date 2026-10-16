@@ -31,7 +31,7 @@ class StorageInitTask implements StartupTask {
     const bool shouldResetForTesting = kDebugMode && true;
 
     if (shouldResetForTesting) {
-      debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
+      // debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
 
       try {
         // await storage.clearAll();
@@ -42,9 +42,9 @@ class StorageInitTask implements StartupTask {
 
         // await database.close();
         
-        debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
+        // debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
       } catch (e, st) {
-        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+        // debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
       }
 
       // if (kDebugMode) {

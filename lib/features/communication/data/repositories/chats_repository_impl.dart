@@ -38,6 +38,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final SecureStorageService _secureStorage;
   final LocalPlaintextMessageCache _plaintextStore =
       LocalPlaintextMessageCache();
+  final Set<String> _failedDecryptAttempts = <String>{};
 
   AppDatabase get db => _db;
 
@@ -229,12 +230,26 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   Future<String?> _resolvePlaintextForEntity(MessageEntity entity) async {
+    final persistedPlaintext = entity.content.trim();
+    if (persistedPlaintext.isNotEmpty) {
+      return persistedPlaintext;
+    }
+
+    final cached = _plaintextStore.resolve(entity.id);
+    if (cached != null && cached.trim().isNotEmpty) {
+      return cached;
+    }
+
     final ciphertext = utf8.decode(
       entity.encryptedPayload,
       allowMalformed: true,
     );
     final normalizedCiphertext = ciphertext.trim();
     if (normalizedCiphertext.isEmpty) {
+      return null;
+    }
+
+    if (_failedDecryptAttempts.contains(entity.id)) {
       return null;
     }
 
@@ -246,12 +261,14 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     if (entity.senderDeviceId.trim().isEmpty) {
+      _failedDecryptAttempts.add(entity.id);
       return null;
     }
 
     try {
       final signalType = normalizeSignalType(entity.type);
       if (signalType == null) {
+        _failedDecryptAttempts.add(entity.id);
         return null;
       }
 
@@ -266,14 +283,20 @@ class ChatsRepositoryImpl implements ChatsRepository {
       if (parsed != null) {
         final text = parsed['text']?.toString() ?? '';
         if (text.trim().isNotEmpty) {
+          _plaintextStore.store(entity.id, text.trim());
           return text.trim();
         }
       }
 
-      return decrypted.trim().isNotEmpty ? decrypted.trim() : null;
+      final fallback = decrypted.trim();
+      if (fallback.isNotEmpty) {
+        _plaintextStore.store(entity.id, fallback);
+      }
+      return fallback.isNotEmpty ? fallback : null;
     } catch (error, stackTrace) {
+      _failedDecryptAttempts.add(entity.id);
       _logger.w(
-        'Unable to decrypt cached message entity ${entity.id} in memory. Keeping ciphertext fallback only.',
+        'Unable to decrypt cached message entity ${entity.id}. Keeping legacy ciphertext fallback only and skipping repeated Signal replay for this row.',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
@@ -679,9 +702,17 @@ class ChatsRepositoryImpl implements ChatsRepository {
         ),
       );
 
-      final newMessages = dtos
-          .map((dto) => _messageDtoToCompanion(dto))
-          .toList();
+      final newMessages = <MessagesCompanion>[];
+      for (final dto in dtos) {
+        final decrypted = await _decryptInboundMessage(dto);
+        newMessages.add(
+          _messageDtoToCompanion(
+            dto,
+            decryptedContent: decrypted ?? '',
+          ),
+        );
+      }
+
       if (newMessages.isNotEmpty) {
         _logger.i(
           '[CHAT-FLOW-2.2] storing remote history snapshot conversationId=$conversationId count=${newMessages.length}',
@@ -1077,6 +1108,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
 
       if (remoteMessageDtos.isNotEmpty) {
+        final persistedCompanions = <MessagesCompanion>[];
+
         for (final dto in remoteMessageDtos) {
           final decrypted = await _decryptInboundMessage(dto);
           if (decrypted != null) {
@@ -1092,11 +1125,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
               module: 'ChatsRepository',
             );
           }
+
+          persistedCompanions.add(
+            _messageDtoToCompanion(
+              dto,
+              decryptedContent: decrypted ?? '',
+            ),
+          );
         }
 
-        await _db.chatsDao.upsertMessages(
-          remoteMessageDtos.map(_messageDtoToCompanion).toList(),
-        );
+        await _db.chatsDao.upsertMessages(persistedCompanions);
       }
 
       final nextMessageVersion = resolveLastKnownMessageVersion(
@@ -1363,8 +1401,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
   }
 
-  MessagesCompanion _messageDtoToCompanion(MessageDto dto) {
-    // 1. Sprawdzamy, czy DTO ma attachmentId. Jeśli nie, próbujemy je wyciągnąć z odszyfrowanego plaintextu lub metadanych.
+  MessagesCompanion _messageDtoToCompanion(
+    MessageDto dto, {
+    String? decryptedContent,
+  }) {
     String? resolvedAttachmentId = dto.attachmentId;
 
     if ((resolvedAttachmentId == null || resolvedAttachmentId.trim().isEmpty) &&
@@ -1376,19 +1416,21 @@ class ChatsRepositoryImpl implements ChatsRepository {
       } catch (_) {}
     }
 
+    final persistedPlaintext = (decryptedContent ?? '').trim();
+
     return MessagesCompanion(
       id: Value(dto.id),
       conversationId: Value(dto.conversationId),
       senderId: Value(dto.senderId),
       senderDeviceId: Value(dto.senderDeviceId ?? ''),
-      // NAPRAWA: Jeśli dto nie ma attachmentId, używamy zabezpieczonego ID lub nie nadpisujemy pustą wartością
       attachmentId:
           resolvedAttachmentId != null && resolvedAttachmentId.trim().isNotEmpty
           ? Value(resolvedAttachmentId)
-          : const Value.absent(), // <--- const Value.absent() sprawi, że Drift nie nadpisze istniejącego ID wartością null!
+          : const Value.absent(),
       type: Value(dto.type),
       sequence: Value(BigInt.from(dto.sequence)),
       encryptedPayload: Value(utf8.encode(dto.encryptedPayload)),
+      content: Value(persistedPlaintext),
       mediaHeader: const Value.absent(),
       version: Value(BigInt.from(dto.version)),
       status: const Value('sent'),
@@ -1404,7 +1446,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String? encryptedContent,
     int? signalType,
   }) {
-    final ciphertext = encryptedContent ?? message.content;
+    final ciphertext = encryptedContent ?? message.encryptedPayload;
+    final plaintext = message.content.trim();
     return MessagesCompanion(
       id: Value(message.id),
       conversationId: Value(message.conversationId),
@@ -1414,6 +1457,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       type: Value(signalType?.toString() ?? 'text'),
       sequence: const Value.absent(),
       encryptedPayload: Value(utf8.encode(ciphertext)),
+      content: Value(plaintext),
       mediaHeader: const Value.absent(),
       version: Value(BigInt.one),
       status: Value(message.status),

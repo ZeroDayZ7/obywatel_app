@@ -3666,6 +3666,18 @@ class $MessagesTable extends Messages
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
@@ -3775,6 +3787,7 @@ class $MessagesTable extends Messages
     senderId,
     senderDeviceId,
     attachmentId,
+    content,
     type,
     sequence,
     encryptedPayload,
@@ -3839,6 +3852,12 @@ class $MessagesTable extends Messages
           data['attachment_id']!,
           _attachmentIdMeta,
         ),
+      );
+    }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
       );
     }
     if (data.containsKey('type')) {
@@ -3932,6 +3951,10 @@ class $MessagesTable extends Messages
         DriftSqlType.string,
         data['${effectivePrefix}attachment_id'],
       ),
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -3983,6 +4006,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
   final String senderId;
   final String senderDeviceId;
   final String? attachmentId;
+  final String content;
   final String type;
   final BigInt? sequence;
   final Uint8List encryptedPayload;
@@ -3998,6 +4022,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     required this.senderId,
     required this.senderDeviceId,
     this.attachmentId,
+    required this.content,
     required this.type,
     this.sequence,
     required this.encryptedPayload,
@@ -4018,6 +4043,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     if (!nullToAbsent || attachmentId != null) {
       map['attachment_id'] = Variable<String>(attachmentId);
     }
+    map['content'] = Variable<String>(content);
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || sequence != null) {
       map['sequence'] = Variable<BigInt>(sequence);
@@ -4045,6 +4071,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       attachmentId: attachmentId == null && nullToAbsent
           ? const Value.absent()
           : Value(attachmentId),
+      content: Value(content),
       type: Value(type),
       sequence: sequence == null && nullToAbsent
           ? const Value.absent()
@@ -4074,6 +4101,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderId: serializer.fromJson<String>(json['senderId']),
       senderDeviceId: serializer.fromJson<String>(json['senderDeviceId']),
       attachmentId: serializer.fromJson<String?>(json['attachmentId']),
+      content: serializer.fromJson<String>(json['content']),
       type: serializer.fromJson<String>(json['type']),
       sequence: serializer.fromJson<BigInt?>(json['sequence']),
       encryptedPayload: serializer.fromJson<Uint8List>(
@@ -4096,6 +4124,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       'senderId': serializer.toJson<String>(senderId),
       'senderDeviceId': serializer.toJson<String>(senderDeviceId),
       'attachmentId': serializer.toJson<String?>(attachmentId),
+      'content': serializer.toJson<String>(content),
       'type': serializer.toJson<String>(type),
       'sequence': serializer.toJson<BigInt?>(sequence),
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
@@ -4114,6 +4143,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     String? senderId,
     String? senderDeviceId,
     Value<String?> attachmentId = const Value.absent(),
+    String? content,
     String? type,
     Value<BigInt?> sequence = const Value.absent(),
     Uint8List? encryptedPayload,
@@ -4129,6 +4159,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     senderId: senderId ?? this.senderId,
     senderDeviceId: senderDeviceId ?? this.senderDeviceId,
     attachmentId: attachmentId.present ? attachmentId.value : this.attachmentId,
+    content: content ?? this.content,
     type: type ?? this.type,
     sequence: sequence.present ? sequence.value : this.sequence,
     encryptedPayload: encryptedPayload ?? this.encryptedPayload,
@@ -4152,6 +4183,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       attachmentId: data.attachmentId.present
           ? data.attachmentId.value
           : this.attachmentId,
+      content: data.content.present ? data.content.value : this.content,
       type: data.type.present ? data.type.value : this.type,
       sequence: data.sequence.present ? data.sequence.value : this.sequence,
       encryptedPayload: data.encryptedPayload.present
@@ -4176,6 +4208,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ..write('senderId: $senderId, ')
           ..write('senderDeviceId: $senderDeviceId, ')
           ..write('attachmentId: $attachmentId, ')
+          ..write('content: $content, ')
           ..write('type: $type, ')
           ..write('sequence: $sequence, ')
           ..write('encryptedPayload: $encryptedPayload, ')
@@ -4196,6 +4229,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     senderId,
     senderDeviceId,
     attachmentId,
+    content,
     type,
     sequence,
     $driftBlobEquality.hash(encryptedPayload),
@@ -4215,6 +4249,7 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           other.senderId == this.senderId &&
           other.senderDeviceId == this.senderDeviceId &&
           other.attachmentId == this.attachmentId &&
+          other.content == this.content &&
           other.type == this.type &&
           other.sequence == this.sequence &&
           $driftBlobEquality.equals(
@@ -4235,6 +4270,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
   final Value<String> senderId;
   final Value<String> senderDeviceId;
   final Value<String?> attachmentId;
+  final Value<String> content;
   final Value<String> type;
   final Value<BigInt?> sequence;
   final Value<Uint8List> encryptedPayload;
@@ -4251,6 +4287,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     this.senderId = const Value.absent(),
     this.senderDeviceId = const Value.absent(),
     this.attachmentId = const Value.absent(),
+    this.content = const Value.absent(),
     this.type = const Value.absent(),
     this.sequence = const Value.absent(),
     this.encryptedPayload = const Value.absent(),
@@ -4268,6 +4305,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     required String senderId,
     required String senderDeviceId,
     this.attachmentId = const Value.absent(),
+    this.content = const Value.absent(),
     this.type = const Value.absent(),
     this.sequence = const Value.absent(),
     required Uint8List encryptedPayload,
@@ -4289,6 +4327,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Expression<String>? senderId,
     Expression<String>? senderDeviceId,
     Expression<String>? attachmentId,
+    Expression<String>? content,
     Expression<String>? type,
     Expression<BigInt>? sequence,
     Expression<Uint8List>? encryptedPayload,
@@ -4306,6 +4345,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       if (senderId != null) 'sender_id': senderId,
       if (senderDeviceId != null) 'sender_device_id': senderDeviceId,
       if (attachmentId != null) 'attachment_id': attachmentId,
+      if (content != null) 'content': content,
       if (type != null) 'type': type,
       if (sequence != null) 'sequence': sequence,
       if (encryptedPayload != null) 'encrypted_payload': encryptedPayload,
@@ -4325,6 +4365,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Value<String>? senderId,
     Value<String>? senderDeviceId,
     Value<String?>? attachmentId,
+    Value<String>? content,
     Value<String>? type,
     Value<BigInt?>? sequence,
     Value<Uint8List>? encryptedPayload,
@@ -4342,6 +4383,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       senderId: senderId ?? this.senderId,
       senderDeviceId: senderDeviceId ?? this.senderDeviceId,
       attachmentId: attachmentId ?? this.attachmentId,
+      content: content ?? this.content,
       type: type ?? this.type,
       sequence: sequence ?? this.sequence,
       encryptedPayload: encryptedPayload ?? this.encryptedPayload,
@@ -4372,6 +4414,9 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     }
     if (attachmentId.present) {
       map['attachment_id'] = Variable<String>(attachmentId.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -4414,6 +4459,7 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
           ..write('senderId: $senderId, ')
           ..write('senderDeviceId: $senderDeviceId, ')
           ..write('attachmentId: $attachmentId, ')
+          ..write('content: $content, ')
           ..write('type: $type, ')
           ..write('sequence: $sequence, ')
           ..write('encryptedPayload: $encryptedPayload, ')
@@ -8869,6 +8915,7 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required String senderId,
       required String senderDeviceId,
       Value<String?> attachmentId,
+      Value<String> content,
       Value<String> type,
       Value<BigInt?> sequence,
       required Uint8List encryptedPayload,
@@ -8887,6 +8934,7 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String> senderId,
       Value<String> senderDeviceId,
       Value<String?> attachmentId,
+      Value<String> content,
       Value<String> type,
       Value<BigInt?> sequence,
       Value<Uint8List> encryptedPayload,
@@ -8930,6 +8978,11 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<String> get attachmentId => $composableBuilder(
     column: $table.attachmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9013,6 +9066,11 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
@@ -9089,6 +9147,9 @@ class $$MessagesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
@@ -9157,6 +9218,7 @@ class $$MessagesTableTableManager
                 Value<String> senderId = const Value.absent(),
                 Value<String> senderDeviceId = const Value.absent(),
                 Value<String?> attachmentId = const Value.absent(),
+                Value<String> content = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<BigInt?> sequence = const Value.absent(),
                 Value<Uint8List> encryptedPayload = const Value.absent(),
@@ -9173,6 +9235,7 @@ class $$MessagesTableTableManager
                 senderId: senderId,
                 senderDeviceId: senderDeviceId,
                 attachmentId: attachmentId,
+                content: content,
                 type: type,
                 sequence: sequence,
                 encryptedPayload: encryptedPayload,
@@ -9191,6 +9254,7 @@ class $$MessagesTableTableManager
                 required String senderId,
                 required String senderDeviceId,
                 Value<String?> attachmentId = const Value.absent(),
+                Value<String> content = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<BigInt?> sequence = const Value.absent(),
                 required Uint8List encryptedPayload,
@@ -9207,6 +9271,7 @@ class $$MessagesTableTableManager
                 senderId: senderId,
                 senderDeviceId: senderDeviceId,
                 attachmentId: attachmentId,
+                content: content,
                 type: type,
                 sequence: sequence,
                 encryptedPayload: encryptedPayload,

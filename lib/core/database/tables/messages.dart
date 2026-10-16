@@ -8,6 +8,10 @@ class Messages extends Table {
   TextColumn get senderDeviceId => text()();
   TextColumn get attachmentId => text().nullable()();
 
+  // Jawny tekst wiadomości zapisany lokalnie po pomyślnym odszyfrowaniu.
+  // To jest główny stan persystowany w bazie; ciphertext jest traktowany jako legacy fallback.
+  TextColumn get content => text().withDefault(const Constant(''))();
+
   // Typ wiadomości: 'text', 'media', 'system'
   TextColumn get type => text().withDefault(const Constant('text'))();
   
