@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -188,6 +190,29 @@ class ChatsApiClient {
 
     final payload = response.data as Map<String, dynamic>? ?? const {};
     return AttachmentDownloadResponseDto.fromJson(payload);
+  }
+
+  Future<List<int>> downloadBytes(String url) async {
+    final normalizedUrl = url.trim();
+    if (normalizedUrl.isEmpty) {
+      return const <int>[];
+    }
+
+    final response = await _apiClient.dio.get<List<int>>(
+      normalizedUrl,
+      options: Options(responseType: ResponseType.bytes, followRedirects: true),
+    );
+
+    final payload = response.data;
+    if (payload == null) {
+      return const <int>[];
+    }
+
+    if (payload is Uint8List) {
+      return payload.toList(growable: false);
+    }
+
+    return List<int>.from(payload, growable: false);
   }
 
   Future<void> deleteAttachment(String attachmentId) async {

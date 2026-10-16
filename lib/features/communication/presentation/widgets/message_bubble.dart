@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
@@ -15,83 +14,145 @@ class MessageBubble extends ConsumerWidget {
 
   const MessageBubble({super.key, required this.message});
 
+  static final Map<String, Future<Uint8List?>> _inFlightDownloads =
+      <String, Future<Uint8List?>>{};
+
   String get _displayContent {
     final content = message.content.trim();
     if (content.isNotEmpty) return content;
-    if (message.attachmentId != null && message.attachmentId!.trim().isNotEmpty) {
+    if (message.attachmentId != null &&
+        message.attachmentId!.trim().isNotEmpty) {
       return '📎 Załącznik';
     }
     return 'Nie można odszyfrować wiadomości';
   }
 
-  Future<Uint8List?> _resolvePreviewBytes(WidgetRef ref, String attachmentId) async {
+  Future<Uint8List?> _resolvePreviewBytes(WidgetRef ref, String attachmentId) {
+    final existing = _inFlightDownloads[attachmentId];
+    if (existing != null) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] request_id=$attachmentId duplicate_in_flight waiting for same download future',
+      );
+      return existing;
+    }
+
+    final future = _loadPreviewBytes(
+      ref,
+      attachmentId,
+    ).whenComplete(() => _inFlightDownloads.remove(attachmentId));
+    _inFlightDownloads[attachmentId] = future;
+    return future;
+  }
+
+  Future<Uint8List?> _loadPreviewBytes(
+    WidgetRef ref,
+    String attachmentId,
+  ) async {
     final storage = ref.read(secureStorageProvider);
 
-    final cachedPreview = await storage.read(key: '$attachmentId-attachment-preview');
+    debugPrint(
+      '[ATTACHMENT-SYNC] attachment_id=$attachmentId start preview check',
+    );
+
+    final cachedPreview = await storage.read(
+      key: '$attachmentId-attachment-preview',
+    );
     if (cachedPreview != null && cachedPreview.trim().isNotEmpty) {
       try {
         final decoded = base64Decode(cachedPreview);
         if (decoded.isNotEmpty) {
+          debugPrint(
+            '[ATTACHMENT-SYNC] attachment_id=$attachmentId served from cache',
+          );
           return Uint8List.fromList(decoded);
         }
-      } catch (_) {
-        // ignore and continue to fetch remote preview
+      } catch (e) {
+        debugPrint(
+          '[ATTACHMENT-SYNC] attachment_id=$attachmentId cache decode failed: $e',
+        );
       }
     }
+
+    await Future.delayed(
+      Duration(milliseconds: 150 + (attachmentId.hashCode % 300)),
+    );
 
     final metadata = await storage.read(key: '$attachmentId-attachment-meta');
     if (metadata == null || metadata.trim().isEmpty) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId missing metadata; aborting',
+      );
       return null;
     }
 
-    try {
-      final decodedMetadata = jsonDecode(metadata);
-      if (decodedMetadata is! Map) {
-        return null;
-      }
-
-      final key = decodedMetadata['key']?.toString().trim();
-      final contentType =
-          (decodedMetadata['originalContentType'] ?? decodedMetadata['contentType'])
-              .toString();
-      if (key == null || key.isEmpty || !contentType.toLowerCase().startsWith('image/')) {
-        return null;
-      }
-
-      final apiClient = ref.read(chatsApiClientProvider);
-      final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
-      if (download.downloadUrl.trim().isEmpty) {
-        return null;
-      }
-
-      final response = await Dio().get(
-        download.downloadUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-        ),
+    final decodedMetadata = jsonDecode(metadata);
+    if (decodedMetadata is! Map) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId invalid metadata json',
       );
-
-      final encryptedBytes = response.data is List<int>
-          ? response.data as List<int>
-          : const <int>[];
-      if (encryptedBytes.isEmpty) {
-        return null;
-      }
-
-      final decryptedBytes = await ref.read(symmetricCryptoProvider).decryptBytes(
-        encryptedBase64: base64Encode(encryptedBytes),
-        secretKey: SecretKey(base64Decode(key)),
-      );
-
-      await storage.write(
-        key: '$attachmentId-attachment-preview',
-        value: base64Encode(decryptedBytes),
-      );
-
-      return decryptedBytes;
-    } catch (_) {
       return null;
     }
+
+    final key = decodedMetadata['key']?.toString().trim();
+    final contentType =
+        (decodedMetadata['originalContentType'] ??
+                decodedMetadata['contentType'])
+            .toString();
+
+    if (key == null ||
+        key.isEmpty ||
+        !contentType.toLowerCase().startsWith('image/')) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId not eligible for image preview type=$contentType',
+      );
+      return null;
+    }
+
+    final apiClient = ref.read(chatsApiClientProvider);
+    debugPrint(
+      '[ATTACHMENT-SYNC] attachment_id=$attachmentId requesting downloadUrl',
+    );
+    final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
+    final rawUrl = download.downloadUrl.trim();
+    debugPrint(
+      '[ATTACHMENT-SYNC] attachment_id=$attachmentId downloadUrl_ready=${rawUrl.isNotEmpty}',
+    );
+
+    if (rawUrl.isEmpty) {
+      return null;
+    }
+
+    final encryptedBytes = await apiClient.downloadBytes(rawUrl);
+    if (encryptedBytes.isEmpty) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId downloaded bytes empty',
+      );
+      return null;
+    }
+
+    final decryptedBytes = await ref
+        .read(symmetricCryptoProvider)
+        .decryptBytes(
+          encryptedBase64: base64Encode(encryptedBytes),
+          secretKey: SecretKey(base64Decode(key)),
+        );
+
+    if (decryptedBytes.isEmpty) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId decrypted preview is empty',
+      );
+      return null;
+    }
+
+    await storage.write(
+      key: '$attachmentId-attachment-preview',
+      value: base64Encode(decryptedBytes),
+    );
+    debugPrint(
+      '[ATTACHMENT-SYNC] attachment_id=$attachmentId preview cached successfully',
+    );
+
+    return Uint8List.fromList(decryptedBytes);
   }
 
   Widget _previewWidget(BuildContext context, WidgetRef ref) {
