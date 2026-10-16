@@ -198,20 +198,20 @@ int resolveLastKnownContactVersion(
   return maxVersion;
 }
 
-int normalizeSignalType(String? rawType, {int fallback = 1}) {
+int? normalizeSignalType(String? rawType) {
   if (rawType == null || rawType.trim().isEmpty) {
-    return fallback;
+    return null;
   }
 
   final parsed = int.tryParse(rawType.trim());
   if (parsed != null) {
-    return parsed;
+    return parsed > 0 ? parsed : null;
   }
 
   final normalized = rawType.trim().toLowerCase();
   if (normalized.contains('pre')) return 3;
   if (normalized.contains('signal') || normalized.contains('cipher')) return 2;
-  return fallback;
+  return null;
 }
 
 class LocalPlaintextMessageCache {

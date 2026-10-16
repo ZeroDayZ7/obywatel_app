@@ -158,7 +158,11 @@ void main() {
       isEncrypted: true,
     );
 
-    final payload = buildOutboxEventPayload(message, 'device-1');
+    final payload = buildOutboxEventPayload(
+      message,
+      'device-1',
+      signalType: 2,
+    );
 
     expect(payload['content'], equals(null));
     expect(payload['payload']['content'], equals(null));
@@ -486,6 +490,7 @@ void main() {
         message,
         'device-abc',
         encryptedContent: message.encryptedPayload,
+        signalType: 2,
       );
       await database.outboxDao.enqueueEvent(
         OutboxEventsCompanion(
@@ -538,6 +543,7 @@ void main() {
         message,
         'device-abc',
         encryptedContent: message.encryptedPayload,
+        signalType: 2,
       );
 
       await database.outboxDao.enqueueEvent(
@@ -605,6 +611,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -656,6 +663,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -713,6 +721,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -838,7 +847,11 @@ void main() {
         createdAt: DateTime.utc(2024, 1, 1, 10, 0),
       );
 
-      final event = buildOutboxEventPayload(message, 'device-abc');
+      final event = buildOutboxEventPayload(
+        message,
+        'device-abc',
+        signalType: 2,
+      );
       final payload = event['payload'] as Map<String, dynamic>;
 
       expect(Uuid.isValidUUID(fromString: event['event_id'] as String), isTrue);
@@ -886,7 +899,11 @@ void main() {
       );
 
       expect(
-        () => buildOutboxEventPayload(message, 'device-abc'),
+        () => buildOutboxEventPayload(
+          message,
+          'device-abc',
+          signalType: 2,
+        ),
         throwsA(isA<StateError>()),
       );
     },

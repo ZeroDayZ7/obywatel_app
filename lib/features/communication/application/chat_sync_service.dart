@@ -19,7 +19,7 @@ import 'package:uuid/uuid.dart';
 Map<String, dynamic> messageToOutboxJson(
   Message message,
   String deviceId, {
-  int signalType = 1,
+  required int signalType,
   String? messageId,
   String? outboxEventId,
 }) {
@@ -215,21 +215,47 @@ class ChatSyncService {
       module: 'ChatSync',
     );
 
-   final payload = validMessages.map((message) {
-      final metadata = rawPayloadByMessageId[message.id];
-      
-      final storedType = metadata?['type'];
-      final storedEventId = metadata?['eventId'];
+    final payload = validMessages
+        .map((message) {
+          final metadata = rawPayloadByMessageId[message.id];
+          final storedType = metadata?['type'];
+          final storedEventId = metadata?['eventId'];
 
-      return messageToOutboxJson(
-        message,
-        deviceId,
-        signalType: storedType == null
-            ? 1
-            : normalizeSignalType(storedType.toString()),
-        outboxEventId: storedEventId?.toString(),
+          final signalType = normalizeSignalType(storedType?.toString());
+          if (signalType == null) {
+            _logger.w(
+              '[OUTBOX-FLOW-ERROR] Message missing required signal type. message_id=${message.id} conversationId=${message.conversationId}',
+              module: 'ChatSync',
+            );
+            invalidMessageIds.add(message.id);
+            return null;
+          }
+
+          return messageToOutboxJson(
+            message,
+            deviceId,
+            signalType: signalType,
+            outboxEventId: storedEventId?.toString(),
+          );
+        })
+        .whereType<Map<String, dynamic>>()
+        .toList();
+
+    if (invalidMessageIds.isNotEmpty) {
+      await _repository.db.outboxDao.deleteEvents(invalidMessageIds);
+      _logger.i(
+        '[OUTBOX-FLOW-3.1] dropped ${invalidMessageIds.length} invalid pending entries because signal type was missing or invalid',
+        module: 'ChatSync',
       );
-    }).toList();
+    }
+
+    if (payload.isEmpty) {
+      _logger.w(
+        '[OUTBOX-FLOW-3.2] no valid pending outbox entries ready to flush after signal type validation; unresolved local entries remain queued for retry',
+        module: 'ChatSync',
+      );
+      return;
+    }
 
     try {
       await _apiClient.sendOutboxBatch(payload);

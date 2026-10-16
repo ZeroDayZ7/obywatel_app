@@ -27,5 +27,14 @@ void main() {
       expect(normalizeTransportTimestamp(null), equals(sentinel));
       expect(normalizeTransportTimestamp(null).isUtc, isTrue);
     });
+
+    test('signal type must not silently fallback to 1', () {
+      expect(normalizeSignalType(null), isNull);
+      expect(normalizeSignalType(''), isNull);
+      expect(normalizeSignalType('invalid'), isNull);
+      expect(normalizeSignalType('2'), equals(2));
+      expect(normalizeSignalType('signal'), equals(2));
+      expect(normalizeSignalType('pre'), equals(3));
+    });
   });
 }

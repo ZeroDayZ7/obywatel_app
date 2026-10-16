@@ -24,14 +24,20 @@ String? _normalizeConversationIdForServer(String conversationId) {
 Map<String, dynamic> buildOutboxEventPayload(
   Message message,
   String appDeviceId, {
+  required int signalType,
   String? encryptedContent,
   String? outboxEventId,
-  int signalType = 1,
 }) {
   final sanitizedAppDeviceId = appDeviceId.trim();
   if (sanitizedAppDeviceId.isEmpty) {
     throw StateError(
       'App device UUID is required for SEND_MESSAGE outbox payload; never pass a numeric Signal device ID here',
+    );
+  }
+
+  if (signalType <= 0) {
+    throw StateError(
+      'SEND_MESSAGE outbox payload requires a valid positive signalType. Missing or invalid signal type must not be silently defaulted.',
     );
   }
 

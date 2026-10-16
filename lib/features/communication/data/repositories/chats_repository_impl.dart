@@ -250,11 +250,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     try {
+      final signalType = normalizeSignalType(entity.type);
+      if (signalType == null) {
+        return null;
+      }
+
       final decrypted = await _cryptoService.decryptInboundMessage(
         senderUserId: entity.senderId,
         senderDeviceId: entity.senderDeviceId,
         ciphertextBase64: normalizedCiphertext,
-        type: normalizeSignalType(entity.type),
+        type: signalType,
       );
 
       final parsed = _decodeSignalPlaintext(decrypted);
@@ -1011,11 +1016,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
           _readOutboxString(directEnvelope['type']) ??
           _readOutboxString(payload['type']) ??
           _readOutboxString(directEnvelope['signalType']) ??
-          _readOutboxString(payload['signalType']) ??
-          '1';
+          _readOutboxString(payload['signalType']);
 
       final normalizedSignalType = normalizeSignalType(signalTypeString);
-      if (normalizedSignalType <= 0) {
+      if (normalizedSignalType == null) {
         _logger.w(
           '[OUTBOX-FLOW-INVALID-SIGNAL-TYPE] skipping pending outbox entry with unsupported signal type. message_id=$messageId conversationId=$conversationId signal_type=$signalTypeString',
           module: 'ChatsRepository',
@@ -1264,7 +1268,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     if (ciphertext.isEmpty ||
         senderDeviceId == null ||
         senderDeviceId.isEmpty ||
-        signalType <= 0) {
+        signalType == null) {
       return null;
     }
 
