@@ -200,10 +200,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
     this._secureStorage,
   ) : _currentUserId = currentUserId;
 
-  String _plaintextStorageKey(String messageId) {
-    return 'chat_plaintext_$messageId';
-  }
-
   Future<void> _persistPlaintextForMessage(
     String messageId,
     String plaintext,
@@ -214,7 +210,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
 
     _logger.i(
-      '[CHAT-FLOW-STORE] Persisting plaintext for message_id=$messageId content_length=${normalized.length}',
+      '[CHAT-FLOW-STORE] caching plaintext in memory only for message_id=$messageId content_length=${normalized.length}',
       module: 'ChatsRepository',
     );
 
@@ -230,21 +226,51 @@ class ChatsRepositoryImpl implements ChatsRepository {
         _registerPlaintextAlias(relatedId, aliasId);
       }
     }
+  }
 
-    for (final relatedId in relatedIds) {
-      try {
-        await _secureStorage.write(
-          key: _plaintextStorageKey(relatedId),
-          value: normalized,
-        );
-      } catch (error, stackTrace) {
-        _logger.w(
-          'Unable to persist plaintext for message $relatedId in secure storage; keeping in-memory fallback only',
-          error: error,
-          stackTrace: stackTrace,
-          module: 'ChatsRepository',
-        );
+  Future<String?> _resolvePlaintextForEntity(MessageEntity entity) async {
+    final ciphertext = utf8.decode(entity.encryptedPayload, allowMalformed: true);
+    final normalizedCiphertext = ciphertext.trim();
+    if (normalizedCiphertext.isEmpty) {
+      return null;
+    }
+
+    final normalizedType = entity.type.trim().toLowerCase();
+    final isPlainTextMessage =
+        normalizedType == 'text' || normalizedType == 'plain';
+    if (isPlainTextMessage) {
+      return normalizedCiphertext;
+    }
+
+    if (entity.senderDeviceId.trim().isEmpty) {
+      return null;
+    }
+
+    try {
+      final decrypted = await _cryptoService.decryptInboundMessage(
+        senderUserId: entity.senderId,
+        senderDeviceId: entity.senderDeviceId,
+        ciphertextBase64: normalizedCiphertext,
+        type: normalizeSignalType(entity.type),
+      );
+
+      final parsed = _decodeSignalPlaintext(decrypted);
+      if (parsed != null) {
+        final text = parsed['text']?.toString() ?? '';
+        if (text.trim().isNotEmpty) {
+          return text.trim();
+        }
       }
+
+      return decrypted.trim().isNotEmpty ? decrypted.trim() : null;
+    } catch (error, stackTrace) {
+      _logger.w(
+        'Unable to decrypt cached message entity ${entity.id} in memory. Keeping ciphertext fallback only.',
+        error: error,
+        stackTrace: stackTrace,
+        module: 'ChatsRepository',
+      );
+      return null;
     }
   }
 
@@ -258,16 +284,23 @@ class ChatsRepositoryImpl implements ChatsRepository {
       ids.addAll(_collectRelatedMessageIds(normalizedId));
     }
 
-    for (final messageId in ids) {
-      if (_plaintextStore.plaintextCache.containsKey(messageId)) {
+    if (ids.isEmpty) {
+      return;
+    }
+
+    final entities = await (
+      _db.select(_db.messages)
+        ..where((tbl) => tbl.id.isIn(ids.toList()))
+    ).get();
+
+    for (final entity in entities) {
+      if (_plaintextStore.resolve(entity.id) != null) {
         continue;
       }
 
-      final persisted = await _secureStorage.read(
-        key: _plaintextStorageKey(messageId),
-      );
-      if (persisted != null && persisted.trim().isNotEmpty) {
-        _plaintextStore.plaintextCache[messageId] = persisted.trim();
+      final plaintext = await _resolvePlaintextForEntity(entity);
+      if (plaintext != null && plaintext.trim().isNotEmpty) {
+        _plaintextStore.store(entity.id, plaintext);
       }
     }
   }
