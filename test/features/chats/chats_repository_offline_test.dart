@@ -230,64 +230,67 @@ void main() {
     expect(message.isMine, isTrue);
   });
 
-  test('attachment-only message falls back to filename when Drift content is empty', () async {
-    final repository = await createRepositoryWithSession(
-      userId: 'user-a',
-      peerId: 'peer-user',
-    );
+  test(
+    'attachment-only message falls back to filename when Drift content is empty',
+    () async {
+      final repository = await createRepositoryWithSession(
+        userId: 'user-a',
+        peerId: 'peer-user',
+      );
 
-    final attachmentId = 'att-fallback-1';
-    final secureStorage = SecureStorageService(
-      const FlutterSecureStorage(),
-      logger,
-    );
-    await secureStorage.write(
-      key: '$attachmentId-attachment-meta',
-      value: jsonEncode({
-        'key': base64Encode(List<int>.filled(32, 7)),
-        'originalFilename': 'S (1).jpg',
-        'originalContentType': 'image/jpeg',
-        'size': 42,
-      }),
-    );
+      final attachmentId = 'att-fallback-1';
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      await secureStorage.write(
+        key: '$attachmentId-attachment-meta',
+        value: jsonEncode({
+          'key': base64Encode(List<int>.filled(32, 7)),
+          'originalFilename': 'S (1).jpg',
+          'originalContentType': 'image/jpeg',
+          'size': 42,
+        }),
+      );
 
-    await database.chatsDao.upsertConversations([
-      ConversationsCompanion(
-        id: const Value('conv-attachment-fallback'),
-        type: const Value('direct'),
-        title: const Value('Peer'),
-        lastSequence: Value(BigInt.zero),
-        updatedAt: Value(DateTime.now()),
-        createdAt: Value(DateTime.now()),
-        deletedAt: const Value.absent(),
-      ),
-    ]);
+      await database.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('conv-attachment-fallback'),
+          type: const Value('direct'),
+          title: const Value('Peer'),
+          lastSequence: Value(BigInt.zero),
+          updatedAt: Value(DateTime.now()),
+          createdAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
 
-    await database.chatsDao.upsertMessages([
-      MessagesCompanion(
-        id: const Value('msg-attachment-empty-content'),
-        conversationId: const Value('conv-attachment-fallback'),
-        senderId: const Value('peer-user'),
-        senderDeviceId: const Value('device-2'),
-        attachmentId: Value(attachmentId),
-        type: const Value('signal'),
-        sequence: Value(BigInt.one),
-        content: const Value(''),
-        encryptedPayload: Value(utf8.encode('fake-ciphertext')), 
-        mediaHeader: const Value.absent(),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
-        updatedAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
-        deletedAt: const Value.absent(),
-      ),
-    ]);
+      await database.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('msg-attachment-empty-content'),
+          conversationId: const Value('conv-attachment-fallback'),
+          senderId: const Value('peer-user'),
+          senderDeviceId: const Value('device-2'),
+          attachmentId: Value(attachmentId),
+          type: const Value('signal'),
+          sequence: Value(BigInt.one),
+          content: const Value(''),
+          encryptedPayload: Value(utf8.encode('fake-ciphertext')),
+          mediaHeader: const Value.absent(),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+          updatedAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
 
-    final messages = await repository
-        .watchMessagesForConversation('conv-attachment-fallback')
-        .first;
-    expect(messages.single.content, '📎 S (1).jpg');
-  });
+      final messages = await repository
+          .watchMessagesForConversation('conv-attachment-fallback')
+          .first;
+      expect(messages.single.content, '📎 S (1).jpg');
+    },
+  );
 
   test(
     'device bundle persists generated signed and one-time prekeys in Drift before session setup',
@@ -770,6 +773,66 @@ void main() {
     expect(row!.outboxEventId, isNotEmpty);
     expect(row.outboxEventId, equals(originalEvent.outboxEventId));
     expect(row.retryCount, equals(2));
+  });
+
+  test('repository schedules retry and persists new retryCount', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+    final conversationId = await seedServerConversationForPeer(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: conversationId,
+      senderId: 'user-a',
+      content: 'retry count check',
+      encryptedPayload: 'ciphertext-retry-count-check',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+    final event = buildOutboxEventPayload(
+      message,
+      'device-abc',
+      encryptedContent: message.encryptedPayload,
+      signalType: 2,
+    );
+    final outboxEventId = (event['eventId'] as String?) ?? const Uuid().v4();
+
+    await database.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        outboxEventId: Value(outboxEventId),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(event)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
+        createdAt: Value(message.createdAt),
+        updatedAt: Value(message.createdAt),
+      ),
+    );
+
+    await repository.scheduleOutboxRetry(
+      message.id,
+      retryCount: 3,
+      referenceTime: DateTime.now(),
+    );
+
+    final row = await database.outboxDao.getRowById(message.id);
+    final domainEvent = await repository.getOutboxEventById(message.id);
+
+    expect(row == null, isFalse);
+    expect(row!.retryCount, equals(3));
+    expect(domainEvent == null, isFalse);
+    expect(domainEvent!.retryCount, equals(3));
+    expect(row.nextAttemptAt == null, isFalse);
   });
 
   test('phase 6: retry eligibility is gated by nextAttemptAt', () async {
