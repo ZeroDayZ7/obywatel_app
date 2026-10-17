@@ -75,7 +75,7 @@ final class ChatSyncServiceProvider
         argument: null,
         retry: null,
         name: r'chatSyncServiceProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -102,4 +102,4 @@ final class ChatSyncServiceProvider
   }
 }
 
-String _$chatSyncServiceHash() => r'7ab6cfe684637c152caa92b1820797bee632aa11';
+String _$chatSyncServiceHash() => r'41766b77dd9ad7ae3d0b3251cf7e676fee279e58';

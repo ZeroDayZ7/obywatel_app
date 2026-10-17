@@ -4,7 +4,8 @@ import 'dart:io';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
@@ -16,6 +17,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'chat_sync_service.g.dart';
 
 class ChatSyncService {
+  ChatSyncService(
+    this._apiClient,
+    this._wsClient,
+    this._repository,
+    this._logger,
+    this._updateStatus, {
+    required OutboxProcessor outboxProcessor,
+  }) : _outboxProcessor = outboxProcessor;
+
   final ChatsApiClient _apiClient;
   final ChatsWsClient _wsClient;
   final ChatsRepository _repository;
@@ -25,37 +35,54 @@ class ChatSyncService {
 
   StreamSubscription<WsConnectionStatus>? _statusSubscription;
   bool _isSyncing = false;
+  bool _isStarted = false;
+  bool _isDisposed = false;
+  int _generation = 0;
   SyncStatus _currentStatus = SyncStatus.idle;
-
-  ChatSyncService(
-    this._apiClient,
-    this._wsClient,
-    this._repository,
-    this._logger,
-    void Function(SyncStatus status) updateStatus, {
-    OutboxProcessor? outboxProcessor,
-  }) : _updateStatus = updateStatus,
-       _outboxProcessor =
-           outboxProcessor ??
-           OutboxProcessor(
-             _repository,
-             _apiClient,
-             _logger,
-             DeviceInfoService(_logger),
-           );
 
   SyncStatus get currentStatus => _currentStatus;
 
-  void _setCurrentStatus(SyncStatus status) {
+  bool _isGenerationActive(int generation) {
+    return !_isDisposed && generation == _generation;
+  }
+
+  void _setCurrentStatus(SyncStatus status, {int? generation}) {
+    if (_isDisposed || (generation != null && generation != _generation)) {
+      return;
+    }
     _currentStatus = status;
     _updateStatus(status);
   }
 
-  void init() {
-    _statusSubscription = _wsClient.statusStream.listen(_onStatusChanged);
+  void startSession() {
+    if (_isDisposed || _isStarted) {
+      return;
+    }
+
+    _isStarted = true;
+    _generation++;
+    _statusSubscription ??= _wsClient.statusStream.listen(_onStatusChanged);
   }
 
+  void stopSession() {
+    _generation++;
+    _isStarted = false;
+    _isSyncing = false;
+    _statusSubscription?.cancel();
+    _statusSubscription = null;
+    if (!_isDisposed) {
+      _currentStatus = SyncStatus.idle;
+      _updateStatus(SyncStatus.idle);
+    }
+  }
+
+  void init() => startSession();
+
   void _onStatusChanged(WsConnectionStatus status) {
+    if (_isDisposed || !_isStarted) {
+      return;
+    }
+
     if (status == WsConnectionStatus.connected) {
       _logger.i(
         'Połączenie WS nawiązane. Uruchamianie synchronizacji...',
@@ -66,23 +93,35 @@ class ChatSyncService {
   }
 
   Future<void> syncPendingData() async {
-    if (_isSyncing) return;
+    if (_isDisposed || _isSyncing) {
+      return;
+    }
+
+    final generation = _generation;
     _isSyncing = true;
-    _setCurrentStatus(SyncStatus.syncing);
+    _setCurrentStatus(SyncStatus.syncing, generation: generation);
 
     try {
       await _flushOutbox();
+      if (!_isGenerationActive(generation)) return;
+
       await _fetchDeltaSync();
+      if (!_isGenerationActive(generation)) return;
+
       await _fetchLatestConversations();
-      _setCurrentStatus(SyncStatus.idle);
+      if (!_isGenerationActive(generation)) return;
+
+      _setCurrentStatus(SyncStatus.idle, generation: generation);
     } on SocketException {
-      _setCurrentStatus(SyncStatus.offline);
+      if (!_isGenerationActive(generation)) return;
+      _setCurrentStatus(SyncStatus.offline, generation: generation);
       _logger.w(
         'Brak połączenia z serwerem. Tryb offline.',
         module: 'ChatSync',
       );
     } catch (e, st) {
-      _setCurrentStatus(SyncStatus.error);
+      if (!_isGenerationActive(generation)) return;
+      _setCurrentStatus(SyncStatus.error, generation: generation);
       _logger.e(
         'Błąd podczas synchronizacji czatu',
         error: e,
@@ -118,7 +157,8 @@ class ChatSyncService {
   }
 
   void dispose() {
-    _statusSubscription?.cancel();
+    _isDisposed = true;
+    stopSession();
   }
 }
 
@@ -132,7 +172,7 @@ class ChatSyncStatusController extends _$ChatSyncStatusController {
   }
 }
 
-@riverpod
+@Riverpod(keepAlive: true)
 ChatSyncService chatSyncService(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
   final wsClient = ref.watch(chatsWsClientProvider);
@@ -149,7 +189,19 @@ ChatSyncService chatSyncService(Ref ref) {
     syncStatus.update,
     outboxProcessor: outboxProcessor,
   );
-  service.init();
+
+  ref.listen<AuthState>(authControllerProvider, (_, next) {
+    if (next.isAuthenticated) {
+      service.startSession();
+    } else {
+      service.stopSession();
+    }
+  });
+
+  final initialState = ref.read(authControllerProvider);
+  if (initialState.isAuthenticated) {
+    service.startSession();
+  }
 
   ref.onDispose(() => service.dispose());
   return service;

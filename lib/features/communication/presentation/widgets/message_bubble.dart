@@ -21,8 +21,10 @@ class MessageBubble extends ConsumerStatefulWidget {
 }
 
 class _MessageBubbleState extends ConsumerState<MessageBubble> {
-  // Statyczna mapa blokująca duplikaty żądań w locie
   static final Map<String, Future<Uint8List?>> _inFlightDownloads =
+      <String, Future<Uint8List?>>{};
+
+  static final Map<String, Future<Uint8List?>> _completedDownloads =
       <String, Future<Uint8List?>>{};
 
   late Future<Uint8List?> _previewFuture;
@@ -61,12 +63,23 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
   }
 
   Future<Uint8List?> _resolvePreviewBytes(WidgetRef ref, String attachmentId) {
+    final completed = _completedDownloads[attachmentId];
+    if (completed != null) {
+      return completed;
+    }
+
     final existing = _inFlightDownloads[attachmentId];
     if (existing != null) {
       return existing;
     }
 
-    final future = _loadPreviewBytes(ref, attachmentId);
+    final future = _loadPreviewBytes(ref, attachmentId).then((value) {
+      if (value != null && value.isNotEmpty) {
+        _completedDownloads[attachmentId] = Future.value(value);
+      }
+      return value;
+    });
+
     _inFlightDownloads[attachmentId] = future;
 
     return future.whenComplete(() {

@@ -16,6 +16,7 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
@@ -532,6 +533,12 @@ void main() {
           repository,
           logger,
           statuses.add,
+          outboxProcessor: OutboxProcessor(
+            repository,
+            chatsApiClient,
+            logger,
+            deviceInfoService,
+          ),
         );
 
         final future = service.syncPendingData();
@@ -590,6 +597,12 @@ void main() {
         repository,
         logger,
         statuses.add,
+        outboxProcessor: OutboxProcessor(
+          repository,
+          chatsApiClient,
+          logger,
+          deviceInfoService,
+        ),
       );
 
       await service.syncPendingData();
@@ -681,6 +694,12 @@ void main() {
           repository,
           logger,
           (_) {},
+          outboxProcessor: OutboxProcessor(
+            repository,
+            chatsApiClient,
+            logger,
+            deviceInfoService,
+          ),
         );
 
         await service.syncPendingData();
@@ -765,6 +784,12 @@ void main() {
         repository,
         logger,
         (_) {},
+        outboxProcessor: OutboxProcessor(
+          repository,
+          chatsApiClient,
+          logger,
+          deviceInfoService,
+        ),
       );
 
       await service.syncPendingData();
