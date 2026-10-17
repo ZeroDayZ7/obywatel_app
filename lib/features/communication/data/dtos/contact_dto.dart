@@ -9,15 +9,15 @@ part 'contact_dto.g.dart';
 @freezed
 abstract class ContactDto with _$ContactDto {
   const factory ContactDto({
-    @JsonKey(name: 'ID') required String id,
-    @JsonKey(name: 'OwnerID') required String ownerId,
-    @JsonKey(name: 'ContactID') required String contactId,
-    @JsonKey(name: 'Status') required String status,
-    @JsonKey(name: 'Direction') required String direction,
-    @JsonKey(name: 'local_alias') String? localAlias,
-    @JsonKey(name: 'Version') required int version,
-    @JsonKey(name: 'created_at') DateTime? createdAt,
-    @JsonKey(name: 'updated_at') DateTime? updatedAt,
+    required String id,
+    required String ownerId,
+    required String contactId,
+    required String status,
+    required String direction,
+    String? localAlias,
+    required int version,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) = _ContactDto;
 
   factory ContactDto.fromJson(Map<String, dynamic> json) =>
@@ -32,7 +32,9 @@ extension ContactDtoX on ContactDto {
       contactId: Value(contactId),
       status: Value(status),
       direction: Value(direction),
-      localAlias: localAlias != null ? Value(localAlias!) : const Value.absent(),
+      localAlias: localAlias != null
+          ? Value(localAlias!)
+          : const Value.absent(),
       version: Value(BigInt.from(version)),
       createdAt: createdAt != null ? Value(createdAt!) : const Value.absent(),
       updatedAt: updatedAt != null ? Value(updatedAt!) : const Value.absent(),

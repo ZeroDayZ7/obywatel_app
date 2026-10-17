@@ -6,7 +6,6 @@ import 'package:obywatel_plus/app/config/constants_base.dart';
 class ApiConstants extends ApiConstantsBase {
   final bool isProduction = false;
   final bool serverOnline = true;
-  final String baseUrl;
   final bool enableSSLPinning;
   final List<String> apiFingerprints;
   final String defaultPassword;
@@ -26,8 +25,7 @@ class ApiConstants extends ApiConstantsBase {
   }
 
   const ApiConstants()
-      : baseUrl = 'http://localhost:8090',
-        enableSSLPinning = false,
+      : enableSSLPinning = false,
         apiFingerprints = const [],
         defaultPassword = 'Zaq1@wsx',
         appName = 'Obywatel Plus Dev',

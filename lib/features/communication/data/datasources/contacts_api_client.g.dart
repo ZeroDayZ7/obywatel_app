@@ -54,4 +54,4 @@ final class ContactsApiClientProvider
   }
 }
 
-String _$contactsApiClientHash() => r'434a65d40b4e5a3ae9393157d424a285703af2bf';
+String _$contactsApiClientHash() => r'd2188e630d0b4a886624635d488bb896ae02c6e2';

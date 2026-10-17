@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contact_details_sheet.dart';
 
 class ContactsContactCard extends ConsumerWidget {
@@ -54,7 +54,9 @@ class ContactsContactCard extends ConsumerWidget {
               onTap: () async {
                 try {
                   final currentUserId = ref.read(currentUserIdProvider);
-                  final peerUserId = contact.peerUserIdForCurrentUser(currentUserId);
+                  final peerUserId = contact.peerUserIdForCurrentUser(
+                    currentUserId,
+                  );
                   final repository = ref.read(chatsRepositoryProvider);
                   final conversationId = await repository
                       .ensureConversationForContact(

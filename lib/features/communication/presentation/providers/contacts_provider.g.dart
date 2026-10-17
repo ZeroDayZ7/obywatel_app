@@ -112,7 +112,7 @@ final class ContactsSyncNotifierProvider
 }
 
 String _$contactsSyncNotifierHash() =>
-    r'35f43cb60c9768a4b2a073efe8cedf6552386b3c';
+    r'3b45be97aa3f8dfce3e3ed70cb70f012376c247f';
 
 abstract class _$ContactsSyncNotifier extends $AsyncNotifier<void> {
   FutureOr<void> build();

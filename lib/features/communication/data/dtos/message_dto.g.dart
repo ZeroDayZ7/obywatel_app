@@ -7,28 +7,30 @@ part of 'message_dto.dart';
 // **************************************************************************
 
 _MessageDto _$MessageDtoFromJson(Map<String, dynamic> json) => _MessageDto(
-  id: json['id'] as String,
-  conversationId: json['conversation_id'] as String,
-  senderId: json['sender_id'] as String,
-  senderDeviceId: json['sender_device_id'] as String?,
-  type: json['type'] as String,
+  id: _stringFromJson(json['id']),
+  conversationId: _stringFromJson(json['conversationId']),
+  senderId: _stringFromJson(json['senderId']),
+  senderDeviceId: _nullableStringFromJson(json['senderDeviceId']),
+  attachmentId: _nullableStringFromJson(json['attachmentId']),
+  type: _stringFromJson(json['type']),
   sequence: (json['sequence'] as num?)?.toInt() ?? 0,
   version: (json['version'] as num?)?.toInt() ?? 1,
-  encryptedPayload: json['encrypted_payload'] as String? ?? '',
+  encryptedPayload: json['encryptedPayload'] as String? ?? '',
   nonce: json['nonce'] as String?,
-  createdAt: DateTime.parse(json['created_at'] as String),
+  createdAt: DateTime.parse(json['createdAt'] as String),
 );
 
 Map<String, dynamic> _$MessageDtoToJson(_MessageDto instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'conversation_id': instance.conversationId,
-      'sender_id': instance.senderId,
-      'sender_device_id': instance.senderDeviceId,
+      'conversationId': instance.conversationId,
+      'senderId': instance.senderId,
+      'senderDeviceId': instance.senderDeviceId,
+      'attachmentId': instance.attachmentId,
       'type': instance.type,
       'sequence': instance.sequence,
       'version': instance.version,
-      'encrypted_payload': instance.encryptedPayload,
+      'encryptedPayload': instance.encryptedPayload,
       'nonce': instance.nonce,
-      'created_at': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt.toIso8601String(),
     };

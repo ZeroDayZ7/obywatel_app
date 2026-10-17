@@ -24,36 +24,34 @@ class StorageInitTask implements StartupTask {
   @override
   String get name => 'Storage & Database';
 
+
   @override
   Future<AppInitStatus?> initialize() async {
-    if (kDebugMode) {
-      // Manual debug-only reset helper for intentional first-run / clean-install simulation.
-      // This block is intentionally commented and MUST NOT run during normal startup.
 
+    const bool shouldResetForTesting = kDebugMode && true;
 
-      // await Future.wait([
-      //   storage.clearAll(),
-      //   prefs.clearAll(),
-      // ]);
-      // await database.clearSignalStore();
-      // await database.clearDatabase();
+    if (shouldResetForTesting) {
+      // debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
 
+      try {
+        // await storage.clearAll();
+        // await prefs.clearAll();
 
-      debugPrint(
-        '[StorageInitTask] Debug bootstrap: preserving persisted secure storage and Signal state. No reset is performed during startup.',
-      );
-      await storage.debugPrintAll();
-      await prefs.debugPrintAll();
+        // await database.clearSignalStore();
+        // await database.clearDatabase();
 
-      final signalIdentityCount = await database.select(database.signalIdentityKeys).get();
-      final signalPreKeyCount = await database.select(database.signalPreKeys).get();
-      final signalSessionCount = await database.select(database.signalSessions).get();
+        // await database.close();
+        
+        // debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
+      } catch (e, st) {
+        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+      }
 
-      debugPrint(
-        '[StorageInitTask] Signal store integrity: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
-      );
+      // if (kDebugMode) {
+      //   await storage.debugPrintAll();
+      //   await prefs.debugPrintAll();
+      // }
     }
-
     return null;
   }
 }

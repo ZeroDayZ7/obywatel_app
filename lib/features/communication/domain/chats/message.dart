@@ -14,5 +14,6 @@ abstract class Message with _$Message {
     @Default('pending') String status,
     @Default(true) bool isEncrypted,
     @Default('') String encryptedPayload,
+    String? attachmentId,
   }) = _Message;
 }

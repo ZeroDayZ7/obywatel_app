@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_contact_card.dart';
 
 class ContactsSearchDelegate extends SearchDelegate<Contact?> {

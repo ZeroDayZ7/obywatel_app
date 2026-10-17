@@ -96,4 +96,4 @@ final class ChatsWsClientProvider
   }
 }
 
-String _$chatsWsClientHash() => r'f5f722f2202904dbad352bd1ad6dfeb365d2cc78';
+String _$chatsWsClientHash() => r'cdb15a1b86bcf3cb664440220c0bcee1abf54bf9';

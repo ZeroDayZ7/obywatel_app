@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/add_contact_modal.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_contact_card.dart';
@@ -31,7 +31,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
       ),
       builder: (_) => const ContactsSettingsSheet(),
@@ -163,35 +163,25 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
         slivers: [
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
               child: Row(
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'CONTACTS / NETWORK STATUS',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${contacts.length} trusted contacts • ${onlineContacts.length} online • ${pendingContacts.length} pending',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      '${contacts.length} trusted • ${onlineContacts.length} online • ${pendingContacts.length} pending',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                   Row(
                     children: [
                       IconButton(
-                        icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
+                        icon: Icon(
+                          Icons.tune_rounded,
+                          color: colorScheme.onSurface,
+                        ),
                         tooltip: 'Ustawienia kontaktów',
                         onPressed: () => _openSettingsSheet(context),
                       ),
@@ -201,7 +191,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                         onPressed: () {
                           showSearch(
                             context: context,
-                            delegate: ContactsSearchDelegate(contacts: contacts),
+                            delegate: ContactsSearchDelegate(
+                              contacts: contacts,
+                            ),
                           );
                         },
                       ),
@@ -213,46 +205,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                         },
                       ),
                     ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.35),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Kontakty w sieci i zaproszenia',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: Text(
-                      'SECURED',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -286,13 +238,18 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   final isIncoming = contact.direction == 'incoming';
 
                   return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: colorScheme.surface,
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.35,
+                        ),
                       ),
                     ),
                     child: Row(
@@ -365,7 +322,10 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: colorScheme.primaryContainer,
                               borderRadius: BorderRadius.circular(999),

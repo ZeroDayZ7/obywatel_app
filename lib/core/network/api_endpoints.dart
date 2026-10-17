@@ -76,6 +76,12 @@ abstract class ApiEndpoints {
   static String get messageHistory => '/messages/history';
   static String get messages => '/messages';
 
+  // --- ATTACHMENTS ---
+  static String get attachmentUpload => '/attachments/upload';
+  static String get attachmentFinalize => '/attachments/finalize';
+  static String attachmentById(String id) => '/attachments/$id';
+  static String attachmentDownload(String id) => '/attachments/$id/download';
+
   // ===========================================================================
   // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---
   // ===========================================================================
@@ -85,5 +91,5 @@ abstract class ApiEndpoints {
   // ===========================================================================
   // --- REAL-TIME WEBSOCKET ---
   // ===========================================================================
-  static String wsMessaging(String token) => '/ws/messaging?token=$token';
+  static String get wsMessaging => '/ws';
 }

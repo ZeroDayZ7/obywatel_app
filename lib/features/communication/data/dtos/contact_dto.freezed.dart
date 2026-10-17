@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ContactDto {
 
-@JsonKey(name: 'ID') String get id;@JsonKey(name: 'OwnerID') String get ownerId;@JsonKey(name: 'ContactID') String get contactId;@JsonKey(name: 'Status') String get status;@JsonKey(name: 'Direction') String get direction;@JsonKey(name: 'local_alias') String? get localAlias;@JsonKey(name: 'Version') int get version;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+ String get id; String get ownerId; String get contactId; String get status; String get direction; String? get localAlias; int get version; DateTime? get createdAt; DateTime? get updatedAt;
 /// Create a copy of ContactDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $ContactDtoCopyWith<$Res>  {
   factory $ContactDtoCopyWith(ContactDto value, $Res Function(ContactDto) _then) = _$ContactDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'Direction') String direction,@JsonKey(name: 'local_alias') String? localAlias,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String ownerId, String contactId, String status, String direction, String? localAlias, int version, DateTime? createdAt, DateTime? updatedAt
 });
 
 
@@ -161,7 +161,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Direction')  String direction, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactId,  String status,  String direction,  String? localAlias,  int version,  DateTime? createdAt,  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _ContactDto() when $default != null:
 return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direction,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
@@ -182,7 +182,7 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direct
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Direction')  String direction, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactId,  String status,  String direction,  String? localAlias,  int version,  DateTime? createdAt,  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _ContactDto():
 return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direction,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
@@ -202,7 +202,7 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direct
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'ID')  String id, @JsonKey(name: 'OwnerID')  String ownerId, @JsonKey(name: 'ContactID')  String contactId, @JsonKey(name: 'Status')  String status, @JsonKey(name: 'Direction')  String direction, @JsonKey(name: 'local_alias')  String? localAlias, @JsonKey(name: 'Version')  int version, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String ownerId,  String contactId,  String status,  String direction,  String? localAlias,  int version,  DateTime? createdAt,  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _ContactDto() when $default != null:
 return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direction,_that.localAlias,_that.version,_that.createdAt,_that.updatedAt);case _:
@@ -217,18 +217,18 @@ return $default(_that.id,_that.ownerId,_that.contactId,_that.status,_that.direct
 @JsonSerializable()
 
 class _ContactDto implements ContactDto {
-  const _ContactDto({@JsonKey(name: 'ID') required this.id, @JsonKey(name: 'OwnerID') required this.ownerId, @JsonKey(name: 'ContactID') required this.contactId, @JsonKey(name: 'Status') required this.status, @JsonKey(name: 'Direction') required this.direction, @JsonKey(name: 'local_alias') this.localAlias, @JsonKey(name: 'Version') required this.version, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _ContactDto({required this.id, required this.ownerId, required this.contactId, required this.status, required this.direction, this.localAlias, required this.version, this.createdAt, this.updatedAt});
   factory _ContactDto.fromJson(Map<String, dynamic> json) => _$ContactDtoFromJson(json);
 
-@override@JsonKey(name: 'ID') final  String id;
-@override@JsonKey(name: 'OwnerID') final  String ownerId;
-@override@JsonKey(name: 'ContactID') final  String contactId;
-@override@JsonKey(name: 'Status') final  String status;
-@override@JsonKey(name: 'Direction') final  String direction;
-@override@JsonKey(name: 'local_alias') final  String? localAlias;
-@override@JsonKey(name: 'Version') final  int version;
-@override@JsonKey(name: 'created_at') final  DateTime? createdAt;
-@override@JsonKey(name: 'updated_at') final  DateTime? updatedAt;
+@override final  String id;
+@override final  String ownerId;
+@override final  String contactId;
+@override final  String status;
+@override final  String direction;
+@override final  String? localAlias;
+@override final  int version;
+@override final  DateTime? createdAt;
+@override final  DateTime? updatedAt;
 
 /// Create a copy of ContactDto
 /// with the given fields replaced by the non-null parameter values.
@@ -263,7 +263,7 @@ abstract mixin class _$ContactDtoCopyWith<$Res> implements $ContactDtoCopyWith<$
   factory _$ContactDtoCopyWith(_ContactDto value, $Res Function(_ContactDto) _then) = __$ContactDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'ID') String id,@JsonKey(name: 'OwnerID') String ownerId,@JsonKey(name: 'ContactID') String contactId,@JsonKey(name: 'Status') String status,@JsonKey(name: 'Direction') String direction,@JsonKey(name: 'local_alias') String? localAlias,@JsonKey(name: 'Version') int version,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+ String id, String ownerId, String contactId, String status, String direction, String? localAlias, int version, DateTime? createdAt, DateTime? updatedAt
 });
 
 

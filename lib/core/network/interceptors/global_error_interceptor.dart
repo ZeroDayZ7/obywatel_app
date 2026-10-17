@@ -322,6 +322,20 @@ class GlobalErrorInterceptor extends Interceptor {
 
   String? _extractMessage(dynamic data) {
     if (data is Map) {
+      final meta = data['meta'];
+      if (meta is Map) {
+        final detail = meta['detail'];
+        if (detail != null && detail.toString().trim().isNotEmpty) {
+          return detail.toString();
+        }
+      }
+
+      final explicitDetail = data['detail'];
+      if (explicitDetail != null &&
+          explicitDetail.toString().trim().isNotEmpty) {
+        return explicitDetail.toString();
+      }
+
       return data['message']?.toString();
     }
 

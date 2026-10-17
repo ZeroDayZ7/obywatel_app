@@ -30,6 +30,24 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
+  Future<bool> hasExistingRelationForUser({
+    required String currentUserId,
+    required String targetUserId,
+  }) async {
+    final existing =
+        await (select(contacts)..where(
+              (t) =>
+                  t.deletedAt.isNull() &
+                  ((t.ownerId.equals(currentUserId) &
+                          t.contactId.equals(targetUserId)) |
+                      (t.ownerId.equals(targetUserId) &
+                          t.contactId.equals(currentUserId))),
+            ))
+            .getSingleOrNull();
+
+    return existing != null;
+  }
+
   Future<BigInt> getMaxContactVersion() async {
     final maxVerExpr = contacts.version.max();
     final query = selectOnly(contacts)..addColumns([maxVerExpr]);

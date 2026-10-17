@@ -16,8 +16,11 @@ import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 
 class _FakeE2eeCryptoService extends E2eeCryptoService {
   _FakeE2eeCryptoService()
@@ -41,6 +44,48 @@ class _FakeE2eeCryptoService extends E2eeCryptoService {
   @override
   Future<void> registerDeviceIdentity() async {
     registerCalls += 1;
+  }
+
+  @override
+  Future<EncryptedData> encryptMessage(
+    String remoteUserId,
+    String plaintext, {
+    String? operationId,
+  }) async {
+    return EncryptedData(
+      ciphertextBase64: 'ciphertext-value',
+      nonceBase64: '',
+      type: CiphertextMessage.whisperType,
+    );
+  }
+}
+
+class _FakeChatsApiClient extends ChatsApiClient {
+  _FakeChatsApiClient()
+    : super(
+        ApiClient(
+          dio: Dio(),
+          storage: SecureStorageService(
+            const FlutterSecureStorage(),
+            AppLogger(),
+          ),
+          logger: AppLogger(),
+        ),
+      );
+
+  Map<String, dynamic>? lastRequestPayload;
+
+  @override
+  Future<Response<dynamic>> post(String path, {dynamic data}) async {
+    lastRequestPayload = data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data as Map);
+
+    return Response<dynamic>(
+      data: {'messageId': lastRequestPayload!['messageId']},
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
   }
 }
 
@@ -122,7 +167,7 @@ void main() {
 
       final bundle = E2eeCryptoService.fromPreKeyBundleJson({
         'registrationId': 123,
-        'deviceId': 'device-1',
+        'deviceId': '1',
         'preKeyId': 7,
         'preKeyPublic': base64Encode(
           oneTimePreKey.getKeyPair().publicKey.serialize(),
@@ -138,10 +183,32 @@ void main() {
       expect(bundle.getRegistrationId(), 123);
       expect(bundle.getDeviceId(), 1);
       expect(bundle.getSignedPreKeyId(), 1);
+      expect(bundle.getPreKeyId(), 7);
       expect(
         bundle.getIdentityKey().serialize(),
         identity.getPublicKey().serialize(),
       );
+    });
+
+    test('accepts a bundle without an optional one-time pre-key', () {
+      final identity = generateIdentityKeyPair();
+      final signedPreKey = generateSignedPreKey(identity, 1);
+
+      final bundle = E2eeCryptoService.fromPreKeyBundleJson({
+        'registrationId': 123,
+        'deviceId': '1',
+        'signedPreKeyId': 1,
+        'signedPreKeyPublic': base64Encode(
+          signedPreKey.getKeyPair().publicKey.serialize(),
+        ),
+        'signedPreKeySignature': base64Encode(signedPreKey.signature),
+        'identityKey': base64Encode(identity.getPublicKey().serialize()),
+      });
+
+      expect(bundle.getRegistrationId(), 123);
+      expect(bundle.getDeviceId(), 1);
+      expect(bundle.getPreKeyId(), isNull);
+      expect(bundle.getSignedPreKeyId(), 1);
     });
 
     test(
@@ -485,5 +552,48 @@ void main() {
         throwsA(isA<EncryptionFailureException>()),
       );
     });
+
+    test(
+      'keeps plaintext only in the in-memory cache and not in secure storage',
+      () async {
+        final logger = AppLogger();
+        final secureStorage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final fakeApiClient = _FakeChatsApiClient();
+        final deviceInfoService = DeviceInfoService(logger);
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(() async => db.close());
+
+        final repo = ChatsRepositoryImpl(
+          fakeApiClient,
+          db,
+          logger,
+          'current-user',
+          deviceInfoService,
+          _FakeE2eeCryptoService(),
+          secureStorage,
+        );
+
+        await repo.sendMessage(
+          conversationId: 'peer-user',
+          content: 'hello plaintext cache',
+        );
+
+        final historyBefore = await repo.getMessageHistory('peer-user');
+        final storedMessageId = historyBefore.isNotEmpty ? historyBefore.first.id : 'missing';
+        expect(
+          await secureStorage.read(key: 'chat_plaintext_$storedMessageId'),
+          isNull,
+          reason:
+              'Plaintext chat content must never be stored in secure storage.',
+        );
+
+        final history = await repo.getMessageHistory('peer-user');
+        expect(history, isNotEmpty);
+        expect(history.first.content, 'hello plaintext cache');
+      },
+    );
   });
 }

@@ -1,13 +1,16 @@
 // lib/features/communication/data/repositories/contacts_repository_impl.dart
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
@@ -23,13 +26,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
+  final AppLogger _logger;
   final String? _currentUserId;
-  final AppLogger _logger = AppLogger();
 
   ContactsRepositoryImpl(
     this._apiClient,
     this._dao,
-    this._outboxDao, [
+    this._outboxDao,
+    this._logger, [
     this._currentUserId,
   ]);
 
@@ -70,7 +74,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Stream<List<Contact>> watchAcceptedContacts() {
     return _dao.watchAcceptedContacts().map((entities) {
-      final contacts = entities.map(Contact.fromEntity).toList();
+      final contacts = entities
+          .map(
+            (entity) =>
+                Contact.fromEntity(entity, currentUserId: _currentUserId),
+          )
+          .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
           ? contacts
           : _dedupeContactsByPeer(contacts);
@@ -80,7 +89,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
   @override
   Stream<List<Contact>> watchPendingContacts() {
     return _dao.watchPendingContacts().map((entities) {
-      final contacts = entities.map(Contact.fromEntity).toList();
+      final contacts = entities
+          .map(
+            (entity) =>
+                Contact.fromEntity(entity, currentUserId: _currentUserId),
+          )
+          .toList();
       return _currentUserId == null || _currentUserId.trim().isEmpty
           ? contacts
           : _dedupeContactsByPeer(contacts);
@@ -138,14 +152,29 @@ class ContactsRepositoryImpl implements ContactsRepository {
     }
 
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
+    final hasExistingRelation = await _dao.hasExistingRelationForUser(
+      currentUserId: _currentUserId!,
+      targetUserId: normalized,
+    );
+
+    if (hasExistingRelation) {
+      _logger.w(
+        '[CONTACTS-INVITE-02] REPOSITORY: pominięto wysyłkę — kontakt już istnieje dla $normalized',
+      );
+      throw const ValidationException(
+        message: 'Zaproszenie lub kontakt już istnieje.',
+        code: 'CONTACT_ALREADY_EXISTS',
+      );
+    }
+
     _logger.i(
-      '[CONTACTS-INVITE-02] REPOSITORY: wysyłka zaproszenia do $normalized',
+      '[CONTACTS-INVITE-03] REPOSITORY: wysyłka zaproszenia do $normalized',
     );
 
     try {
       await _apiClient.sendContactRequest(normalized);
       _logger.i(
-        '[CONTACTS-INVITE-03] REPOSITORY: backend przyjął zaproszenie dla $normalized',
+        '[CONTACTS-INVITE-04] REPOSITORY: backend przyjął zaproszenie dla $normalized',
       );
     } catch (error, stackTrace) {
       _logger.e(
@@ -153,25 +182,32 @@ class ContactsRepositoryImpl implements ContactsRepository {
         error: error,
         stackTrace: stackTrace,
       );
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'contacts_repository_impl',
-          context: ErrorDescription(
-            'Failed to send contact request to backend',
+
+      final isExpectedNetworkError =
+          error is AppException ||
+          (error is DioException && error.error is AppException);
+
+      if (!isExpectedNetworkError) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'contacts_repository_impl',
+            context: ErrorDescription(
+              'Failed to send contact request to backend',
+            ),
           ),
-        ),
-      );
+        );
+      }
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     final companion = ContactsCompanion(
       id: Value(eventId),
-      ownerId: Value(_currentUserId!),
+      ownerId: Value(_currentUserId),
       contactId: Value(normalized),
       status: const Value('pending'),
       syncState: const Value('pending_create'),
@@ -196,12 +232,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
           conversationId: const Value.absent(),
           payload: Value(
             jsonEncode({
-              'entity_type': 'CONTACT',
-              'entity_id': normalized,
-              'event_type': 'ADD_CONTACT',
+              'entityType': 'CONTACT',
+              'entityId': normalized,
+              'eventType': 'ADD_CONTACT',
               'action': 'request',
-              'target_user_id': normalized,
-              'created_at': now.toUtc().toIso8601String(),
+              'targetUserId': normalized,
+              'createdAt': now.toUtc().toIso8601String(),
             }),
           ),
           status: const Value('pending'),
@@ -265,7 +301,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     await _dao.db.transaction(() async {
@@ -293,12 +329,12 @@ class ContactsRepositoryImpl implements ContactsRepository {
           conversationId: const Value.absent(),
           payload: Value(
             jsonEncode({
-              'entity_type': 'CONTACT',
-              'entity_id': requestId,
-              'event_type': accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT',
+              'entityType': 'CONTACT',
+              'entityId': requestId,
+              'eventType': accept ? 'RESPOND_CONTACT' : 'REMOVE_CONTACT',
               'action': accept ? 'ACCEPT' : 'REJECT',
               'accepted': accept,
-              'created_at': now.toUtc().toIso8601String(),
+              'createdAt': now.toUtc().toIso8601String(),
             }),
           ),
           status: const Value('pending'),
@@ -316,11 +352,13 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
+  final logger = ref.watch(appLoggerProvider);
   final currentUserId = ref.watch(authControllerProvider).userId;
   return ContactsRepositoryImpl(
     apiClient,
     db.contactsDao,
     db.outboxDao,
+    logger,
     currentUserId,
   );
 }

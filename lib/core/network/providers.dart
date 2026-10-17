@@ -8,10 +8,10 @@ import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
-import 'package:obywatel_plus/core/network/clients/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/clients/no_auth_client.dart';
 import 'package:obywatel_plus/core/network/clients/public_client.dart';
 import 'package:obywatel_plus/core/network/dio_factory.dart';
+import 'package:obywatel_plus/core/network/interceptors/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
 import 'package:obywatel_plus/core/network/network_manager.dart';
@@ -67,7 +67,7 @@ Dio authDio(Ref ref) {
 
   final dio = Dio(
     BaseOptions(
-      baseUrl: ServicesConfig.authBaseUrl,
+      baseUrl: ServicesConfig.apiBaseUrl,
       connectTimeout: Duration(seconds: apiConstants.connectTimeoutSeconds),
       receiveTimeout: Duration(seconds: apiConstants.receiveTimeoutSeconds),
       headers: {'Content-Type': 'application/json'},

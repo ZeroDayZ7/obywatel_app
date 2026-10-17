@@ -15,7 +15,9 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 
 class ThrowingCryptoService extends E2eeCryptoService {
   ThrowingCryptoService(

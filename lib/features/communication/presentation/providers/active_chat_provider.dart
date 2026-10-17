@@ -20,6 +20,9 @@ final chatE2eeSessionStatusProvider = FutureProvider.family<
     final remoteUserId = await repository.resolvePeerUserIdForConversation(
       conversationId,
     );
+    if (remoteUserId == conversationId.trim()) {
+      return E2eeSessionUiStatus.ready;
+    }
     await repository.ensureE2eeSessionForContact(remoteUserId);
     return E2eeSessionUiStatus.ready;
   } on ArgumentError {
@@ -37,14 +40,16 @@ class ActiveChat extends _$ActiveChat {
     return repository.watchMessagesForConversation(conversationId);
   }
 
-  Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  Future<void> sendMessage(String text, {String? attachmentId}) async {
+    final normalizedText = text.trim();
+    if (normalizedText.isEmpty && attachmentId == null) return;
 
     final repository = ref.read(chatsRepositoryProvider);
 
     await repository.sendMessage(
       conversationId: conversationId,
-      content: text,
+      content: normalizedText,
+      attachmentId: attachmentId,
     );
   }
 }

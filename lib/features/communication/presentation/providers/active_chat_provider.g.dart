@@ -50,7 +50,7 @@ final class ActiveChatProvider
   }
 }
 
-String _$activeChatHash() => r'2e6a9ec5399751a4aea3fd7294bf07a407290b20';
+String _$activeChatHash() => r'3fdbd1d99e5a331d4ca98cd72542289fd95aaf90';
 
 final class ActiveChatFamily extends $Family
     with

@@ -13,6 +13,30 @@ String buildOutboxEventIdForMessage({required Message message}) {
   return _normalizeUuidString(message.id, fallback: const Uuid().v7());
 }
 
+Map<String, dynamic> messageToOutboxJson(
+  Message message,
+  String deviceId, {
+  required int signalType,
+  String? messageId,
+  String? outboxEventId,
+}) {
+  final resolvedMessageId = (messageId != null && messageId.trim().isNotEmpty)
+      ? messageId
+      : message.id;
+  final resolvedEventId =
+      (outboxEventId != null && outboxEventId.trim().isNotEmpty)
+      ? outboxEventId
+      : message.id;
+
+  return buildOutboxEventPayload(
+    message.copyWith(id: resolvedMessageId),
+    deviceId,
+    encryptedContent: message.encryptedPayload,
+    outboxEventId: resolvedEventId,
+    signalType: signalType,
+  );
+}
+
 String? _normalizeConversationIdForServer(String conversationId) {
   final trimmed = conversationId.trim();
   if (trimmed.isEmpty) {
@@ -24,14 +48,20 @@ String? _normalizeConversationIdForServer(String conversationId) {
 Map<String, dynamic> buildOutboxEventPayload(
   Message message,
   String appDeviceId, {
+  required int signalType,
   String? encryptedContent,
   String? outboxEventId,
-  int signalType = 1,
 }) {
   final sanitizedAppDeviceId = appDeviceId.trim();
   if (sanitizedAppDeviceId.isEmpty) {
     throw StateError(
       'App device UUID is required for SEND_MESSAGE outbox payload; never pass a numeric Signal device ID here',
+    );
+  }
+
+  if (signalType <= 0) {
+    throw StateError(
+      'SEND_MESSAGE outbox payload requires a valid positive signalType. Missing or invalid signal type must not be silently defaulted.',
     );
   }
 
@@ -48,6 +78,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   final normalizedConversationId = _normalizeConversationIdForServer(
     message.conversationId,
   );
+  final normalizedAttachmentId = (message.attachmentId ?? '').trim();
 
   if (normalizedConversationId == null || normalizedConversationId.isEmpty) {
     throw StateError(
@@ -61,31 +92,18 @@ Map<String, dynamic> buildOutboxEventPayload(
     );
   }
 
-  final nestedPayload = {
-    'event_id': safeOutboxEventId,
-    'idempotency_key': safeOutboxEventId,
-    'message_id': safeMessageId,
-    'event_type': 'SEND_MESSAGE',
-    'conversation_id': normalizedConversationId,
-    'sender_device_id': sanitizedAppDeviceId,
-    'device_id': sanitizedAppDeviceId,
+  return {
+    'eventId': safeOutboxEventId,
+    'idempotencyKey': safeOutboxEventId,
+    'messageId': safeMessageId,
+    'eventType': 'SEND_MESSAGE',
+    'conversationId': normalizedConversationId,
+    'senderDeviceId': sanitizedAppDeviceId,
+    'attachmentId': normalizedAttachmentId.isEmpty
+        ? null
+        : normalizedAttachmentId,
     'ciphertext': ciphertext,
     'type': signalType,
-    'created_at': createdAt,
-    'outbox_event_id': safeOutboxEventId,
-  };
-
-  return {
-    'event_id': safeOutboxEventId,
-    'idempotency_key': safeOutboxEventId,
-    'message_id': safeMessageId,
-    'event_type': 'SEND_MESSAGE',
-    'conversation_id': normalizedConversationId,
-    'sender_device_id': sanitizedAppDeviceId,
-    'device_id': sanitizedAppDeviceId,
-    'payload': nestedPayload,
-    'type': signalType,
-    'created_at': createdAt,
-    'outbox_event_id': safeOutboxEventId,
+    'createdAt': createdAt,
   };
 }

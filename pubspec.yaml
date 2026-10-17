@@ -89,6 +89,7 @@ dependencies:
   fresh_dio: 0.4.4
   secure_application: ^4.1.0
   connectivity_plus: ^7.3.1
+  emoji_picker_flutter: ^4.4.0
 
 dev_dependencies:
   flutter_test:

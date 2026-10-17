@@ -23,8 +23,8 @@ class MessagingActivationApiClient {
     final response = await _apiClient.post(
       ApiEndpoints.messagingActivation,
       data: {
-        'device_id': deviceId,
-        'terms_version': termsVersion,
+        'deviceId': deviceId,
+        'termsVersion': termsVersion,
         'consent': consent,
       },
     );
@@ -39,8 +39,8 @@ class MessagingActivationApiClient {
     final response = await _apiClient.post(
       ApiEndpoints.messagingAcceptTerms,
       data: {
-        'device_id': deviceId,
-        'terms_version': termsVersion,
+        'deviceId': deviceId,
+        'termsVersion': termsVersion,
       },
     );
     final data = response.data as Map<String, dynamic>;

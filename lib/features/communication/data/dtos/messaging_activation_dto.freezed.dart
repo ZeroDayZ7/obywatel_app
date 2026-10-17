@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessagingActivationDto {
 
-@JsonKey(name: 'user_id') String get userId;@JsonKey(name: 'status') String get status;@JsonKey(name: 'consent_accepted') bool get consentAccepted;@JsonKey(name: 'terms_version') String get termsVersion;@JsonKey(name: 'current_terms_version') String get currentTermsVersion;@JsonKey(name: 'requires_terms_acceptance') bool get requiresTermsAcceptance;@JsonKey(name: 'device_id') String? get deviceId;@JsonKey(name: 'activated_at') DateTime? get activatedAt;@JsonKey(name: 'created_at') DateTime? get createdAt;@JsonKey(name: 'updated_at') DateTime? get updatedAt;
+@JsonKey(name: 'userId') String get userId;@JsonKey(name: 'status') String get status;@JsonKey(name: 'consentAccepted') bool get consentAccepted;@JsonKey(name: 'termsVersion') String get termsVersion;@JsonKey(name: 'currentTermsVersion') String get currentTermsVersion;@JsonKey(name: 'requiresTermsAcceptance') bool get requiresTermsAcceptance;@JsonKey(name: 'deviceId') String? get deviceId;@JsonKey(name: 'activatedAt') DateTime? get activatedAt;@JsonKey(name: 'createdAt') DateTime? get createdAt;@JsonKey(name: 'updatedAt') DateTime? get updatedAt;
 /// Create a copy of MessagingActivationDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -48,7 +48,7 @@ abstract mixin class $MessagingActivationDtoCopyWith<$Res>  {
   factory $MessagingActivationDtoCopyWith(MessagingActivationDto value, $Res Function(MessagingActivationDto) _then) = _$MessagingActivationDtoCopyWithImpl;
 @useResult
 $Res call({
-@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'status') String status,@JsonKey(name: 'consent_accepted') bool consentAccepted,@JsonKey(name: 'terms_version') String termsVersion,@JsonKey(name: 'current_terms_version') String currentTermsVersion,@JsonKey(name: 'requires_terms_acceptance') bool requiresTermsAcceptance,@JsonKey(name: 'device_id') String? deviceId,@JsonKey(name: 'activated_at') DateTime? activatedAt,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'userId') String userId,@JsonKey(name: 'status') String status,@JsonKey(name: 'consentAccepted') bool consentAccepted,@JsonKey(name: 'termsVersion') String termsVersion,@JsonKey(name: 'currentTermsVersion') String currentTermsVersion,@JsonKey(name: 'requiresTermsAcceptance') bool requiresTermsAcceptance,@JsonKey(name: 'deviceId') String? deviceId,@JsonKey(name: 'activatedAt') DateTime? activatedAt,@JsonKey(name: 'createdAt') DateTime? createdAt,@JsonKey(name: 'updatedAt') DateTime? updatedAt
 });
 
 
@@ -162,7 +162,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consent_accepted')  bool consentAccepted, @JsonKey(name: 'terms_version')  String termsVersion, @JsonKey(name: 'current_terms_version')  String currentTermsVersion, @JsonKey(name: 'requires_terms_acceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'device_id')  String? deviceId, @JsonKey(name: 'activated_at')  DateTime? activatedAt, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function(@JsonKey(name: 'userId')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consentAccepted')  bool consentAccepted, @JsonKey(name: 'termsVersion')  String termsVersion, @JsonKey(name: 'currentTermsVersion')  String currentTermsVersion, @JsonKey(name: 'requiresTermsAcceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'deviceId')  String? deviceId, @JsonKey(name: 'activatedAt')  DateTime? activatedAt, @JsonKey(name: 'createdAt')  DateTime? createdAt, @JsonKey(name: 'updatedAt')  DateTime? updatedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessagingActivationDto() when $default != null:
 return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.deviceId,_that.activatedAt,_that.createdAt,_that.updatedAt);case _:
@@ -183,7 +183,7 @@ return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersi
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consent_accepted')  bool consentAccepted, @JsonKey(name: 'terms_version')  String termsVersion, @JsonKey(name: 'current_terms_version')  String currentTermsVersion, @JsonKey(name: 'requires_terms_acceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'device_id')  String? deviceId, @JsonKey(name: 'activated_at')  DateTime? activatedAt, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function(@JsonKey(name: 'userId')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consentAccepted')  bool consentAccepted, @JsonKey(name: 'termsVersion')  String termsVersion, @JsonKey(name: 'currentTermsVersion')  String currentTermsVersion, @JsonKey(name: 'requiresTermsAcceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'deviceId')  String? deviceId, @JsonKey(name: 'activatedAt')  DateTime? activatedAt, @JsonKey(name: 'createdAt')  DateTime? createdAt, @JsonKey(name: 'updatedAt')  DateTime? updatedAt)  $default,) {final _that = this;
 switch (_that) {
 case _MessagingActivationDto():
 return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.deviceId,_that.activatedAt,_that.createdAt,_that.updatedAt);case _:
@@ -203,7 +203,7 @@ return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersi
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'user_id')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consent_accepted')  bool consentAccepted, @JsonKey(name: 'terms_version')  String termsVersion, @JsonKey(name: 'current_terms_version')  String currentTermsVersion, @JsonKey(name: 'requires_terms_acceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'device_id')  String? deviceId, @JsonKey(name: 'activated_at')  DateTime? activatedAt, @JsonKey(name: 'created_at')  DateTime? createdAt, @JsonKey(name: 'updated_at')  DateTime? updatedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function(@JsonKey(name: 'userId')  String userId, @JsonKey(name: 'status')  String status, @JsonKey(name: 'consentAccepted')  bool consentAccepted, @JsonKey(name: 'termsVersion')  String termsVersion, @JsonKey(name: 'currentTermsVersion')  String currentTermsVersion, @JsonKey(name: 'requiresTermsAcceptance')  bool requiresTermsAcceptance, @JsonKey(name: 'deviceId')  String? deviceId, @JsonKey(name: 'activatedAt')  DateTime? activatedAt, @JsonKey(name: 'createdAt')  DateTime? createdAt, @JsonKey(name: 'updatedAt')  DateTime? updatedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MessagingActivationDto() when $default != null:
 return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.deviceId,_that.activatedAt,_that.createdAt,_that.updatedAt);case _:
@@ -218,19 +218,19 @@ return $default(_that.userId,_that.status,_that.consentAccepted,_that.termsVersi
 @JsonSerializable()
 
 class _MessagingActivationDto implements MessagingActivationDto {
-  const _MessagingActivationDto({@JsonKey(name: 'user_id') required this.userId, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'consent_accepted') this.consentAccepted = false, @JsonKey(name: 'terms_version') this.termsVersion = '', @JsonKey(name: 'current_terms_version') this.currentTermsVersion = '', @JsonKey(name: 'requires_terms_acceptance') this.requiresTermsAcceptance = false, @JsonKey(name: 'device_id') this.deviceId, @JsonKey(name: 'activated_at') this.activatedAt, @JsonKey(name: 'created_at') this.createdAt, @JsonKey(name: 'updated_at') this.updatedAt});
+  const _MessagingActivationDto({@JsonKey(name: 'userId') required this.userId, @JsonKey(name: 'status') required this.status, @JsonKey(name: 'consentAccepted') this.consentAccepted = false, @JsonKey(name: 'termsVersion') this.termsVersion = '', @JsonKey(name: 'currentTermsVersion') this.currentTermsVersion = '', @JsonKey(name: 'requiresTermsAcceptance') this.requiresTermsAcceptance = false, @JsonKey(name: 'deviceId') this.deviceId, @JsonKey(name: 'activatedAt') this.activatedAt, @JsonKey(name: 'createdAt') this.createdAt, @JsonKey(name: 'updatedAt') this.updatedAt});
   factory _MessagingActivationDto.fromJson(Map<String, dynamic> json) => _$MessagingActivationDtoFromJson(json);
 
-@override@JsonKey(name: 'user_id') final  String userId;
+@override@JsonKey(name: 'userId') final  String userId;
 @override@JsonKey(name: 'status') final  String status;
-@override@JsonKey(name: 'consent_accepted') final  bool consentAccepted;
-@override@JsonKey(name: 'terms_version') final  String termsVersion;
-@override@JsonKey(name: 'current_terms_version') final  String currentTermsVersion;
-@override@JsonKey(name: 'requires_terms_acceptance') final  bool requiresTermsAcceptance;
-@override@JsonKey(name: 'device_id') final  String? deviceId;
-@override@JsonKey(name: 'activated_at') final  DateTime? activatedAt;
-@override@JsonKey(name: 'created_at') final  DateTime? createdAt;
-@override@JsonKey(name: 'updated_at') final  DateTime? updatedAt;
+@override@JsonKey(name: 'consentAccepted') final  bool consentAccepted;
+@override@JsonKey(name: 'termsVersion') final  String termsVersion;
+@override@JsonKey(name: 'currentTermsVersion') final  String currentTermsVersion;
+@override@JsonKey(name: 'requiresTermsAcceptance') final  bool requiresTermsAcceptance;
+@override@JsonKey(name: 'deviceId') final  String? deviceId;
+@override@JsonKey(name: 'activatedAt') final  DateTime? activatedAt;
+@override@JsonKey(name: 'createdAt') final  DateTime? createdAt;
+@override@JsonKey(name: 'updatedAt') final  DateTime? updatedAt;
 
 /// Create a copy of MessagingActivationDto
 /// with the given fields replaced by the non-null parameter values.
@@ -265,7 +265,7 @@ abstract mixin class _$MessagingActivationDtoCopyWith<$Res> implements $Messagin
   factory _$MessagingActivationDtoCopyWith(_MessagingActivationDto value, $Res Function(_MessagingActivationDto) _then) = __$MessagingActivationDtoCopyWithImpl;
 @override @useResult
 $Res call({
-@JsonKey(name: 'user_id') String userId,@JsonKey(name: 'status') String status,@JsonKey(name: 'consent_accepted') bool consentAccepted,@JsonKey(name: 'terms_version') String termsVersion,@JsonKey(name: 'current_terms_version') String currentTermsVersion,@JsonKey(name: 'requires_terms_acceptance') bool requiresTermsAcceptance,@JsonKey(name: 'device_id') String? deviceId,@JsonKey(name: 'activated_at') DateTime? activatedAt,@JsonKey(name: 'created_at') DateTime? createdAt,@JsonKey(name: 'updated_at') DateTime? updatedAt
+@JsonKey(name: 'userId') String userId,@JsonKey(name: 'status') String status,@JsonKey(name: 'consentAccepted') bool consentAccepted,@JsonKey(name: 'termsVersion') String termsVersion,@JsonKey(name: 'currentTermsVersion') String currentTermsVersion,@JsonKey(name: 'requiresTermsAcceptance') bool requiresTermsAcceptance,@JsonKey(name: 'deviceId') String? deviceId,@JsonKey(name: 'activatedAt') DateTime? activatedAt,@JsonKey(name: 'createdAt') DateTime? createdAt,@JsonKey(name: 'updatedAt') DateTime? updatedAt
 });
 
 
@@ -305,7 +305,7 @@ as DateTime?,
 /// @nodoc
 mixin _$MessagingTermsDto {
 
- String get version; String get text;@JsonKey(name: 'published_at') DateTime? get publishedAt;
+ String get version; String get text;@JsonKey(name: 'publishedAt') DateTime? get publishedAt;
 /// Create a copy of MessagingTermsDto
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -338,7 +338,7 @@ abstract mixin class $MessagingTermsDtoCopyWith<$Res>  {
   factory $MessagingTermsDtoCopyWith(MessagingTermsDto value, $Res Function(MessagingTermsDto) _then) = _$MessagingTermsDtoCopyWithImpl;
 @useResult
 $Res call({
- String version, String text,@JsonKey(name: 'published_at') DateTime? publishedAt
+ String version, String text,@JsonKey(name: 'publishedAt') DateTime? publishedAt
 });
 
 
@@ -445,7 +445,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String version,  String text, @JsonKey(name: 'published_at')  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String version,  String text, @JsonKey(name: 'publishedAt')  DateTime? publishedAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessagingTermsDto() when $default != null:
 return $default(_that.version,_that.text,_that.publishedAt);case _:
@@ -466,7 +466,7 @@ return $default(_that.version,_that.text,_that.publishedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String version,  String text, @JsonKey(name: 'published_at')  DateTime? publishedAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String version,  String text, @JsonKey(name: 'publishedAt')  DateTime? publishedAt)  $default,) {final _that = this;
 switch (_that) {
 case _MessagingTermsDto():
 return $default(_that.version,_that.text,_that.publishedAt);case _:
@@ -486,7 +486,7 @@ return $default(_that.version,_that.text,_that.publishedAt);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String version,  String text, @JsonKey(name: 'published_at')  DateTime? publishedAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String version,  String text, @JsonKey(name: 'publishedAt')  DateTime? publishedAt)?  $default,) {final _that = this;
 switch (_that) {
 case _MessagingTermsDto() when $default != null:
 return $default(_that.version,_that.text,_that.publishedAt);case _:
@@ -501,12 +501,12 @@ return $default(_that.version,_that.text,_that.publishedAt);case _:
 @JsonSerializable()
 
 class _MessagingTermsDto implements MessagingTermsDto {
-  const _MessagingTermsDto({required this.version, required this.text, @JsonKey(name: 'published_at') this.publishedAt});
+  const _MessagingTermsDto({required this.version, required this.text, @JsonKey(name: 'publishedAt') this.publishedAt});
   factory _MessagingTermsDto.fromJson(Map<String, dynamic> json) => _$MessagingTermsDtoFromJson(json);
 
 @override final  String version;
 @override final  String text;
-@override@JsonKey(name: 'published_at') final  DateTime? publishedAt;
+@override@JsonKey(name: 'publishedAt') final  DateTime? publishedAt;
 
 /// Create a copy of MessagingTermsDto
 /// with the given fields replaced by the non-null parameter values.
@@ -541,7 +541,7 @@ abstract mixin class _$MessagingTermsDtoCopyWith<$Res> implements $MessagingTerm
   factory _$MessagingTermsDtoCopyWith(_MessagingTermsDto value, $Res Function(_MessagingTermsDto) _then) = __$MessagingTermsDtoCopyWithImpl;
 @override @useResult
 $Res call({
- String version, String text,@JsonKey(name: 'published_at') DateTime? publishedAt
+ String version, String text,@JsonKey(name: 'publishedAt') DateTime? publishedAt
 });
 
 
