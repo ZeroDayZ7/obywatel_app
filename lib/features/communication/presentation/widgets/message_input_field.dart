@@ -12,7 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
+import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
@@ -300,7 +300,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     final apiClient = ref.read(chatsApiClientProvider);
     final crypto = ref.read(symmetricCryptoProvider);
     final storage = ref.read(secureStorageProvider);
-    final localAttachmentStore = LocalAttachmentStore();
+    final localAttachmentStore = ref.read(localAttachmentStoreProvider);
 
     try {
       final response = await apiClient.prepareAttachmentUpload(
@@ -319,11 +319,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       final encryptedSha256 = sha256.convert(encryptedBytes).toString();
       final keyBytes = await attachmentKey.extractBytes();
       final keyRef = '${response.attachment.id}-attachment-key';
-      final localPreviewPath = pending.isImage
-          ? await localAttachmentStore.previewPathForAttachment(
-              response.attachment.id,
-            )
-          : null;
       final attachmentMetadata = {
         'version': 1,
         'attachmentId': response.attachment.id,
@@ -334,8 +329,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         'originalFilename': pending.fileName,
         'size': pending.bytes.length,
         'sha256': encryptedSha256,
-        if (localPreviewPath != null && localPreviewPath.trim().isNotEmpty)
-          'localPreviewPath': localPreviewPath,
       };
       await storage.write(
         key: keyRef,
@@ -345,10 +338,16 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         key: '${response.attachment.id}-attachment-meta',
         value: jsonEncode(attachmentMetadata),
       );
+      await localAttachmentStore.saveAttachment(
+        attachmentId: response.attachment.id,
+        bytes: pending.bytes,
+        mimeType: pending.mimeType,
+        fileName: pending.fileName,
+      );
       if (pending.isImage) {
-        await localAttachmentStore.savePreview(
-          response.attachment.id,
-          pending.bytes,
+        await localAttachmentStore.saveThumbnail(
+          attachmentId: response.attachment.id,
+          bytes: pending.bytes,
         );
       }
 

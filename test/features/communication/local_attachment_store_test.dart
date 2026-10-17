@@ -16,10 +16,16 @@ void main() {
         .setMockMethodCallHandler(
       const MethodChannel('plugins.flutter.io/path_provider'),
       (methodCall) async {
-        if (methodCall.method == 'getApplicationSupportDirectory') {
-          return rootDirectory.path;
+        switch (methodCall.method) {
+          case 'getApplicationSupportDirectory':
+            return rootDirectory.path;
+          case 'getTemporaryDirectory':
+            return rootDirectory.path;
+          case 'getApplicationDocumentsDirectory':
+            return rootDirectory.path;
+          default:
+            return null;
         }
-        return null;
       },
     );
   });
@@ -36,27 +42,54 @@ void main() {
   });
 
   group('LocalAttachmentStore', () {
-    test('stores preview bytes in app-local file storage', () async {
+    test('stores attachment bytes in a public local file location', () async {
       final store = LocalAttachmentStore();
       const attachmentId = 'attachment-123';
-      final preview = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
 
-      await store.savePreview(attachmentId, preview);
+      final savedPath = await store.saveAttachment(
+        attachmentId: attachmentId,
+        bytes: bytes,
+        mimeType: 'image/png',
+        fileName: 'photo.png',
+      );
 
-      final saved = await store.readPreview(attachmentId);
-      expect(saved, equals(preview));
-
-      final path = await store.previewPathForAttachment(attachmentId);
-      final file = File(path);
+      final file = File(savedPath);
       expect(await file.exists(), isTrue);
-      expect(await file.readAsBytes(), equals(preview));
+      expect(await file.readAsBytes(), equals(bytes));
+      expect(
+        await store.readAttachment(
+          attachmentId: attachmentId,
+          mimeType: 'image/png',
+          fileName: 'photo.png',
+        ),
+        equals(bytes),
+      );
     });
 
-    test('returns null for a missing preview file', () async {
+    test('stores and reads thumbnail bytes from app cache', () async {
+      final store = LocalAttachmentStore();
+      const attachmentId = 'attachment-thumb';
+      final thumbnail = Uint8List.fromList([7, 8, 9]);
+
+      await store.saveThumbnail(
+        attachmentId: attachmentId,
+        bytes: thumbnail,
+      );
+
+      final saved = await store.readThumbnail(attachmentId);
+      expect(saved, equals(thumbnail));
+    });
+
+    test('returns null for a missing attachment file', () async {
       final store = LocalAttachmentStore();
       const attachmentId = 'missing-attachment-456';
 
-      final preview = await store.readPreview(attachmentId);
+      final preview = await store.readAttachment(
+        attachmentId: attachmentId,
+        mimeType: 'image/png',
+        fileName: 'missing.png',
+      );
       expect(preview, isNull);
     });
   });

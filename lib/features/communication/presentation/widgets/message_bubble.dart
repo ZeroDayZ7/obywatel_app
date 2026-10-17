@@ -1,12 +1,11 @@
 import 'dart:convert';
-import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
-import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
+import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
@@ -81,14 +80,14 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
     String attachmentId,
   ) async {
     final storage = ref.read(secureStorageProvider);
-    final localAttachmentStore = LocalAttachmentStore();
+    final localAttachmentStore = ref.read(localAttachmentStoreProvider);
 
-    final cachedPreview = await localAttachmentStore.readPreview(attachmentId);
-    if (cachedPreview != null && cachedPreview.isNotEmpty) {
+    final cachedThumbnail = await localAttachmentStore.readThumbnail(attachmentId);
+    if (cachedThumbnail != null && cachedThumbnail.isNotEmpty) {
       debugPrint(
-        '[ATTACHMENT-SYNC] attachment_id=$attachmentId served from local preview file',
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId served from local thumbnail cache',
       );
-      return cachedPreview;
+      return cachedThumbnail;
     }
 
     final metadata = await storage.read(key: '$attachmentId-attachment-meta');
@@ -108,24 +107,23 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
           (decodedMetadata['originalContentType'] ??
                   decodedMetadata['contentType'])
               .toString();
-      final localPreviewPath = decodedMetadata['localPreviewPath']
-          ?.toString()
-          .trim();
+      final fileName = decodedMetadata['originalFilename']?.toString().trim();
 
-      if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
-        final file = File(localPreviewPath);
-        if (await file.exists()) {
-          final fileBytes = await file.readAsBytes();
-          if (fileBytes.isNotEmpty) {
-            return Uint8List.fromList(fileBytes);
-          }
-        }
+      if (key == null || key.isEmpty || !contentType.toLowerCase().startsWith('image/')) {
+        return null;
       }
 
-      if (key == null ||
-          key.isEmpty ||
-          !contentType.toLowerCase().startsWith('image/')) {
-        return null;
+      final localFile = await localAttachmentStore.readAttachment(
+        attachmentId: attachmentId,
+        mimeType: contentType,
+        fileName: fileName,
+      );
+      if (localFile != null && localFile.isNotEmpty) {
+        await localAttachmentStore.saveThumbnail(
+          attachmentId: attachmentId,
+          bytes: localFile,
+        );
+        return localFile;
       }
 
       final apiClient = ref.read(chatsApiClientProvider);
@@ -146,13 +144,15 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
 
       if (decryptedBytes.isEmpty) return null;
 
-      await localAttachmentStore.savePreview(attachmentId, decryptedBytes);
-      final updatedMetadata = Map<String, dynamic>.from(decodedMetadata)
-        ..['localPreviewPath'] = await localAttachmentStore
-            .previewPathForAttachment(attachmentId);
-      await storage.write(
-        key: '$attachmentId-attachment-meta',
-        value: jsonEncode(updatedMetadata),
+      await localAttachmentStore.saveAttachment(
+        attachmentId: attachmentId,
+        bytes: decryptedBytes,
+        mimeType: contentType,
+        fileName: fileName ?? attachmentId,
+      );
+      await localAttachmentStore.saveThumbnail(
+        attachmentId: attachmentId,
+        bytes: decryptedBytes,
       );
 
       debugPrint(
