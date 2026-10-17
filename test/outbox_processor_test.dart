@@ -19,6 +19,13 @@ class FakeDeviceInfoService extends DeviceInfoService {
   Future<String> getOrCreateDeviceId() async => 'app-device-id';
 }
 
+class EmptyDeviceInfoService extends DeviceInfoService {
+  EmptyDeviceInfoService() : super(AppLogger());
+
+  @override
+  Future<String> getOrCreateDeviceId() async => '';
+}
+
 class FakeTransportClient implements OutboxTransportClient {
   FakeTransportClient({this.fail = false});
 
@@ -288,6 +295,57 @@ void main() {
   );
 
   test(
+    'OutboxProcessor skips payload build failures without deleting or retrying',
+    () async {
+      final messageId = const Uuid().v4();
+      final repository = FakeChatsRepository(
+        pendingMessages: <Message>[
+          Message(
+            id: messageId,
+            conversationId: conversationId,
+            senderId: 'user-1',
+            content: 'hello',
+            encryptedPayload: 'ciphertext-abc',
+            isMine: true,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        ],
+        retryEvents: <OutboxEvent>[
+          OutboxEvent(
+            id: messageId,
+            payload: jsonEncode({
+              'messageId': messageId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-abc',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 2,
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+            conversationId: conversationId,
+            retryCount: 0,
+          ),
+        ],
+      );
+
+      final transport = FakeTransportClient();
+      final processor = OutboxProcessor(
+        repository,
+        transport,
+        AppLogger(),
+        EmptyDeviceInfoService(),
+      );
+
+      await processor.processPending();
+
+      expect(transport.calls, isEmpty);
+      expect(repository.clearedMessageIds, isEmpty);
+      expect(repository.deletedOutboxIds, isEmpty);
+      expect(repository.scheduledRetries, isEmpty);
+    },
+  );
+
+  test(
     'OutboxProcessor schedules retry only for attempted transport entries',
     () async {
       final messageId = const Uuid().v4();
@@ -333,6 +391,46 @@ void main() {
 
       expect(repository.clearedMessageIds, isEmpty);
       expect(repository.scheduledRetries[messageId], 1);
+    },
+  );
+
+  test(
+    'OutboxProcessor no-ops when pending queue is empty even if retry rows exist',
+    () async {
+      final messageId = const Uuid().v4();
+      final repository = FakeChatsRepository(
+        pendingMessages: const <Message>[],
+        retryEvents: <OutboxEvent>[
+          OutboxEvent(
+            id: messageId,
+            payload: jsonEncode({
+              'messageId': messageId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-abc',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 2,
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+            conversationId: conversationId,
+            retryCount: 0,
+          ),
+        ],
+      );
+
+      final transport = FakeTransportClient();
+      final processor = OutboxProcessor(
+        repository,
+        transport,
+        AppLogger(),
+        FakeDeviceInfoService(),
+      );
+
+      await processor.processPending();
+
+      expect(transport.calls, isEmpty);
+      expect(repository.clearedMessageIds, isEmpty);
+      expect(repository.scheduledRetries, isEmpty);
     },
   );
 }

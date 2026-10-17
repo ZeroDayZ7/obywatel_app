@@ -30,7 +30,6 @@ class ChatSyncService {
     this._wsClient,
     this._repository,
     this._logger,
-    DeviceInfoService? deviceInfoService,
     void Function(SyncStatus status) updateStatus, {
     OutboxProcessor? outboxProcessor,
   }) : _updateStatus = updateStatus,
@@ -40,7 +39,7 @@ class ChatSyncService {
              _repository,
              _apiClient,
              _logger,
-             deviceInfoService ?? DeviceInfoService(_logger),
+             DeviceInfoService(_logger),
            );
 
   SyncStatus get currentStatus => _currentStatus;
@@ -140,7 +139,6 @@ final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
   final wsClient = ref.watch(chatsWsClientProvider);
   final repository = ref.watch(chatsRepositoryProvider);
   final logger = ref.watch(appLoggerProvider);
-  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);
   final outboxProcessor = ref.read(outboxProcessorProvider);
 
@@ -149,7 +147,6 @@ final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
     wsClient,
     repository,
     logger,
-    deviceInfoService,
     syncStatus.update,
     outboxProcessor: outboxProcessor,
   );

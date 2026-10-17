@@ -1336,6 +1336,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
         ),
       );
 
+      // For SEND_MESSAGE rows the Outbox primary key is the exact row id stored in
+      // the message table, so this removes only the concrete Outbox rows we just
+      // confirmed as sent. It does not bulk-delete every row sharing the same
+      // logical messageId.
       await _db.outboxDao.deleteEvents(messageIds);
     });
 

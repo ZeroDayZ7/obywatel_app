@@ -308,7 +308,6 @@ void main() {
           ),
           repository,
           logger,
-          deviceInfoService,
           statuses.add,
         );
 
@@ -367,7 +366,6 @@ void main() {
         ),
         repository,
         logger,
-        deviceInfoService,
         statuses.add,
       );
 
@@ -421,6 +419,35 @@ void main() {
           ],
         );
 
+        await db.outboxDao.enqueueEvent(
+          OutboxEventsCompanion(
+            id: const drift.Value('22222222-2222-4222-8222-222222222222'),
+            outboxEventId: const drift.Value(
+              '77777777-7777-4777-8777-777777777777',
+            ),
+            eventType: const drift.Value('SEND_MESSAGE'),
+            conversationId: const drift.Value(
+              '123e4567-e89b-42d3-a456-426614174000',
+            ),
+            payload: drift.Value(
+              jsonEncode({
+                'eventId': '77777777-7777-4777-8777-777777777777',
+                'messageId': '22222222-2222-4222-8222-222222222222',
+                'conversationId': '123e4567-e89b-42d3-a456-426614174000',
+                'ciphertext': 'payload',
+                'type': 2,
+                'createdAt': '2026-10-14T12:00:00.000Z',
+              }),
+            ),
+            status: const drift.Value('pending'),
+            retryCount: const drift.Value(0),
+            attemptCount: const drift.Value(0),
+            nextAttemptAt: const drift.Value.absent(),
+            createdAt: drift.Value(DateTime.utc(2026, 10, 14, 12, 0, 0)),
+            updatedAt: drift.Value(DateTime.utc(2026, 10, 14, 12, 0, 0)),
+          ),
+        );
+
         final service = ChatSyncService(
           chatsApiClient,
           ChatsWsClient(
@@ -430,7 +457,6 @@ void main() {
           ),
           repository,
           logger,
-          deviceInfoService,
           (_) {},
         );
 
@@ -515,7 +541,6 @@ void main() {
         ),
         repository,
         logger,
-        deviceInfoService,
         (_) {},
       );
 
