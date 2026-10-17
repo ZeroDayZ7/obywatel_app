@@ -97,3 +97,44 @@ final class ChatsWsClientProvider
 }
 
 String _$chatsWsClientHash() => r'cdb15a1b86bcf3cb664440220c0bcee1abf54bf9';
+
+@ProviderFor(chatsWsStatus)
+final chatsWsStatusProvider = ChatsWsStatusProvider._();
+
+final class ChatsWsStatusProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<WsConnectionStatus>,
+          WsConnectionStatus,
+          Stream<WsConnectionStatus>
+        >
+    with
+        $FutureModifier<WsConnectionStatus>,
+        $StreamProvider<WsConnectionStatus> {
+  ChatsWsStatusProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'chatsWsStatusProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$chatsWsStatusHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<WsConnectionStatus> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<WsConnectionStatus> create(Ref ref) {
+    return chatsWsStatus(ref);
+  }
+}
+
+String _$chatsWsStatusHash() => r'10e24a2b7095857edd6766b2556d05ec57928764';

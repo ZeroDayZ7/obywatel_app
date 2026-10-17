@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
@@ -11,7 +10,10 @@ import 'package:obywatel_plus/features/communication/data/repositories/chats_rep
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
+
+part 'outbox_processor.g.dart';
 
 class OutboxMessageEvent {
   const OutboxMessageEvent({
@@ -338,11 +340,12 @@ class OutboxProcessor {
   }
 }
 
-final outboxProcessorProvider = Provider<OutboxProcessor>((ref) {
+@riverpod
+OutboxProcessor outboxProcessor(Ref ref) {
   return OutboxProcessor(
     ref.watch(chatsRepositoryProvider),
     ref.watch(chatsApiClientProvider),
     ref.watch(appLoggerProvider),
     ref.watch(deviceInfoServiceProvider),
   );
-});
+}

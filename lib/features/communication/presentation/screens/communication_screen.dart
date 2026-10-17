@@ -13,8 +13,12 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_c
 import 'package:obywatel_plus/features/communication/presentation/screens/contacts_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/screens/conversations_screen.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messaging_onboarding_screen.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final chatWebSocketSessionProvider = Provider<void>((ref) {
+part 'communication_screen.g.dart';
+
+@riverpod
+void chatWebSocketSession(Ref ref) {
   String? lastAccessToken;
 
   Future<void> sync(AuthState authState) async {
@@ -47,9 +51,7 @@ final chatWebSocketSessionProvider = Provider<void>((ref) {
   ref.onDispose(() {
     lastAccessToken = null;
   });
-
-  return;
-});
+}
 
 class CommunicationScreen extends ConsumerStatefulWidget {
   const CommunicationScreen({super.key, this.initialIndex = 0});

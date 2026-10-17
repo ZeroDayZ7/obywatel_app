@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -77,7 +76,8 @@ ChatsWsClient chatsWsClient(Ref ref) {
   return ChatsWsClient(rawWsClient, logger, deviceInfoService);
 }
 
-final chatsWsStatusProvider = StreamProvider<WsConnectionStatus>((ref) {
+@riverpod
+Stream<WsConnectionStatus> chatsWsStatus(Ref ref) {
   final wsClient = ref.watch(chatsWsClientProvider);
   return wsClient.statusStream;
-});
+}

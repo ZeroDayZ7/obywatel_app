@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
@@ -12,6 +11,9 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_api_
 import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'chat_sync_service.g.dart';
 
 class ChatSyncService {
   final ChatsApiClient _apiClient;
@@ -120,7 +122,8 @@ class ChatSyncService {
   }
 }
 
-class ChatSyncStatusController extends Notifier<SyncStatus> {
+@riverpod
+class ChatSyncStatusController extends _$ChatSyncStatusController {
   @override
   SyncStatus build() => SyncStatus.idle;
 
@@ -129,12 +132,8 @@ class ChatSyncStatusController extends Notifier<SyncStatus> {
   }
 }
 
-final chatSyncStatusControllerProvider =
-    NotifierProvider<ChatSyncStatusController, SyncStatus>(
-      ChatSyncStatusController.new,
-    );
-
-final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
+@riverpod
+ChatSyncService chatSyncService(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
   final wsClient = ref.watch(chatsWsClientProvider);
   final repository = ref.watch(chatsRepositoryProvider);
@@ -154,4 +153,4 @@ final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
 
   ref.onDispose(() => service.dispose());
   return service;
-});
+}

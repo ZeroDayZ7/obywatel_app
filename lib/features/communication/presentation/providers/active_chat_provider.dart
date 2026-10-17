@@ -1,4 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
+
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -11,10 +12,11 @@ enum E2eeSessionUiStatus {
   failed,
 }
 
-final chatE2eeSessionStatusProvider = FutureProvider.family<
-    E2eeSessionUiStatus,
-    String
->((ref, conversationId) async {
+@riverpod
+FutureOr<E2eeSessionUiStatus> chatE2eeSessionStatus(
+  Ref ref,
+  String conversationId,
+) async {
   try {
     final repository = ref.read(chatsRepositoryProvider);
     final remoteUserId = await repository.resolvePeerUserIdForConversation(
@@ -30,7 +32,7 @@ final chatE2eeSessionStatusProvider = FutureProvider.family<
   } catch (_) {
     return E2eeSessionUiStatus.failed;
   }
-});
+}
 
 @riverpod
 class ActiveChat extends _$ActiveChat {
