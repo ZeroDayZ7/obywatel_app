@@ -1,54 +1,47 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final attachmentPreviewProvider =
-    FutureProvider.autoDispose.family<Uint8List?, String>((ref, attachmentId) {
+part 'attachment_preview_provider.g.dart';
+
+@riverpod
+FutureOr<Uint8List?> attachmentPreview(
+  Ref ref,
+  String attachmentId,
+) async {
   final normalized = attachmentId.trim();
   if (normalized.isEmpty) {
-    return Future.value(null);
+    return null;
   }
 
-  return _AttachmentPreviewLoader(ref).load(normalized);
-});
+  return AttachmentPreviewService(ref).loadPreview(normalized);
+}
 
-class _AttachmentPreviewLoader {
-  const _AttachmentPreviewLoader(this.ref);
+class AttachmentPreviewService {
+  AttachmentPreviewService(this._ref);
 
-  final Ref ref;
+  final Ref _ref;
 
   static final Map<String, Future<Uint8List?>> _inFlightDownloads =
       <String, Future<Uint8List?>>{};
 
-  static final Map<String, Future<Uint8List?>> _completedDownloads =
-      <String, Future<Uint8List?>>{};
-
-  Future<Uint8List?> load(String attachmentId) {
-    final completed = _completedDownloads[attachmentId];
-    if (completed != null) {
-      return completed;
-    }
-
+  Future<Uint8List?> loadPreview(String attachmentId) {
     final existing = _inFlightDownloads[attachmentId];
     if (existing != null) {
       return existing;
     }
 
-    final future = _loadPreviewBytes(attachmentId).then((value) {
-      if (value != null && value.isNotEmpty) {
-        _completedDownloads[attachmentId] = Future.value(value);
-      }
-      return value;
-    });
-
+    final future = _loadPreviewBytes(attachmentId);
     _inFlightDownloads[attachmentId] = future;
+
     return future.whenComplete(() {
       if (identical(_inFlightDownloads[attachmentId], future)) {
         _inFlightDownloads.remove(attachmentId);
@@ -57,9 +50,9 @@ class _AttachmentPreviewLoader {
   }
 
   Future<Uint8List?> _loadPreviewBytes(String attachmentId) async {
-    final storage = ref.read(secureStorageProvider);
-    final localAttachmentStore = ref.read(localAttachmentStoreProvider);
-    final repository = ref.read(chatsRepositoryProvider);
+    final storage = _ref.read(secureStorageProvider);
+    final localAttachmentStore = _ref.read(localAttachmentStoreProvider);
+    final repository = _ref.read(chatsRepositoryProvider);
 
     final cachedThumbnail = await localAttachmentStore.readThumbnail(attachmentId);
     if (cachedThumbnail != null && cachedThumbnail.isNotEmpty) {
@@ -73,7 +66,6 @@ class _AttachmentPreviewLoader {
 
     try {
       final key = await storage.read(key: '$attachmentId-attachment-key');
-
       final contentType =
           (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
               .toString();
@@ -96,10 +88,14 @@ class _AttachmentPreviewLoader {
           attachmentId: attachmentId,
           bytes: localFile,
         );
-        return localFile;
+
+        final thumbnail = await localAttachmentStore.readThumbnail(attachmentId);
+        if (thumbnail != null && thumbnail.isNotEmpty) {
+          return thumbnail;
+        }
       }
 
-      final apiClient = ref.read(chatsApiClientProvider);
+      final apiClient = _ref.read(chatsApiClientProvider);
       final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
       final rawUrl = download.downloadUrl.trim();
       if (rawUrl.isEmpty) {
@@ -111,7 +107,7 @@ class _AttachmentPreviewLoader {
         return null;
       }
 
-      final decryptedBytes = await ref
+      final decryptedBytes = await _ref
           .read(symmetricCryptoProvider)
           .decryptBytes(
             encryptedBase64: base64Encode(encryptedBytes),
@@ -122,7 +118,7 @@ class _AttachmentPreviewLoader {
         return null;
       }
 
-      await localAttachmentStore.saveAttachment(
+      await _ref.read(localAttachmentStoreProvider).saveAttachment(
         attachmentId: attachmentId,
         bytes: decryptedBytes,
         mimeType: contentType,
@@ -133,7 +129,12 @@ class _AttachmentPreviewLoader {
         bytes: decryptedBytes,
       );
 
-      return localAttachmentStore.readThumbnail(attachmentId);
+      final thumbnail = await localAttachmentStore.readThumbnail(attachmentId);
+      if (thumbnail != null && thumbnail.isNotEmpty) {
+        return thumbnail;
+      }
+
+      return null;
     } catch (_) {
       return null;
     }
