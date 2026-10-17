@@ -283,7 +283,7 @@ as bool,
 /// @nodoc
 mixin _$MessageInputState {
 
- String get text; PendingAttachment? get attachment; bool get isSending; String? get errorMessage; String? get uploadedAttachmentId;
+ String get text; PendingAttachment? get attachment; bool get isSending; String? get errorMessage; String? get preparedAttachmentId; String? get uploadUrl; String? get uploadedAttachmentId;
 /// Create a copy of MessageInputState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -294,16 +294,16 @@ $MessageInputStateCopyWith<MessageInputState> get copyWith => _$MessageInputStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.preparedAttachmentId, preparedAttachmentId) || other.preparedAttachmentId == preparedAttachmentId)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,uploadedAttachmentId);
+int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,preparedAttachmentId,uploadUrl,uploadedAttachmentId);
 
 @override
 String toString() {
-  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, uploadedAttachmentId: $uploadedAttachmentId)';
+  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, preparedAttachmentId: $preparedAttachmentId, uploadUrl: $uploadUrl, uploadedAttachmentId: $uploadedAttachmentId)';
 }
 
 
@@ -314,7 +314,7 @@ abstract mixin class $MessageInputStateCopyWith<$Res>  {
   factory $MessageInputStateCopyWith(MessageInputState value, $Res Function(MessageInputState) _then) = _$MessageInputStateCopyWithImpl;
 @useResult
 $Res call({
- String text, PendingAttachment? attachment, bool isSending, String? errorMessage, String? uploadedAttachmentId
+ String text, PendingAttachment? attachment, bool isSending, String? errorMessage, String? preparedAttachmentId, String? uploadUrl, String? uploadedAttachmentId
 });
 
 
@@ -331,12 +331,14 @@ class _$MessageInputStateCopyWithImpl<$Res>
 
 /// Create a copy of MessageInputState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? attachment = freezed,Object? isSending = null,Object? errorMessage = freezed,Object? uploadedAttachmentId = freezed,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? attachment = freezed,Object? isSending = null,Object? errorMessage = freezed,Object? preparedAttachmentId = freezed,Object? uploadUrl = freezed,Object? uploadedAttachmentId = freezed,}) {
   return _then(_self.copyWith(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,attachment: freezed == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
 as PendingAttachment?,isSending: null == isSending ? _self.isSending : isSending // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,preparedAttachmentId: freezed == preparedAttachmentId ? _self.preparedAttachmentId : preparedAttachmentId // ignore: cast_nullable_to_non_nullable
+as String?,uploadUrl: freezed == uploadUrl ? _self.uploadUrl : uploadUrl // ignore: cast_nullable_to_non_nullable
 as String?,uploadedAttachmentId: freezed == uploadedAttachmentId ? _self.uploadedAttachmentId : uploadedAttachmentId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));
@@ -435,10 +437,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? uploadedAttachmentId)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? preparedAttachmentId,  String? uploadUrl,  String? uploadedAttachmentId)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessageInputState() when $default != null:
-return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.uploadedAttachmentId);case _:
+return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.preparedAttachmentId,_that.uploadUrl,_that.uploadedAttachmentId);case _:
   return orElse();
 
 }
@@ -456,10 +458,10 @@ return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? uploadedAttachmentId)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? preparedAttachmentId,  String? uploadUrl,  String? uploadedAttachmentId)  $default,) {final _that = this;
 switch (_that) {
 case _MessageInputState():
-return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.uploadedAttachmentId);case _:
+return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.preparedAttachmentId,_that.uploadUrl,_that.uploadedAttachmentId);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -476,10 +478,10 @@ return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? uploadedAttachmentId)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String text,  PendingAttachment? attachment,  bool isSending,  String? errorMessage,  String? preparedAttachmentId,  String? uploadUrl,  String? uploadedAttachmentId)?  $default,) {final _that = this;
 switch (_that) {
 case _MessageInputState() when $default != null:
-return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.uploadedAttachmentId);case _:
+return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_that.preparedAttachmentId,_that.uploadUrl,_that.uploadedAttachmentId);case _:
   return null;
 
 }
@@ -491,13 +493,15 @@ return $default(_that.text,_that.attachment,_that.isSending,_that.errorMessage,_
 
 
 class _MessageInputState extends MessageInputState {
-  const _MessageInputState({this.text = '', this.attachment, this.isSending = false, this.errorMessage, this.uploadedAttachmentId}): super._();
+  const _MessageInputState({this.text = '', this.attachment, this.isSending = false, this.errorMessage, this.preparedAttachmentId, this.uploadUrl, this.uploadedAttachmentId}): super._();
   
 
 @override@JsonKey() final  String text;
 @override final  PendingAttachment? attachment;
 @override@JsonKey() final  bool isSending;
 @override final  String? errorMessage;
+@override final  String? preparedAttachmentId;
+@override final  String? uploadUrl;
 @override final  String? uploadedAttachmentId;
 
 /// Create a copy of MessageInputState
@@ -510,16 +514,16 @@ _$MessageInputStateCopyWith<_MessageInputState> get copyWith => __$MessageInputS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.preparedAttachmentId, preparedAttachmentId) || other.preparedAttachmentId == preparedAttachmentId)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,uploadedAttachmentId);
+int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,preparedAttachmentId,uploadUrl,uploadedAttachmentId);
 
 @override
 String toString() {
-  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, uploadedAttachmentId: $uploadedAttachmentId)';
+  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, preparedAttachmentId: $preparedAttachmentId, uploadUrl: $uploadUrl, uploadedAttachmentId: $uploadedAttachmentId)';
 }
 
 
@@ -530,7 +534,7 @@ abstract mixin class _$MessageInputStateCopyWith<$Res> implements $MessageInputS
   factory _$MessageInputStateCopyWith(_MessageInputState value, $Res Function(_MessageInputState) _then) = __$MessageInputStateCopyWithImpl;
 @override @useResult
 $Res call({
- String text, PendingAttachment? attachment, bool isSending, String? errorMessage, String? uploadedAttachmentId
+ String text, PendingAttachment? attachment, bool isSending, String? errorMessage, String? preparedAttachmentId, String? uploadUrl, String? uploadedAttachmentId
 });
 
 
@@ -547,12 +551,14 @@ class __$MessageInputStateCopyWithImpl<$Res>
 
 /// Create a copy of MessageInputState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? text = null,Object? attachment = freezed,Object? isSending = null,Object? errorMessage = freezed,Object? uploadedAttachmentId = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? text = null,Object? attachment = freezed,Object? isSending = null,Object? errorMessage = freezed,Object? preparedAttachmentId = freezed,Object? uploadUrl = freezed,Object? uploadedAttachmentId = freezed,}) {
   return _then(_MessageInputState(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,attachment: freezed == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
 as PendingAttachment?,isSending: null == isSending ? _self.isSending : isSending // ignore: cast_nullable_to_non_nullable
 as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+as String?,preparedAttachmentId: freezed == preparedAttachmentId ? _self.preparedAttachmentId : preparedAttachmentId // ignore: cast_nullable_to_non_nullable
+as String?,uploadUrl: freezed == uploadUrl ? _self.uploadUrl : uploadUrl // ignore: cast_nullable_to_non_nullable
 as String?,uploadedAttachmentId: freezed == uploadedAttachmentId ? _self.uploadedAttachmentId : uploadedAttachmentId // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

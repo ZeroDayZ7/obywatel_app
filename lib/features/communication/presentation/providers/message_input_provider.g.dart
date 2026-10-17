@@ -58,7 +58,7 @@ final class MessageInputProvider
   }
 }
 
-String _$messageInputHash() => r'9308a71733defc75155904be70ec6e2f25d3c237';
+String _$messageInputHash() => r'd8a7a53daeb1fe4d4d2d5b4d7b6376323d450b96';
 
 final class MessageInputFamily extends $Family
     with
