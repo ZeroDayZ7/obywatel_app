@@ -1,6 +1,7 @@
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/outbox/outbox_event.dart';
 
 abstract class ChatsRepository {
   Stream<List<Conversation>> watchConversations();
@@ -28,6 +29,17 @@ abstract class ChatsRepository {
 
   /// Pobiera niepotwierdzone wiadomości z lokalnego outboxa (dla offline sync)
   Future<List<Message>> getPendingOutboxMessages();
+
+  Future<List<OutboxEvent>> getRetryEligibleOutboxEvents({
+    DateTime? referenceTime,
+  });
+  Future<void> deleteInvalidOutboxEvents(List<String> ids);
+  Future<OutboxEvent?> getOutboxEventById(String id);
+  Future<void> scheduleOutboxRetry(
+    String id, {
+    required int retryCount,
+    DateTime? referenceTime,
+  });
 
   /// Synchronicznie pobiera i aplikuje delta sync z backendu.
   Future<List<Map<String, dynamic>>> syncDeltaFromRemote({

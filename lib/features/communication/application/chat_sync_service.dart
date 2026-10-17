@@ -14,6 +14,7 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_c
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:uuid/uuid.dart';
 
 Map<String, dynamic> messageToOutboxJson(
@@ -43,7 +44,7 @@ Map<String, dynamic> messageToOutboxJson(
 class ChatSyncService {
   final ChatsApiClient _apiClient;
   final ChatsWsClient _wsClient;
-  final ChatsRepositoryImpl _repository;
+  final ChatsRepository _repository;
   final AppLogger _logger;
   final DeviceInfoService _deviceInfoService;
   final void Function(SyncStatus status) _updateStatus;
@@ -115,8 +116,7 @@ class ChatSyncService {
     final pendingMessages = await _repository.getPendingOutboxMessages();
     if (pendingMessages.isEmpty) return;
 
-    final rawOutboxEvents = await _repository.db.outboxDao
-        .getRetryEligibleEvents();
+    final rawOutboxEvents = await _repository.getRetryEligibleOutboxEvents();
     final rawPayloadByMessageId = <String, Map<String, dynamic>>{};
     for (final event in rawOutboxEvents) {
       if (event.payload.trim().isEmpty) {
@@ -193,7 +193,7 @@ class ChatSyncService {
     }
 
     if (invalidMessageIds.isNotEmpty) {
-      await _repository.db.outboxDao.deleteEvents(invalidMessageIds);
+      await _repository.deleteInvalidOutboxEvents(invalidMessageIds);
       _logger.i(
         '[OUTBOX-FLOW-3.1] dropped ${invalidMessageIds.length} irrecoverably invalid pending entries from outbox',
         module: 'ChatSync',
@@ -242,7 +242,7 @@ class ChatSyncService {
         .toList();
 
     if (invalidMessageIds.isNotEmpty) {
-      await _repository.db.outboxDao.deleteEvents(invalidMessageIds);
+      await _repository.deleteInvalidOutboxEvents(invalidMessageIds);
       _logger.i(
         '[OUTBOX-FLOW-3.1] dropped ${invalidMessageIds.length} invalid pending entries because signal type was missing or invalid',
         module: 'ChatSync',
@@ -264,9 +264,9 @@ class ChatSyncService {
       );
     } catch (e) {
       for (final message in validMessages) {
-        final current = await _repository.db.outboxDao.getRowById(message.id);
+        final current = await _repository.getOutboxEventById(message.id);
         final retryCount = (current?.retryCount ?? 0) + 1;
-        await _repository.db.outboxDao.scheduleRetry(
+        await _repository.scheduleOutboxRetry(
           message.id,
           retryCount: retryCount,
         );
@@ -316,7 +316,7 @@ final chatSyncStatusControllerProvider =
 final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
   final wsClient = ref.watch(chatsWsClientProvider);
-  final repository = ref.watch(chatsRepositoryProvider) as ChatsRepositoryImpl;
+  final repository = ref.watch(chatsRepositoryProvider);
   final logger = ref.watch(appLoggerProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);

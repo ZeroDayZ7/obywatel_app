@@ -21,6 +21,7 @@ import 'package:obywatel_plus/features/communication/domain/chats/conversation.d
 import 'package:obywatel_plus/features/communication/domain/chats/decrypted_message_content.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
+import 'package:obywatel_plus/features/communication/domain/outbox/outbox_event.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
@@ -41,7 +42,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
       LocalPlaintextMessageCache();
   final Set<String> _failedDecryptAttempts = <String>{};
 
-  AppDatabase get db => _db;
+  OutboxEvent _mapOutboxEntityToDomain(OutboxEventEntity row) {
+    return OutboxEvent(
+      id: row.id,
+      payload: row.payload,
+      conversationId: row.conversationId,
+      retryCount: row.retryCount,
+      nextAttemptAt: row.nextAttemptAt,
+    );
+  }
 
   Set<String> _collectRelatedMessageIds(String messageId) =>
       _plaintextStore.collectRelatedMessageIds(messageId);
@@ -289,7 +298,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return '📎 Załącznik';
     }
 
-    final fileName = metadata['originalFilename']?.toString().trim() ??
+    final fileName =
+        metadata['originalFilename']?.toString().trim() ??
         metadata['fileName']?.toString().trim() ??
         '';
 
@@ -1097,6 +1107,42 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   @override
+  Future<List<OutboxEvent>> getRetryEligibleOutboxEvents({
+    DateTime? referenceTime,
+  }) async {
+    final rows = await _db.outboxDao.getRetryEligibleEvents(
+      referenceTime: referenceTime,
+    );
+    return rows.map(_mapOutboxEntityToDomain).toList();
+  }
+
+  @override
+  Future<void> deleteInvalidOutboxEvents(List<String> ids) async {
+    if (ids.isEmpty) return;
+    await _db.outboxDao.deleteEvents(ids);
+  }
+
+  @override
+  Future<OutboxEvent?> getOutboxEventById(String id) async {
+    final row = await _db.outboxDao.getRowById(id);
+    if (row == null) return null;
+    return _mapOutboxEntityToDomain(row);
+  }
+
+  @override
+  Future<void> scheduleOutboxRetry(
+    String id, {
+    required int retryCount,
+    DateTime? referenceTime,
+  }) async {
+    await _db.outboxDao.scheduleRetry(
+      id,
+      retryCount: retryCount,
+      referenceTime: referenceTime,
+    );
+  }
+
+  @override
   Future<List<Message>> getPendingOutboxMessages() async {
     final events = await _db.outboxDao.getRetryEligibleEvents();
 
@@ -1414,7 +1460,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return ordered;
   }
 
-  Future<DecryptedMessageContent?> _decryptInboundMessage(MessageDto dto) async {
+  Future<DecryptedMessageContent?> _decryptInboundMessage(
+    MessageDto dto,
+  ) async {
     final ciphertext = dto.encryptedPayload.trim();
     final senderDeviceId = dto.senderDeviceId?.trim();
     final signalType = normalizeSignalType(dto.type);
@@ -1441,14 +1489,13 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
         var decryptedContent =
             parseDecryptedMessageContent(jsonEncode(parsed)) ??
-                DecryptedMessageContent(text: text);
+            DecryptedMessageContent(text: text);
 
         String? extractedAttachmentId = decryptedContent.attachmentId;
 
         if (attachment is Map) {
           final attachmentKey = attachment['key']?.toString();
-          final normalizedAttachmentId =
-              (extractedAttachmentId ?? '').trim();
+          final normalizedAttachmentId = (extractedAttachmentId ?? '').trim();
 
           if (normalizedAttachmentId.isNotEmpty &&
               attachmentKey != null &&
@@ -1477,9 +1524,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
               final fileName = attachment['fileName']?.toString();
               final normalizedText =
                   (fileName != null && fileName.trim().isNotEmpty)
-                      ? '📎 $fileName'
-                      : '📎 Załącznik';
-              decryptedContent = decryptedContent.copyWith(text: normalizedText);
+                  ? '📎 $fileName'
+                  : '📎 Załącznik';
+              decryptedContent = decryptedContent.copyWith(
+                text: normalizedText,
+              );
             }
           }
         }
@@ -1524,7 +1573,8 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String? decryptedContent,
   }) {
     final parsedContent = parseDecryptedMessageContent(decryptedContent);
-    String? resolvedAttachmentId = dto.attachmentId ?? parsedContent?.attachmentId;
+    String? resolvedAttachmentId =
+        dto.attachmentId ?? parsedContent?.attachmentId;
     if (resolvedAttachmentId != null) {
       resolvedAttachmentId = resolvedAttachmentId.trim();
     }

@@ -127,15 +127,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
 
       if (rawUrl.isEmpty) return null;
 
-      String targetEndpoint = rawUrl;
-      try {
-        final uri = Uri.parse(rawUrl);
-        if (uri.hasScheme && uri.hasAuthority) {
-          targetEndpoint = uri.path + (uri.hasQuery ? '?${uri.query}' : '');
-        }
-      } catch (_) {}
-
-      final encryptedBytes = await apiClient.downloadBytes(targetEndpoint);
+      final encryptedBytes = await apiClient.downloadBytes(rawUrl);
       if (encryptedBytes.isEmpty) return null;
 
       final decryptedBytes = await ref
