@@ -108,7 +108,7 @@ Punkty 25–34
 
 25\. Rozdzielić `ChatsRepositoryImpl` według odpowiedzialności. Wydzielić obsługę wiadomości, konwersacji, synchronizacji, cache plaintextu oraz załączników. Nie należy tworzyć pięciu repozytoriów, które wszystkie bezpośrednio modyfikują te same tabele.
 
-26\. Ograniczyć dostęp aplikacji do wewnętrznych szczegółów Drift. Kod aplikacyjny nie powinien w wielu miejscach korzystać z `_repository.db.outboxDao`. Repozytorium powinno udostępniać operacje domenowe, np. `getRetryEligibleOutboxEvents()`.
+<!-- 26\. Ograniczyć dostęp aplikacji do wewnętrznych szczegółów Drift. Kod aplikacyjny nie powinien w wielu miejscach korzystać z `_repository.db.outboxDao`. Repozytorium powinno udostępniać operacje domenowe, np. `getRetryEligibleOutboxEvents()`. -->
 
 27\. Zastąpić mapy dynamiczne modelami DTO. `syncDeltaFromRemote()` zwraca `Future<List<Map<String, dynamic>>>`. Wprowadzić typowany wynik synchronizacji, np. `SyncDeltaResult`, z osobnymi kolekcjami wiadomości, kontaktów i checkpointów.
 

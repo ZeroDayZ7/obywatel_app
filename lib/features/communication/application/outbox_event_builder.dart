@@ -13,6 +13,30 @@ String buildOutboxEventIdForMessage({required Message message}) {
   return _normalizeUuidString(message.id, fallback: const Uuid().v7());
 }
 
+Map<String, dynamic> messageToOutboxJson(
+  Message message,
+  String deviceId, {
+  required int signalType,
+  String? messageId,
+  String? outboxEventId,
+}) {
+  final resolvedMessageId = (messageId != null && messageId.trim().isNotEmpty)
+      ? messageId
+      : message.id;
+  final resolvedEventId =
+      (outboxEventId != null && outboxEventId.trim().isNotEmpty)
+      ? outboxEventId
+      : message.id;
+
+  return buildOutboxEventPayload(
+    message.copyWith(id: resolvedMessageId),
+    deviceId,
+    encryptedContent: message.encryptedPayload,
+    outboxEventId: resolvedEventId,
+    signalType: signalType,
+  );
+}
+
 String? _normalizeConversationIdForServer(String conversationId) {
   final trimmed = conversationId.trim();
   if (trimmed.isEmpty) {
@@ -75,7 +99,9 @@ Map<String, dynamic> buildOutboxEventPayload(
     'eventType': 'SEND_MESSAGE',
     'conversationId': normalizedConversationId,
     'senderDeviceId': sanitizedAppDeviceId,
-    'attachmentId': normalizedAttachmentId.isEmpty ? null : normalizedAttachmentId,
+    'attachmentId': normalizedAttachmentId.isEmpty
+        ? null
+        : normalizedAttachmentId,
     'ciphertext': ciphertext,
     'type': signalType,
     'createdAt': createdAt,
