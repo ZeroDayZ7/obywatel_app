@@ -1,10 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
+import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
@@ -79,24 +81,16 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
     String attachmentId,
   ) async {
     final storage = ref.read(secureStorageProvider);
+    final localAttachmentStore = LocalAttachmentStore();
 
-    // 1. Sprawdzenie cache
-    final cachedPreview = await storage.read(
-      key: '$attachmentId-attachment-preview',
-    );
-    if (cachedPreview != null && cachedPreview.trim().isNotEmpty) {
-      try {
-        final decoded = base64Decode(cachedPreview);
-        if (decoded.isNotEmpty) {
-          debugPrint('[ATTACHMENT-SYNC] attachment_id=$attachmentId served from cache');
-          return Uint8List.fromList(decoded);
-        }
-      } catch (e) {
-        debugPrint('[ATTACHMENT-SYNC] attachment_id=$attachmentId cache decode failed: $e');
-      }
+    final cachedPreview = await localAttachmentStore.readPreview(attachmentId);
+    if (cachedPreview != null && cachedPreview.isNotEmpty) {
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId served from local preview file',
+      );
+      return cachedPreview;
     }
 
-    // 2. Pobranie metadanych
     final metadata = await storage.read(key: '$attachmentId-attachment-meta');
     if (metadata == null || metadata.trim().isEmpty) {
       debugPrint(
@@ -114,6 +108,19 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
           (decodedMetadata['originalContentType'] ??
                   decodedMetadata['contentType'])
               .toString();
+      final localPreviewPath = decodedMetadata['localPreviewPath']
+          ?.toString()
+          .trim();
+
+      if (localPreviewPath != null && localPreviewPath.isNotEmpty) {
+        final file = File(localPreviewPath);
+        if (await file.exists()) {
+          final fileBytes = await file.readAsBytes();
+          if (fileBytes.isNotEmpty) {
+            return Uint8List.fromList(fileBytes);
+          }
+        }
+      }
 
       if (key == null ||
           key.isEmpty ||
@@ -139,15 +146,23 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
 
       if (decryptedBytes.isEmpty) return null;
 
+      await localAttachmentStore.savePreview(attachmentId, decryptedBytes);
+      final updatedMetadata = Map<String, dynamic>.from(decodedMetadata)
+        ..['localPreviewPath'] = await localAttachmentStore
+            .previewPathForAttachment(attachmentId);
       await storage.write(
-        key: '$attachmentId-attachment-preview',
-        value: base64Encode(decryptedBytes),
+        key: '$attachmentId-attachment-meta',
+        value: jsonEncode(updatedMetadata),
       );
 
-      debugPrint('[ATTACHMENT-SYNC] attachment_id=$attachmentId preview downloaded and cached successfully');
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId preview downloaded and cached locally',
+      );
       return Uint8List.fromList(decryptedBytes);
     } catch (e) {
-      debugPrint('[ATTACHMENT-SYNC] attachment_id=$attachmentId load preview error: $e');
+      debugPrint(
+        '[ATTACHMENT-SYNC] attachment_id=$attachmentId load preview error: $e',
+      );
       return null;
     }
   }
@@ -198,13 +213,13 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
                 fit: BoxFit.cover,
                 gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
-                  debugPrint('[ATTACHMENT-SYNC] Image.memory decode error: $error');
+                  debugPrint(
+                    '[ATTACHMENT-SYNC] Image.memory decode error: $error',
+                  );
                   return const SizedBox(
                     width: 220,
                     height: 120,
-                    child: Center(
-                      child: Icon(Icons.broken_image_outlined),
-                    ),
+                    child: Center(child: Icon(Icons.broken_image_outlined)),
                   );
                 },
               ),
@@ -247,7 +262,9 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
       alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.78, // Naprawiono brakujący '*'
+          maxWidth:
+              MediaQuery.of(context).size.width *
+              0.78, // Naprawiono brakujący '*'
         ),
         margin: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
         padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),

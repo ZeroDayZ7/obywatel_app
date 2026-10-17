@@ -12,6 +12,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
@@ -165,8 +166,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       final effectiveBytes = fileBytes.isNotEmpty
           ? Uint8List.fromList(fileBytes)
           : (selected.path == null
-              ? Uint8List(0)
-              : Uint8List.fromList(await File(selected.path!).readAsBytes()));
+                ? Uint8List(0)
+                : Uint8List.fromList(await File(selected.path!).readAsBytes()));
 
       final detectedMimeType =
           lookupMimeType(selected.path ?? '') ?? 'application/octet-stream';
@@ -235,7 +236,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Zdjęcia z galerii'),
-                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.gallery),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pop(_AttachmentPickerSource.gallery),
                 ),
                 ListTile(
                   leading: Icon(
@@ -243,7 +246,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Plik'),
-                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.file),
+                  onTap: () =>
+                      Navigator.of(context).pop(_AttachmentPickerSource.file),
                 ),
               ],
             ),
@@ -279,9 +283,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
     if (pending.bytes.isEmpty) {
       if (!mounted) return null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Wybrany plik jest pusty.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Wybrany plik jest pusty.')));
       return null;
     }
 
@@ -296,6 +300,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     final apiClient = ref.read(chatsApiClientProvider);
     final crypto = ref.read(symmetricCryptoProvider);
     final storage = ref.read(secureStorageProvider);
+    final localAttachmentStore = LocalAttachmentStore();
 
     try {
       final response = await apiClient.prepareAttachmentUpload(
@@ -314,6 +319,11 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       final encryptedSha256 = sha256.convert(encryptedBytes).toString();
       final keyBytes = await attachmentKey.extractBytes();
       final keyRef = '${response.attachment.id}-attachment-key';
+      final localPreviewPath = pending.isImage
+          ? await localAttachmentStore.previewPathForAttachment(
+              response.attachment.id,
+            )
+          : null;
       final attachmentMetadata = {
         'version': 1,
         'attachmentId': response.attachment.id,
@@ -324,6 +334,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         'originalFilename': pending.fileName,
         'size': pending.bytes.length,
         'sha256': encryptedSha256,
+        if (localPreviewPath != null && localPreviewPath.trim().isNotEmpty)
+          'localPreviewPath': localPreviewPath,
       };
       await storage.write(
         key: keyRef,
@@ -334,9 +346,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         value: jsonEncode(attachmentMetadata),
       );
       if (pending.isImage) {
-        await storage.write(
-          key: '${response.attachment.id}-attachment-preview',
-          value: base64Encode(pending.bytes),
+        await localAttachmentStore.savePreview(
+          response.attachment.id,
+          pending.bytes,
         );
       }
 
@@ -344,7 +356,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         BaseOptions(
           connectTimeout: const Duration(seconds: 30),
           receiveTimeout: const Duration(seconds: 30),
-          validateStatus: (status) => status != null && status >= 200 && status < 300,
+          validateStatus: (status) =>
+              status != null && status >= 200 && status < 300,
           headers: {'Content-Type': pending.mimeType},
         ),
       );
@@ -374,12 +387,14 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
       return finalAttachment.id;
     } catch (error, stackTrace) {
-      ref.read(appLoggerProvider).e(
-        'Attachment upload failed for conversation ${widget.conversationId}',
-        error: error,
-        stackTrace: stackTrace,
-        module: 'MessageInputField',
-      );
+      ref
+          .read(appLoggerProvider)
+          .e(
+            'Attachment upload failed for conversation ${widget.conversationId}',
+            error: error,
+            stackTrace: stackTrace,
+            module: 'MessageInputField',
+          );
       FlutterError.reportError(
         FlutterErrorDetails(
           exception: error,
@@ -414,10 +429,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       }
     }
 
-    await ref.read(activeChatProvider(widget.conversationId).notifier).sendMessage(
-      text.isEmpty ? '' : text,
-      attachmentId: attachmentId,
-    );
+    await ref
+        .read(activeChatProvider(widget.conversationId).notifier)
+        .sendMessage(text.isEmpty ? '' : text, attachmentId: attachmentId);
 
     if (!mounted) return;
     _controller.clear();
@@ -460,7 +474,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                         ? Icons.keyboard_rounded
                         : Icons.emoji_emotions_outlined,
                   ),
-                  tooltip: _isEmojiPickerVisible ? 'Wpisz tekst' : 'Wybierz emoji',
+                  tooltip: _isEmojiPickerVisible
+                      ? 'Wpisz tekst'
+                      : 'Wybierz emoji',
                   color: colorScheme.onSurface,
                 ),
                 IconButton(
@@ -504,13 +520,17 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.25,
+                          ),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(4),
                         borderSide: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.25,
+                          ),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -530,7 +550,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                   style: IconButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
-                    disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                    disabledBackgroundColor:
+                        colorScheme.surfaceContainerHighest,
                     disabledForegroundColor: colorScheme.onSurfaceVariant,
                   ),
                 ),
@@ -600,7 +621,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () => setState(() => _pendingAttachment = null),
+                          onPressed: () =>
+                              setState(() => _pendingAttachment = null),
                           icon: const Icon(Icons.close_rounded),
                           tooltip: 'Usuń załącznik',
                         ),

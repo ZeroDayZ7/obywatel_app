@@ -66,7 +66,7 @@ Rozdzielić błędy szyfrowania, braku sesji i niepoprawnego ciphertextu.
 
 Ograniczyć przechowywanie kluczy załączników i metadanych.
 
-Zweryfikować użycie `attachment-key`, `attachment-meta` i `attachment-preview`. Klucz powinien być chroniony, metadane nie powinny być duplikowane bez potrzeby, a cache podglądów powinien mieć określone zasady usuwania i ograniczenia rozmiaru.
+Zweryfikować użycie `attachment-key` i `attachment-meta`. Klucz powinien być chroniony, a metadane nie powinny być duplikowane bez potrzeby.
 
 12
 
