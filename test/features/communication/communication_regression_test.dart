@@ -22,6 +22,7 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_c
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
@@ -146,6 +147,228 @@ void main() {
           }
         },
       );
+
+  group('attachment metadata persistence', () {
+    test('saveAttachmentMetadata stores metadata in Drift and getAttachmentMetadata can read it back', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final logger = AppLogger();
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(resetOnError: false),
+        ),
+        logger,
+      );
+      final repo = ChatsRepositoryImpl(
+        TestChatApiClient(client: ApiClient(dio: Dio(), storage: secureStorage, logger: logger)),
+        db,
+        logger,
+        'user-1',
+        DeviceInfoService(logger),
+        E2eeCryptoService(
+          secureStorage,
+          logger,
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db, logger: logger),
+        ),
+        secureStorage,
+      );
+
+      final messageId = 'msg-attachment-1';
+      await db.into(db.messages).insert(
+        MessagesCompanion(
+          id: drift.Value(messageId),
+          conversationId: const drift.Value('conv-1'),
+          senderId: const drift.Value('user-2'),
+          senderDeviceId: const drift.Value('device-2'),
+          attachmentId: const drift.Value('attachment-1'),
+          encryptedPayload: drift.Value(utf8.encode('ciphertext')),
+          content: const drift.Value(''),
+        ),
+      );
+
+      await repo.saveAttachmentMetadata(
+        attachmentId: 'attachment-1',
+        messageId: messageId,
+        originalFileName: 'photo.png',
+        mimeType: 'image/png',
+        sizeBytes: 123,
+        sha256: 'abc123',
+        status: 'ready',
+        isAvailableLocally: true,
+        hasThumbnail: false,
+      );
+
+      final metadata = await repo.getAttachmentMetadata('attachment-1');
+      expect(metadata, isNotNull);
+      expect(metadata!['contentType'], 'image/png');
+      expect(metadata['fileName'], 'photo.png');
+      expect(metadata['size'], 123);
+      expect(metadata['sha256'], 'abc123');
+    });
+
+    test('getAttachmentMetadata ignores SecureStorage metadata and reads only from Drift', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final logger = AppLogger();
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(resetOnError: false),
+        ),
+        logger,
+      );
+      final repo = ChatsRepositoryImpl(
+        TestChatApiClient(client: ApiClient(dio: Dio(), storage: secureStorage, logger: logger)),
+        db,
+        logger,
+        'user-1',
+        DeviceInfoService(logger),
+        E2eeCryptoService(
+          secureStorage,
+          logger,
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db, logger: logger),
+        ),
+        secureStorage,
+      );
+
+      final attachmentId = 'attachment-drift-only';
+      final driftMetadata = {
+        'attachmentId': attachmentId,
+        'originalFilename': 'drift.png',
+        'contentType': 'image/png',
+        'fileName': 'drift.png',
+        'size': 321,
+        'sha256': 'drift-hash',
+        'status': 'ready',
+        'isAvailableLocally': false,
+        'hasThumbnail': false,
+      };
+      await db.into(db.messages).insert(
+        MessagesCompanion(
+          id: drift.Value('msg-drift-only'),
+          conversationId: const drift.Value('conv-drift-only'),
+          senderId: const drift.Value('user-2'),
+          senderDeviceId: const drift.Value('device-2'),
+          attachmentId: const drift.Value.absent(),
+          encryptedPayload: drift.Value(utf8.encode('ciphertext')),
+          content: const drift.Value(''),
+          mediaHeader: drift.Value(utf8.encode(jsonEncode(driftMetadata))),
+        ),
+      );
+      await secureStorage.write(
+        key: '$attachmentId-attachment-meta',
+        value: jsonEncode({'fileName': 'legacy.png', 'contentType': 'image/jpeg'}),
+      );
+
+      final metadata = await repo.getAttachmentMetadata(attachmentId);
+      expect(metadata, isNotNull);
+      expect(metadata!['fileName'], 'drift.png');
+      expect(metadata['contentType'], 'image/png');
+      expect(metadata['sha256'], 'drift-hash');
+    });
+
+    test('upload-before-message persists metadata in Drift and blocks empty overwrite', () async {
+      final db = AppDatabase(NativeDatabase.memory());
+      final logger = AppLogger();
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(
+          aOptions: AndroidOptions(resetOnError: false),
+        ),
+        logger,
+      );
+      final repo = ChatsRepositoryImpl(
+        TestChatApiClient(client: ApiClient(dio: Dio(), storage: secureStorage, logger: logger)),
+        db,
+        logger,
+        'user-1',
+        DeviceInfoService(logger),
+        E2eeCryptoService(
+          secureStorage,
+          logger,
+          ApiClient(dio: Dio(), storage: secureStorage, logger: logger),
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db, logger: logger),
+        ),
+        secureStorage,
+      );
+
+      const attachmentId = '99aa8727-ddee-4297-99f7-56e6111a9a20';
+      const messageId = '01a14a4c-0a04-7e58-ae6d-7ddded22ab83';
+
+      await repo.saveAttachmentMetadata(
+        attachmentId: attachmentId,
+        originalFileName: 'S (1).jpg',
+        mimeType: 'image/jpeg',
+        sizeBytes: 2048,
+        sha256: 'hash-123',
+        status: 'uploaded',
+        isAvailableLocally: true,
+        hasThumbnail: false,
+      );
+
+      final initialMetadata = await repo.getAttachmentMetadata(attachmentId);
+      expect(initialMetadata, isNotNull);
+      expect(initialMetadata!['fileName'], 'S (1).jpg');
+      expect(initialMetadata['contentType'], 'image/jpeg');
+      expect(initialMetadata['size'], 2048);
+      expect(initialMetadata['sha256'], 'hash-123');
+
+      await db.into(db.messages).insert(
+        MessagesCompanion(
+          id: drift.Value(messageId),
+          conversationId: const drift.Value('conv-upload-before-message'),
+          senderId: const drift.Value('user-2'),
+          senderDeviceId: const drift.Value('device-2'),
+          attachmentId: const drift.Value(attachmentId),
+          encryptedPayload: drift.Value(utf8.encode('ciphertext')),
+          content: const drift.Value(''),
+        ),
+      );
+
+      await repo.saveAttachmentMetadata(
+        attachmentId: attachmentId,
+        messageId: messageId,
+        originalFileName: '',
+        mimeType: '',
+        sizeBytes: 0,
+        sha256: '',
+        status: 'ready',
+        isAvailableLocally: false,
+        hasThumbnail: false,
+      );
+
+      final finalMetadata = await repo.getAttachmentMetadata(attachmentId);
+      expect(finalMetadata, isNotNull);
+      expect(finalMetadata!['fileName'], 'S (1).jpg');
+      expect(finalMetadata['contentType'], 'image/jpeg');
+      expect(finalMetadata['size'], 2048);
+      expect(finalMetadata['sha256'], 'hash-123');
+    });
+
+    test('receiver keeps full attachment metadata after decrypting E2EE payload', () async {
+      final payload = jsonEncode({
+        'v': 1,
+        'text': 'hello',
+        'attachment': {
+          'id': '99aa8727-ddee-4297-99f7-56e6111a9a20',
+          'key': 'attachment-key',
+          'size': 2048,
+          'sha256': 'hash-123',
+          'contentType': 'image/jpeg',
+          'fileName': 'S (1).jpg',
+        },
+      });
+
+      final parsed = parseDecryptedMessageContent(payload);
+      expect(parsed, isNotNull);
+      expect(parsed!.attachmentId, '99aa8727-ddee-4297-99f7-56e6111a9a20');
+      expect(parsed.fileName, 'S (1).jpg');
+      expect(parsed.contentType, 'image/jpeg');
+      expect(parsed.size, 2048);
+      expect(parsed.sha256, 'hash-123');
+    });
+  });
 
   group('MessagingActivationState.copyWith', () {
     test(

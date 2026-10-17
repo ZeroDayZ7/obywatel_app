@@ -173,26 +173,136 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String attachmentId,
   ) async => getAttachmentMetadata(attachmentId);
 
+  Future<void> _persistAttachmentMetadataFromDecryptedContent({
+    required String messageId,
+    required DecryptedMessageContent decryptedContent,
+  }) async {
+    final attachmentId = (decryptedContent.attachmentId ?? '').trim();
+    if (attachmentId.isEmpty) {
+      return;
+    }
+
+    _logger.i(
+      '[ATTACHMENT-DIAG] persisting metadata from decrypted content for message_id=$messageId attachmentId=$attachmentId fileName=${decryptedContent.fileName ?? ""} contentType=${decryptedContent.contentType ?? ""} size=${decryptedContent.size ?? 0} sha256=${decryptedContent.sha256 ?? ""}',
+      module: 'ChatsRepository',
+    );
+
+    await saveAttachmentMetadata(
+      attachmentId: attachmentId,
+      messageId: messageId,
+      originalFileName: decryptedContent.fileName,
+      mimeType: decryptedContent.contentType,
+      sizeBytes: decryptedContent.size ?? 0,
+      sha256: decryptedContent.sha256 ?? '',
+      status: 'ready',
+      isAvailableLocally: false,
+      hasThumbnail: false,
+    );
+  }
+
+  MessageEntity? _selectPreferredAttachmentRow(
+    Iterable<MessageEntity> rows, {
+    String? messageId,
+  }) {
+    MessageEntity? nonPlaceholderRow;
+    for (final row in rows) {
+      if (messageId != null &&
+          messageId.trim().isNotEmpty &&
+          row.id == messageId.trim()) {
+        return row;
+      }
+      if (!row.id.startsWith('attachment:')) {
+        nonPlaceholderRow ??= row;
+      }
+    }
+    if (nonPlaceholderRow != null) {
+      return nonPlaceholderRow;
+    }
+    for (final row in rows) {
+      return row;
+    }
+    return null;
+  }
+
+  Future<MessageEntity?> _findMessageRowWithAttachmentMetadata(
+    String attachmentId,
+  ) async {
+    final rows = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.attachmentId.equals(attachmentId))).get();
+    if (rows.isNotEmpty) {
+      return _selectPreferredAttachmentRow(rows);
+    }
+
+    final candidates = await (_db.select(_db.messages)
+          ..where((tbl) => tbl.mediaHeader.isNotNull()))
+        .get();
+
+    for (final candidate in candidates) {
+      final raw = candidate.mediaHeader;
+      if (raw == null || raw.isEmpty) {
+        continue;
+      }
+
+      try {
+        final decoded = jsonDecode(utf8.decode(raw));
+        if (decoded is Map &&
+            decoded['attachmentId']?.toString().trim() == attachmentId) {
+          return candidate;
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
   @override
   Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId) async {
     final normalizedAttachmentId = attachmentId.trim();
     if (normalizedAttachmentId.isEmpty) {
+      _logger.w(
+        '[ATTACHMENT-DIAG] getAttachmentMetadata called with empty attachmentId',
+        module: 'ChatsRepository',
+      );
       return null;
     }
 
-    final row = await (_db.select(
-      _db.messages,
-    )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).getSingleOrNull();
-    if (row == null || row.mediaHeader == null || row.mediaHeader!.isEmpty) {
+    final row = await _findMessageRowWithAttachmentMetadata(
+      normalizedAttachmentId,
+    );
+    if (row == null) {
+      _logger.w(
+        '[ATTACHMENT-DIAG] no message row found for attachmentId=$normalizedAttachmentId while looking for mediaHeader',
+        module: 'ChatsRepository',
+      );
+      return null;
+    }
+
+    if (row.mediaHeader == null || row.mediaHeader!.isEmpty) {
+      _logger.w(
+        '[ATTACHMENT-DIAG] message row found for attachmentId=$normalizedAttachmentId but mediaHeader is empty rowId=${row.id}',
+        module: 'ChatsRepository',
+      );
       return null;
     }
 
     try {
       final decoded = jsonDecode(utf8.decode(row.mediaHeader!));
       if (decoded is! Map) {
+        _logger.w(
+          '[ATTACHMENT-DIAG] mediaHeader for attachmentId=$normalizedAttachmentId is not a JSON object rowId=${row.id}',
+          module: 'ChatsRepository',
+        );
         return null;
       }
-      return decoded.map((key, value) => MapEntry(key.toString(), value));
+      final mapped = decoded.map((key, value) => MapEntry(key.toString(), value));
+      _logger.i(
+        '[ATTACHMENT-DIAG] metadata read from Drift for attachmentId=$normalizedAttachmentId rowId=${row.id} keys=${mapped.keys.join(",")}',
+        module: 'ChatsRepository',
+      );
+      return mapped;
     } catch (error, stackTrace) {
       _logger.w(
         'Attachment metadata exists but is unreadable for $normalizedAttachmentId',
@@ -220,8 +330,17 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }) async {
     final normalizedAttachmentId = attachmentId.trim();
     if (normalizedAttachmentId.isEmpty) {
+      _logger.w(
+        '[ATTACHMENT-DIAG] saveAttachmentMetadata called with empty attachmentId',
+        module: 'ChatsRepository',
+      );
       return;
     }
+
+    _logger.i(
+      '[ATTACHMENT-DIAG] saveAttachmentMetadata start attachmentId=$normalizedAttachmentId messageId=${messageId ?? "n/a"} fileName=${originalFileName ?? ""} contentType=${mimeType ?? ""}',
+      module: 'ChatsRepository',
+    );
 
     final metadata = {
       'attachmentId': normalizedAttachmentId,
@@ -239,24 +358,158 @@ class ChatsRepositoryImpl implements ChatsRepository {
       'hasThumbnail': hasThumbnail,
     };
 
+    final hasMeaningfulMetadata =
+        (originalFileName?.trim().isNotEmpty ?? false) ||
+        (mimeType?.trim().isNotEmpty ?? false) ||
+        sizeBytes > 0 ||
+        sha256.trim().isNotEmpty;
+
     final messageRow = messageId != null && messageId.trim().isNotEmpty
         ? await (_db.select(_db.messages)
               ..where((tbl) => tbl.id.equals(messageId.trim())))
             .getSingleOrNull()
         : null;
+    final byAttachmentRows = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).get();
+    final byAttachment = byAttachmentRows.isEmpty
+        ? null
+        : _selectPreferredAttachmentRow(
+            byAttachmentRows,
+            messageId: messageId,
+          );
 
-    if (messageRow == null) {
-      final byAttachment = await (_db.select(
-        _db.messages,
-      )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).getSingleOrNull();
-      if (byAttachment == null) {
+    Map<String, dynamic>? persistedMetadata;
+    for (final row in byAttachmentRows) {
+      final raw = row.mediaHeader;
+      if (raw == null || raw.isEmpty) {
+        continue;
+      }
+      try {
+        final decoded = jsonDecode(utf8.decode(raw));
+        if (decoded is Map) {
+          final candidate = decoded.map(
+            (key, value) => MapEntry(key.toString(), value),
+          );
+          final keyLooksValid =
+              (candidate['fileName']?.toString().trim().isNotEmpty ?? false) ||
+              (candidate['originalFilename']?.toString().trim().isNotEmpty ?? false) ||
+              (candidate['contentType']?.toString().trim().isNotEmpty ?? false) ||
+              (candidate['originalContentType']?.toString().trim().isNotEmpty ?? false) ||
+              (int.tryParse((candidate['size'] ?? '0').toString()) ?? 0) > 0 ||
+              (candidate['sha256']?.toString().trim().isNotEmpty ?? false);
+          if (keyLooksValid) {
+            persistedMetadata = candidate;
+            break;
+          }
+        }
+      } catch (_) {
+        continue;
+      }
+    }
+
+    if (byAttachmentRows.length > 1 && byAttachment != null) {
+      final staleRows = byAttachmentRows.where(
+        (row) => row.id != byAttachment.id,
+      );
+      for (final staleRow in staleRows) {
+        await (_db.delete(_db.messages)
+              ..where((tbl) => tbl.id.equals(staleRow.id)))
+            .go();
+      }
+    }
+
+    final targetRow = messageRow ?? byAttachment;
+    if (!hasMeaningfulMetadata && persistedMetadata != null) {
+      final normalizedMessageId = messageId?.trim();
+      final mergedMetadata = <String, dynamic>{
+        ...persistedMetadata,
+        'attachmentId': normalizedAttachmentId,
+        'messageId':
+            normalizedMessageId != null && normalizedMessageId.isNotEmpty
+                ? normalizedMessageId
+                : (persistedMetadata['messageId']?.toString()),
+      };
+      if (targetRow == null) {
+        final now = DateTime.now().toUtc();
+        await _db.into(_db.messages).insert(
+          MessagesCompanion(
+            id: Value('attachment:$normalizedAttachmentId'),
+            conversationId: const Value('local-attachment-pending'),
+            senderId: Value(_currentUserId),
+            senderDeviceId: const Value('local-attachment-device'),
+            attachmentId: Value(normalizedAttachmentId),
+            encryptedPayload: Value(utf8.encode('')),
+            content: const Value(''),
+            type: const Value('text'),
+            status: const Value('pending'),
+            mediaHeader: Value(utf8.encode(jsonEncode(mergedMetadata))),
+            createdAt: Value(now),
+            updatedAt: Value(now),
+          ),
+        );
         return;
       }
 
+      _logger.i(
+        '[ATTACHMENT-DIAG] saveAttachmentMetadata preserved persisted metadata for attachmentId=$normalizedAttachmentId rowId=${targetRow.id}',
+        module: 'ChatsRepository',
+      );
       await (_db.update(
         _db.messages,
-      )..where((tbl) => tbl.id.equals(byAttachment.id))).write(
+      )..where((tbl) => tbl.id.equals(targetRow.id))).write(
         MessagesCompanion(
+          attachmentId: Value(normalizedAttachmentId),
+          mediaHeader: Value(utf8.encode(jsonEncode(mergedMetadata))),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+      return;
+    }
+
+    if (targetRow == null) {
+      final now = DateTime.now().toUtc();
+      final placeholderId = 'attachment:$normalizedAttachmentId';
+      _logger.i(
+        '[ATTACHMENT-DIAG] no row found for attachmentId=$normalizedAttachmentId; creating Drift placeholder row id=$placeholderId',
+        module: 'ChatsRepository',
+      );
+      await _db.into(_db.messages).insert(
+        MessagesCompanion(
+          id: Value(placeholderId),
+          conversationId: const Value('local-attachment-pending'),
+          senderId: Value(_currentUserId),
+          senderDeviceId: const Value('local-attachment-device'),
+          attachmentId: Value(normalizedAttachmentId),
+          encryptedPayload: Value(utf8.encode('')),
+          content: const Value(''),
+          type: const Value('text'),
+          status: const Value('pending'),
+          mediaHeader: Value(utf8.encode(jsonEncode(metadata))),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+      return;
+    }
+
+    final normalizedMessageId = messageId?.trim();
+    final resolvedMessageId =
+        normalizedMessageId != null && normalizedMessageId.isNotEmpty
+            ? normalizedMessageId
+            : targetRow.id;
+
+    if (resolvedMessageId != targetRow.id) {
+      _logger.i(
+        '[ATTACHMENT-DIAG] saveAttachmentMetadata promoting placeholder rowId=${targetRow.id} to messageId=$resolvedMessageId attachmentId=$normalizedAttachmentId',
+        module: 'ChatsRepository',
+      );
+      await (_db.update(
+        _db.messages,
+      )..where((tbl) => tbl.id.equals(targetRow.id))).write(
+        MessagesCompanion(
+          id: Value(resolvedMessageId),
+          attachmentId: Value(normalizedAttachmentId),
           mediaHeader: Value(utf8.encode(jsonEncode(metadata))),
           updatedAt: Value(DateTime.now().toUtc()),
         ),
@@ -264,10 +517,15 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return;
     }
 
+    _logger.i(
+      '[ATTACHMENT-DIAG] saveAttachmentMetadata updating message rowId=${targetRow.id} attachmentId=$normalizedAttachmentId',
+      module: 'ChatsRepository',
+    );
     await (_db.update(
       _db.messages,
-    )..where((tbl) => tbl.id.equals(messageRow.id))).write(
+    )..where((tbl) => tbl.id.equals(targetRow.id))).write(
       MessagesCompanion(
+        attachmentId: Value(normalizedAttachmentId),
         mediaHeader: Value(utf8.encode(jsonEncode(metadata))),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -863,6 +1121,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
       final newMessages = <MessagesCompanion>[];
       final resolvedMessages = <Message>[];
+      final pendingAttachmentMetadata = <({String messageId, DecryptedMessageContent decryptedContent})>[];
       for (final dto in dtos) {
         final isOwnMessage = _isCurrentUserMessage(dto);
         final persistedPlaintext = isOwnMessage
@@ -880,6 +1139,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
           await _persistPlaintextForMessage(dto.id, decryptedText);
         }
 
+        if (!isOwnMessage && decryptedContent != null) {
+          pendingAttachmentMetadata.add(
+            (messageId: dto.id, decryptedContent: decryptedContent),
+          );
+        }
+
         newMessages.add(
           _messageDtoToCompanion(dto, decryptedContent: decryptedText),
         );
@@ -894,6 +1159,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
           module: 'ChatsRepository',
         );
         await _db.chatsDao.upsertMessages(newMessages);
+        for (final entry in pendingAttachmentMetadata) {
+          await _persistAttachmentMetadataFromDecryptedContent(
+            messageId: entry.messageId,
+            decryptedContent: entry.decryptedContent,
+          );
+        }
       }
 
       _logger.i(
@@ -1344,6 +1615,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
       if (remoteMessageDtos.isNotEmpty) {
         final persistedCompanions = <MessagesCompanion>[];
+        final pendingAttachmentMetadata = <({String messageId, DecryptedMessageContent decryptedContent})>[];
 
         for (final dto in remoteMessageDtos) {
           final isOwnMessage = _isCurrentUserMessage(dto);
@@ -1359,6 +1631,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
               : decryptedContent?.text ?? '';
 
           if (!isOwnMessage && decryptedContent != null) {
+            pendingAttachmentMetadata.add(
+              (messageId: dto.id, decryptedContent: decryptedContent),
+            );
             await _persistPlaintextForMessage(dto.id, decryptedText);
             _logger.i(
               '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
@@ -1380,6 +1655,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
         }
 
         await _db.chatsDao.upsertMessages(persistedCompanions);
+        for (final entry in pendingAttachmentMetadata) {
+          await _persistAttachmentMetadataFromDecryptedContent(
+            messageId: entry.messageId,
+            decryptedContent: entry.decryptedContent,
+          );
+        }
       }
 
       final nextMessageVersion = resolveLastKnownMessageVersion(
@@ -1486,6 +1767,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       }
 
       final remoteMessages = <MessagesCompanion>[];
+      final pendingAttachmentMetadata = <({String messageId, DecryptedMessageContent decryptedContent})>[];
       for (final messageDto in _orderMessageDtos(
         dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
       )) {
@@ -1493,17 +1775,32 @@ class ChatsRepositoryImpl implements ChatsRepository {
         final resolvedPlaintext = isOwnMessage
             ? await _resolvePersistedPlaintextForOwnedMessage(messageDto)
             : null;
+        final decryptedContent = isOwnMessage
+            ? null
+            : await _decryptInboundMessage(messageDto);
+
+        if (!isOwnMessage && decryptedContent != null) {
+          pendingAttachmentMetadata.add(
+            (messageId: messageDto.id, decryptedContent: decryptedContent),
+          );
+        }
 
         remoteMessages.add(
           _messageDtoToCompanion(
             messageDto,
-            decryptedContent: resolvedPlaintext ?? '',
+            decryptedContent: (resolvedPlaintext ?? decryptedContent?.text ?? ''),
           ),
         );
       }
 
       if (remoteMessages.isNotEmpty) {
         await _db.chatsDao.upsertMessages(remoteMessages);
+        for (final entry in pendingAttachmentMetadata) {
+          await _persistAttachmentMetadataFromDecryptedContent(
+            messageId: entry.messageId,
+            decryptedContent: entry.decryptedContent,
+          );
+        }
       }
 
       conversations.add(conv);
@@ -1594,6 +1891,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
         String? extractedAttachmentId = decryptedContent.attachmentId;
 
+        _logger.i(
+          '[ATTACHMENT-DIAG] inbound decrypt parsed message_id=${dto.id} attachmentPresent=${attachment is Map} attachmentId=${extractedAttachmentId ?? "n/a"} fileName=${decryptedContent.fileName ?? ""} contentType=${decryptedContent.contentType ?? ""} size=${decryptedContent.size ?? 0} sha256=${decryptedContent.sha256 ?? ""}',
+          module: 'ChatsRepository',
+        );
+
         if (attachment is Map) {
           final attachmentKey = attachment['key']?.toString();
           final normalizedAttachmentId = (extractedAttachmentId ?? '').trim();
@@ -1603,17 +1905,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
               attachmentKey.trim().isNotEmpty) {
             final keyRef = '$normalizedAttachmentId-attachment-key';
             await _secureStorage.write(key: keyRef, value: attachmentKey);
-
-            await saveAttachmentMetadata(
-              attachmentId: normalizedAttachmentId,
-              messageId: dto.id,
-              originalFileName: attachment['fileName']?.toString() ?? '',
-              mimeType: attachment['contentType']?.toString() ?? '',
-              sizeBytes: int.tryParse((attachment['size'] ?? 0).toString()) ?? 0,
-              sha256: attachment['sha256']?.toString() ?? '',
-              status: 'ready',
-              isAvailableLocally: false,
-              hasThumbnail: false,
+            _logger.i(
+              '[ATTACHMENT-DIAG] stored AES key for message_id=${dto.id} attachmentId=$normalizedAttachmentId keyRef=$keyRef',
+              module: 'ChatsRepository',
             );
 
             if (decryptedContent.text.isEmpty) {

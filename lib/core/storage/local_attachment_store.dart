@@ -6,89 +6,59 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 class LocalAttachmentStore {
-  static const String _cacheDirectoryName = 'communication/attachments/thumbnails';
-  static const String _publicAlbumName = 'ObywatelPlus';
+  static const String _attachmentRootSegment = 'communication/attachments';
+  static const String _thumbnailRootSegment = 'communication/thumbnails';
+  static const String _temporaryUploadSegment = 'communication/uploads';
 
-  Future<String> _directoryForAttachmentKind(String mimeType) async {
-    final normalized = mimeType.toLowerCase();
-
-    if (Platform.isAndroid) {
-      if (normalized.startsWith('image/')) {
-        return _androidPublicDirectory('Pictures/$_publicAlbumName');
-      }
-      if (normalized.startsWith('video/')) {
-        return _androidPublicDirectory('Movies/$_publicAlbumName');
-      }
-      return _androidPublicDirectory('Download/$_publicAlbumName');
-    }
-
-    if (Platform.isIOS) {
-      final appSupportDir = await getApplicationDocumentsDirectory();
-      final baseDir = Directory(
-        p.join(appSupportDir.path, 'Attachments', _publicAlbumName),
-      );
-      if (!await baseDir.exists()) {
-        await baseDir.create(recursive: true);
-      }
-      return baseDir.path;
-    }
-
-    if (Platform.isWindows) {
-      final homeDrive = Platform.environment['HOMEDRIVE'] ?? '';
-      final homePath = Platform.environment['HOMEPATH'] ?? '';
-      final userProfile = Platform.environment['USERPROFILE'] ??
-          '$homeDrive$homePath';
-      final basePath = userProfile.isEmpty
-          ? (await getDownloadsDirectory())?.path ??
-              (await getApplicationDocumentsDirectory()).path
-          : userProfile;
-      final root = Directory(
-        p.join(
-          basePath,
-          normalized.startsWith('image/')
-              ? 'Pictures'
-              : normalized.startsWith('video/')
-                  ? 'Videos'
-                  : 'Downloads',
-          _publicAlbumName,
-        ),
-      );
-      if (!await root.exists()) {
-        await root.create(recursive: true);
-      }
-      return root.path;
-    }
-
-    final tempDir = await getTemporaryDirectory();
-    final fallbackDir = Directory(
-      p.join(tempDir.path, 'obywatel_plus', 'attachments'),
+  Future<Directory> _privateAttachmentsDirectory() async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final directory = Directory(
+      p.join(appDir.path, _attachmentRootSegment),
     );
-    if (!await fallbackDir.exists()) {
-      await fallbackDir.create(recursive: true);
-    }
-    return fallbackDir.path;
-  }
-
-  Future<String> _androidPublicDirectory(String relativePath) async {
-    final basePath = '/storage/emulated/0';
-    final directory = Directory(p.join(basePath, relativePath));
     if (!await directory.exists()) {
       await directory.create(recursive: true);
     }
-    return directory.path;
+    return directory;
   }
 
-  String _safeFileName(String attachmentId, String mimeType, {String? fileName}) {
-    final raw = fileName?.trim().isNotEmpty == true ? fileName! : attachmentId;
-    final sanitized = raw.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
-    final extension = _extensionForMime(mimeType, fallback: sanitized);
-    final baseName = sanitized.contains('.')
-        ? sanitized
-        : '$sanitized$extension';
-    return baseName;
+  Future<Directory> _thumbnailCacheDirectory() async {
+    final tempDir = await getTemporaryDirectory();
+    final directory = Directory(
+      p.join(tempDir.path, _thumbnailRootSegment),
+    );
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    return directory;
   }
 
-  String _extensionForMime(String mimeType, {String? fallback}) {
+  Future<Directory> _temporaryUploadDirectory() async {
+    final tempDir = await getTemporaryDirectory();
+    final directory = Directory(
+      p.join(tempDir.path, _temporaryUploadSegment),
+    );
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
+    return directory;
+  }
+
+  String _storageFileName(String attachmentId, String mimeType) {
+    final normalizedId = attachmentId.trim();
+    if (normalizedId.isEmpty) {
+      throw ArgumentError.value(attachmentId, 'attachmentId');
+    }
+
+    final sanitizedId = normalizedId.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
+    final extension = _extensionForMime(mimeType);
+    if (extension.isEmpty) {
+      return sanitizedId;
+    }
+
+    return '$sanitizedId$extension';
+  }
+
+  String _extensionForMime(String mimeType) {
     final normalized = mimeType.toLowerCase();
     final extensionMap = {
       'image/jpeg': '.jpg',
@@ -107,19 +77,17 @@ class LocalAttachmentStore {
       'text/plain': '.txt',
     };
 
-    final extension = extensionMap[normalized];
-    if (extension != null) {
-      return extension;
-    }
+    return extensionMap[normalized] ?? '';
+  }
 
-    if (fallback != null && fallback.contains('.')) {
-      final dotIndex = fallback.lastIndexOf('.');
-      if (dotIndex >= 0 && dotIndex < fallback.length - 1) {
-        return fallback.substring(dotIndex);
-      }
-    }
-
-    return '';
+  Future<String> temporaryAttachmentPath(
+    String attachmentId, {
+    required String mimeType,
+    String? fileName,
+  }) async {
+    final directory = await _temporaryUploadDirectory();
+    final basename = _storageFileName(attachmentId, mimeType);
+    return p.join(directory.path, basename);
   }
 
   Future<String> pathForAttachment(
@@ -127,18 +95,9 @@ class LocalAttachmentStore {
     required String mimeType,
     String? fileName,
   }) async {
-    final normalized = attachmentId.trim();
-    if (normalized.isEmpty) {
-      throw ArgumentError.value(attachmentId, 'attachmentId');
-    }
-
-    final directoryPath = await _directoryForAttachmentKind(mimeType);
-    final resolvedFileName = _safeFileName(
-      normalized,
-      mimeType,
-      fileName: fileName,
-    );
-    return p.join(directoryPath, resolvedFileName);
+    final directory = await _privateAttachmentsDirectory();
+    final basename = _storageFileName(attachmentId, mimeType);
+    return p.join(directory.path, basename);
   }
 
   Future<String> thumbnailPathForAttachment(String attachmentId) async {
@@ -147,14 +106,7 @@ class LocalAttachmentStore {
       throw ArgumentError.value(attachmentId, 'attachmentId');
     }
 
-    final cacheDir = await getTemporaryDirectory();
-    final directory = Directory(
-      p.join(cacheDir.path, _cacheDirectoryName),
-    );
-    if (!await directory.exists()) {
-      await directory.create(recursive: true);
-    }
-
+    final directory = await _thumbnailCacheDirectory();
     final sanitized = normalized.replaceAll(RegExp(r'[^A-Za-z0-9_.-]'), '_');
     return p.join(directory.path, '$sanitized.thumb');
   }
@@ -178,8 +130,17 @@ class LocalAttachmentStore {
     );
     await file.parent.create(recursive: true);
 
-    final tempFile = File('${file.path}.tmp');
+    final tempFile = File(
+      p.join(
+        file.parent.path,
+        '.${p.basenameWithoutExtension(file.path)}.${DateTime.now().microsecondsSinceEpoch}.tmp',
+      ),
+    );
+
     await tempFile.writeAsBytes(bytes, flush: true);
+    if (await file.exists()) {
+      await file.delete();
+    }
     await tempFile.rename(file.path);
     return file.path;
   }
@@ -213,8 +174,20 @@ class LocalAttachmentStore {
   }) async {
     final file = File(await thumbnailPathForAttachment(attachmentId));
     await file.parent.create(recursive: true);
+
+    final tempFile = File(
+      p.join(
+        file.parent.path,
+        '.${p.basenameWithoutExtension(file.path)}.${DateTime.now().microsecondsSinceEpoch}.tmp',
+      ),
+    );
+
     final thumbnailBytes = await _generateThumbnailBytes(bytes);
-    await file.writeAsBytes(thumbnailBytes, flush: true);
+    await tempFile.writeAsBytes(thumbnailBytes, flush: true);
+    if (await file.exists()) {
+      await file.delete();
+    }
+    await tempFile.rename(file.path);
   }
 
   Future<Uint8List?> readAttachment({

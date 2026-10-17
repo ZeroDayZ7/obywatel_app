@@ -84,39 +84,68 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
     final localAttachmentStore = ref.read(localAttachmentStoreProvider);
     final repository = ref.read(chatsRepositoryProvider);
 
-    final cachedThumbnail = await localAttachmentStore.readThumbnail(attachmentId);
+    debugPrint(
+      '[ATTACHMENT-DIAG] Rozpoczęto ładowanie podglądu dla attachmentId=$attachmentId',
+    );
+
+    // 1. Sprawdzenie cache miniatur
+    final cachedThumbnail = await localAttachmentStore.readThumbnail(
+      attachmentId,
+    );
     if (cachedThumbnail != null && cachedThumbnail.isNotEmpty) {
       debugPrint(
-        '[ATTACHMENT-SYNC] attachment_id=$attachmentId served from local thumbnail cache',
+        '[ATTACHMENT-DIAG] attachment_id=$attachmentId obsłużony z cache miniatur',
       );
       return cachedThumbnail;
     }
 
+    // 2. Pobranie metadanych
     final metadata = await repository.getAttachmentMetadata(attachmentId);
     if (metadata == null || metadata.isEmpty) {
       debugPrint(
-        '[ATTACHMENT-SYNC] attachment_id=$attachmentId missing metadata; preview unavailable',
+        '[ATTACHMENT-DIAG] BŁĄD: attachment_id=$attachmentId - brak metadanych w repozytorium! Sprawdź czy ChatsRepository poprawnie zapisuje metadane z payloadu E2EE.',
       );
       return null;
     }
+    debugPrint(
+      '[ATTACHMENT-DIAG] Pobrano metadane dla $attachmentId: $metadata',
+    );
 
     try {
+      // 3. Sprawdzenie klucza deszyfrującego
       final key = await storage.read(key: '$attachmentId-attachment-key');
-      final contentType = (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
-          .toString();
-      final fileName = (metadata['fileName'] ?? metadata['originalFilename'] ?? '')
-          .toString();
+      if (key == null || key.isEmpty) {
+        debugPrint(
+          '[ATTACHMENT-DIAG] BŁĄD: attachment_id=$attachmentId - brak klucza AES w SecureStorage pod kluczem "$attachmentId-attachment-key"!',
+        );
+      }
 
-      if (key == null || key.isEmpty || !contentType.toLowerCase().startsWith('image/')) {
+      final contentType =
+          (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
+              .toString();
+      final fileName =
+          (metadata['fileName'] ?? metadata['originalFilename'] ?? '')
+              .toString();
+
+      if (key == null ||
+          key.isEmpty ||
+          !contentType.toLowerCase().startsWith('image/')) {
+        debugPrint(
+          '[ATTACHMENT-DIAG] Przerywam: klucz jest pusty lub typ ($contentType) to nie obraz.',
+        );
         return null;
       }
 
+      // 4. Sprawdzenie czy plik fizyczny już istnieje lokalnie
       final localFile = await localAttachmentStore.readAttachment(
         attachmentId: attachmentId,
         mimeType: contentType,
         fileName: fileName,
       );
       if (localFile != null && localFile.isNotEmpty) {
+        debugPrint(
+          '[ATTACHMENT-DIAG] Znaleziono fizyczny plik lokalnie dla $attachmentId',
+        );
         await localAttachmentStore.saveThumbnail(
           attachmentId: attachmentId,
           bytes: localFile,
@@ -124,15 +153,31 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
         return localFile;
       }
 
+      // 5. Pobieranie z serwera (MinIO / API)
+      debugPrint(
+        '[ATTACHMENT-DIAG] Pobieranie URL pobierania z API dla $attachmentId...',
+      );
       final apiClient = ref.read(chatsApiClientProvider);
       final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
       final rawUrl = download.downloadUrl.trim();
 
-      if (rawUrl.isEmpty) return null;
+      if (rawUrl.isEmpty) {
+        debugPrint('[ATTACHMENT-DIAG] BŁĄD: Otrzymany downloadUrl jest pusty.');
+        return null;
+      }
 
+      debugPrint('[ATTACHMENT-DIAG] Pobieranie zaszyfrowanych bajtów z URL...');
       final encryptedBytes = await apiClient.downloadBytes(rawUrl);
-      if (encryptedBytes.isEmpty) return null;
+      if (encryptedBytes.isEmpty) {
+        debugPrint(
+          '[ATTACHMENT-DIAG] BŁĄD: Pobrane zaszyfrowane bajty są puste.',
+        );
+        return null;
+      }
 
+      debugPrint(
+        '[ATTACHMENT-DIAG] Deszyfrowanie bajtów algorytmem symetrycznym...',
+      );
       final decryptedBytes = await ref
           .read(symmetricCryptoProvider)
           .decryptBytes(
@@ -140,7 +185,10 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
             secretKey: SecretKey(base64Decode(key)),
           );
 
-      if (decryptedBytes.isEmpty) return null;
+      if (decryptedBytes.isEmpty) {
+        debugPrint('[ATTACHMENT-DIAG] BŁĄD: Zdeszyfrowane bajty są puste.');
+        return null;
+      }
 
       await localAttachmentStore.saveAttachment(
         attachmentId: attachmentId,
@@ -154,12 +202,12 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
       );
 
       debugPrint(
-        '[ATTACHMENT-SYNC] attachment_id=$attachmentId preview downloaded and cached locally',
+        '[ATTACHMENT-DIAG] Sukces! Załącznik pobrany, zdeszyfrowany i zapisały w cache dla $attachmentId',
       );
       return Uint8List.fromList(decryptedBytes);
-    } catch (e) {
+    } catch (e, st) {
       debugPrint(
-        '[ATTACHMENT-SYNC] attachment_id=$attachmentId load preview error: $e',
+        '[ATTACHMENT-DIAG] WYJĄTEK podczas ładowania załącznika $attachmentId: $e\n$st',
       );
       return null;
     }
