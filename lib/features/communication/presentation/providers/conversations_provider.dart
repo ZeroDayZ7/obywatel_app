@@ -141,10 +141,9 @@ class Conversations extends _$Conversations {
       _handleIncomingMessage,
     );
 
+    final conversationsStream = repository.watchConversations();
     _conversationsSubscription?.cancel();
-    _conversationsSubscription = repository.watchConversations().listen((
-      items,
-    ) {
+    _conversationsSubscription = conversationsStream.listen((items) {
       state = AsyncValue.data(items);
     });
 
@@ -153,7 +152,7 @@ class Conversations extends _$Conversations {
       _conversationsSubscription?.cancel();
     });
 
-    return repository.watchConversations().first;
+    return conversationsStream.first;
   }
 
   Future<void> refresh() async {

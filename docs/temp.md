@@ -50,11 +50,11 @@ Zastąpić marker rejestracji jednoznacznym stanem lokalnym.
 
 `e2ee_device_registration_marker` porównuje `toString()` mapy z zapisanym ciągiem. Lepiej użyć jawnego, stabilnego formatu serializacji i wersjonowanego modelu stanu, bez przechowywania prywatnych danych w markerze.
 
-9
+<!-- 9 -->
 
-Ograniczyć logowanie danych kryptograficznych.
+<!-- Ograniczyć logowanie danych kryptograficznych.
 
-W logach `E2EE_TRACE` pojawiają się fingerprinty, identyfikatory użytkowników, długości plaintextu i szczegóły błędów. Nie logować treści, kluczy, tokenów ani surowych payloadów. Ustalić politykę redakcji identyfikatorów i poziomów logowania dla produkcji.
+W logach `E2EE_TRACE` pojawiają się fingerprinty, identyfikatory użytkowników, długości plaintextu i szczegóły błędów. Nie logować treści, kluczy, tokenów ani surowych payloadów. Ustalić politykę redakcji identyfikatorów i poziomów logowania dla produkcji. -->
 
 10
 
@@ -80,11 +80,11 @@ Punkty 13–24 · krytyczne dla niezawodności komunikatora
 
 13\. Podzielić `ChatSyncService` na mniejsze klasy. Obecna klasa odpowiada za stan synchronizacji, obsługę połączenia, wysyłanie outboxa, parsowanie payloadów i pobieranie danych.
 
-14\. Wydzielić `OutboxProcessor`. Ma odpowiadać za pobranie zdarzeń, walidację, wysyłkę, retry i potwierdzenie dostarczenia do serwera.
+<!-- 14\. Wydzielić `OutboxProcessor`. Ma odpowiadać za pobranie zdarzeń, walidację, wysyłkę, retry i potwierdzenie dostarczenia do serwera. -->
 
 15\. Wydzielić `DeltaSyncService`. Pobieranie zmian, parsowanie odpowiedzi, deszyfrowanie i aktualizowanie checkpointów nie powinno być rozproszone między jedną metodą synchronizacji a repozytorium.
 
-16\. Wprowadzić typowany model zdarzenia outbox. Zamiast wielokrotnie dekodować `Map<String, dynamic>`, stworzyć np. `OutboxMessageEvent` z jawnie określonymi polami i walidacją.
+<!-- 16\. Wprowadzić typowany model zdarzenia outbox. Zamiast wielokrotnie dekodować `Map<String, dynamic>`, stworzyć np. `OutboxMessageEvent` z jawnie określonymi polami i walidacją. -->
 
 <!-- 17\. Usunąć powielone parsowanie payloadu. `rawPayloadByMessageId` i alternatywne odczyty `type`, `signalType`, `eventId` oraz `outboxEventId` wskazują na kilka wariantów tego samego kontraktu. W pierwszej wersji należy wybrać jeden kanoniczny format. -->
 
@@ -108,15 +108,15 @@ Punkty 25–34
 
 25\. Rozdzielić `ChatsRepositoryImpl` według odpowiedzialności. Wydzielić obsługę wiadomości, konwersacji, synchronizacji, cache plaintextu oraz załączników. Nie należy tworzyć pięciu repozytoriów, które wszystkie bezpośrednio modyfikują te same tabele.
 
-26\. Ograniczyć dostęp aplikacji do wewnętrznych szczegółów Drift. Kod aplikacyjny nie powinien w wielu miejscach korzystać z `_repository.db.outboxDao`. Repozytorium powinno udostępniać operacje domenowe, np. `getRetryEligibleOutboxEvents()`.
+<!-- 26\. Ograniczyć dostęp aplikacji do wewnętrznych szczegółów Drift. Kod aplikacyjny nie powinien w wielu miejscach korzystać z `_repository.db.outboxDao`. Repozytorium powinno udostępniać operacje domenowe, np. `getRetryEligibleOutboxEvents()`. -->
 
 27\. Zastąpić mapy dynamiczne modelami DTO. `syncDeltaFromRemote()` zwraca `Future<List<Map<String, dynamic>>>`. Wprowadzić typowany wynik synchronizacji, np. `SyncDeltaResult`, z osobnymi kolekcjami wiadomości, kontaktów i checkpointów.
 
 28\. Uprościć cache plaintextu i aliasy ID. `LocalPlaintextMessageCache` tworzy relacje aliasów między identyfikatorami. To sygnał, że model tożsamości wiadomości może być niejednoznaczny. Wiadomość powinna mieć jeden stabilny identyfikator; relację z lokalnym zdarzeniem należy modelować osobno, jeśli faktycznie jest potrzebna.
 
-29\. Zlikwidować potencjalne zapytania N+1. `watchConversations()` pobiera konwersacje, a potem osobno ostatnie wiadomości każdej z nich i dodatkowo odczytuje cache. Dla wielu konwersacji może to generować kosztowne serie zapytań i operacji I/O.
+<!-- 29\. Zlikwidować potencjalne zapytania N+1. `watchConversations()` pobiera konwersacje, a potem osobno ostatnie wiadomości każdej z nich i dodatkowo odczytuje cache. Dla wielu konwersacji może to generować kosztowne serie zapytań i operacji I/O. -->
 
-30\. Nie wykonywać zbędnych zapisów w Secure Storage. Sprawdzić, czy plaintext i metadane załączników są zapisywane wielokrotnie przy każdej synchronizacji. Zapisy powinny być idempotentne, ograniczone do rzeczywistych zmian i objęte jasną polityką retencji.
+<!-- 30\. Nie wykonywać zbędnych zapisów w Secure Storage. Sprawdzić, czy plaintext i metadane załączników są zapisywane wielokrotnie przy każdej synchronizacji. Zapisy powinny być idempotentne, ograniczone do rzeczywistych zmian i objęte jasną polityką retencji. -->
 
 31\. Ujednolicić walidację UUID. Nie tworzyć osobnych, nieco różniących się walidatorów w outboxie, repozytorium i warstwie E2EE. Wprowadzić jawne typy identyfikatorów oraz wspólną walidację na granicach systemu.
 

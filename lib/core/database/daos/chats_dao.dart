@@ -16,21 +16,15 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
     return (select(conversations)
           ..where((t) => t.deletedAt.isNull())
           ..orderBy([
-            (t) => OrderingTerm(
-                  expression: t.updatedAt,
-                  mode: OrderingMode.desc,
-                ),
+            (t) =>
+                OrderingTerm(expression: t.updatedAt, mode: OrderingMode.desc),
           ]))
         .watch();
   }
 
   Future<void> upsertConversations(List<ConversationsCompanion> items) async {
     await batch((batch) {
-      batch.insertAll(
-        conversations,
-        items,
-        mode: InsertMode.insertOrReplace,
-      );
+      batch.insertAll(conversations, items, mode: InsertMode.insertOrReplace);
     });
   }
 
@@ -51,44 +45,39 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
     required String userId,
     required BigInt sequence,
   }) async {
-    await (update(conversationMembers)
-          ..where(
-            (t) =>
-                t.conversationId.equals(conversationId) &
-                t.userId.equals(userId),
-          ))
+    await (update(conversationMembers)..where(
+          (t) =>
+              t.conversationId.equals(conversationId) & t.userId.equals(userId),
+        ))
         .write(
-      ConversationMembersCompanion(
-        lastReadSequence: Value(sequence),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+          ConversationMembersCompanion(
+            lastReadSequence: Value(sequence),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   // --- MESSAGES ---
 
-  Stream<List<MessageEntity>> watchMessagesForConversation(String conversationId) {
+  Stream<List<MessageEntity>> watchMessagesForConversation(
+    String conversationId,
+  ) {
     return (select(messages)
-          ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
+          ..where(
+            (t) =>
+                t.conversationId.equals(conversationId) & t.deletedAt.isNull(),
+          )
           ..orderBy([
             (t) => OrderingTerm(
-                  expression: CustomExpression<int>(
-                    'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
-                  ),
-                  mode: OrderingMode.asc,
-                ),
-            (t) => OrderingTerm(
-                  expression: t.sequence,
-                  mode: OrderingMode.asc,
-                ),
-            (t) => OrderingTerm(
-                  expression: t.createdAt,
-                  mode: OrderingMode.asc,
-                ),
-            (t) => OrderingTerm(
-                  expression: t.id,
-                  mode: OrderingMode.asc,
-                ),
+              expression: CustomExpression<int>(
+                'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+              ),
+              mode: OrderingMode.asc,
+            ),
+            (t) => OrderingTerm(expression: t.sequence, mode: OrderingMode.asc),
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
           ]))
         .watch();
   }
@@ -98,29 +87,77 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
     int limit = 50,
   }) {
     return (select(messages)
-          ..where((t) => t.conversationId.equals(conversationId) & t.deletedAt.isNull())
+          ..where(
+            (t) =>
+                t.conversationId.equals(conversationId) & t.deletedAt.isNull(),
+          )
           ..orderBy([
             (t) => OrderingTerm(
+              expression: CustomExpression<int>(
+                'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
+              ),
+              mode: OrderingMode.asc,
+            ),
+            (t) => OrderingTerm(expression: t.sequence, mode: OrderingMode.asc),
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.asc),
+            (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  Future<Map<String, List<MessageEntity>>> getLatestMessagesForConversations(
+    Iterable<String> conversationIds, {
+    int limitPerConversation = 20,
+  }) async {
+    final ids = conversationIds
+        .map((conversationId) => conversationId.trim())
+        .where((conversationId) => conversationId.isNotEmpty)
+        .toSet()
+        .toList();
+
+    if (ids.isEmpty) {
+      return const <String, List<MessageEntity>>{};
+    }
+
+    final rows =
+        await (select(messages)
+              ..where((t) => t.conversationId.isIn(ids) & t.deletedAt.isNull())
+              ..orderBy([
+                (t) => OrderingTerm(
+                  expression: t.conversationId,
+                  mode: OrderingMode.asc,
+                ),
+                (t) => OrderingTerm(
                   expression: CustomExpression<int>(
                     'CASE WHEN ${t.sequence.name} IS NULL THEN 1 ELSE 0 END',
                   ),
                   mode: OrderingMode.asc,
                 ),
-            (t) => OrderingTerm(
+                (t) => OrderingTerm(
                   expression: t.sequence,
                   mode: OrderingMode.asc,
                 ),
-            (t) => OrderingTerm(
+                (t) => OrderingTerm(
                   expression: t.createdAt,
                   mode: OrderingMode.asc,
                 ),
-            (t) => OrderingTerm(
-                  expression: t.id,
-                  mode: OrderingMode.asc,
-                ),
-          ])
-          ..limit(limit))
-        .get();
+                (t) => OrderingTerm(expression: t.id, mode: OrderingMode.asc),
+              ]))
+            .get();
+
+    final result = <String, List<MessageEntity>>{};
+    for (final row in rows) {
+      final bucket = result.putIfAbsent(
+        row.conversationId,
+        () => <MessageEntity>[],
+      );
+      if (bucket.length < limitPerConversation) {
+        bucket.add(row);
+      }
+    }
+    return result;
   }
 
   Future<BigInt> getMaxMessageSequence(String conversationId) async {
@@ -130,15 +167,19 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
       ..where(messages.conversationId.equals(conversationId))
       ..where(messages.sequence.isNotNull());
 
-    final result = await query.map((row) => row.read(maxSeqExpr)).getSingleOrNull();
+    final result = await query
+        .map((row) => row.read(maxSeqExpr))
+        .getSingleOrNull();
     return result ?? BigInt.zero;
   }
 
   Future<BigInt> getMaxMessageVersion() async {
     final maxVerExpr = messages.version.max();
     final query = selectOnly(messages)..addColumns([maxVerExpr]);
-    
-    final result = await query.map((row) => row.read(maxVerExpr)).getSingleOrNull();
+
+    final result = await query
+        .map((row) => row.read(maxVerExpr))
+        .getSingleOrNull();
     return result ?? BigInt.zero;
   }
 
@@ -160,7 +201,9 @@ class ChatsDao extends DatabaseAccessor<AppDatabase> with _$ChatsDaoMixin {
           final convId = msg.conversationId.value;
           final seq = msg.sequence.value!;
 
-          await (update(conversations)..where((t) => t.id.equals(convId))).write(
+          await (update(
+            conversations,
+          )..where((t) => t.id.equals(convId))).write(
             ConversationsCompanion(
               lastSequence: Value(seq),
               updatedAt: Value(DateTime.now()),
