@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_transport_client.dart';
 import 'package:obywatel_plus/features/communication/application/outbox_event_builder.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
@@ -11,10 +12,6 @@ import 'package:obywatel_plus/features/communication/data/repositories/chats_rep
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:uuid/uuid.dart';
-
-abstract class OutboxTransportClient {
-  Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload);
-}
 
 class OutboxMessageEvent {
   const OutboxMessageEvent({
@@ -120,18 +117,25 @@ class OutboxMessageEvent {
     };
   }
 
-  static Map<String, dynamic> _normalizeEnvelope(Map<String, dynamic> json) {
-    final direct = Map<String, dynamic>.from(json);
-    final nested = direct['payload'];
-    if (nested is Map) {
-      final merged = Map<String, dynamic>.from(nested);
+  static Map<String, Object?> _normalizeEnvelope(Map<String, dynamic> json) {
+    final direct = <String, Object?>{};
+    for (final entry in json.entries) {
+      direct[entry.key.toString()] = entry.value;
+    }
+
+    final nestedValue = direct['payload'];
+    if (nestedValue is Map) {
+      final merged = <String, Object?>{};
+      for (final entry in nestedValue.entries) {
+        merged[entry.key.toString()] = entry.value;
+      }
       merged.addAll(direct);
       return merged;
     }
     return direct;
   }
 
-  static String? _readString(Map<String, dynamic> source, List<String> keys) {
+  static String? _readString(Map<String, Object?> source, List<String> keys) {
     for (final key in keys) {
       final value = source[key];
       if (value == null) {
@@ -172,7 +176,7 @@ class OutboxProcessor {
 
     final retryEligibleEvents = await _repository
         .getRetryEligibleOutboxEvents();
-    final eventsByMessageId = <String, OutboxMessageEvent>{};
+    final eventsByMessageId = <String, List<OutboxMessageEvent>>{};
     final invalidEventIds = <String>{};
 
     for (final event in retryEligibleEvents) {
@@ -184,11 +188,21 @@ class OutboxProcessor {
       try {
         final decoded = jsonDecode(event.payload);
         if (decoded is Map) {
+          final payloadMap = <String, Object?>{};
+          for (final entry in decoded.entries) {
+            final key = entry.key?.toString();
+            if (key != null && key.isNotEmpty) {
+              payloadMap[key] = entry.value;
+            }
+          }
+
           final parsed = OutboxMessageEvent.fromJson(
-            Map<String, dynamic>.from(decoded),
+            payloadMap,
             fallbackId: event.id,
           );
-          eventsByMessageId[parsed.messageId] = parsed;
+          eventsByMessageId
+              .putIfAbsent(parsed.messageId, () => <OutboxMessageEvent>[])
+              .add(parsed);
         } else {
           invalidEventIds.add(event.id);
         }
@@ -244,16 +258,23 @@ class OutboxProcessor {
         continue;
       }
 
-      final event = eventsByMessageId[messageId];
-      if (event == null) {
+      final matchingEvents =
+          eventsByMessageId[messageId] ?? const <OutboxMessageEvent>[];
+      if (matchingEvents.isEmpty) {
         _logger.w(
           '[OUTBOX-PROCESSOR-HOLD] pending message has no matching retry payload metadata. message_id=${message.id}',
           module: 'OutboxProcessor',
         );
         continue;
       }
+      if (matchingEvents.length > 1) {
+        _logger.w(
+          '[OUTBOX-PROCESSOR-DUPLICATE-EVENT] multiple Outbox events matched one messageId; using first event and preserving remaining rows. message_id=${message.id} candidates=${matchingEvents.length}',
+          module: 'OutboxProcessor',
+        );
+      }
 
-      queuedMessages.add(_QueuedOutboxMessage(message, event));
+      queuedMessages.add(_QueuedOutboxMessage(message, matchingEvents.first));
     }
 
     if (invalidMessageIds.isNotEmpty) {
@@ -266,6 +287,7 @@ class OutboxProcessor {
 
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final payload = <Map<String, dynamic>>[];
+    final transportTargets = <_QueuedOutboxMessage>[];
 
     for (final queued in queuedMessages) {
       try {
@@ -276,8 +298,8 @@ class OutboxProcessor {
           outboxEventId: queued.event.eventId,
         );
         payload.add(candidate);
+        transportTargets.add(queued);
       } catch (error, stackTrace) {
-        invalidMessageIds.add(queued.message.id);
         _logger.w(
           '[OUTBOX-PROCESSOR-INVALID-MESSAGE] unable to build payload for pending message. message_id=${queued.message.id}',
           error: error,
@@ -287,10 +309,6 @@ class OutboxProcessor {
       }
     }
 
-    if (invalidMessageIds.isNotEmpty) {
-      await _repository.deleteInvalidOutboxEvents(invalidMessageIds.toList());
-    }
-
     if (payload.isEmpty) {
       return;
     }
@@ -298,10 +316,10 @@ class OutboxProcessor {
     try {
       await _transport.sendOutboxBatch(payload);
       await _repository.clearSentOutboxMessages(
-        queuedMessages.map((entry) => entry.message.id).toList(),
+        transportTargets.map((entry) => entry.message.id).toList(),
       );
     } catch (error, stackTrace) {
-      for (final queued in queuedMessages) {
+      for (final queued in transportTargets) {
         final current = await _repository.getOutboxEventById(queued.message.id);
         final retryCount = (current?.retryCount ?? 0) + 1;
         await _repository.scheduleOutboxRetry(
@@ -310,7 +328,7 @@ class OutboxProcessor {
         );
       }
       _logger.w(
-        '[OUTBOX-PROCESSOR-RETRY] batch send failed; retry scheduled for pending entries.',
+        '[OUTBOX-PROCESSOR-RETRY] batch send failed; retry scheduled for attempted transport entries.',
         error: error,
         stackTrace: stackTrace,
         module: 'OutboxProcessor',

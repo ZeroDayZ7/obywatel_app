@@ -18,7 +18,6 @@ class ChatSyncService {
   final ChatsWsClient _wsClient;
   final ChatsRepository _repository;
   final AppLogger _logger;
-  final DeviceInfoService _deviceInfoService;
   final OutboxProcessor _outboxProcessor;
   final void Function(SyncStatus status) _updateStatus;
 
@@ -31,7 +30,7 @@ class ChatSyncService {
     this._wsClient,
     this._repository,
     this._logger,
-    this._deviceInfoService,
+    DeviceInfoService? deviceInfoService,
     void Function(SyncStatus status) updateStatus, {
     OutboxProcessor? outboxProcessor,
   }) : _updateStatus = updateStatus,
@@ -41,7 +40,7 @@ class ChatSyncService {
              _repository,
              _apiClient,
              _logger,
-             _deviceInfoService,
+             deviceInfoService ?? DeviceInfoService(_logger),
            );
 
   SyncStatus get currentStatus => _currentStatus;
@@ -95,7 +94,6 @@ class ChatSyncService {
   }
 
   Future<void> _flushOutbox() async {
-    await _deviceInfoService.getOrCreateDeviceId();
     await _outboxProcessor.processPending();
   }
 

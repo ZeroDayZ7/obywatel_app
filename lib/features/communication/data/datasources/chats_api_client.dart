@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
-import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_transport_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/attachment_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';

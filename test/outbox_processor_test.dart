@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_transport_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
@@ -160,47 +161,63 @@ void main() {
   );
 
   test(
-    'OutboxProcessor sends valid pending message and clears only after success',
+    'OutboxProcessor clears only messages that were successfully built and sent',
     () async {
-      final messageId = const Uuid().v4();
-      final eventId = const Uuid().v4();
-      final payload = <String, dynamic>{
-        'messageId': messageId,
-        'conversationId': conversationId,
-        'ciphertext': 'ciphertext-abc',
-        'eventId': eventId,
-        'senderDeviceId': 'app-device-id',
-        'type': 2,
-        'createdAt': DateTime.now().toUtc().toIso8601String(),
-      };
-
-      final message = Message(
-        id: messageId,
+      final messageAId = const Uuid().v4();
+      final messageBId = const Uuid().v4();
+      final messageA = Message(
+        id: messageAId,
         conversationId: conversationId,
         senderId: 'user-1',
-        content: 'hello',
-        encryptedPayload: 'ciphertext-abc',
+        content: 'hello-a',
+        encryptedPayload: 'ciphertext-a',
+        isMine: true,
+        createdAt: DateTime.now().toUtc(),
+      );
+      final messageB = Message(
+        id: messageBId,
+        conversationId: conversationId,
+        senderId: 'user-1',
+        content: 'hello-b',
+        encryptedPayload: 'ciphertext-b',
         isMine: true,
         createdAt: DateTime.now().toUtc(),
       );
 
       final repository = FakeChatsRepository(
-        pendingMessages: <Message>[message],
+        pendingMessages: <Message>[messageA, messageB],
         retryEvents: <OutboxEvent>[
           OutboxEvent(
-            id: messageId,
-            payload: jsonEncode(payload),
+            id: messageAId,
+            payload: jsonEncode({
+              'messageId': messageAId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-a',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 2,
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+            conversationId: conversationId,
+            retryCount: 0,
+          ),
+          OutboxEvent(
+            id: messageBId,
+            payload: jsonEncode({
+              'messageId': messageBId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-b',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 2,
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
             conversationId: conversationId,
             retryCount: 0,
           ),
         ],
       );
-      repository.outboxById[messageId] = OutboxEvent(
-        id: messageId,
-        payload: jsonEncode(payload),
-        conversationId: conversationId,
-        retryCount: 0,
-      );
+
       final transport = FakeTransportClient();
       final processor = OutboxProcessor(
         repository,
@@ -212,26 +229,18 @@ void main() {
       await processor.processPending();
 
       expect(transport.calls, isNotEmpty);
-      expect(repository.clearedMessageIds, <String>[messageId]);
+      expect(
+        repository.clearedMessageIds,
+        containsAll(<String>[messageAId, messageBId]),
+      );
       expect(repository.deletedOutboxIds, isEmpty);
     },
   );
 
   test(
-    'OutboxProcessor schedules retry without deleting messages after transport failure',
+    'OutboxProcessor does not retry or confirm invalid outbox data',
     () async {
       final messageId = const Uuid().v4();
-      final eventId = const Uuid().v4();
-      final payload = <String, dynamic>{
-        'messageId': messageId,
-        'conversationId': conversationId,
-        'ciphertext': 'ciphertext-abc',
-        'eventId': eventId,
-        'senderDeviceId': 'app-device-id',
-        'type': 2,
-        'createdAt': DateTime.now().toUtc().toIso8601String(),
-      };
-
       final repository = FakeChatsRepository(
         pendingMessages: <Message>[
           Message(
@@ -247,18 +256,71 @@ void main() {
         retryEvents: <OutboxEvent>[
           OutboxEvent(
             id: messageId,
-            payload: jsonEncode(payload),
+            payload: jsonEncode({
+              'messageId': messageId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-abc',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 'invalid',
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
             conversationId: conversationId,
             retryCount: 0,
           ),
         ],
       );
-      repository.outboxById[messageId] = OutboxEvent(
-        id: messageId,
-        payload: jsonEncode(payload),
-        conversationId: conversationId,
-        retryCount: 0,
+
+      final transport = FakeTransportClient();
+      final processor = OutboxProcessor(
+        repository,
+        transport,
+        AppLogger(),
+        FakeDeviceInfoService(),
       );
+
+      await processor.processPending();
+
+      expect(transport.calls, isEmpty);
+      expect(repository.clearedMessageIds, isEmpty);
+      expect(repository.scheduledRetries, isEmpty);
+    },
+  );
+
+  test(
+    'OutboxProcessor schedules retry only for attempted transport entries',
+    () async {
+      final messageId = const Uuid().v4();
+      final repository = FakeChatsRepository(
+        pendingMessages: <Message>[
+          Message(
+            id: messageId,
+            conversationId: conversationId,
+            senderId: 'user-1',
+            content: 'hello',
+            encryptedPayload: 'ciphertext-abc',
+            isMine: true,
+            createdAt: DateTime.now().toUtc(),
+          ),
+        ],
+        retryEvents: <OutboxEvent>[
+          OutboxEvent(
+            id: messageId,
+            payload: jsonEncode({
+              'messageId': messageId,
+              'conversationId': conversationId,
+              'ciphertext': 'ciphertext-abc',
+              'eventId': const Uuid().v4(),
+              'senderDeviceId': 'app-device-id',
+              'type': 2,
+              'createdAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+            conversationId: conversationId,
+            retryCount: 0,
+          ),
+        ],
+      );
+      repository.outboxById[messageId] = repository.retryEvents.first;
       final transport = FakeTransportClient(fail: true);
       final processor = OutboxProcessor(
         repository,
