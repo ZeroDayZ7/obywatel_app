@@ -266,10 +266,13 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 220, maxHeight: 220),
+              constraints: const BoxConstraints(
+                maxWidth: 240,
+                maxHeight: 260,
+              ),
               child: Image.memory(
                 previewBytes,
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 gaplessPlayback: true,
                 errorBuilder: (context, error, stackTrace) {
                   debugPrint(

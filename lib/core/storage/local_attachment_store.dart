@@ -147,17 +147,47 @@ class LocalAttachmentStore {
 
   Future<Uint8List> _generateThumbnailBytes(
     Uint8List bytes, {
-    int maxSide = 256,
+    int maxWidth = 240,
+    int maxHeight = 260,
   }) async {
     try {
-      final codec = await ui.instantiateImageCodec(
-        bytes,
-        targetWidth: maxSide,
-        targetHeight: maxSide,
-      );
+      final codec = await ui.instantiateImageCodec(bytes);
       final frame = await codec.getNextFrame();
       final image = frame.image;
-      final pngBytes = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (image.width <= 0 || image.height <= 0) {
+        return bytes;
+      }
+
+      final imageWidth = image.width.toDouble();
+      final imageHeight = image.height.toDouble();
+      final scale = (maxWidth / imageWidth).clamp(0.0, 1.0) <
+              (maxHeight / imageHeight).clamp(0.0, 1.0)
+          ? (maxWidth / imageWidth).clamp(0.0, 1.0)
+          : (maxHeight / imageHeight).clamp(0.0, 1.0);
+
+      final targetWidth = (imageWidth * scale).round();
+      final targetHeight = (imageHeight * scale).round();
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      final srcRect = ui.Rect.fromLTWH(
+        0,
+        0,
+        imageWidth,
+        imageHeight,
+      );
+      final dstRect = ui.Rect.fromLTWH(
+        0,
+        0,
+        targetWidth.toDouble(),
+        targetHeight.toDouble(),
+      );
+
+      canvas.drawImageRect(image, srcRect, dstRect, ui.Paint());
+
+      final picture = recorder.endRecording();
+      final resized = await picture.toImage(targetWidth, targetHeight);
+      final pngBytes = await resized.toByteData(format: ui.ImageByteFormat.png);
       if (pngBytes != null && pngBytes.lengthInBytes > 0) {
         return pngBytes.buffer.asUint8List();
       }
