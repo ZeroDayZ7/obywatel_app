@@ -1,8 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
-import 'package:dio/dio.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -10,13 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
-import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
-import 'package:obywatel_plus/core/logger/logger_provider.dart';
-import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
 
 class AttachmentCameraSupport {
@@ -40,9 +30,9 @@ class AttachmentCameraSupport {
 enum _AttachmentPickerSource { gallery, camera, file }
 
 class MessageInputField extends ConsumerStatefulWidget {
-  final String conversationId;
-
   const MessageInputField({super.key, required this.conversationId});
+
+  final String conversationId;
 
   @override
   ConsumerState<MessageInputField> createState() => _MessageInputFieldState();
@@ -53,7 +43,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   late final FocusNode _focusNode;
   bool _isEmojiPickerVisible = false;
   TextSelection? _lastValidSelection;
-  _PendingAttachment? _pendingAttachment;
+  String? _lastDisplayedError;
+
+  ProviderSubscription<MessageInputState>? _subscription;
 
   @override
   void initState() {
@@ -61,14 +53,60 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     _controller = TextEditingController();
     _focusNode = FocusNode();
     _controller.addListener(_syncSelection);
+    _syncControllerFromProvider();
+
+    _subscription = ref.listenManual<MessageInputState>(
+      messageInputProvider(widget.conversationId),
+      (previous, next) {
+        if (!mounted) return;
+
+        if (_controller.text != next.text) {
+          _controller.value = TextEditingValue(
+            text: next.text,
+            selection: TextSelection.collapsed(offset: next.text.length),
+            composing: TextRange.empty,
+          );
+        }
+
+        final currentError = next.errorMessage;
+        if (currentError != null &&
+            currentError != _lastDisplayedError &&
+            currentError.trim().isNotEmpty) {
+          _lastDisplayedError = currentError;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(currentError)),
+            );
+          });
+        }
+
+        if (currentError == null) {
+          _lastDisplayedError = null;
+        }
+      },
+      fireImmediately: true,
+    );
   }
 
   @override
   void dispose() {
+    _subscription?.close();
     _controller.removeListener(_syncSelection);
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _syncControllerFromProvider() {
+    final state = ref.read(messageInputProvider(widget.conversationId));
+    if (_controller.text != state.text) {
+      _controller.value = TextEditingValue(
+        text: state.text,
+        selection: TextSelection.collapsed(offset: state.text.length),
+        composing: TextRange.empty,
+      );
+    }
   }
 
   void _syncSelection() {
@@ -135,17 +173,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
   }
 
-  bool _looksLikeImage(String fileName, String? mimeType) {
-    final normalized = fileName.toLowerCase();
-    final mediaType = (mimeType ?? '').toLowerCase();
-    return mediaType.startsWith('image/') ||
-        normalized.endsWith('.png') ||
-        normalized.endsWith('.jpg') ||
-        normalized.endsWith('.jpeg') ||
-        normalized.endsWith('.gif') ||
-        normalized.endsWith('.webp');
-  }
-
   Future<void> _pickAttachment(_AttachmentPickerSource source) async {
     if (source == _AttachmentPickerSource.file) {
       final result = await FilePicker.platform.pickFiles(
@@ -174,15 +201,12 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
           lookupMimeType(selected.path ?? '') ?? 'application/octet-stream';
 
       if (!mounted) return;
-      setState(() {
-        _pendingAttachment = _PendingAttachment(
-          fileName: fileName,
-          bytes: effectiveBytes,
-          mimeType: detectedMimeType,
-          filePath: selected.path,
-          isImage: _looksLikeImage(fileName, detectedMimeType),
-        );
-      });
+      await ref.read(messageInputProvider(widget.conversationId).notifier).setAttachmentSelection(
+        fileName: fileName,
+        bytes: effectiveBytes,
+        mimeType: detectedMimeType,
+        filePath: selected.path,
+      );
       return;
     }
 
@@ -203,15 +227,13 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
     final data = await pickedFile.readAsBytes();
     if (!mounted) return;
-    setState(() {
-      _pendingAttachment = _PendingAttachment(
-        fileName: pickedFile.name,
-        bytes: data,
-        mimeType: lookupMimeType(pickedFile.path) ?? 'image/jpeg',
-        filePath: pickedFile.path,
-        isImage: true,
-      );
-    });
+    await ref.read(messageInputProvider(widget.conversationId).notifier).setAttachmentSelection(
+      fileName: pickedFile.name.trim().isNotEmpty ? pickedFile.name : 'photo.jpg',
+      bytes: data,
+      mimeType: lookupMimeType(pickedFile.path) ?? 'image/jpeg',
+      filePath: pickedFile.path,
+      isImage: true,
+    );
   }
 
   Future<void> _openAttachmentPicker() async {
@@ -237,9 +259,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Zdjęcia z galerii'),
-                  onTap: () => Navigator.of(
-                    context,
-                  ).pop(_AttachmentPickerSource.gallery),
+                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.gallery),
                 ),
                 ListTile(
                   leading: Icon(
@@ -247,8 +267,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Plik'),
-                  onTap: () =>
-                      Navigator.of(context).pop(_AttachmentPickerSource.file),
+                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.file),
                 ),
               ],
             ),
@@ -276,207 +295,24 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     await _pickAttachment(_AttachmentPickerSource.camera);
   }
 
-  Future<String?> _uploadPendingAttachment() async {
-    final pending = _pendingAttachment;
-    if (pending == null) {
-      return null;
-    }
-
-    if (pending.bytes.isEmpty) {
-      if (!mounted) return null;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Wybrany plik jest pusty.')));
-      return null;
-    }
-
-    if (pending.bytes.length > 25 * 1024 * 1024) {
-      if (!mounted) return null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plik jest za duży. Maksymalnie 25 MB.')),
-      );
-      return null;
-    }
-
-    final apiClient = ref.read(chatsApiClientProvider);
-    final crypto = ref.read(symmetricCryptoProvider);
-    final storage = ref.read(secureStorageProvider);
-    final localAttachmentStore = ref.read(localAttachmentStoreProvider);
-    final repository = ref.read(chatsRepositoryProvider);
-
-    try {
-      final response = await apiClient.prepareAttachmentUpload(
-        conversationId: widget.conversationId,
-        fileName: pending.fileName,
-        contentType: pending.mimeType,
-        size: pending.bytes.length,
-      );
-
-      final attachmentKey = await crypto.generateMasterKey();
-      final encryptedBase64 = await crypto.encryptBytes(
-        clearBytes: pending.bytes,
-        secretKey: attachmentKey,
-      );
-      final encryptedBytes = base64Decode(encryptedBase64);
-      final encryptedSha256 = sha256.convert(encryptedBytes).toString();
-      final keyBytes = await attachmentKey.extractBytes();
-      final keyRef = '${response.attachment.id}-attachment-key';
-      final keyValue = base64Encode(keyBytes);
-      await storage.write(
-        key: keyRef,
-        value: keyValue,
-      );
-      await repository.saveAttachmentMetadata(
-        attachmentId: response.attachment.id,
-        originalFileName: pending.fileName,
-        mimeType: pending.mimeType,
-        sizeBytes: pending.bytes.length,
-        sha256: encryptedSha256,
-        localFilePath: null,
-        thumbnailPath: null,
-        status: 'uploaded',
-        isAvailableLocally: true,
-        hasThumbnail: false,
-      );
-      final localFilePath = await localAttachmentStore.saveAttachment(
-        attachmentId: response.attachment.id,
-        bytes: pending.bytes,
-        mimeType: pending.mimeType,
-        fileName: pending.fileName,
-      );
-      if (pending.isImage) {
-        final thumbnailPath = await localAttachmentStore.thumbnailPathForAttachment(
-          response.attachment.id,
-        );
-        await localAttachmentStore.saveThumbnail(
-          attachmentId: response.attachment.id,
-          bytes: pending.bytes,
-        );
-        await repository.saveAttachmentMetadata(
-          attachmentId: response.attachment.id,
-          originalFileName: pending.fileName,
-          mimeType: pending.mimeType,
-          sizeBytes: pending.bytes.length,
-          sha256: encryptedSha256,
-          localFilePath: localFilePath,
-          thumbnailPath: thumbnailPath,
-          status: 'ready',
-          isAvailableLocally: true,
-          hasThumbnail: true,
-        );
-      } else {
-        await repository.saveAttachmentMetadata(
-          attachmentId: response.attachment.id,
-          originalFileName: pending.fileName,
-          mimeType: pending.mimeType,
-          sizeBytes: pending.bytes.length,
-          sha256: encryptedSha256,
-          localFilePath: localFilePath,
-          thumbnailPath: null,
-          status: 'ready',
-          isAvailableLocally: true,
-          hasThumbnail: false,
-        );
-      }
-
-      final uploadClient = Dio(
-        BaseOptions(
-          connectTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 30),
-          validateStatus: (status) =>
-              status != null && status >= 200 && status < 300,
-          headers: {'Content-Type': pending.mimeType},
-        ),
-      );
-
-      await uploadClient.put(
-        response.uploadUrl,
-        data: encryptedBytes,
-        options: Options(
-          headers: {'Content-Type': pending.mimeType},
-          followRedirects: false,
-        ),
-      );
-
-      final finalAttachment = await apiClient.finalizeAttachmentUpload(
-        attachmentId: response.attachment.id,
-        size: pending.bytes.length,
-        sha256: encryptedSha256,
-        metadata: {
-          'version': 1,
-          'ciphertextAlgorithm': 'AES-256-GCM',
-          'keyRef': keyRef,
-          'keyStoredLocally': true,
-          'originalContentType': pending.mimeType,
-          'originalFilename': pending.fileName,
-        },
-      );
-
-      return finalAttachment.id;
-    } catch (error, stackTrace) {
-      ref
-          .read(appLoggerProvider)
-          .e(
-            'Attachment upload failed for conversation ${widget.conversationId}',
-            error: error,
-            stackTrace: stackTrace,
-            module: 'MessageInputField',
-          );
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'message_input_field',
-          context: ErrorDescription('Attachment upload failed'),
-        ),
-      );
-
-      if (!mounted) return null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nie udało się wysłać załącznika. Spróbuj ponownie.'),
-        ),
-      );
-      return null;
-    }
-  }
-
   Future<void> _sendMessage() async {
-    final text = _controller.text.trim();
-    final hasAttachment = _pendingAttachment != null;
-    if (text.isEmpty && !hasAttachment) {
+    final notifier = ref.read(messageInputProvider(widget.conversationId).notifier);
+    final wasSent = await notifier.sendCurrentMessage();
+    if (!wasSent || !mounted) {
       return;
     }
 
-    String? attachmentId;
-    if (hasAttachment) {
-      attachmentId = await _uploadPendingAttachment();
-      if (attachmentId == null) {
-        return;
-      }
-    }
-
-    await ref
-        .read(activeChatProvider(widget.conversationId).notifier)
-        .sendMessage(text.isEmpty ? '' : text, attachmentId: attachmentId);
-
-    if (!mounted) return;
-    _controller.clear();
-    _lastValidSelection = const TextSelection.collapsed(offset: 0);
-    _updateTextState('');
     _closeEmojiPicker();
     _focusNode.unfocus();
-    setState(() {
-      _pendingAttachment = null;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final textState = ref.watch(messageInputProvider(widget.conversationId));
-    final canSend = textState.trim().isNotEmpty || _pendingAttachment != null;
+    final inputState = ref.watch(messageInputProvider(widget.conversationId));
+    final attachment = inputState.attachment;
+    final canSend = inputState.canSend && !inputState.isSending;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
@@ -573,7 +409,13 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                 const SizedBox(width: 8),
                 IconButton.filled(
                   onPressed: canSend ? _sendMessage : null,
-                  icon: const Icon(Icons.send_rounded),
+                  icon: inputState.isSending
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.send_rounded),
                   style: IconButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
@@ -584,7 +426,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                 ),
               ],
             ),
-            if (_pendingAttachment != null)
+            if (attachment != null)
               Align(
                 alignment: Alignment.centerLeft,
                 child: Padding(
@@ -598,7 +440,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_pendingAttachment!.isImage)
+                        if (attachment.isImage)
                           SizedBox(
                             width: 72,
                             height: 72,
@@ -608,7 +450,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                                 bottomLeft: Radius.circular(12),
                               ),
                               child: Image.memory(
-                                _pendingAttachment!.bytes,
+                                attachment.bytes,
                                 fit: BoxFit.cover,
                               ),
                             ),
@@ -629,16 +471,16 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  _pendingAttachment!.fileName,
+                                  attachment.fileName,
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                   style: theme.textTheme.bodyMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _pendingAttachment!.isImage
+                                  attachment.isImage
                                       ? 'Zdjęcie'
-                                      : _pendingAttachment!.mimeType,
+                                      : attachment.mimeType,
                                   style: theme.textTheme.labelSmall?.copyWith(
                                     color: colorScheme.onSurfaceVariant,
                                   ),
@@ -648,8 +490,11 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () =>
-                              setState(() => _pendingAttachment = null),
+                          onPressed: inputState.isSending
+                              ? null
+                              : () => ref
+                                  .read(messageInputProvider(widget.conversationId).notifier)
+                                  .clearAttachment(),
                           icon: const Icon(Icons.close_rounded),
                           tooltip: 'Usuń załącznik',
                         ),
@@ -700,27 +545,5 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
         ),
       ),
     );
-  }
-}
-
-class _PendingAttachment {
-  const _PendingAttachment({
-    required this.fileName,
-    required this.bytes,
-    required this.mimeType,
-    this.filePath,
-    required this.isImage,
-  });
-
-  final String fileName;
-  final Uint8List bytes;
-  final String mimeType;
-  final String? filePath;
-  final bool isImage;
-
-  String get fileHash => _sha256Hash(bytes);
-
-  static String _sha256Hash(List<int> bytes) {
-    return sha256.convert(bytes).toString();
   }
 }

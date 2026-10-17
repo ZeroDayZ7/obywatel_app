@@ -13,7 +13,7 @@ part of 'message_input_provider.dart';
 final messageInputProvider = MessageInputFamily._();
 
 final class MessageInputProvider
-    extends $NotifierProvider<MessageInput, String> {
+    extends $NotifierProvider<MessageInput, MessageInputState> {
   MessageInputProvider._({
     required MessageInputFamily super.from,
     required String super.argument,
@@ -40,10 +40,10 @@ final class MessageInputProvider
   MessageInput create() => MessageInput();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(String value) {
+  Override overrideWithValue(MessageInputState value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<String>(value),
+      providerOverride: $SyncValueProvider<MessageInputState>(value),
     );
   }
 
@@ -58,10 +58,17 @@ final class MessageInputProvider
   }
 }
 
-String _$messageInputHash() => r'e9213173e8e87bb0c449e90c3d418d457b3b668b';
+String _$messageInputHash() => r'9308a71733defc75155904be70ec6e2f25d3c237';
 
 final class MessageInputFamily extends $Family
-    with $ClassFamilyOverride<MessageInput, String, String, String, String> {
+    with
+        $ClassFamilyOverride<
+          MessageInput,
+          MessageInputState,
+          MessageInputState,
+          MessageInputState,
+          String
+        > {
   MessageInputFamily._()
     : super(
         retry: null,
@@ -78,20 +85,20 @@ final class MessageInputFamily extends $Family
   String toString() => r'messageInputProvider';
 }
 
-abstract class _$MessageInput extends $Notifier<String> {
+abstract class _$MessageInput extends $Notifier<MessageInputState> {
   late final _$args = ref.$arg as String;
   String get conversationId => _$args;
 
-  String build(String conversationId);
+  MessageInputState build(String conversationId);
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<String, String>;
+    final ref = this.ref as $Ref<MessageInputState, MessageInputState>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<String, String>,
-              String,
+              AnyNotifier<MessageInputState, MessageInputState>,
+              MessageInputState,
               Object?,
               Object?
             >;
