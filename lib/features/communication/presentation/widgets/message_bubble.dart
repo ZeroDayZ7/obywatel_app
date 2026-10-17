@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 
 class MessageBubble extends ConsumerStatefulWidget {
@@ -81,6 +82,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
   ) async {
     final storage = ref.read(secureStorageProvider);
     final localAttachmentStore = ref.read(localAttachmentStoreProvider);
+    final repository = ref.read(chatsRepositoryProvider);
 
     final cachedThumbnail = await localAttachmentStore.readThumbnail(attachmentId);
     if (cachedThumbnail != null && cachedThumbnail.isNotEmpty) {
@@ -90,8 +92,8 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
       return cachedThumbnail;
     }
 
-    final metadata = await storage.read(key: '$attachmentId-attachment-meta');
-    if (metadata == null || metadata.trim().isEmpty) {
+    final metadata = await repository.getAttachmentMetadata(attachmentId);
+    if (metadata == null || metadata.isEmpty) {
       debugPrint(
         '[ATTACHMENT-SYNC] attachment_id=$attachmentId missing metadata; preview unavailable',
       );
@@ -99,15 +101,11 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
     }
 
     try {
-      final decodedMetadata = jsonDecode(metadata);
-      if (decodedMetadata is! Map) return null;
-
-      final key = decodedMetadata['key']?.toString().trim();
-      final contentType =
-          (decodedMetadata['originalContentType'] ??
-                  decodedMetadata['contentType'])
-              .toString();
-      final fileName = decodedMetadata['originalFilename']?.toString().trim();
+      final key = await storage.read(key: '$attachmentId-attachment-key');
+      final contentType = (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
+          .toString();
+      final fileName = (metadata['fileName'] ?? metadata['originalFilename'] ?? '')
+          .toString();
 
       if (key == null || key.isEmpty || !contentType.toLowerCase().startsWith('image/')) {
         return null;
@@ -148,7 +146,7 @@ class _MessageBubbleState extends ConsumerState<MessageBubble> {
         attachmentId: attachmentId,
         bytes: decryptedBytes,
         mimeType: contentType,
-        fileName: fileName ?? attachmentId,
+        fileName: fileName.isNotEmpty ? fileName : attachmentId,
       );
       await localAttachmentStore.saveThumbnail(
         attachmentId: attachmentId,

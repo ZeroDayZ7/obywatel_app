@@ -15,6 +15,7 @@ import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
 
@@ -301,6 +302,7 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     final crypto = ref.read(symmetricCryptoProvider);
     final storage = ref.read(secureStorageProvider);
     final localAttachmentStore = ref.read(localAttachmentStoreProvider);
+    final repository = ref.read(chatsRepositoryProvider);
 
     try {
       final response = await apiClient.prepareAttachmentUpload(
@@ -319,35 +321,61 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       final encryptedSha256 = sha256.convert(encryptedBytes).toString();
       final keyBytes = await attachmentKey.extractBytes();
       final keyRef = '${response.attachment.id}-attachment-key';
-      final attachmentMetadata = {
-        'version': 1,
-        'attachmentId': response.attachment.id,
-        'key': base64Encode(keyBytes),
-        'keyRef': keyRef,
-        'ciphertextAlgorithm': 'AES-256-GCM',
-        'originalContentType': pending.mimeType,
-        'originalFilename': pending.fileName,
-        'size': pending.bytes.length,
-        'sha256': encryptedSha256,
-      };
+      final keyValue = base64Encode(keyBytes);
       await storage.write(
         key: keyRef,
-        value: attachmentMetadata['key'] as String,
+        value: keyValue,
       );
-      await storage.write(
-        key: '${response.attachment.id}-attachment-meta',
-        value: jsonEncode(attachmentMetadata),
+      await repository.saveAttachmentMetadata(
+        attachmentId: response.attachment.id,
+        originalFileName: pending.fileName,
+        mimeType: pending.mimeType,
+        sizeBytes: pending.bytes.length,
+        sha256: encryptedSha256,
+        localFilePath: null,
+        thumbnailPath: null,
+        status: 'uploaded',
+        isAvailableLocally: true,
+        hasThumbnail: false,
       );
-      await localAttachmentStore.saveAttachment(
+      final localFilePath = await localAttachmentStore.saveAttachment(
         attachmentId: response.attachment.id,
         bytes: pending.bytes,
         mimeType: pending.mimeType,
         fileName: pending.fileName,
       );
       if (pending.isImage) {
+        final thumbnailPath = await localAttachmentStore.thumbnailPathForAttachment(
+          response.attachment.id,
+        );
         await localAttachmentStore.saveThumbnail(
           attachmentId: response.attachment.id,
           bytes: pending.bytes,
+        );
+        await repository.saveAttachmentMetadata(
+          attachmentId: response.attachment.id,
+          originalFileName: pending.fileName,
+          mimeType: pending.mimeType,
+          sizeBytes: pending.bytes.length,
+          sha256: encryptedSha256,
+          localFilePath: localFilePath,
+          thumbnailPath: thumbnailPath,
+          status: 'ready',
+          isAvailableLocally: true,
+          hasThumbnail: true,
+        );
+      } else {
+        await repository.saveAttachmentMetadata(
+          attachmentId: response.attachment.id,
+          originalFileName: pending.fileName,
+          mimeType: pending.mimeType,
+          sizeBytes: pending.bytes.length,
+          sha256: encryptedSha256,
+          localFilePath: localFilePath,
+          thumbnailPath: null,
+          status: 'ready',
+          isAvailableLocally: true,
+          hasThumbnail: false,
         );
       }
 

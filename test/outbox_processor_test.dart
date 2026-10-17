@@ -96,6 +96,24 @@ class FakeChatsRepository implements ChatsRepository {
   }) async {}
 
   @override
+  Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId) async => null;
+
+  @override
+  Future<void> saveAttachmentMetadata({
+    required String attachmentId,
+    String? messageId,
+    String? originalFileName,
+    String? mimeType,
+    int sizeBytes = 0,
+    String sha256 = '',
+    String? localFilePath,
+    String? thumbnailPath,
+    String status = 'ready',
+    bool isAvailableLocally = false,
+    bool hasThumbnail = false,
+  }) async {}
+
+  @override
   Stream<Message> get incomingMessagesStream => const Stream.empty();
 
   @override

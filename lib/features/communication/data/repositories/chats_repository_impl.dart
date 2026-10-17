@@ -171,34 +171,107 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
   Future<Map<String, dynamic>?> _readAttachmentMetadataForMessage(
     String attachmentId,
-  ) async {
-    final normalized = attachmentId.trim();
-    if (normalized.isEmpty) {
+  ) async => getAttachmentMetadata(attachmentId);
+
+  @override
+  Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId) async {
+    final normalizedAttachmentId = attachmentId.trim();
+    if (normalizedAttachmentId.isEmpty) {
       return null;
     }
 
-    final stored = await _secureStorage.read(
-      key: '$normalized-attachment-meta',
-    );
-    if (stored == null || stored.trim().isEmpty) {
+    final row = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).getSingleOrNull();
+    if (row == null || row.mediaHeader == null || row.mediaHeader!.isEmpty) {
       return null;
     }
 
     try {
-      final decoded = jsonDecode(stored);
+      final decoded = jsonDecode(utf8.decode(row.mediaHeader!));
       if (decoded is! Map) {
         return null;
       }
       return decoded.map((key, value) => MapEntry(key.toString(), value));
     } catch (error, stackTrace) {
       _logger.w(
-        'Attachment metadata exists but is unreadable for $normalized',
+        'Attachment metadata exists but is unreadable for $normalizedAttachmentId',
         error: error,
         stackTrace: stackTrace,
         module: 'ChatsRepository',
       );
       return null;
     }
+  }
+
+  @override
+  Future<void> saveAttachmentMetadata({
+    required String attachmentId,
+    String? messageId,
+    String? originalFileName,
+    String? mimeType,
+    int sizeBytes = 0,
+    String sha256 = '',
+    String? localFilePath,
+    String? thumbnailPath,
+    String status = 'ready',
+    bool isAvailableLocally = false,
+    bool hasThumbnail = false,
+  }) async {
+    final normalizedAttachmentId = attachmentId.trim();
+    if (normalizedAttachmentId.isEmpty) {
+      return;
+    }
+
+    final metadata = {
+      'attachmentId': normalizedAttachmentId,
+      'messageId': messageId?.trim().isNotEmpty == true ? messageId : null,
+      'originalFilename': originalFileName?.trim() ?? '',
+      'originalContentType': mimeType?.trim().isNotEmpty == true ? mimeType : '',
+      'fileName': originalFileName?.trim() ?? '',
+      'contentType': mimeType?.trim().isNotEmpty == true ? mimeType : '',
+      'size': sizeBytes,
+      'sha256': sha256.trim(),
+      'localFilePath': localFilePath?.trim().isNotEmpty == true ? localFilePath : null,
+      'thumbnailPath': thumbnailPath?.trim().isNotEmpty == true ? thumbnailPath : null,
+      'status': status.trim().isNotEmpty ? status : 'ready',
+      'isAvailableLocally': isAvailableLocally,
+      'hasThumbnail': hasThumbnail,
+    };
+
+    final messageRow = messageId != null && messageId.trim().isNotEmpty
+        ? await (_db.select(_db.messages)
+              ..where((tbl) => tbl.id.equals(messageId.trim())))
+            .getSingleOrNull()
+        : null;
+
+    if (messageRow == null) {
+      final byAttachment = await (_db.select(
+        _db.messages,
+      )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).getSingleOrNull();
+      if (byAttachment == null) {
+        return;
+      }
+
+      await (_db.update(
+        _db.messages,
+      )..where((tbl) => tbl.id.equals(byAttachment.id))).write(
+        MessagesCompanion(
+          mediaHeader: Value(utf8.encode(jsonEncode(metadata))),
+          updatedAt: Value(DateTime.now().toUtc()),
+        ),
+      );
+      return;
+    }
+
+    await (_db.update(
+      _db.messages,
+    )..where((tbl) => tbl.id.equals(messageRow.id))).write(
+      MessagesCompanion(
+        mediaHeader: Value(utf8.encode(jsonEncode(metadata))),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
   }
 
   ChatsRepositoryImpl(
@@ -888,42 +961,51 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     String signalPlaintext = content;
     String effectiveDisplayContent = content;
+    String attachmentFileName = '';
+    String attachmentContentType = '';
+    int attachmentSize = 0;
+    String attachmentSha256 = '';
 
     if (hasAttachment) {
       final attachmentMetadata = await _readAttachmentMetadataForMessage(
         attachmentId,
       );
-      final attachmentKey = attachmentMetadata?['key']?.toString().trim();
-      if (attachmentKey == null || attachmentKey.isEmpty) {
+      final attachmentKey = await _secureStorage.read(
+        key: '$attachmentId-attachment-key',
+      );
+      if (attachmentKey == null || attachmentKey.trim().isEmpty) {
         throw const FormatException(
           'Attachment metadata missing: no valid key can be embedded in the encrypted message for this attachment.',
         );
       }
 
-      final fileName =
+      attachmentFileName =
           attachmentMetadata?['originalFilename']?.toString() ??
           attachmentMetadata?['fileName']?.toString() ??
           '';
+      attachmentContentType =
+          attachmentMetadata?['originalContentType']?.toString() ??
+          attachmentMetadata?['contentType']?.toString() ??
+          '';
+      attachmentSize =
+          int.tryParse((attachmentMetadata?['size'] ?? 0).toString()) ?? 0;
+      attachmentSha256 = attachmentMetadata?['sha256']?.toString() ?? '';
 
       signalPlaintext = jsonEncode(
         _buildSignalPlaintext(
           text: content,
           attachmentId: attachmentId,
           attachmentKey: attachmentKey,
-          attachmentFileName: fileName,
-          attachmentContentType:
-              attachmentMetadata?['originalContentType']?.toString() ??
-              attachmentMetadata?['contentType']?.toString() ??
-              '',
-          attachmentSize:
-              int.tryParse((attachmentMetadata?['size'] ?? 0).toString()) ?? 0,
-          attachmentSha256: attachmentMetadata?['sha256']?.toString() ?? '',
+          attachmentFileName: attachmentFileName,
+          attachmentContentType: attachmentContentType,
+          attachmentSize: attachmentSize,
+          attachmentSha256: attachmentSha256,
         ),
       );
 
       if (effectiveDisplayContent.trim().isEmpty) {
-        effectiveDisplayContent = fileName.isNotEmpty
-            ? '📎 $fileName'
+        effectiveDisplayContent = attachmentFileName.isNotEmpty
+            ? '📎 $attachmentFileName'
             : '📎 Załącznik';
       }
     } else {
@@ -987,6 +1069,21 @@ class ChatsRepositoryImpl implements ChatsRepository {
         signalType: encrypted.type,
       ),
     ]);
+    if (attachmentId != null && attachmentId.trim().isNotEmpty) {
+      await saveAttachmentMetadata(
+        attachmentId: attachmentId,
+        messageId: message.id,
+        originalFileName: attachmentFileName,
+        mimeType: attachmentContentType,
+        sizeBytes: attachmentSize,
+        sha256: attachmentSha256,
+        localFilePath: null,
+        thumbnailPath: null,
+        status: 'ready',
+        isAvailableLocally: true,
+        hasThumbnail: false,
+      );
+    }
 
     if (shouldPersistLocallyOnly || !isServerBackedConversation) {
       final localOnlyMessage = message.copyWith(status: 'pending');
@@ -1507,21 +1604,16 @@ class ChatsRepositoryImpl implements ChatsRepository {
             final keyRef = '$normalizedAttachmentId-attachment-key';
             await _secureStorage.write(key: keyRef, value: attachmentKey);
 
-            final attachmentMetadata = {
-              'version': 1,
-              'attachmentId': normalizedAttachmentId,
-              'key': attachmentKey,
-              'keyRef': keyRef,
-              'ciphertextAlgorithm': 'AES-256-GCM',
-              'originalContentType': attachment['contentType'] ?? '',
-              'originalFilename': attachment['fileName'] ?? '',
-              'size': attachment['size'] ?? 0,
-              'sha256': attachment['sha256'] ?? '',
-            };
-
-            await _secureStorage.write(
-              key: '$normalizedAttachmentId-attachment-meta',
-              value: jsonEncode(attachmentMetadata),
+            await saveAttachmentMetadata(
+              attachmentId: normalizedAttachmentId,
+              messageId: dto.id,
+              originalFileName: attachment['fileName']?.toString() ?? '',
+              mimeType: attachment['contentType']?.toString() ?? '',
+              sizeBytes: int.tryParse((attachment['size'] ?? 0).toString()) ?? 0,
+              sha256: attachment['sha256']?.toString() ?? '',
+              status: 'ready',
+              isAvailableLocally: false,
+              hasThumbnail: false,
             );
 
             if (decryptedContent.text.isEmpty) {

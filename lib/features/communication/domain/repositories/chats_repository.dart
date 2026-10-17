@@ -25,6 +25,20 @@ abstract class ChatsRepository {
     required String content,
     String? attachmentId,
   });
+  Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId);
+  Future<void> saveAttachmentMetadata({
+    required String attachmentId,
+    String? messageId,
+    String? originalFileName,
+    String? mimeType,
+    int sizeBytes = 0,
+    String sha256 = '',
+    String? localFilePath,
+    String? thumbnailPath,
+    String status = 'ready',
+    bool isAvailableLocally = false,
+    bool hasThumbnail = false,
+  });
   Stream<Message> get incomingMessagesStream;
 
   /// Pobiera niepotwierdzone wiadomości z lokalnego outboxa (dla offline sync)

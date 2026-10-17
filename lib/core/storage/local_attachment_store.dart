@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -183,13 +184,37 @@ class LocalAttachmentStore {
     return file.path;
   }
 
+  Future<Uint8List> _generateThumbnailBytes(
+    Uint8List bytes, {
+    int maxSide = 256,
+  }) async {
+    try {
+      final codec = await ui.instantiateImageCodec(
+        bytes,
+        targetWidth: maxSide,
+        targetHeight: maxSide,
+      );
+      final frame = await codec.getNextFrame();
+      final image = frame.image;
+      final pngBytes = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (pngBytes != null && pngBytes.lengthInBytes > 0) {
+        return pngBytes.buffer.asUint8List();
+      }
+    } catch (_) {
+      // Fallback to the original bytes only when the payload is not a valid image.
+    }
+
+    return bytes;
+  }
+
   Future<void> saveThumbnail({
     required String attachmentId,
     required Uint8List bytes,
   }) async {
     final file = File(await thumbnailPathForAttachment(attachmentId));
     await file.parent.create(recursive: true);
-    await file.writeAsBytes(bytes, flush: true);
+    final thumbnailBytes = await _generateThumbnailBytes(bytes);
+    await file.writeAsBytes(thumbnailBytes, flush: true);
   }
 
   Future<Uint8List?> readAttachment({
