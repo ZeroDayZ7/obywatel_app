@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
-import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/add_contact_modal.dart';
@@ -11,6 +10,7 @@ import 'package:obywatel_plus/features/communication/presentation/widgets/contac
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_online_section.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_search_delegate.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_settings_sheet.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/pending_contact_card.dart';
 
 class ContactsScreen extends ConsumerStatefulWidget {
   const ContactsScreen({super.key});
@@ -20,8 +20,6 @@ class ContactsScreen extends ConsumerStatefulWidget {
 }
 
 class _ContactsScreenState extends ConsumerState<ContactsScreen> {
-  final Set<String> _processingRequestIds = <String>{};
-
   void _openAddContactModal(BuildContext context) {
     showDialog(context: context, builder: (_) => const AddContactModal());
   }
@@ -36,46 +34,6 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       ),
       builder: (_) => const ContactsSettingsSheet(),
     );
-  }
-
-  Future<void> _respondToRequest(Contact contact, bool accept) async {
-    if (_processingRequestIds.contains(contact.id)) return;
-
-    setState(() => _processingRequestIds.add(contact.id));
-
-    try {
-      final repository = ref.read(contactsRepositoryProvider);
-      await repository.respondToRequest(contact.id, accept);
-
-      if (!mounted) return;
-
-      final statusColors = context.statusColors;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            accept
-                ? 'Zaproszenie zaakceptowane dla ${contact.displayName}'
-                : 'Zaproszenie odrzucone dla ${contact.displayName}',
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: accept ? statusColors.success : statusColors.warning,
-        ),
-      );
-    } catch (error) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Nie udało się zaktualizować zaproszenia: $error'),
-          backgroundColor: Theme.of(context).colorScheme.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _processingRequestIds.remove(contact.id));
-      }
-    }
   }
 
   @override
@@ -232,116 +190,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  final contact = pendingContacts[index];
-                  final isBusy = _processingRequestIds.contains(contact.id);
-                  final isIncoming = contact.direction == 'incoming';
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.35,
-                        ),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: colorScheme.surfaceContainerHighest,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            contact.displayName.isNotEmpty
-                                ? contact.displayName[0].toUpperCase()
-                                : '?',
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: colorScheme.onSurface,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                contact.localAlias?.trim().isNotEmpty == true
-                                    ? contact.localAlias!
-                                    : contact.displayName,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  color: colorScheme.onSurface,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                isIncoming
-                                    ? 'Zaproszenie oczekujące'
-                                    : 'Wysłano zaproszenie',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (isIncoming)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                onPressed: isBusy
-                                    ? null
-                                    : () => _respondToRequest(contact, true),
-                                tooltip: 'Akceptuj',
-                                color: colorScheme.primary,
-                                icon: const Icon(Icons.check_rounded),
-                              ),
-                              IconButton(
-                                onPressed: isBusy
-                                    ? null
-                                    : () => _respondToRequest(contact, false),
-                                tooltip: 'Odrzuć',
-                                color: colorScheme.error,
-                                icon: const Icon(Icons.close_rounded),
-                              ),
-                            ],
-                          )
-                        else
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Text(
-                              'Wysłano',
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onPrimaryContainer,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                }, childCount: pendingContacts.length),
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) =>
+                      PendingContactCard(contact: pendingContacts[index]),
+                  childCount: pendingContacts.length,
+                ),
               ),
             ),
           ],
