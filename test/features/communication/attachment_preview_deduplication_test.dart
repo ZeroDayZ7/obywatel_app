@@ -14,7 +14,7 @@ import 'package:obywatel_plus/features/communication/domain/chats/conversation.d
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/outbox/outbox_event.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
 
 class _CountingAttachmentStore extends LocalAttachmentStore {
   _CountingAttachmentStore() : _thumbnails = <String, Uint8List>{};

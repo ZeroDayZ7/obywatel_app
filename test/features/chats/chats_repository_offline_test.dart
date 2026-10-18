@@ -23,8 +23,8 @@ import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart'
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_list.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
