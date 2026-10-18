@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_attachment_preview.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_toolbar.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/message_text_field.dart';
 
 class AttachmentCameraSupport {
   static bool isCameraSupportedOnCurrentPlatform() {
@@ -330,81 +333,25 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
           children: [
             Row(
               children: [
-                IconButton(
-                  onPressed: _toggleEmojiPicker,
-                  icon: Icon(
-                    _isEmojiPickerVisible
-                        ? Icons.keyboard_rounded
-                        : Icons.emoji_emotions_outlined,
-                  ),
-                  tooltip: _isEmojiPickerVisible
-                      ? 'Wpisz tekst'
-                      : 'Wybierz emoji',
-                  color: colorScheme.onSurface,
-                ),
-                IconButton(
-                  onPressed: _openAttachmentPicker,
-                  icon: const Icon(Icons.attach_file_rounded),
-                  tooltip: 'Dodaj załącznik',
-                  color: colorScheme.onSurface,
-                ),
-                IconButton(
-                  onPressed: AttachmentCameraSupport.isCameraButtonEnabled()
+                MessageInputToolbar(
+                  isEmojiVisible: _isEmojiPickerVisible,
+                  onToggleEmoji: _toggleEmojiPicker,
+                  onOpenAttachmentPicker: _openAttachmentPicker,
+                  onOpenCamera: AttachmentCameraSupport.isCameraButtonEnabled()
                       ? _openCamera
                       : null,
-                  icon: const Icon(Icons.photo_camera_rounded),
-                  tooltip: AttachmentCameraSupport.cameraTooltip(),
-                  color: colorScheme.onSurface,
                 ),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    onTap: () {
-                      if (_isEmojiPickerVisible) {
-                        _closeEmojiPicker();
-                      }
-                    },
-                    onChanged: _updateTextState,
-                    minLines: 1,
-                    maxLines: 4,
-                    style: theme.textTheme.bodyMedium,
-                    decoration: InputDecoration(
-                      hintText: 'Napisz wiadomość...',
-                      hintStyle: theme.textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 14,
-                        vertical: 12,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.25,
-                          ),
-                        ),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.25,
-                          ),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                        borderSide: BorderSide(
-                          color: colorScheme.primary,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                  ),
+                MessageTextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  onTap: () {
+                    if (_isEmojiPickerVisible) {
+                      _closeEmojiPicker();
+                    }
+                  },
+                  onChanged: _updateTextState,
+                  colorScheme: colorScheme,
+                  theme: theme,
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
@@ -427,81 +374,14 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
               ],
             ),
             if (attachment != null)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 320),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (attachment.isImage)
-                          SizedBox(
-                            width: 72,
-                            height: 72,
-                            child: ClipRRect(
-                              borderRadius: const BorderRadius.only(
-                                topLeft: Radius.circular(12),
-                                bottomLeft: Radius.circular(12),
-                              ),
-                              child: Image.memory(
-                                attachment.bytes,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                        else
-                          SizedBox(
-                            width: 72,
-                            height: 72,
-                            child: Icon(
-                              Icons.insert_drive_file_rounded,
-                              color: colorScheme.primary,
-                            ),
-                          ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  attachment.fileName,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.bodyMedium,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  attachment.isImage
-                                      ? 'Zdjęcie'
-                                      : attachment.mimeType,
-                                  style: theme.textTheme.labelSmall?.copyWith(
-                                    color: colorScheme.onSurfaceVariant,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: inputState.isSending
-                              ? null
-                              : () => ref
-                                  .read(messageInputProvider(widget.conversationId).notifier)
-                                  .clearAttachment(),
-                          icon: const Icon(Icons.close_rounded),
-                          tooltip: 'Usuń załącznik',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              MessageAttachmentPreview(
+                attachment: attachment,
+                isSending: inputState.isSending,
+                onRemove: inputState.isSending
+                    ? () {}
+                    : () => ref
+                        .read(messageInputProvider(widget.conversationId).notifier)
+                        .clearAttachment(),
               ),
             if (_isEmojiPickerVisible)
               Padding(
