@@ -54,10 +54,7 @@ class MessageTextField extends StatelessWidget {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(4),
-            borderSide: BorderSide(
-              color: colorScheme.primary,
-              width: 1,
-            ),
+            borderSide: BorderSide(color: colorScheme.primary, width: 1),
           ),
         ),
       ),

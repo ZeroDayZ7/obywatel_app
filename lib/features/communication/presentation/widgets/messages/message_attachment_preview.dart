@@ -40,10 +40,7 @@ class MessageAttachmentPreview extends StatelessWidget {
                       topLeft: Radius.circular(12),
                       bottomLeft: Radius.circular(12),
                     ),
-                    child: Image.memory(
-                      attachment.bytes,
-                      fit: BoxFit.cover,
-                    ),
+                    child: Image.memory(attachment.bytes, fit: BoxFit.cover),
                   ),
                 )
               else
@@ -69,9 +66,7 @@ class MessageAttachmentPreview extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        attachment.isImage
-                            ? 'Zdjęcie'
-                            : attachment.mimeType,
+                        attachment.isImage ? 'Zdjęcie' : attachment.mimeType,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),

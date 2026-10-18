@@ -11,7 +11,8 @@ class MessageBubble extends ConsumerWidget {
   String get _displayContent {
     final content = message.content.trim();
     if (content.isNotEmpty) return content;
-    if (message.attachmentId != null && message.attachmentId!.trim().isNotEmpty) {
+    if (message.attachmentId != null &&
+        message.attachmentId!.trim().isNotEmpty) {
       return '📎 Załącznik';
     }
     return 'Nie można odszyfrować wiadomości';
@@ -43,10 +44,7 @@ class MessageBubble extends ConsumerWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(
-                maxWidth: 240,
-                maxHeight: 260,
-              ),
+              constraints: const BoxConstraints(maxWidth: 240, maxHeight: 260),
               child: Image.memory(
                 previewBytes,
                 fit: BoxFit.contain,

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/date_divider.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/date_divider.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_list.dart';
 
 void main() {
   group('MessageList ordering and date dividers', () {
@@ -43,9 +43,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MessageList(messages: messages),
-          ),
+          child: MaterialApp(home: MessageList(messages: messages)),
         ),
       );
 
@@ -93,9 +91,7 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          child: MaterialApp(
-            home: MessageList(messages: messages),
-          ),
+          child: MaterialApp(home: MessageList(messages: messages)),
         ),
       );
 

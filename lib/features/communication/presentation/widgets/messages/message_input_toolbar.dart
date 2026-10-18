@@ -23,7 +23,9 @@ class MessageInputToolbar extends StatelessWidget {
         IconButton(
           onPressed: onToggleEmoji,
           icon: Icon(
-            isEmojiVisible ? Icons.keyboard_rounded : Icons.emoji_emotions_outlined,
+            isEmojiVisible
+                ? Icons.keyboard_rounded
+                : Icons.emoji_emotions_outlined,
           ),
           tooltip: isEmojiVisible ? 'Wpisz tekst' : 'Wybierz emoji',
           color: colorScheme.onSurface,

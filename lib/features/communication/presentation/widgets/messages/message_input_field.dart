@@ -8,9 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_attachment_preview.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_toolbar.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_text_field.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_attachment_preview.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_toolbar.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_text_field.dart';
 
 class AttachmentCameraSupport {
   static bool isCameraSupportedOnCurrentPlatform() {
@@ -78,9 +78,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
           _lastDisplayedError = currentError;
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(currentError)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(currentError)));
           });
         }
 
@@ -204,12 +204,14 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
           lookupMimeType(selected.path ?? '') ?? 'application/octet-stream';
 
       if (!mounted) return;
-      await ref.read(messageInputProvider(widget.conversationId).notifier).setAttachmentSelection(
-        fileName: fileName,
-        bytes: effectiveBytes,
-        mimeType: detectedMimeType,
-        filePath: selected.path,
-      );
+      await ref
+          .read(messageInputProvider(widget.conversationId).notifier)
+          .setAttachmentSelection(
+            fileName: fileName,
+            bytes: effectiveBytes,
+            mimeType: detectedMimeType,
+            filePath: selected.path,
+          );
       return;
     }
 
@@ -230,13 +232,17 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
 
     final data = await pickedFile.readAsBytes();
     if (!mounted) return;
-    await ref.read(messageInputProvider(widget.conversationId).notifier).setAttachmentSelection(
-      fileName: pickedFile.name.trim().isNotEmpty ? pickedFile.name : 'photo.jpg',
-      bytes: data,
-      mimeType: lookupMimeType(pickedFile.path) ?? 'image/jpeg',
-      filePath: pickedFile.path,
-      isImage: true,
-    );
+    await ref
+        .read(messageInputProvider(widget.conversationId).notifier)
+        .setAttachmentSelection(
+          fileName: pickedFile.name.trim().isNotEmpty
+              ? pickedFile.name
+              : 'photo.jpg',
+          bytes: data,
+          mimeType: lookupMimeType(pickedFile.path) ?? 'image/jpeg',
+          filePath: pickedFile.path,
+          isImage: true,
+        );
   }
 
   Future<void> _openAttachmentPicker() async {
@@ -262,7 +268,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Zdjęcia z galerii'),
-                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.gallery),
+                  onTap: () => Navigator.of(
+                    context,
+                  ).pop(_AttachmentPickerSource.gallery),
                 ),
                 ListTile(
                   leading: Icon(
@@ -270,7 +278,8 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     color: colorScheme.primary,
                   ),
                   title: const Text('Plik'),
-                  onTap: () => Navigator.of(context).pop(_AttachmentPickerSource.file),
+                  onTap: () =>
+                      Navigator.of(context).pop(_AttachmentPickerSource.file),
                 ),
               ],
             ),
@@ -299,7 +308,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
   }
 
   Future<void> _sendMessage() async {
-    final notifier = ref.read(messageInputProvider(widget.conversationId).notifier);
+    final notifier = ref.read(
+      messageInputProvider(widget.conversationId).notifier,
+    );
     final wasSent = await notifier.sendCurrentMessage();
     if (!wasSent || !mounted) {
       return;
@@ -380,8 +391,12 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                 onRemove: inputState.isSending
                     ? () {}
                     : () => ref
-                        .read(messageInputProvider(widget.conversationId).notifier)
-                        .clearAttachment(),
+                          .read(
+                            messageInputProvider(
+                              widget.conversationId,
+                            ).notifier,
+                          )
+                          .clearAttachment(),
               ),
             if (_isEmojiPickerVisible)
               Padding(

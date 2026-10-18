@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/date_divider.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/date_divider.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
 
 class MessageList extends StatelessWidget {
   final List<Message> messages;
@@ -45,10 +45,7 @@ class MessageList extends StatelessWidget {
                 key: ValueKey('date-divider-${message.id}'),
                 date: message.createdAt,
               ),
-            MessageBubble(
-              key: ValueKey(message.id),
-              message: message,
-            ),
+            MessageBubble(key: ValueKey(message.id), message: message),
           ],
         );
       },

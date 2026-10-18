@@ -4,8 +4,8 @@ import 'package:obywatel_plus/features/communication/application/chat_sync_servi
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_field.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_field.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_list.dart';
 
 class ChatRoomScreen extends ConsumerStatefulWidget {
   final String conversationId;
