@@ -33,19 +33,14 @@ class MessageList extends StatelessWidget {
       itemCount: messages.length,
       itemBuilder: (context, index) {
         final message = messages[index];
-        final previousMessage = index > 0 ? messages[index - 1] : null;
-
+        final previousMessage = index == 0 ? null : messages[index - 1];
         final showDivider = _shouldShowDateDivider(message, previousMessage);
 
         return Column(
           key: ValueKey('message-list-row-${message.id}'),
           children: [
-            if (showDivider)
-              DateDivider(
-                key: ValueKey('date-divider-${message.id}'),
-                date: message.createdAt,
-              ),
-            MessageBubble(key: ValueKey(message.id), message: message),
+            if (showDivider) DateDivider(date: message.createdAt),
+            MessageBubble(message: message),
           ],
         );
       },
