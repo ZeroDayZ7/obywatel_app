@@ -1,6 +1,20 @@
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 
+const String _connectionProblemMessage =
+    'Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.';
+const String _retryRequestMessage =
+    'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+const String _validationMessage = 'Sprawdź identyfikator użytkownika.';
+const String _selfContactMessage = 'Nie możesz dodać siebie do kontaktów.';
+const String _existingRelationMessage = 'Zaproszenie lub kontakt już istnieje.';
+const String _inactiveDeviceMessage =
+    'Nie można wysłać zaproszenia. To konto nie ma aktywnego komunikatora lub nie jest jeszcze dostępne.';
+const String _genericValidationMessage =
+    'Sprawdź poprawność danych i spróbuj ponownie.';
+const String _sessionExpiredMessage = 'Sesja wygasła. Zaloguj się ponownie.';
+const String _forbiddenMessage = 'Nie masz uprawnień do tej operacji.';
+
 String mapContactInviteError(Object error) {
   if (error is DioException) {
     final nested = error.error;
@@ -17,20 +31,20 @@ String mapContactInviteError(Object error) {
     }
 
     if (error.response?.statusCode == 400) {
-      return _fallbackValidationMessage();
+      return _validationMessage;
     }
 
     if (error.type == DioExceptionType.connectionError ||
         error.type == DioExceptionType.connectionTimeout) {
-      return 'Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.';
+      return _connectionProblemMessage;
     }
 
     if (error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.sendTimeout) {
-      return 'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+      return _retryRequestMessage;
     }
 
-    return 'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+    return _retryRequestMessage;
   }
 
   if (error is ValidationException) {
@@ -38,89 +52,141 @@ String mapContactInviteError(Object error) {
   }
 
   if (error is NetworkException) {
-    return 'Nie udało się połączyć z serwerem. Sprawdź połączenie i spróbuj ponownie.';
+    return _connectionProblemMessage;
   }
 
   if (error is TimeoutException) {
-    return 'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+    return _retryRequestMessage;
   }
 
   if (error is UnauthorizedException) {
-    return 'Sesja wygasła. Zaloguj się ponownie.';
+    return _sessionExpiredMessage;
   }
 
   if (error is ForbiddenException) {
-    return 'Nie masz uprawnień do tej operacji.';
+    return _forbiddenMessage;
   }
 
   if (error is BackendUnavailableException ||
       error is UpstreamUnavailableException ||
       error is ServerException) {
-    return 'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+    return _retryRequestMessage;
   }
 
   if (error is FormatException) {
-    return 'Sprawdź identyfikator użytkownika.';
+    return _validationMessage;
   }
 
-  return 'Nie udało się wysłać zaproszenia. Spróbuj ponownie za chwilę.';
+  return _retryRequestMessage;
 }
-
-String _fallbackValidationMessage() => 'Sprawdź identyfikator użytkownika.';
 
 String? _validationDetailFrom(Map<dynamic, dynamic> data) {
   final meta = data['meta'];
-  if (meta is Map) {
-    final detail = meta['detail'];
-    if (detail != null && detail.toString().trim().isNotEmpty) {
-      return detail.toString();
+  final directDetail = data['detail'];
+  final responseMessage = data['message'];
+
+  return _firstNonEmpty([
+    _safeString(meta is Map ? meta['detail'] : null),
+    _safeString(directDetail),
+    _safeString(responseMessage),
+  ]);
+}
+
+String? _firstNonEmpty(List<String?> values) {
+  for (final value in values) {
+    if (value != null && value.trim().isNotEmpty) {
+      return value;
     }
   }
+  return null;
+}
 
-  final explicitDetail = data['detail'];
-  if (explicitDetail != null && explicitDetail.toString().trim().isNotEmpty) {
-    return explicitDetail.toString();
+String? _safeString(Object? value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
   }
 
-  final message = data['message'];
-  if (message != null && message.toString().trim().isNotEmpty) {
-    return message.toString();
+  if (value is num || value is bool) {
+    final text = value.toString();
+    return text.trim().isEmpty ? null : text;
   }
 
   return null;
 }
 
 String _mapValidationDetail(String detail) {
-  final normalized = detail.toLowerCase();
-
-  if (normalized.contains('cannot send a contact request to yourself') ||
-      (normalized.contains('self') && normalized.contains('contact'))) {
-    return 'Nie możesz dodać siebie do kontaktów.';
+  final normalized = detail.trim().toLowerCase();
+  if (normalized.isEmpty) {
+    return _genericValidationMessage;
   }
 
-  if (normalized.contains('already exists') ||
-      normalized.contains('contact relation already exists')) {
-    return 'Zaproszenie lub kontakt już istnieje.';
+  if (_containsAny(normalized, ['cannot send a contact request to yourself'])) {
+    return _selfContactMessage;
   }
 
-  if (normalized.contains('not eligible') ||
-      normalized.contains('target user is not eligible') ||
-      normalized.contains('no active device identity') ||
-      normalized.contains('device identity') ||
-      normalized.contains('not available')) {
-    return 'Nie można wysłać zaproszenia. To konto nie ma aktywnego komunikatora lub nie jest jeszcze dostępne.';
+  if (_containsAny(normalized, [
+        'contact relation already exists',
+        'contact already exists',
+        'invite already exists',
+        'request already exists',
+      ]) ||
+      (_containsAny(normalized, ['already exists']) &&
+          _containsAny(normalized, [
+            'contact',
+            'invite',
+            'request',
+            'relation',
+          ]))) {
+    return _existingRelationMessage;
   }
 
-  if (normalized.contains('invalid user identifiers') ||
-      normalized.contains('invalid identifier') ||
-      normalized.contains('request validation failed') ||
-      normalized.contains('validation failed')) {
-    return 'Sprawdź identyfikator użytkownika.';
+  if (_containsAny(normalized, [
+        'no active device identity',
+        'no active device',
+        'device identity is not active',
+        'device identity unavailable',
+        'device identity not active',
+      ]) ||
+      (_containsAny(normalized, ['device identity', 'device']) &&
+          _containsAny(normalized, [
+            'not active',
+            'inactive',
+            'missing',
+            'unavailable',
+          ]))) {
+    return _inactiveDeviceMessage;
   }
 
-  if (normalized.contains('identyfikator') || normalized.contains('uuid')) {
-    return 'Sprawdź identyfikator użytkownika.';
+  if (_containsAny(normalized, [
+        'invalid user identifier',
+        'invalid user identifiers',
+        'invalid user id',
+        'invalid identifier',
+        'invalid id',
+        'validation failed',
+        'request validation failed',
+      ]) ||
+      (normalized.contains('invalid') &&
+          _containsAny(normalized, [
+            'identifier',
+            'user id',
+            'user identifier',
+            'contact id',
+          ]))) {
+    return _validationMessage;
   }
 
-  return 'Sprawdź poprawność danych i spróbuj ponownie.';
+  if (_containsAny(normalized, [
+    'not eligible',
+    'target user is not eligible',
+  ])) {
+    return _inactiveDeviceMessage;
+  }
+
+  return _genericValidationMessage;
+}
+
+bool _containsAny(String value, List<String> needles) {
+  return needles.any(value.contains);
 }
