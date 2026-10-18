@@ -602,6 +602,25 @@ class ChatsRepositoryImpl implements ChatsRepository {
     }
   }
 
+  Future<String> _resolveMessageContentForPersistence(
+    String messageId,
+    String decryptedText,
+  ) async {
+    final normalizedText = decryptedText.trim();
+    if (normalizedText.isNotEmpty) {
+      return normalizedText;
+    }
+
+    final existing = await (_db.select(
+      _db.messages,
+    )..where((tbl) => tbl.id.equals(messageId))).getSingleOrNull();
+
+    final preserved = existing?.content.trim();
+    return preserved != null && preserved.isNotEmpty
+        ? preserved
+        : normalizedText;
+  }
+
   bool _isCurrentUserMessage(MessageDto dto) =>
       dto.senderId.trim() == _currentUserId.trim();
 
@@ -1622,58 +1641,6 @@ class ChatsRepositoryImpl implements ChatsRepository {
         parseRemoteMessageDtos(newMessages),
       );
 
-      if (remoteMessageDtos.isNotEmpty) {
-        final persistedCompanions = <MessagesCompanion>[];
-        final pendingAttachmentMetadata =
-            <({String messageId, DecryptedMessageContent decryptedContent})>[];
-
-        for (final dto in remoteMessageDtos) {
-          final isOwnMessage = _isCurrentUserMessage(dto);
-          final persistedPlaintext = isOwnMessage
-              ? await _resolvePersistedPlaintextForOwnedMessage(dto)
-              : null;
-          final decryptedContent = isOwnMessage
-              ? null
-              : await _decryptInboundMessage(dto);
-
-          final decryptedText = isOwnMessage
-              ? persistedPlaintext ?? ''
-              : decryptedContent?.text ?? '';
-
-          if (!isOwnMessage && decryptedContent != null) {
-            pendingAttachmentMetadata.add((
-              messageId: dto.id,
-              decryptedContent: decryptedContent,
-            ));
-            await _persistPlaintextForMessage(dto.id, decryptedText);
-            _logger.i(
-              '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
-              module: 'ChatsRepository',
-            );
-          } else if (!isOwnMessage) {
-            _logger.w(
-              'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
-              'conversationId=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
-              module: 'ChatsRepository',
-            );
-          } else if (decryptedText.trim().isNotEmpty) {
-            await _persistPlaintextForMessage(dto.id, decryptedText);
-          }
-
-          persistedCompanions.add(
-            _messageDtoToCompanion(dto, decryptedContent: decryptedText),
-          );
-        }
-
-        await _db.chatsDao.upsertMessages(persistedCompanions);
-        for (final entry in pendingAttachmentMetadata) {
-          await _persistAttachmentMetadataFromDecryptedContent(
-            messageId: entry.messageId,
-            decryptedContent: entry.decryptedContent,
-          );
-        }
-      }
-
       final nextMessageVersion = resolveLastKnownMessageVersion(
         remoteMessageDtos,
         resolvedLastKnownMessageVersion,
@@ -1683,11 +1650,76 @@ class ChatsRepositoryImpl implements ChatsRepository {
         resolvedLastKnownContactVersion,
       );
 
-      await _db.syncStateDao.upsertCheckpoint(
-        userId: _currentUserId,
-        lastKnownMessageVersion: BigInt.from(nextMessageVersion),
-        lastKnownContactVersion: BigInt.from(nextContactVersion),
-      );
+      await _db.transaction(() async {
+        if (remoteMessageDtos.isNotEmpty) {
+          final persistedCompanions = <MessagesCompanion>[];
+          final pendingAttachmentMetadata =
+              <
+                ({String messageId, DecryptedMessageContent decryptedContent})
+              >[];
+
+          for (final dto in remoteMessageDtos) {
+            final isOwnMessage = _isCurrentUserMessage(dto);
+            final persistedPlaintext = isOwnMessage
+                ? await _resolvePersistedPlaintextForOwnedMessage(dto)
+                : null;
+            final decryptedContent = isOwnMessage
+                ? null
+                : await _decryptInboundMessage(dto);
+
+            final decryptedText = isOwnMessage
+                ? persistedPlaintext ?? ''
+                : decryptedContent?.text ?? '';
+
+            if (!isOwnMessage && decryptedContent != null) {
+              pendingAttachmentMetadata.add((
+                messageId: dto.id,
+                decryptedContent: decryptedContent,
+              ));
+              await _persistPlaintextForMessage(dto.id, decryptedText);
+              _logger.i(
+                '[CHAT-FLOW-4.1] inbound delta message decrypted conversationId=${dto.conversationId} message_id=${dto.id}',
+                module: 'ChatsRepository',
+              );
+            } else if (!isOwnMessage) {
+              _logger.w(
+                'Nie udało się odszyfrować wiadomości z delta sync; zachowuję ciphertext. '
+                'conversationId=${dto.conversationId} sender_id=${dto.senderId} message_id=${dto.id}',
+                module: 'ChatsRepository',
+              );
+            } else if (decryptedText.trim().isNotEmpty) {
+              await _persistPlaintextForMessage(dto.id, decryptedText);
+            }
+
+            final contentForPersistence =
+                await _resolveMessageContentForPersistence(
+                  dto.id,
+                  decryptedText,
+                );
+
+            persistedCompanions.add(
+              _messageDtoToCompanion(
+                dto,
+                decryptedContent: contentForPersistence,
+              ),
+            );
+          }
+
+          await _db.chatsDao.upsertMessages(persistedCompanions);
+          for (final entry in pendingAttachmentMetadata) {
+            await _persistAttachmentMetadataFromDecryptedContent(
+              messageId: entry.messageId,
+              decryptedContent: entry.decryptedContent,
+            );
+          }
+        }
+
+        await _db.syncStateDao.upsertCheckpoint(
+          userId: _currentUserId,
+          lastKnownMessageVersion: BigInt.from(nextMessageVersion),
+          lastKnownContactVersion: BigInt.from(nextContactVersion),
+        );
+      });
 
       _logger.i(
         '[CHAT-FLOW-4] syncDeltaFromRemote complete remoteMessages=${remoteMessageDtos.length} updatedContacts=${updatedContacts.length}',
@@ -1744,81 +1776,89 @@ class ChatsRepositoryImpl implements ChatsRepository {
   ) async {
     final conversations = <Conversation>[];
 
-    for (final dto in dtos) {
-      final conv = mapConversationFromDto(dto, _currentUserId);
-      await _db.chatsDao.upsertConversations([
-        ConversationsCompanion(
-          id: Value(dto.id),
-          type: Value(dto.type),
-          title: Value(dto.title),
-          lastSequence: Value(BigInt.from(dto.lastSequence)),
-          updatedAt: Value(normalizeTransportTimestamp(dto.updatedAt)),
-          createdAt: Value(normalizeTransportTimestamp(dto.createdAt)),
-          deletedAt: const Value.absent(),
-        ),
-      ]);
-
-      if (dto.members.isNotEmpty) {
-        await _db.chatsDao.upsertMembers(
-          dto.members
-              .map(
-                (member) => ConversationMembersCompanion(
-                  id: Value(member.id),
-                  conversationId: Value(member.conversationId),
-                  userId: Value(member.userId),
-                  role: Value(member.role),
-                  lastReadSequence: Value(BigInt.from(member.lastReadSequence)),
-                  createdAt: Value(DateTime.now().toUtc()),
-                  updatedAt: Value(DateTime.now().toUtc()),
-                  deletedAt: const Value.absent(),
-                ),
-              )
-              .toList(),
-        );
-      }
-
-      final remoteMessages = <MessagesCompanion>[];
-      final pendingAttachmentMetadata =
-          <({String messageId, DecryptedMessageContent decryptedContent})>[];
-      for (final messageDto in _orderMessageDtos(
-        dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
-      )) {
-        final isOwnMessage = _isCurrentUserMessage(messageDto);
-        final resolvedPlaintext = isOwnMessage
-            ? await _resolvePersistedPlaintextForOwnedMessage(messageDto)
-            : null;
-        final decryptedContent = isOwnMessage
-            ? null
-            : await _decryptInboundMessage(messageDto);
-
-        if (!isOwnMessage && decryptedContent != null) {
-          pendingAttachmentMetadata.add((
-            messageId: messageDto.id,
-            decryptedContent: decryptedContent,
-          ));
-        }
-
-        remoteMessages.add(
-          _messageDtoToCompanion(
-            messageDto,
-            decryptedContent:
-                (resolvedPlaintext ?? decryptedContent?.text ?? ''),
+    await _db.transaction(() async {
+      for (final dto in dtos) {
+        final conv = mapConversationFromDto(dto, _currentUserId);
+        await _db.chatsDao.upsertConversations([
+          ConversationsCompanion(
+            id: Value(dto.id),
+            type: Value(dto.type),
+            title: Value(dto.title),
+            lastSequence: Value(BigInt.from(dto.lastSequence)),
+            updatedAt: Value(normalizeTransportTimestamp(dto.updatedAt)),
+            createdAt: Value(normalizeTransportTimestamp(dto.createdAt)),
+            deletedAt: const Value.absent(),
           ),
-        );
-      }
+        ]);
 
-      if (remoteMessages.isNotEmpty) {
-        await _db.chatsDao.upsertMessages(remoteMessages);
-        for (final entry in pendingAttachmentMetadata) {
-          await _persistAttachmentMetadataFromDecryptedContent(
-            messageId: entry.messageId,
-            decryptedContent: entry.decryptedContent,
+        if (dto.members.isNotEmpty) {
+          await _db.chatsDao.upsertMembers(
+            dto.members
+                .map(
+                  (member) => ConversationMembersCompanion(
+                    id: Value(member.id),
+                    conversationId: Value(member.conversationId),
+                    userId: Value(member.userId),
+                    role: Value(member.role),
+                    lastReadSequence: Value(
+                      BigInt.from(member.lastReadSequence),
+                    ),
+                    createdAt: Value(DateTime.now().toUtc()),
+                    updatedAt: Value(DateTime.now().toUtc()),
+                    deletedAt: const Value.absent(),
+                  ),
+                )
+                .toList(),
           );
         }
-      }
 
-      conversations.add(conv);
-    }
+        final remoteMessages = <MessagesCompanion>[];
+        final pendingAttachmentMetadata =
+            <({String messageId, DecryptedMessageContent decryptedContent})>[];
+        for (final messageDto in _orderMessageDtos(
+          dto.messages?.whereType<MessageDto>() ?? const <MessageDto>[],
+        )) {
+          final isOwnMessage = _isCurrentUserMessage(messageDto);
+          final resolvedPlaintext = isOwnMessage
+              ? await _resolvePersistedPlaintextForOwnedMessage(messageDto)
+              : null;
+          final decryptedContent = isOwnMessage
+              ? null
+              : await _decryptInboundMessage(messageDto);
+
+          if (!isOwnMessage && decryptedContent != null) {
+            pendingAttachmentMetadata.add((
+              messageId: messageDto.id,
+              decryptedContent: decryptedContent,
+            ));
+          }
+
+          final persistedContent = await _resolveMessageContentForPersistence(
+            messageDto.id,
+            resolvedPlaintext ?? decryptedContent?.text ?? '',
+          );
+
+          remoteMessages.add(
+            _messageDtoToCompanion(
+              messageDto,
+              decryptedContent: persistedContent,
+            ),
+          );
+        }
+
+        if (remoteMessages.isNotEmpty) {
+          await _db.chatsDao.upsertMessages(remoteMessages);
+          for (final entry in pendingAttachmentMetadata) {
+            await _persistAttachmentMetadataFromDecryptedContent(
+              messageId: entry.messageId,
+              decryptedContent: entry.decryptedContent,
+            );
+          }
+        }
+
+        conversations.add(conv);
+      }
+    });
 
     _logger.i(
       'Zaktualizowano ${conversations.length} konwersacji',

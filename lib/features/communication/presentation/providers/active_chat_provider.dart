@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'active_chat_provider.g.dart';
@@ -36,19 +37,19 @@ FutureOr<E2eeSessionUiStatus> chatE2eeSessionStatus(
 
 @riverpod
 class ActiveChat extends _$ActiveChat {
+  late ChatsRepository _repository;
+
   @override
   Stream<List<Message>> build(String conversationId) {
-    final repository = ref.watch(chatsRepositoryProvider);
-    return repository.watchMessagesForConversation(conversationId);
+    _repository = ref.watch(chatsRepositoryProvider);
+    return _repository.watchMessagesForConversation(conversationId);
   }
 
   Future<void> sendMessage(String text, {String? attachmentId}) async {
     final normalizedText = text.trim();
     if (normalizedText.isEmpty && attachmentId == null) return;
 
-    final repository = ref.read(chatsRepositoryProvider);
-
-    await repository.sendMessage(
+    await _repository.sendMessage(
       conversationId: conversationId,
       content: normalizedText,
       attachmentId: attachmentId,

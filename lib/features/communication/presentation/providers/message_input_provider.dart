@@ -63,7 +63,6 @@ abstract class MessageInputState with _$MessageInputState {
 
 @riverpod
 class MessageInput extends _$MessageInput {
-  late final ActiveChat _chat;
   late final AppLogger _logger;
   late final ChatsApiClient _apiClient;
   late final SymmetricCrypto _crypto;
@@ -74,7 +73,6 @@ class MessageInput extends _$MessageInput {
   @override
   MessageInputState build(String conversationId) {
     ref.keepAlive();
-    _chat = ref.read(activeChatProvider(conversationId).notifier);
     _logger = ref.read(appLoggerProvider);
     _apiClient = ref.read(chatsApiClientProvider);
     _crypto = ref.read(symmetricCryptoProvider);
@@ -125,14 +123,12 @@ class MessageInput extends _$MessageInput {
       mimeType: resolvedMimeType,
     );
     if (validationError != null) {
-      state = state.copyWith(
-        attachment: null,
-        errorMessage: validationError,
-      );
+      state = state.copyWith(attachment: null, errorMessage: validationError);
       return;
     }
 
-    final effectiveIsImage = isImage ?? _looksLikeImage(fileName, resolvedMimeType);
+    final effectiveIsImage =
+        isImage ?? _looksLikeImage(fileName, resolvedMimeType);
     state = state.copyWith(
       attachment: PendingAttachment(
         fileName: fileName.trim(),
@@ -163,7 +159,8 @@ class MessageInput extends _$MessageInput {
 
     try {
       String? attachmentId = state.uploadedAttachmentId;
-      if (hasAttachment && (attachmentId == null || attachmentId.trim().isEmpty)) {
+      if (hasAttachment &&
+          (attachmentId == null || attachmentId.trim().isEmpty)) {
         attachmentId = await _uploadPendingAttachment(state.attachment!);
         if (attachmentId == null) {
           state = state.copyWith(isSending: false);
@@ -171,7 +168,8 @@ class MessageInput extends _$MessageInput {
         }
       }
 
-      await _chat.sendMessage(
+      final chat = ref.read(activeChatProvider(conversationId).notifier);
+      await chat.sendMessage(
         content.isEmpty ? '' : content,
         attachmentId: attachmentId,
       );
@@ -250,17 +248,23 @@ class MessageInput extends _$MessageInput {
     for (final candidateId in candidateIds) {
       final existingMetadata =
           await _repository.getAttachmentMetadata(candidateId) ??
-              const <String, dynamic>{};
+          const <String, dynamic>{};
 
-      final existingLocalFilePath = existingMetadata['localFilePath']?.toString();
-      if ((existingLocalFilePath != null && existingLocalFilePath.trim().isNotEmpty) &&
-          (resolvedLocalFilePath == null || resolvedLocalFilePath.trim().isEmpty)) {
+      final existingLocalFilePath = existingMetadata['localFilePath']
+          ?.toString();
+      if ((existingLocalFilePath != null &&
+              existingLocalFilePath.trim().isNotEmpty) &&
+          (resolvedLocalFilePath == null ||
+              resolvedLocalFilePath.trim().isEmpty)) {
         resolvedLocalFilePath = existingLocalFilePath;
       }
 
-      final existingThumbnailPath = existingMetadata['thumbnailPath']?.toString();
-      if ((existingThumbnailPath != null && existingThumbnailPath.trim().isNotEmpty) &&
-          (resolvedThumbnailPath == null || resolvedThumbnailPath.trim().isEmpty)) {
+      final existingThumbnailPath = existingMetadata['thumbnailPath']
+          ?.toString();
+      if ((existingThumbnailPath != null &&
+              existingThumbnailPath.trim().isNotEmpty) &&
+          (resolvedThumbnailPath == null ||
+              resolvedThumbnailPath.trim().isEmpty)) {
         resolvedThumbnailPath = existingThumbnailPath;
       }
 
@@ -316,9 +320,8 @@ class MessageInput extends _$MessageInput {
     required Uint8List bytes,
   }) async {
     try {
-      final thumbnailPath = await localAttachmentStore.thumbnailPathForAttachment(
-        attachmentId,
-      );
+      final thumbnailPath = await localAttachmentStore
+          .thumbnailPathForAttachment(attachmentId);
       await localAttachmentStore.saveThumbnail(
         attachmentId: attachmentId,
         bytes: bytes,
@@ -340,10 +343,7 @@ class MessageInput extends _$MessageInput {
       mimeType: pending.mimeType,
     );
     if (validationError != null) {
-      state = state.copyWith(
-        attachment: null,
-        errorMessage: validationError,
-      );
+      state = state.copyWith(attachment: null, errorMessage: validationError);
       return null;
     }
 
@@ -372,7 +372,8 @@ class MessageInput extends _$MessageInput {
           state = state.copyWith(
             preparedAttachmentId: null,
             uploadUrl: null,
-            errorMessage: 'Nie można wznowić wysyłki załącznika. Spróbuj ponownie.',
+            errorMessage:
+                'Nie można wznowić wysyłki załącznika. Spróbuj ponownie.',
           );
           return null;
         }
@@ -382,7 +383,9 @@ class MessageInput extends _$MessageInput {
           secretKey: SecretKey(base64Decode(storedKey)),
         );
         final encryptedBytes = base64Decode(encryptedBase64);
-        final encryptedSha256 = sha256.convert(encryptedBytes).toString();
+        final ciphertextSha256 = sha256.convert(encryptedBytes).toString();
+        final plaintextSha256 = sha256.convert(pending.bytes).toString();
+        final plaintextSize = pending.bytes.length;
 
         final uploadClient = attachmentUploadClientFactory(
           contentType: pending.mimeType,
@@ -408,8 +411,8 @@ class MessageInput extends _$MessageInput {
 
         final finalAttachment = await apiClient.finalizeAttachmentUpload(
           attachmentId: preparedAttachmentId,
-          size: pending.bytes.length,
-          sha256: encryptedSha256,
+          size: plaintextSize,
+          sha256: ciphertextSha256,
           metadata: {
             'version': 1,
             'ciphertextAlgorithm': 'AES-256-GCM',
@@ -431,8 +434,8 @@ class MessageInput extends _$MessageInput {
           attachmentId: finalAttachment.id,
           originalFileName: pending.fileName,
           mimeType: pending.mimeType,
-          sizeBytes: pending.bytes.length,
-          sha256: encryptedSha256,
+          sizeBytes: plaintextSize,
+          sha256: plaintextSha256,
           localFilePath: metadata['localFilePath'] as String?,
           thumbnailPath: metadata['thumbnailPath'] as String?,
           status: 'ready',
@@ -477,7 +480,9 @@ class MessageInput extends _$MessageInput {
         secretKey: attachmentKey,
       );
       final encryptedBytes = base64Decode(encryptedBase64);
-      final encryptedSha256 = sha256.convert(encryptedBytes).toString();
+      final ciphertextSha256 = sha256.convert(encryptedBytes).toString();
+      final plaintextSha256 = sha256.convert(pending.bytes).toString();
+      final plaintextSize = pending.bytes.length;
       final keyBytes = await attachmentKey.extractBytes();
       final keyRef = '$attachmentId-attachment-key';
       final keyValue = base64Encode(keyBytes);
@@ -512,8 +517,8 @@ class MessageInput extends _$MessageInput {
         attachmentId: attachmentId,
         originalFileName: pending.fileName,
         mimeType: pending.mimeType,
-        sizeBytes: pending.bytes.length,
-        sha256: encryptedSha256,
+        sizeBytes: plaintextSize,
+        sha256: plaintextSha256,
         localFilePath: uploadMetadata['localFilePath'] as String?,
         thumbnailPath: uploadMetadata['thumbnailPath'] as String?,
         status: 'uploaded',
@@ -551,8 +556,8 @@ class MessageInput extends _$MessageInput {
 
       final finalAttachment = await apiClient.finalizeAttachmentUpload(
         attachmentId: attachmentId,
-        size: pending.bytes.length,
-        sha256: encryptedSha256,
+        size: plaintextSize,
+        sha256: ciphertextSha256,
         metadata: {
           'version': 1,
           'ciphertextAlgorithm': 'AES-256-GCM',
@@ -574,8 +579,8 @@ class MessageInput extends _$MessageInput {
         attachmentId: finalAttachment.id,
         originalFileName: pending.fileName,
         mimeType: pending.mimeType,
-        sizeBytes: pending.bytes.length,
-        sha256: encryptedSha256,
+        sizeBytes: plaintextSize,
+        sha256: plaintextSha256,
         localFilePath: finalMetadata['localFilePath'] as String?,
         thumbnailPath: finalMetadata['thumbnailPath'] as String?,
         status: 'ready',

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -20,6 +21,7 @@ import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/domain/outbox/outbox_event.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/attachment_preview_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
 
 class FakeSecureStorage extends SecureStorageService {
@@ -51,8 +53,9 @@ class FakeChatsRepository implements ChatsRepository {
   Future<List<Conversation>> getConversations() async => const [];
 
   @override
-  Future<String> resolvePeerUserIdForConversation(String conversationId) async =>
-      'peer-user';
+  Future<String> resolvePeerUserIdForConversation(
+    String conversationId,
+  ) async => 'peer-user';
 
   @override
   Future<String> ensureSelfConversation() async => 'self';
@@ -87,8 +90,9 @@ class FakeChatsRepository implements ChatsRepository {
   }
 
   @override
-  Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId) async =>
-      metadataByAttachment[attachmentId];
+  Future<Map<String, dynamic>?> getAttachmentMetadata(
+    String attachmentId,
+  ) async => metadataByAttachment[attachmentId];
 
   @override
   Future<void> saveAttachmentMetadata({
@@ -167,11 +171,13 @@ class FakeChatsApiClient extends ChatsApiClient {
     this.finalizeResponse,
     this.prepareError,
     this.finalizeError,
-  }) : super(ApiClient(
-          dio: Dio(),
-          storage: FakeSecureStorage(),
-          logger: AppLogger(),
-        ));
+  }) : super(
+         ApiClient(
+           dio: Dio(),
+           storage: FakeSecureStorage(),
+           logger: AppLogger(),
+         ),
+       );
 
   final AttachmentUploadResponseDto? prepareResponse;
   final AttachmentDto? finalizeResponse;
@@ -180,6 +186,8 @@ class FakeChatsApiClient extends ChatsApiClient {
 
   int prepareCalls = 0;
   int finalizeCalls = 0;
+  int? lastFinalizeSize;
+  String? lastFinalizeSha256;
 
   @override
   Future<AttachmentUploadResponseDto> prepareAttachmentUpload({
@@ -216,6 +224,8 @@ class FakeChatsApiClient extends ChatsApiClient {
     Map<String, dynamic>? metadata,
   }) async {
     finalizeCalls += 1;
+    lastFinalizeSize = size;
+    lastFinalizeSha256 = sha256;
     if (finalizeError != null) {
       throw finalizeError!;
     }
@@ -242,10 +252,7 @@ class FakeActiveChat extends ActiveChat {
 
   @override
   Future<void> sendMessage(String text, {String? attachmentId}) async {
-    sentMessages.add({
-      'text': text,
-      'attachmentId': attachmentId,
-    });
+    sentMessages.add({'text': text, 'attachmentId': attachmentId});
   }
 }
 
@@ -284,7 +291,9 @@ class MockUploadHttpClientAdapter implements HttpClientAdapter {
     return ResponseBody.fromString(
       'ok',
       200,
-      headers: {'content-type': ['application/octet-stream']},
+      headers: {
+        'content-type': ['application/octet-stream'],
+      },
     );
   }
 
@@ -295,363 +304,516 @@ class MockUploadHttpClientAdapter implements HttpClientAdapter {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  setUp(() {
+    FakeActiveChat.sentMessages.clear();
+  });
+
+  test('ActiveChat.sendMessage can still send after provider disposal', () async {
+    final repo = FakeChatsRepository();
+    final container = ProviderContainer(
+      overrides: [
+        chatsRepositoryProvider.overrideWithValue(repo),
+      ],
+    );
+
+    final notifier = container.read(activeChatProvider('room-disposed').notifier);
+    container.dispose();
+
+    await expectLater(
+      notifier.sendMessage('hello from disposed provider'),
+      completes,
+    );
+    expect(repo.sentMessages, isNotEmpty);
+  });
+
+  group('Attachment integrity validation', () {
+    test('accepts matching plaintext hash and size metadata', () {
+      final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final metadata = {
+        'sha256': sha256.convert(bytes).toString(),
+        'size': bytes.length,
+      };
+
+      expect(
+        () => validateAttachmentIntegrity(bytes: bytes, metadata: metadata),
+        returnsNormally,
+      );
+    });
+
+    test('rejects mismatched SHA-256', () {
+      final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final metadata = {
+        'sha256': sha256.convert(Uint8List.fromList([9, 9, 9])).toString(),
+        'size': bytes.length,
+      };
+
+      expect(
+        () => validateAttachmentIntegrity(bytes: bytes, metadata: metadata),
+        throwsA(isA<AttachmentIntegrityException>()),
+      );
+    });
+
+    test('rejects mismatched size', () {
+      final bytes = Uint8List.fromList([1, 2, 3, 4, 5]);
+      final metadata = {
+        'sha256': sha256.convert(bytes).toString(),
+        'size': bytes.length + 1,
+      };
+
+      expect(
+        () => validateAttachmentIntegrity(bytes: bytes, metadata: metadata),
+        throwsA(isA<AttachmentIntegrityException>()),
+      );
+    });
+
+    test('rejects missing SHA-256 metadata', () {
+      final bytes = Uint8List.fromList([1, 2, 3]);
+
+      expect(
+        () => validateAttachmentIntegrity(
+          bytes: bytes,
+          metadata: const {'size': 3},
+        ),
+        throwsA(isA<AttachmentIntegrityException>()),
+      );
+    });
+
+    test(
+      'finalizes upload with ciphertext hash and keeps plaintext hash for local validation',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter();
+          return dio;
+        };
+
+        final bytes = Uint8List.fromList([10, 20, 30, 40]);
+        final apiClient = FakeChatsApiClient();
+        final secureStorage = FakeSecureStorage();
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room- integrity',
+        );
+        final notifier = container.read(
+          messageInputProvider('room- integrity').notifier,
+        );
+
+        await notifier.setAttachmentSelection(
+          fileName: 'file.bin',
+          bytes: bytes,
+          mimeType: 'application/octet-stream',
+        );
+
+        final sent = await notifier.sendCurrentMessage();
+
+        expect(sent, isTrue);
+        expect(apiClient.lastFinalizeSize, bytes.length);
+        expect(apiClient.lastFinalizeSha256, isNotNull);
+        expect(
+          apiClient.lastFinalizeSha256,
+          isNot(sha256.convert(bytes).toString()),
+        );
+        expect(apiClient.finalizeCalls, 1);
+      },
+    );
+  });
+
   group('MessageInputProvider attachment retry semantics', () {
     tearDown(() {
       FakeActiveChat.sentMessages.clear();
     });
 
-    test('sendCurrentMessage should only send uploadedAttachmentId after finalize',
-        () async {
-      final repo = FakeChatsRepository();
-      final originalFactory = attachmentUploadClientFactory;
-      addTearDown(() => attachmentUploadClientFactory = originalFactory);
-      attachmentUploadClientFactory = ({required String contentType}) {
-        final dio = Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            validateStatus: (status) =>
-                status != null && status >= 200 && status < 300,
-            headers: {'Content-Type': contentType},
+    test(
+      'sendCurrentMessage should only send uploadedAttachmentId after finalize',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter();
+          return dio;
+        };
+        final apiClient = FakeChatsApiClient(
+          prepareResponse: AttachmentUploadResponseDto(
+            attachment: AttachmentDto(
+              id: 'prep-111',
+              userId: 'user-1',
+              fileKey: 'file-key',
+              originalName: 'file.txt',
+              contentType: 'text/plain',
+              size: 3,
+              status: 'uploaded',
+            ),
+            uploadUrl: 'https://example.test/upload',
+            expiresAt: DateTime.now().add(const Duration(minutes: 5)),
           ),
-        );
-        dio.httpClientAdapter = const MockUploadHttpClientAdapter();
-        return dio;
-      };
-      final apiClient = FakeChatsApiClient(
-        prepareResponse: AttachmentUploadResponseDto(
-          attachment: AttachmentDto(
-            id: 'prep-111',
+          finalizeResponse: AttachmentDto(
+            id: 'final-111',
             userId: 'user-1',
             fileKey: 'file-key',
             originalName: 'file.txt',
             contentType: 'text/plain',
             size: 3,
-            status: 'uploaded',
+            status: 'ready',
           ),
+        );
+        final secureStorage = FakeSecureStorage();
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room-1',
+        );
+
+        final notifier = container.read(
+          messageInputProvider('room-1').notifier,
+        );
+        await notifier.setAttachmentSelection(
+          fileName: 'file.txt',
+          bytes: Uint8List.fromList([1, 2, 3]),
+          mimeType: 'text/plain',
+        );
+
+        secureStorage.values['prep-111-attachment-key'] = base64Encode(
+          Uint8List.fromList(List<int>.filled(32, 7)),
+        );
+        notifier.state = notifier.state.copyWith(
+          attachment: PendingAttachment(
+            fileName: 'file.txt',
+            bytes: Uint8List.fromList([1, 2, 3]),
+            mimeType: 'text/plain',
+            isImage: false,
+          ),
+          preparedAttachmentId: 'prep-111',
           uploadUrl: 'https://example.test/upload',
-          expiresAt: DateTime.now().add(const Duration(minutes: 5)),
-        ),
-        finalizeResponse: AttachmentDto(
-          id: 'final-111',
-          userId: 'user-1',
-          fileKey: 'file-key',
-          originalName: 'file.txt',
-          contentType: 'text/plain',
-          size: 3,
-          status: 'ready',
-        ),
-      );
-      final secureStorage = FakeSecureStorage();
-      final container = createMessageInputContainer(
-        apiClient: apiClient,
-        repository: repo,
-        secureStorage: secureStorage,
-        conversationId: 'room-1',
-      );
+          uploadedAttachmentId: null,
+        );
 
-      final notifier = container.read(messageInputProvider('room-1').notifier);
-      await notifier.setAttachmentSelection(
-        fileName: 'file.txt',
-        bytes: Uint8List.fromList([1, 2, 3]),
-        mimeType: 'text/plain',
-      );
+        final sent = await notifier.sendCurrentMessage();
 
-      secureStorage.values['prep-111-attachment-key'] = base64Encode(
-        Uint8List.fromList(List<int>.filled(32, 7)),
-      );
-      notifier.state = notifier.state.copyWith(
-        attachment: PendingAttachment(
+        expect(sent, isTrue);
+        expect(apiClient.prepareCalls, 0);
+        expect(apiClient.finalizeCalls, 1);
+        expect(FakeActiveChat.sentMessages.single['attachmentId'], 'final-111');
+      },
+    );
+
+    test(
+      'retry should reuse prepared attachment and not create a new attachment after timeout',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter(
+            failWithTimeout: true,
+          );
+          return dio;
+        };
+        final apiClient = FakeChatsApiClient(
+          finalizeError: TimeoutException('finalize timeout'),
+        );
+        final secureStorage = FakeSecureStorage();
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room-1',
+        );
+
+        final notifier = container.read(
+          messageInputProvider('room-1').notifier,
+        );
+        await notifier.setAttachmentSelection(
           fileName: 'file.txt',
           bytes: Uint8List.fromList([1, 2, 3]),
           mimeType: 'text/plain',
-          isImage: false,
-        ),
-        preparedAttachmentId: 'prep-111',
-        uploadUrl: 'https://example.test/upload',
-        uploadedAttachmentId: null,
-      );
-
-      final sent = await notifier.sendCurrentMessage();
-
-      expect(sent, isTrue);
-      expect(apiClient.prepareCalls, 0);
-      expect(apiClient.finalizeCalls, 1);
-      expect(FakeActiveChat.sentMessages.single['attachmentId'], 'final-111');
-    });
-
-    test('retry should reuse prepared attachment and not create a new attachment after timeout',
-        () async {
-      final repo = FakeChatsRepository();
-      final originalFactory = attachmentUploadClientFactory;
-      addTearDown(() => attachmentUploadClientFactory = originalFactory);
-      attachmentUploadClientFactory = ({required String contentType}) {
-        final dio = Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            validateStatus: (status) =>
-                status != null && status >= 200 && status < 300,
-            headers: {'Content-Type': contentType},
-          ),
         );
-        dio.httpClientAdapter = const MockUploadHttpClientAdapter(
-          failWithTimeout: true,
+        secureStorage.values['prep-222-attachment-key'] = base64Encode(
+          Uint8List.fromList(List<int>.filled(32, 9)),
         );
-        return dio;
-      };
-      final apiClient = FakeChatsApiClient(
-        finalizeError: TimeoutException('finalize timeout'),
-      );
-      final secureStorage = FakeSecureStorage();
-      final container = createMessageInputContainer(
-        apiClient: apiClient,
-        repository: repo,
-        secureStorage: secureStorage,
-        conversationId: 'room-1',
-      );
-
-      final notifier = container.read(messageInputProvider('room-1').notifier);
-      await notifier.setAttachmentSelection(
-        fileName: 'file.txt',
-        bytes: Uint8List.fromList([1, 2, 3]),
-        mimeType: 'text/plain',
-      );
-      secureStorage.values['prep-222-attachment-key'] = base64Encode(
-        Uint8List.fromList(List<int>.filled(32, 9)),
-      );
-      notifier.state = notifier.state.copyWith(
-        attachment: PendingAttachment(
-          fileName: 'file.txt',
-          bytes: Uint8List.fromList([1, 2, 3]),
-          mimeType: 'text/plain',
-          isImage: false,
-        ),
-        preparedAttachmentId: 'prep-222',
-        uploadUrl: 'http://127.0.0.1:1/upload',
-        uploadedAttachmentId: null,
-      );
-
-      final firstAttempt = await notifier.sendCurrentMessage();
-      expect(firstAttempt, isFalse);
-      expect(apiClient.finalizeCalls, 1);
-
-      final secondAttempt = await notifier.sendCurrentMessage();
-      expect(secondAttempt, isFalse);
-      expect(apiClient.prepareCalls, 0);
-      expect(apiClient.finalizeCalls, 2);
-    });
-
-    test('sendCurrentMessage should fail when finalizeAttachmentUpload throws',
-        () async {
-      final repo = FakeChatsRepository();
-      final originalFactory = attachmentUploadClientFactory;
-      addTearDown(() => attachmentUploadClientFactory = originalFactory);
-      attachmentUploadClientFactory = ({required String contentType}) {
-        final dio = Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            validateStatus: (status) =>
-                status != null && status >= 200 && status < 300,
-            headers: {'Content-Type': contentType},
+        notifier.state = notifier.state.copyWith(
+          attachment: PendingAttachment(
+            fileName: 'file.txt',
+            bytes: Uint8List.fromList([1, 2, 3]),
+            mimeType: 'text/plain',
+            isImage: false,
           ),
-        );
-        dio.httpClientAdapter = const MockUploadHttpClientAdapter();
-        return dio;
-      };
-      final apiClient = FakeChatsApiClient(
-        prepareResponse: AttachmentUploadResponseDto(
-          attachment: AttachmentDto(
-            id: 'prep-333',
-            userId: 'user-1',
-            fileKey: 'file-key',
-            originalName: 'file.pdf',
-            contentType: 'application/pdf',
-            size: 3,
-            status: 'uploaded',
-          ),
+          preparedAttachmentId: 'prep-222',
           uploadUrl: 'http://127.0.0.1:1/upload',
-          expiresAt: DateTime.now().add(const Duration(minutes: 5)),
-        ),
-        finalizeError: TimeoutException('finalize failed'),
-      );
-      final secureStorage = FakeSecureStorage();
-      final container = createMessageInputContainer(
-        apiClient: apiClient,
-        repository: repo,
-        secureStorage: secureStorage,
-        conversationId: 'room-1',
-      );
-
-      final notifier = container.read(messageInputProvider('room-1').notifier);
-      await notifier.setAttachmentSelection(
-        fileName: 'file.pdf',
-        bytes: Uint8List.fromList([9, 8, 7]),
-        mimeType: 'application/pdf',
-      );
-
-      final sent = await notifier.sendCurrentMessage();
-
-      expect(sent, isFalse);
-      expect(FakeActiveChat.sentMessages, isEmpty);
-      expect(notifier.state.errorMessage,
-          'Nie udało się wysłać załącznika. Spróbuj ponownie.');
-    });
-
-    test('sendCurrentMessage should send message after successful finalization',
-        () async {
-      final repo = FakeChatsRepository();
-      final originalFactory = attachmentUploadClientFactory;
-      addTearDown(() => attachmentUploadClientFactory = originalFactory);
-      attachmentUploadClientFactory = ({required String contentType}) {
-        final dio = Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            validateStatus: (status) =>
-                status != null && status >= 200 && status < 300,
-            headers: {'Content-Type': contentType},
-          ),
+          uploadedAttachmentId: null,
         );
-        dio.httpClientAdapter = const MockUploadHttpClientAdapter();
-        return dio;
-      };
-      final apiClient = FakeChatsApiClient(
-        prepareResponse: AttachmentUploadResponseDto(
-          attachment: AttachmentDto(
-            id: 'prep-444',
+
+        final firstAttempt = await notifier.sendCurrentMessage();
+        expect(firstAttempt, isFalse);
+        expect(apiClient.finalizeCalls, 1);
+
+        final secondAttempt = await notifier.sendCurrentMessage();
+        expect(secondAttempt, isFalse);
+        expect(apiClient.prepareCalls, 0);
+        expect(apiClient.finalizeCalls, 2);
+      },
+    );
+
+    test(
+      'sendCurrentMessage should fail when finalizeAttachmentUpload throws',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter();
+          return dio;
+        };
+        final apiClient = FakeChatsApiClient(
+          prepareResponse: AttachmentUploadResponseDto(
+            attachment: AttachmentDto(
+              id: 'prep-333',
+              userId: 'user-1',
+              fileKey: 'file-key',
+              originalName: 'file.pdf',
+              contentType: 'application/pdf',
+              size: 3,
+              status: 'uploaded',
+            ),
+            uploadUrl: 'http://127.0.0.1:1/upload',
+            expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+          ),
+          finalizeError: TimeoutException('finalize failed'),
+        );
+        final secureStorage = FakeSecureStorage();
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room-1',
+        );
+
+        final notifier = container.read(
+          messageInputProvider('room-1').notifier,
+        );
+        await notifier.setAttachmentSelection(
+          fileName: 'file.pdf',
+          bytes: Uint8List.fromList([9, 8, 7]),
+          mimeType: 'application/pdf',
+        );
+
+        final sent = await notifier.sendCurrentMessage();
+
+        expect(sent, isFalse);
+        expect(FakeActiveChat.sentMessages, isEmpty);
+        expect(
+          notifier.state.errorMessage,
+          'Nie udało się wysłać załącznika. Spróbuj ponownie.',
+        );
+      },
+    );
+
+    test(
+      'sendCurrentMessage should send message after successful finalization',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter();
+          return dio;
+        };
+        final apiClient = FakeChatsApiClient(
+          prepareResponse: AttachmentUploadResponseDto(
+            attachment: AttachmentDto(
+              id: 'prep-444',
+              userId: 'user-1',
+              fileKey: 'file-key',
+              originalName: 'photo.png',
+              contentType: 'image/png',
+              size: 3,
+              status: 'uploaded',
+            ),
+            uploadUrl: 'https://example.test/upload',
+            expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+          ),
+          finalizeResponse: AttachmentDto(
+            id: 'final-444',
             userId: 'user-1',
-            fileKey: 'file-key',
+            fileKey: 'final-key',
             originalName: 'photo.png',
             contentType: 'image/png',
             size: 3,
-            status: 'uploaded',
-          ),
-          uploadUrl: 'https://example.test/upload',
-          expiresAt: DateTime.now().add(const Duration(minutes: 5)),
-        ),
-        finalizeResponse: AttachmentDto(
-          id: 'final-444',
-          userId: 'user-1',
-          fileKey: 'final-key',
-          originalName: 'photo.png',
-          contentType: 'image/png',
-          size: 3,
-          status: 'ready',
-        ),
-      );
-      final secureStorage = FakeSecureStorage();
-      final container = createMessageInputContainer(
-        apiClient: apiClient,
-        repository: repo,
-        secureStorage: secureStorage,
-        conversationId: 'room-1',
-      );
-
-      final notifier = container.read(messageInputProvider('room-1').notifier);
-      await notifier.setAttachmentSelection(
-        fileName: 'photo.png',
-        bytes: Uint8List.fromList([1, 2, 3]),
-        mimeType: 'image/png',
-      );
-
-      final sent = await notifier.sendCurrentMessage();
-
-      expect(sent, isTrue);
-      expect(FakeActiveChat.sentMessages.single['attachmentId'], 'final-444');
-      expect(notifier.state, const MessageInputState());
-    });
-
-    test('should preserve existing local file and thumbnail metadata on retry',
-        () async {
-      final repo = FakeChatsRepository();
-      final originalFactory = attachmentUploadClientFactory;
-      addTearDown(() => attachmentUploadClientFactory = originalFactory);
-      attachmentUploadClientFactory = ({required String contentType}) {
-        final dio = Dio(
-          BaseOptions(
-            connectTimeout: const Duration(seconds: 30),
-            receiveTimeout: const Duration(seconds: 30),
-            validateStatus: (status) =>
-                status != null && status >= 200 && status < 300,
-            headers: {'Content-Type': contentType},
+            status: 'ready',
           ),
         );
-        dio.httpClientAdapter = const MockUploadHttpClientAdapter();
-        return dio;
-      };
-      await repo.saveAttachmentMetadata(
-        attachmentId: 'prep-555',
-        originalFileName: 'photo.png',
-        mimeType: 'image/png',
-        sizeBytes: 3,
-        localFilePath: '/tmp/existing-file.png',
-        thumbnailPath: '/tmp/existing-thumb.png',
-        status: 'ready',
-        isAvailableLocally: true,
-        hasThumbnail: true,
-      );
-      final apiClient = FakeChatsApiClient(
-        prepareResponse: AttachmentUploadResponseDto(
-          attachment: AttachmentDto(
-            id: 'prep-555',
+        final secureStorage = FakeSecureStorage();
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room-1',
+        );
+
+        final notifier = container.read(
+          messageInputProvider('room-1').notifier,
+        );
+        await notifier.setAttachmentSelection(
+          fileName: 'photo.png',
+          bytes: Uint8List.fromList([1, 2, 3]),
+          mimeType: 'image/png',
+        );
+
+        final sent = await notifier.sendCurrentMessage();
+
+        expect(sent, isTrue);
+        expect(FakeActiveChat.sentMessages.single['attachmentId'], 'final-444');
+        expect(notifier.state, const MessageInputState());
+      },
+    );
+
+    test(
+      'should preserve existing local file and thumbnail metadata on retry',
+      () async {
+        final repo = FakeChatsRepository();
+        final originalFactory = attachmentUploadClientFactory;
+        addTearDown(() => attachmentUploadClientFactory = originalFactory);
+        attachmentUploadClientFactory = ({required String contentType}) {
+          final dio = Dio(
+            BaseOptions(
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              validateStatus: (status) =>
+                  status != null && status >= 200 && status < 300,
+              headers: {'Content-Type': contentType},
+            ),
+          );
+          dio.httpClientAdapter = const MockUploadHttpClientAdapter();
+          return dio;
+        };
+        await repo.saveAttachmentMetadata(
+          attachmentId: 'prep-555',
+          originalFileName: 'photo.png',
+          mimeType: 'image/png',
+          sizeBytes: 3,
+          localFilePath: '/tmp/existing-file.png',
+          thumbnailPath: '/tmp/existing-thumb.png',
+          status: 'ready',
+          isAvailableLocally: true,
+          hasThumbnail: true,
+        );
+        final apiClient = FakeChatsApiClient(
+          prepareResponse: AttachmentUploadResponseDto(
+            attachment: AttachmentDto(
+              id: 'prep-555',
+              userId: 'user-1',
+              fileKey: 'file-key',
+              originalName: 'photo.png',
+              contentType: 'image/png',
+              size: 3,
+              status: 'uploaded',
+            ),
+            uploadUrl: 'https://example.test/upload',
+            expiresAt: DateTime.now().add(const Duration(minutes: 5)),
+          ),
+          finalizeResponse: AttachmentDto(
+            id: 'final-555',
             userId: 'user-1',
-            fileKey: 'file-key',
+            fileKey: 'final-key',
             originalName: 'photo.png',
             contentType: 'image/png',
             size: 3,
-            status: 'uploaded',
+            status: 'ready',
           ),
-          uploadUrl: 'https://example.test/upload',
-          expiresAt: DateTime.now().add(const Duration(minutes: 5)),
-        ),
-        finalizeResponse: AttachmentDto(
-          id: 'final-555',
-          userId: 'user-1',
-          fileKey: 'final-key',
-          originalName: 'photo.png',
-          contentType: 'image/png',
-          size: 3,
-          status: 'ready',
-        ),
-      );
-      final secureStorage = FakeSecureStorage();
-      secureStorage.values['prep-555-attachment-key'] = base64Encode(
-        Uint8List.fromList(List<int>.filled(32, 7)),
-      );
-      final container = createMessageInputContainer(
-        apiClient: apiClient,
-        repository: repo,
-        secureStorage: secureStorage,
-        conversationId: 'room-1',
-      );
+        );
+        final secureStorage = FakeSecureStorage();
+        secureStorage.values['prep-555-attachment-key'] = base64Encode(
+          Uint8List.fromList(List<int>.filled(32, 7)),
+        );
+        final container = createMessageInputContainer(
+          apiClient: apiClient,
+          repository: repo,
+          secureStorage: secureStorage,
+          conversationId: 'room-1',
+        );
 
-      final notifier = container.read(messageInputProvider('room-1').notifier);
-      await notifier.setAttachmentSelection(
-        fileName: 'photo.png',
-        bytes: Uint8List.fromList([4, 5, 6]),
-        mimeType: 'image/png',
-      );
-      notifier.state = notifier.state.copyWith(
-        attachment: PendingAttachment(
+        final notifier = container.read(
+          messageInputProvider('room-1').notifier,
+        );
+        await notifier.setAttachmentSelection(
           fileName: 'photo.png',
           bytes: Uint8List.fromList([4, 5, 6]),
           mimeType: 'image/png',
-          isImage: true,
-        ),
-        preparedAttachmentId: 'prep-555',
-        uploadUrl: 'https://example.test/upload',
-        uploadedAttachmentId: null,
-      );
+        );
+        notifier.state = notifier.state.copyWith(
+          attachment: PendingAttachment(
+            fileName: 'photo.png',
+            bytes: Uint8List.fromList([4, 5, 6]),
+            mimeType: 'image/png',
+            isImage: true,
+          ),
+          preparedAttachmentId: 'prep-555',
+          uploadUrl: 'https://example.test/upload',
+          uploadedAttachmentId: null,
+        );
 
-      final sent = await notifier.sendCurrentMessage();
+        final sent = await notifier.sendCurrentMessage();
 
-      expect(sent, isTrue);
-      expect(repo.metadataByAttachment['final-555']?['localFilePath'],
-          '/tmp/existing-file.png');
-      expect(repo.metadataByAttachment['final-555']?['thumbnailPath'],
-          '/tmp/existing-thumb.png');
-    });
+        expect(sent, isTrue);
+        expect(
+          repo.metadataByAttachment['final-555']?['localFilePath'],
+          '/tmp/existing-file.png',
+        );
+        expect(
+          repo.metadataByAttachment['final-555']?['thumbnailPath'],
+          '/tmp/existing-thumb.png',
+        );
+      },
+    );
   });
 }
