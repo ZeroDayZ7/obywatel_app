@@ -1,14 +1,17 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cryptography/cryptography.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
+import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
@@ -37,6 +40,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
   final String _currentUserId;
   final DeviceInfoService _deviceInfoService;
   final E2eeCryptoService _cryptoService;
+  final SymmetricCrypto _symmetricCrypto;
   final SecureStorageService _secureStorage;
   final LocalPlaintextMessageCache _plaintextStore =
       LocalPlaintextMessageCache();
@@ -319,6 +323,78 @@ class ChatsRepositoryImpl implements ChatsRepository {
   }
 
   @override
+  Future<String?> getAttachmentKey(String attachmentId) async {
+    final normalizedAttachmentId = attachmentId.trim();
+    if (normalizedAttachmentId.isEmpty) {
+      return null;
+    }
+
+    final wrappedKey = await _db.cryptoKeysDao.getAttachmentKey(
+      normalizedAttachmentId,
+    );
+    if (wrappedKey == null || wrappedKey.trim().isEmpty) {
+      return null;
+    }
+
+    final wrappingKeyValue = await _secureStorage.read(
+      key: StorageKeys.databaseKey,
+    );
+    if (wrappingKeyValue == null || wrappingKeyValue.trim().isEmpty) {
+      return null;
+    }
+
+    final secretKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final unwrapped = await _symmetricCrypto.unwrapKey(
+      wrappedKeyBase64: wrappedKey,
+      wrappingKey: secretKey,
+    );
+
+    return base64Encode(await unwrapped.extractBytes());
+  }
+
+  @override
+  Future<void> saveAttachmentKey({
+    required String attachmentId,
+    required String attachmentKey,
+  }) async {
+    final normalizedAttachmentId = attachmentId.trim();
+    final normalizedKey = attachmentKey.trim();
+    if (normalizedAttachmentId.isEmpty || normalizedKey.isEmpty) {
+      return;
+    }
+
+    final wrappingKeyValue = await _secureStorage.read(
+      key: StorageKeys.databaseKey,
+    );
+    if (wrappingKeyValue == null || wrappingKeyValue.trim().isEmpty) {
+      throw const FormatException(
+        'Database master key is missing; attachment DEK cannot be wrapped.',
+      );
+    }
+
+    final wrappingKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final wrapped = await _symmetricCrypto.wrapKey(
+      keyToWrap: SecretKey(base64Decode(normalizedKey)),
+      wrappingKey: wrappingKey,
+    );
+
+    await _db.cryptoKeysDao.saveAttachmentKey(
+      attachmentId: normalizedAttachmentId,
+      keyBytes: base64Decode(wrapped),
+    );
+  }
+
+  @override
+  Future<void> deleteAttachmentKey(String attachmentId) async {
+    final normalizedAttachmentId = attachmentId.trim();
+    if (normalizedAttachmentId.isEmpty) {
+      return;
+    }
+
+    await _db.cryptoKeysDao.deleteAttachmentKey(normalizedAttachmentId);
+  }
+
+  @override
   Future<void> saveAttachmentMetadata({
     required String attachmentId,
     String? messageId,
@@ -553,6 +629,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     String currentUserId,
     this._deviceInfoService,
     this._cryptoService,
+    this._symmetricCrypto,
     this._secureStorage,
   ) : _currentUserId = currentUserId;
 
@@ -1269,9 +1346,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       final attachmentMetadata = await _readAttachmentMetadataForMessage(
         attachmentId,
       );
-      final attachmentKey = await _secureStorage.read(
-        key: '$attachmentId-attachment-key',
-      );
+      final attachmentKey = await getAttachmentKey(attachmentId);
       if (attachmentKey == null || attachmentKey.trim().isEmpty) {
         throw const FormatException(
           'Attachment metadata missing: no valid key can be embedded in the encrypted message for this attachment.',
@@ -1957,10 +2032,12 @@ class ChatsRepositoryImpl implements ChatsRepository {
           if (normalizedAttachmentId.isNotEmpty &&
               attachmentKey != null &&
               attachmentKey.trim().isNotEmpty) {
-            final keyRef = '$normalizedAttachmentId-attachment-key';
-            await _secureStorage.write(key: keyRef, value: attachmentKey);
+            await saveAttachmentKey(
+              attachmentId: normalizedAttachmentId,
+              attachmentKey: attachmentKey,
+            );
             _logger.i(
-              '[ATTACHMENT-DIAG] stored AES key for message_id=${dto.id} attachmentId=$normalizedAttachmentId keyRef=$keyRef',
+              '[ATTACHMENT-DIAG] stored AES key for message_id=${dto.id} attachmentId=$normalizedAttachmentId in Drift key-store',
               module: 'ChatsRepository',
             );
 
@@ -2150,6 +2227,7 @@ ChatsRepository chatsRepository(Ref ref) {
   final currentUserId = ref.watch(currentUserIdProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final cryptoService = ref.watch(e2eeCryptoServiceProvider);
+  final symmetricCrypto = ref.watch(symmetricCryptoProvider);
   final secureStorage = ref.watch(secureStorageProvider);
 
   return ChatsRepositoryImpl(
@@ -2159,6 +2237,7 @@ ChatsRepository chatsRepository(Ref ref) {
     currentUserId,
     deviceInfoService,
     cryptoService,
+    symmetricCrypto,
     secureStorage,
   );
 }

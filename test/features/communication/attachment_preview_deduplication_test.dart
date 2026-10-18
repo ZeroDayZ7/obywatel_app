@@ -89,6 +89,18 @@ class _PreviewRepository implements ChatsRepository {
       null;
 
   @override
+  Future<String?> getAttachmentKey(String attachmentId) async => null;
+
+  @override
+  Future<void> saveAttachmentKey({
+    required String attachmentId,
+    required String attachmentKey,
+  }) async {}
+
+  @override
+  Future<void> deleteAttachmentKey(String attachmentId) async {}
+
+  @override
   Future<void> saveAttachmentMetadata({
     required String attachmentId,
     String? messageId,

@@ -12,7 +12,6 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
@@ -66,7 +65,6 @@ class MessageInput extends _$MessageInput {
   late final AppLogger _logger;
   late final ChatsApiClient _apiClient;
   late final SymmetricCrypto _crypto;
-  late final SecureStorageService _storage;
   late final LocalAttachmentStore _localAttachmentStore;
   late final ChatsRepository _repository;
 
@@ -76,7 +74,6 @@ class MessageInput extends _$MessageInput {
     _logger = ref.read(appLoggerProvider);
     _apiClient = ref.read(chatsApiClientProvider);
     _crypto = ref.read(symmetricCryptoProvider);
-    _storage = ref.read(secureStorageProvider);
     _localAttachmentStore = ref.read(localAttachmentStoreProvider);
     _repository = ref.read(chatsRepositoryProvider);
     return const MessageInputState();
@@ -349,7 +346,6 @@ class MessageInput extends _$MessageInput {
 
     final apiClient = _apiClient;
     final crypto = _crypto;
-    final storage = _storage;
     final localAttachmentStore = _localAttachmentStore;
     final repository = _repository;
 
@@ -366,8 +362,7 @@ class MessageInput extends _$MessageInput {
         preparedUploadUrl != null &&
         preparedUploadUrl.isNotEmpty) {
       try {
-        final keyRef = '$preparedAttachmentId-attachment-key';
-        final storedKey = await storage.read(key: keyRef);
+        final storedKey = await repository.getAttachmentKey(preparedAttachmentId);
         if (storedKey == null || storedKey.trim().isEmpty) {
           state = state.copyWith(
             preparedAttachmentId: null,
@@ -416,7 +411,7 @@ class MessageInput extends _$MessageInput {
           metadata: {
             'version': 1,
             'ciphertextAlgorithm': 'AES-256-GCM',
-            'keyRef': keyRef,
+            'keyRef': 'db:attachment:$preparedAttachmentId',
             'keyStoredLocally': true,
             'originalContentType': pending.mimeType,
             'originalFilename': pending.fileName,
@@ -484,15 +479,17 @@ class MessageInput extends _$MessageInput {
       final plaintextSha256 = sha256.convert(pending.bytes).toString();
       final plaintextSize = pending.bytes.length;
       final keyBytes = await attachmentKey.extractBytes();
-      final keyRef = '$attachmentId-attachment-key';
       final keyValue = base64Encode(keyBytes);
 
-      await storage.write(key: keyRef, value: keyValue);
+      await repository.saveAttachmentKey(
+        attachmentId: attachmentId,
+        attachmentKey: keyValue,
+      );
 
       final localFilePath = await _safeSaveAttachment(
         localAttachmentStore: localAttachmentStore,
         attachmentId: attachmentId,
-        bytes: pending.bytes,
+        bytes: encryptedBytes,
         mimeType: pending.mimeType,
         fileName: pending.fileName,
       );
@@ -561,7 +558,7 @@ class MessageInput extends _$MessageInput {
         metadata: {
           'version': 1,
           'ciphertextAlgorithm': 'AES-256-GCM',
-          'keyRef': keyRef,
+          'keyRef': 'db:attachment:$attachmentId',
           'keyStoredLocally': true,
           'originalContentType': pending.mimeType,
           'originalFilename': pending.fileName,

@@ -7,7 +7,6 @@ import 'package:cryptography/cryptography.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
-import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -95,16 +94,17 @@ Future<void> deleteInvalidAttachmentFile({
 Future<String?> persistValidatedAttachment({
   required LocalAttachmentStore localAttachmentStore,
   required String attachmentId,
-  required Uint8List bytes,
+  required Uint8List decryptedBytes,
+  required Uint8List encryptedBytes,
   required String mimeType,
   required Map<String, dynamic>? metadata,
   String? fileName,
 }) async {
-  validateAttachmentIntegrity(bytes: bytes, metadata: metadata);
+  validateAttachmentIntegrity(bytes: decryptedBytes, metadata: metadata);
 
   return localAttachmentStore.saveAttachment(
     attachmentId: attachmentId,
-    bytes: bytes,
+    bytes: encryptedBytes,
     mimeType: mimeType,
     fileName: fileName,
   );
@@ -155,7 +155,6 @@ class AttachmentPreviewService {
   }
 
   Future<Uint8List?> loadFullImage(String attachmentId) async {
-    final storage = _ref.read(secureStorageProvider);
     final localAttachmentStore = _ref.read(localAttachmentStoreProvider);
     final repository = _ref.read(chatsRepositoryProvider);
 
@@ -165,7 +164,7 @@ class AttachmentPreviewService {
     }
 
     try {
-      final key = await storage.read(key: '$attachmentId-attachment-key');
+      final key = await repository.getAttachmentKey(attachmentId);
       final contentType =
           (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
               .toString();
@@ -217,7 +216,8 @@ class AttachmentPreviewService {
       await persistValidatedAttachment(
         localAttachmentStore: localAttachmentStore,
         attachmentId: attachmentId,
-        bytes: decryptedBytes,
+        decryptedBytes: decryptedBytes,
+        encryptedBytes: Uint8List.fromList(encryptedBytes),
         mimeType: contentType,
         metadata: metadata,
         fileName: fileName.isNotEmpty ? fileName : attachmentId,
@@ -242,7 +242,6 @@ class AttachmentPreviewService {
   }
 
   Future<Uint8List?> _loadPreviewBytes(String attachmentId) async {
-    final storage = _ref.read(secureStorageProvider);
     final localAttachmentStore = _ref.read(localAttachmentStoreProvider);
     final repository = _ref.read(chatsRepositoryProvider);
 
@@ -259,7 +258,7 @@ class AttachmentPreviewService {
     }
 
     try {
-      final key = await storage.read(key: '$attachmentId-attachment-key');
+      final key = await repository.getAttachmentKey(attachmentId);
       final contentType =
           (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
               .toString();
@@ -341,7 +340,8 @@ class AttachmentPreviewService {
       await persistValidatedAttachment(
         localAttachmentStore: _ref.read(localAttachmentStoreProvider),
         attachmentId: attachmentId,
-        bytes: decryptedBytes,
+        decryptedBytes: decryptedBytes,
+        encryptedBytes: Uint8List.fromList(encryptedBytes),
         mimeType: contentType,
         metadata: metadata,
         fileName: fileName.isNotEmpty ? fileName : attachmentId,

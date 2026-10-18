@@ -26,6 +26,12 @@ abstract class ChatsRepository {
     String? attachmentId,
   });
   Future<Map<String, dynamic>?> getAttachmentMetadata(String attachmentId);
+  Future<String?> getAttachmentKey(String attachmentId);
+  Future<void> saveAttachmentKey({
+    required String attachmentId,
+    required String attachmentKey,
+  });
+  Future<void> deleteAttachmentKey(String attachmentId);
   Future<void> saveAttachmentMetadata({
     required String attachmentId,
     String? messageId,

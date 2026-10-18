@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -101,6 +102,7 @@ ChatsRepositoryImpl _createRepository(
     deviceInfo,
     DriftSignalProtocolStore(db, logger: logger),
   );
+  final symmetricCrypto = SymmetricCrypto(logger);
 
   return ChatsRepositoryImpl(
     apiClient ??
@@ -110,6 +112,7 @@ ChatsRepositoryImpl _createRepository(
     'user-1',
     deviceInfo,
     cryptoService,
+    symmetricCrypto,
     storage,
   );
 }

@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -573,6 +574,7 @@ void main() {
           'current-user',
           deviceInfoService,
           _FakeE2eeCryptoService(),
+          SymmetricCrypto(logger),
           secureStorage,
         );
 

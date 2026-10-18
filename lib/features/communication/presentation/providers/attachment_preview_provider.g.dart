@@ -137,7 +137,8 @@ final class AttachmentFullImageProvider
   }
 }
 
-String _$attachmentFullImageHash() => r'11d5543d6d9de7f5a764b9c0e5e33347d79a3df5';
+String _$attachmentFullImageHash() =>
+    r'ae8ead2722ef4167c483537be2819c978664a9f5';
 
 final class AttachmentFullImageFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<Uint8List?>, String> {

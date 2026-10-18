@@ -157,4 +157,41 @@ class SymmetricCrypto {
     final algorithm = AesGcm.with256bits();
     return algorithm.newSecretKey();
   }
+
+  Future<String> wrapKey({
+    required SecretKey keyToWrap,
+    required SecretKey wrappingKey,
+    List<int>? aad,
+  }) async {
+    final nonce = _algorithm.newNonce();
+    final wrapped = await _algorithm.encrypt(
+      await keyToWrap.extractBytes(),
+      secretKey: wrappingKey,
+      nonce: nonce,
+      aad: aad ?? const [],
+    );
+
+    return base64Encode(wrapped.concatenation());
+  }
+
+  Future<SecretKey> unwrapKey({
+    required String wrappedKeyBase64,
+    required SecretKey wrappingKey,
+    List<int>? aad,
+  }) async {
+    final combined = base64Decode(wrappedKeyBase64);
+    final box = SecretBox.fromConcatenation(
+      combined,
+      nonceLength: _algorithm.nonceLength,
+      macLength: _algorithm.macAlgorithm.macLength,
+    );
+
+    final unwrapped = await _algorithm.decrypt(
+      box,
+      secretKey: wrappingKey,
+      aad: aad ?? const [],
+    );
+
+    return SecretKey(unwrapped);
+  }
 }

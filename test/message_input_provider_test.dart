@@ -138,6 +138,31 @@ class FakeChatsRepository implements ChatsRepository {
   }) async => const [];
 
   @override
+  Future<String?> getAttachmentKey(String attachmentId) async =>
+      metadataByAttachment[attachmentId]?['attachmentKey'] as String?;
+
+  @override
+  Future<void> saveAttachmentKey({
+    required String attachmentId,
+    required String attachmentKey,
+  }) async {
+    final existing = metadataByAttachment[attachmentId] ?? <String, dynamic>{};
+    metadataByAttachment[attachmentId] = {
+      ...existing,
+      'attachmentKey': attachmentKey,
+    };
+  }
+
+  @override
+  Future<void> deleteAttachmentKey(String attachmentId) async {
+    final existing = metadataByAttachment[attachmentId];
+    if (existing == null) {
+      return;
+    }
+    existing.remove('attachmentKey');
+  }
+
+  @override
   Future<void> deleteInvalidOutboxEvents(List<String> ids) async {}
 
   @override
@@ -496,8 +521,11 @@ void main() {
           mimeType: 'text/plain',
         );
 
-        secureStorage.values['prep-111-attachment-key'] = base64Encode(
-          Uint8List.fromList(List<int>.filled(32, 7)),
+        await repo.saveAttachmentKey(
+          attachmentId: 'prep-111',
+          attachmentKey: base64Encode(
+            Uint8List.fromList(List<int>.filled(32, 7)),
+          ),
         );
         notifier.state = notifier.state.copyWith(
           attachment: PendingAttachment(
@@ -560,8 +588,11 @@ void main() {
           bytes: Uint8List.fromList([1, 2, 3]),
           mimeType: 'text/plain',
         );
-        secureStorage.values['prep-222-attachment-key'] = base64Encode(
-          Uint8List.fromList(List<int>.filled(32, 9)),
+        await repo.saveAttachmentKey(
+          attachmentId: 'prep-222',
+          attachmentKey: base64Encode(
+            Uint8List.fromList(List<int>.filled(32, 9)),
+          ),
         );
         notifier.state = notifier.state.copyWith(
           attachment: PendingAttachment(
@@ -772,8 +803,11 @@ void main() {
           ),
         );
         final secureStorage = FakeSecureStorage();
-        secureStorage.values['prep-555-attachment-key'] = base64Encode(
-          Uint8List.fromList(List<int>.filled(32, 7)),
+        await repo.saveAttachmentKey(
+          attachmentId: 'prep-555',
+          attachmentKey: base64Encode(
+            Uint8List.fromList(List<int>.filled(32, 7)),
+          ),
         );
         final container = createMessageInputContainer(
           apiClient: apiClient,

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -49,6 +50,7 @@ class TestChatRepository extends ChatsRepositoryImpl {
     required AppLogger logger,
     required DeviceInfoService deviceInfoService,
     required E2eeCryptoService cryptoService,
+    required SymmetricCrypto symmetricCrypto,
     required SecureStorageService secureStorage,
     this.pendingMessagesFactory,
   }) : super(
@@ -58,6 +60,7 @@ class TestChatRepository extends ChatsRepositoryImpl {
          'user-1',
          deviceInfoService,
          cryptoService,
+         symmetricCrypto,
          secureStorage,
        );
 
@@ -172,6 +175,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db, logger: logger),
         ),
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -230,6 +234,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db, logger: logger),
         ),
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -291,6 +296,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db, logger: logger),
         ),
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -515,6 +521,7 @@ void main() {
           logger: logger,
           deviceInfoService: deviceInfoService,
           cryptoService: cryptoService,
+          symmetricCrypto: SymmetricCrypto(logger),
           secureStorage: secureStorage,
           pendingMessagesFactory: () async {
             await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -580,6 +587,7 @@ void main() {
         logger: logger,
         deviceInfoService: deviceInfoService,
         cryptoService: cryptoService,
+        symmetricCrypto: SymmetricCrypto(logger),
         secureStorage: secureStorage,
       );
       repository.pendingMessagesFactory = () async {
@@ -640,6 +648,7 @@ void main() {
           logger: logger,
           deviceInfoService: deviceInfoService,
           cryptoService: cryptoService,
+          symmetricCrypto: SymmetricCrypto(logger),
           secureStorage: secureStorage,
           pendingMessagesFactory: () async => <Message>[
             _makeMessage(
@@ -741,6 +750,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -834,6 +844,7 @@ void main() {
           'user-1',
           deviceInfoService,
           cryptoService,
+          SymmetricCrypto(logger),
           secureStorage,
         );
 

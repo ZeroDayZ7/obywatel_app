@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -180,6 +181,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -196,6 +198,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -240,6 +243,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -300,6 +304,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -496,6 +501,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -539,6 +545,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -642,6 +649,7 @@ void main() {
         'anna',
         deviceInfoService,
         cryptoService1,
+        SymmetricCrypto(logger),
         secureStorage,
       );
       final piotrRepo = ChatsRepositoryImpl(
@@ -651,6 +659,7 @@ void main() {
         'piotr',
         deviceInfoService,
         cryptoService2,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -723,6 +732,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -825,6 +835,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -930,6 +941,7 @@ void main() {
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -1049,6 +1061,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -1085,6 +1098,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
