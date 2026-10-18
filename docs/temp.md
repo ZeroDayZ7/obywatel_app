@@ -174,7 +174,7 @@ Punkty 43–52
 
 Punkty 53–58
 
-53\. Ustalić jeden kanoniczny format JSON. `conversationId`, `messageId`, `senderDeviceId`, `eventId`, `createdAt`, `signalType` — z dokładnym określeniem, które pola należą do danego endpointu.
+<!-- 53\. Ustalić jeden kanoniczny format JSON. `conversationId`, `messageId`, `senderDeviceId`, `eventId`, `createdAt`, `signalType` — z dokładnym określeniem, które pola należą do danego endpointu. -->
 
 54\. Usunąć rozproszone odczyty alternatywnych nazw. Przykłady to `sender_id` i `senderId` oraz `type` i `signalType`. Jeśli wybieramy camelCase, kod nie powinien bez końca akceptować wszystkich wariantów historycznych.
 

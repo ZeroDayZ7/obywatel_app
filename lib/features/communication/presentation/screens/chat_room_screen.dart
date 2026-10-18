@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
-import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/message_input_field.dart';
@@ -24,7 +23,6 @@ class ChatRoomScreen extends ConsumerStatefulWidget {
 
 class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   late final ScrollController _scrollController;
-  String? _lastRenderedMessageId;
 
   @override
   void initState() {
@@ -36,39 +34,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   void dispose() {
     _scrollController.dispose();
     super.dispose();
-  }
-
-  bool _shouldAutoScrollToBottom(List<Message> messages) {
-    if (!_scrollController.hasClients || messages.isEmpty) {
-      return false;
-    }
-
-    final maxScroll = _scrollController.position.maxScrollExtent;
-    final atBottom = maxScroll - _scrollController.offset <= 220;
-
-    if (_lastRenderedMessageId == null) {
-      return true;
-    }
-
-    return messages.last.id != _lastRenderedMessageId && atBottom;
-  }
-
-  void _scrollToBottomIfNeeded(List<Message> messages) {
-    if (!_shouldAutoScrollToBottom(messages)) return;
-
-    _lastRenderedMessageId = messages.last.id;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_scrollController.hasClients) return;
-
-      final maxScroll = _scrollController.position.maxScrollExtent;
-      if (maxScroll > 0) {
-        _scrollController.animateTo(
-          maxScroll,
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-        );
-      }
-    });
   }
 
   @override
@@ -182,7 +147,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           Expanded(
             child: chatState.when(
               data: (messages) {
-                _scrollToBottomIfNeeded(messages);
                 if (messages.isEmpty) {
                   return Center(
                     child: Text(
