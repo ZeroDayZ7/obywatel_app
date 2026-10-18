@@ -82,3 +82,77 @@ final class AttachmentPreviewFamily extends $Family
   @override
   String toString() => r'attachmentPreviewProvider';
 }
+
+@ProviderFor(attachmentFullImage)
+final attachmentFullImageProvider = AttachmentFullImageFamily._();
+
+final class AttachmentFullImageProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<Uint8List?>,
+          Uint8List?,
+          FutureOr<Uint8List?>
+        >
+    with $FutureModifier<Uint8List?>, $FutureProvider<Uint8List?> {
+  AttachmentFullImageProvider._({
+    required AttachmentFullImageFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'attachmentFullImageProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
+
+  @override
+  String debugGetCreateSourceHash() => _$attachmentFullImageHash();
+
+  @override
+  String toString() {
+    return r'attachmentFullImageProvider'
+        ''
+        '($argument)';
+  }
+
+  @$internal
+  @override
+  $FutureProviderElement<Uint8List?> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
+
+  @override
+  FutureOr<Uint8List?> create(Ref ref) {
+    final argument = this.argument as String;
+    return attachmentFullImage(ref, argument);
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is AttachmentFullImageProvider && other.argument == argument;
+  }
+
+  @override
+  int get hashCode {
+    return argument.hashCode;
+  }
+}
+
+String _$attachmentFullImageHash() => r'11d5543d6d9de7f5a764b9c0e5e33347d79a3df5';
+
+final class AttachmentFullImageFamily extends $Family
+    with $FunctionalFamilyOverride<FutureOr<Uint8List?>, String> {
+  AttachmentFullImageFamily._()
+    : super(
+        retry: null,
+        name: r'attachmentFullImageProvider',
+        dependencies: null,
+        $allTransitiveDependencies: null,
+        isAutoDispose: true,
+      );
+
+  AttachmentFullImageProvider call(String attachmentId) =>
+      AttachmentFullImageProvider._(argument: attachmentId, from: this);
+
+  @override
+  String toString() => r'attachmentFullImageProvider';
+}

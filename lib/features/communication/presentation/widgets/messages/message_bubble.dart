@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/attachment_preview_provider.dart';
+import 'package:obywatel_plus/features/communication/presentation/screens/attachment_viewer_screen.dart';
 
 class MessageBubble extends ConsumerWidget {
   const MessageBubble({super.key, required this.message});
@@ -41,21 +42,38 @@ class MessageBubble extends ConsumerWidget {
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 240, maxHeight: 260),
-              child: Image.memory(
-                previewBytes,
-                fit: BoxFit.contain,
-                gaplessPlayback: true,
-                errorBuilder: (context, error, stackTrace) {
-                  return const SizedBox(
-                    width: 220,
-                    height: 120,
-                    child: Center(child: Icon(Icons.broken_image_outlined)),
-                  );
-                },
+          child: GestureDetector(
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  fullscreenDialog: true,
+                  builder: (_) =>
+                      AttachmentViewerScreen(attachmentId: attachmentId),
+                ),
+              );
+            },
+            child: Hero(
+              tag: 'attachment-$attachmentId',
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxWidth: 240,
+                    maxHeight: 260,
+                  ),
+                  child: Image.memory(
+                    previewBytes,
+                    fit: BoxFit.contain,
+                    gaplessPlayback: true,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const SizedBox(
+                        width: 220,
+                        height: 120,
+                        child: Center(child: Icon(Icons.broken_image_outlined)),
+                      );
+                    },
+                  ),
+                ),
               ),
             ),
           ),

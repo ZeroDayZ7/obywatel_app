@@ -120,6 +120,16 @@ FutureOr<Uint8List?> attachmentPreview(Ref ref, String attachmentId) async {
   return AttachmentPreviewService(ref).loadPreview(normalized);
 }
 
+@riverpod
+FutureOr<Uint8List?> attachmentFullImage(Ref ref, String attachmentId) async {
+  final normalized = attachmentId.trim();
+  if (normalized.isEmpty) {
+    return null;
+  }
+
+  return AttachmentPreviewService(ref).loadFullImage(normalized);
+}
+
 class AttachmentPreviewService {
   AttachmentPreviewService(this._ref);
 
@@ -142,6 +152,93 @@ class AttachmentPreviewService {
         _inFlightDownloads.remove(attachmentId);
       }
     });
+  }
+
+  Future<Uint8List?> loadFullImage(String attachmentId) async {
+    final storage = _ref.read(secureStorageProvider);
+    final localAttachmentStore = _ref.read(localAttachmentStoreProvider);
+    final repository = _ref.read(chatsRepositoryProvider);
+
+    final metadata = await repository.getAttachmentMetadata(attachmentId);
+    if (metadata == null || metadata.isEmpty) {
+      return null;
+    }
+
+    try {
+      final key = await storage.read(key: '$attachmentId-attachment-key');
+      final contentType =
+          (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
+              .toString();
+      final fileName =
+          (metadata['fileName'] ?? metadata['originalFilename'] ?? '')
+              .toString();
+
+      if (key == null ||
+          key.isEmpty ||
+          !contentType.toLowerCase().startsWith('image/')) {
+        return null;
+      }
+
+      final localFile = await localAttachmentStore.readAttachment(
+        attachmentId: attachmentId,
+        mimeType: contentType,
+        fileName: fileName,
+      );
+      if (localFile != null && localFile.isNotEmpty) {
+        validateAttachmentIntegrity(bytes: localFile, metadata: metadata);
+        return localFile;
+      }
+
+      final apiClient = _ref.read(chatsApiClientProvider);
+      final download = await apiClient.getAttachmentDownloadUrl(attachmentId);
+      final rawUrl = download.downloadUrl.trim();
+      if (rawUrl.isEmpty) {
+        return null;
+      }
+
+      final encryptedBytes = await apiClient.downloadBytes(rawUrl);
+      if (encryptedBytes.isEmpty) {
+        return null;
+      }
+
+      final decryptedBytes = await _ref
+          .read(symmetricCryptoProvider)
+          .decryptBytes(
+            encryptedBase64: base64Encode(encryptedBytes),
+            secretKey: SecretKey(base64Decode(key)),
+          );
+
+      if (decryptedBytes.isEmpty) {
+        return null;
+      }
+
+      validateAttachmentIntegrity(bytes: decryptedBytes, metadata: metadata);
+
+      await persistValidatedAttachment(
+        localAttachmentStore: localAttachmentStore,
+        attachmentId: attachmentId,
+        bytes: decryptedBytes,
+        mimeType: contentType,
+        metadata: metadata,
+        fileName: fileName.isNotEmpty ? fileName : attachmentId,
+      );
+
+      return decryptedBytes;
+    } on AttachmentIntegrityException catch (error) {
+      final metadataContentType =
+          (metadata['contentType'] ?? metadata['originalContentType'] ?? '')
+              .toString();
+      final fileName =
+          (metadata['fileName'] ?? metadata['originalFilename'] ?? '')
+              .toString();
+      await deleteInvalidAttachmentFile(
+        localAttachmentStore: localAttachmentStore,
+        attachmentId: attachmentId,
+        mimeType: metadataContentType,
+        fileName: fileName.isNotEmpty ? fileName : attachmentId,
+      );
+      throw Exception(error.message);
+    }
   }
 
   Future<Uint8List?> _loadPreviewBytes(String attachmentId) async {
