@@ -66,7 +66,6 @@ class DeviceKeyBundle {
   final String deviceId;
   final int registrationId;
   final String publicKey;
-  final String privateKey;
   final String signedPreKey;
   final String signedPreKeySignature;
   final int signedPreKeyId;
@@ -76,10 +75,45 @@ class DeviceKeyBundle {
     required this.deviceId,
     required this.registrationId,
     required this.publicKey,
-    required this.privateKey,
     required this.signedPreKey,
     required this.signedPreKeySignature,
     required this.signedPreKeyId,
     required this.oneTimePreKeys,
   });
+
+  Map<String, dynamic> toRegistrationPayload() => {
+    'deviceId': deviceId,
+    'registrationId': registrationId,
+    'identityPublicKey': publicKey,
+    'publicKey': publicKey,
+    'signedPreKey': signedPreKey,
+    'signedPreKeySig': signedPreKeySignature,
+    'signedPreKeyId': signedPreKeyId,
+    'oneTimePreKeys': oneTimePreKeys.map((preKey) => preKey.toJson()).toList(),
+  };
+}
+
+class LocalDeviceKeyBundle extends DeviceKeyBundle {
+  final String privateKey;
+
+  const LocalDeviceKeyBundle({
+    required super.deviceId,
+    required super.registrationId,
+    required super.publicKey,
+    required this.privateKey,
+    required super.signedPreKey,
+    required super.signedPreKeySignature,
+    required super.signedPreKeyId,
+    required super.oneTimePreKeys,
+  });
+
+  DeviceKeyBundle toRegistrationBundle() => DeviceKeyBundle(
+    deviceId: deviceId,
+    registrationId: registrationId,
+    publicKey: publicKey,
+    signedPreKey: signedPreKey,
+    signedPreKeySignature: signedPreKeySignature,
+    signedPreKeyId: signedPreKeyId,
+    oneTimePreKeys: oneTimePreKeys,
+  );
 }

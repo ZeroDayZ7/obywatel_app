@@ -205,7 +205,7 @@ class E2eeCryptoService {
     return hasSignedPreKey && hasOneTimePreKeys;
   }
 
-  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+  Future<LocalDeviceKeyBundle> _ensureLocalDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final registrationId = await _signalStore.getLocalRegistrationId();
     final identityKeyPair = await _signalStore.getIdentityKeyPair();
@@ -223,7 +223,7 @@ class E2eeCryptoService {
         }),
       );
 
-      return DeviceKeyBundle(
+      return LocalDeviceKeyBundle(
         deviceId: deviceId,
         registrationId: registrationId,
         publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
@@ -253,7 +253,7 @@ class E2eeCryptoService {
         )
         .toList();
 
-    return DeviceKeyBundle(
+    return LocalDeviceKeyBundle(
       deviceId: deviceId,
       registrationId: registrationId,
       publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
@@ -265,6 +265,11 @@ class E2eeCryptoService {
       signedPreKeyId: signedPreKey.id,
       oneTimePreKeys: oneTimePreKeyRegistrations,
     );
+  }
+
+  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+    final localBundle = await _ensureLocalDeviceIdentityBundle();
+    return localBundle.toRegistrationBundle();
   }
 
   Future<void> registerDeviceIdentity() async {
@@ -286,7 +291,8 @@ class E2eeCryptoService {
         final persistedMarker = await _secureStorage.read(
           key: 'e2ee_device_registration_marker',
         );
-        final bundle = await ensureDeviceIdentityBundle();
+        final localBundle = await _ensureLocalDeviceIdentityBundle();
+        final bundle = localBundle.toRegistrationBundle();
         final marker = {
           'deviceId': bundle.deviceId,
           'registrationId': bundle.registrationId,
@@ -307,22 +313,16 @@ class E2eeCryptoService {
           );
         }
 
-        final payload = {
-          'deviceId': bundle.deviceId,
-          'registrationId': bundle.registrationId,
-          'identityPublicKey': bundle.publicKey,
-          'publicKey': bundle.publicKey,
-          'signedPreKey': bundle.signedPreKey,
-          'signedPreKeySig': bundle.signedPreKeySignature,
-          'signedPreKeyId': bundle.signedPreKeyId,
-          'oneTimePreKeys': bundle.oneTimePreKeys
-              .map((preKey) => preKey.toJson())
-              .toList(),
+        final payload = bundle.toRegistrationPayload();
+        final transportKeys = <String>{
+          'privateKey',
+          'privateKeyBase64',
+          'private_key',
+          'devicePrivateKey',
+          'device_private_key',
         };
-
-        if (payload.containsKey('private_key') ||
-            payload.containsKey('device_private_key') ||
-            payload.containsValue(bundle.privateKey)) {
+        final hasPrivateMaterial = transportKeys.any(payload.containsKey);
+        if (hasPrivateMaterial) {
           throw StateError(
             'Private E2EE keys must never be sent to the backend',
           );
