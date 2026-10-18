@@ -7,19 +7,18 @@ class MessageTextField extends StatelessWidget {
     required this.focusNode,
     required this.onTap,
     required this.onChanged,
-    required this.colorScheme,
-    required this.theme,
   });
 
   final TextEditingController controller;
   final FocusNode focusNode;
   final VoidCallback onTap;
   final ValueChanged<String> onChanged;
-  final ColorScheme colorScheme;
-  final ThemeData theme;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Expanded(
       child: TextField(
         controller: controller,

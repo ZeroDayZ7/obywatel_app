@@ -361,8 +361,6 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
                     }
                   },
                   onChanged: _updateTextState,
-                  colorScheme: colorScheme,
-                  theme: theme,
                 ),
                 const SizedBox(width: 8),
                 IconButton.filled(
