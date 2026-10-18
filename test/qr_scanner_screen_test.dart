@@ -1,37 +1,50 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/qr_scanner_screen.dart';
 
 void main() {
-  group('ScannerErrorDeduplicator', () {
-    test('suppresses repeated duplicate messages', () {
-      final deduplicator = ScannerErrorDeduplicator();
+  testWidgets(
+    'onDetectError deduplicates repeated scan errors and errorBuilder renders permission guidance',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: QrScannerScreen()));
+
+      final scanner = tester.widget<MobileScanner>(find.byType(MobileScanner));
+      final onDetectError = scanner.onDetectError;
+      final errorBuilder = scanner.errorBuilder;
+
+      expect(onDetectError, isNotNull);
+      expect(errorBuilder, isNotNull);
+
+      const genericError = MobileScannerException(
+        errorCode: MobileScannerErrorCode.genericError,
+      );
+      const permissionError = MobileScannerException(
+        errorCode: MobileScannerErrorCode.permissionDenied,
+      );
+
+      onDetectError(genericError, StackTrace.current);
+      await tester.pump();
+      expect(tester.widgetList<SnackBar>(find.byType(SnackBar)).length, 1);
+
+      onDetectError(genericError, StackTrace.current);
+      await tester.pump();
+      expect(tester.widgetList<SnackBar>(find.byType(SnackBar)).length, 1);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Builder(
+            builder: (context) => errorBuilder!(context, permissionError),
+          ),
+        ),
+      );
 
       expect(
-        deduplicator.shouldDisplay(
-          'Nie udało się odczytać kodu QR. Spróbuj ponownie.',
-        ),
-        isTrue,
-      );
-      expect(
-        deduplicator.shouldDisplay(
-          'Nie udało się odczytać kodu QR. Spróbuj ponownie.',
-        ),
-        isFalse,
-      );
-      expect(
-        deduplicator.shouldDisplay(
+        find.text(
           'Brak dostępu do kamery. Włącz dostęp do kamery w ustawieniach urządzenia i spróbuj ponownie.',
         ),
-        isTrue,
+        findsOneWidget,
       );
-    });
-
-    test('reset clears the last reported message', () {
-      final deduplicator = ScannerErrorDeduplicator();
-
-      expect(deduplicator.shouldDisplay('foo'), isTrue);
-      deduplicator.reset();
-      expect(deduplicator.shouldDisplay('foo'), isTrue);
-    });
-  });
+    },
+  );
 }

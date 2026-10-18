@@ -1,24 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:obywatel_plus/app/theme/theme_extensions.dart';
-
-class ScannerErrorDeduplicator {
-  String? _lastMessage;
-
-  bool shouldDisplay(String message) {
-    if (_lastMessage == message) {
-      return false;
-    }
-    _lastMessage = message;
-    return true;
-  }
-
-  void reset() {
-    _lastMessage = null;
-  }
-}
 
 class QrScannerScreen extends StatefulWidget {
   const QrScannerScreen({super.key});
@@ -29,10 +11,46 @@ class QrScannerScreen extends StatefulWidget {
 
 class _QrScannerScreenState extends State<QrScannerScreen> {
   final MobileScannerController _controller = MobileScannerController();
-  final ScannerErrorDeduplicator _scannerErrorDeduplicator =
-      ScannerErrorDeduplicator();
   bool _isScanned = false;
   bool _isTorchToggling = false;
+  String? _lastScanErrorMessage;
+  DateTime? _lastScanErrorAt;
+  String? _lastCameraInitErrorMessage;
+  DateTime? _lastCameraInitErrorAt;
+
+  bool _shouldReportError({
+    required bool isScanError,
+    required String message,
+  }) {
+    final lastMessage = isScanError
+        ? _lastScanErrorMessage
+        : _lastCameraInitErrorMessage;
+    final lastAt = isScanError ? _lastScanErrorAt : _lastCameraInitErrorAt;
+    final now = DateTime.now();
+
+    if (lastMessage == message && lastAt != null) {
+      final elapsed = now.difference(lastAt);
+      if (elapsed < const Duration(seconds: 6)) {
+        return false;
+      }
+    }
+
+    if (isScanError) {
+      _lastScanErrorMessage = message;
+      _lastScanErrorAt = now;
+    } else {
+      _lastCameraInitErrorMessage = message;
+      _lastCameraInitErrorAt = now;
+    }
+    return true;
+  }
+
+  void _resetErrorTracking() {
+    _lastScanErrorMessage = null;
+    _lastScanErrorAt = null;
+    _lastCameraInitErrorMessage = null;
+    _lastCameraInitErrorAt = null;
+  }
 
   void _showUserMessage(String message) {
     if (!mounted) {
@@ -59,7 +77,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         await _controller.stop();
       }
       await _controller.start();
-      _scannerErrorDeduplicator.reset();
+      _resetErrorTracking();
     } on MobileScannerException catch (error) {
       if (!mounted) {
         return;
@@ -69,15 +87,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
           ? 'Brak dostępu do kamery. Włącz dostęp do kamery w ustawieniach urządzenia i spróbuj ponownie.'
           : 'Nie udało się uruchomić kamery. Spróbuj ponownie.';
 
-      if (_scannerErrorDeduplicator.shouldDisplay(message)) {
+      if (_shouldReportError(isScanError: false, message: message)) {
         _showUserMessage(message);
       }
     } on Object catch (_) {
       if (!mounted) {
         return;
       }
-      final message = 'Nie udało się uruchomić kamery. Spróbuj ponownie.';
-      if (_scannerErrorDeduplicator.shouldDisplay(message)) {
+      const message = 'Nie udało się uruchomić kamery. Spróbuj ponownie.';
+      if (_shouldReportError(isScanError: false, message: message)) {
         _showUserMessage(message);
       }
     }
@@ -93,7 +111,12 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       return;
     }
 
-    _isTorchToggling = true;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _isTorchToggling = true;
+    });
 
     try {
       await _controller.toggleTorch();
@@ -104,7 +127,9 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       _showUserMessage('Nie udało się zmienić stanu latarki.');
     } finally {
       if (mounted) {
-        _isTorchToggling = false;
+        setState(() {
+          _isTorchToggling = false;
+        });
       }
     }
   }
@@ -115,13 +140,18 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     }
 
     _isScanned = true;
-    _scannerErrorDeduplicator.reset();
-    Navigator.of(context).pop(code);
+    _resetErrorTracking();
+    if (mounted) {
+      Navigator.of(context).pop(code);
+    }
   }
 
-  Future<void> _disposeControllerSafely() async {
+  @override
+  void dispose() {
+    _isTorchToggling = false;
+    _resetErrorTracking();
     try {
-      await _controller.dispose();
+      _controller.dispose();
     } on Object catch (error, stackTrace) {
       FlutterError.reportError(
         FlutterErrorDetails(
@@ -132,13 +162,6 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         ),
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _isTorchToggling = false;
-    _scannerErrorDeduplicator.reset();
-    unawaited(_disposeControllerSafely());
     super.dispose();
   }
 
@@ -253,7 +276,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
               const message =
                   'Nie udało się odczytać kodu QR. Spróbuj ponownie.';
-              if (_scannerErrorDeduplicator.shouldDisplay(message)) {
+              if (_shouldReportError(isScanError: true, message: message)) {
                 _showUserMessage(message);
               }
             },
