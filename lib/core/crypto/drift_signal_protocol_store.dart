@@ -12,12 +12,10 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     IdentityKeyPair? identityKeyPair,
     int? localRegistrationId,
     AppLogger? logger,
-  })  : _logger = logger ?? AppLogger(),
-        _identityKeyPair = identityKeyPair ?? generateIdentityKeyPair(),
-        _localRegistrationId =
-            localRegistrationId ?? generateRegistrationId(false) {
-    unawaited(_ensureLocalIdentityLoaded());
-  }
+  }) : _logger = logger ?? AppLogger(),
+       _identityKeyPair = identityKeyPair ?? generateIdentityKeyPair(),
+       _localRegistrationId =
+           localRegistrationId ?? generateRegistrationId(false);
 
   final AppDatabase db;
   final AppLogger _logger;
@@ -39,20 +37,36 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     _localIdentityLoading = () async {
       final existing = await _loadLocalIdentity();
       if (existing != null) {
-        _identityKeyPair = IdentityKeyPair.fromSerialized(existing.identityKeyPair);
+        _identityKeyPair = IdentityKeyPair.fromSerialized(
+          existing.identityKeyPair,
+        );
         _localRegistrationId = existing.registrationId;
         _localIdentityLoaded = true;
         return;
       }
 
-      await db.into(db.signalLocalIdentity).insert(
-        SignalLocalIdentityCompanion(
-          id: const Value('local'),
-          identityKeyPair: Value(_identityKeyPair.serialize()),
-          registrationId: Value(_localRegistrationId),
-        ),
-      );
-      _localIdentityLoaded = true;
+      await db.transaction(() async {
+        final transactionExisting = await _loadLocalIdentity();
+        if (transactionExisting != null) {
+          _identityKeyPair = IdentityKeyPair.fromSerialized(
+            transactionExisting.identityKeyPair,
+          );
+          _localRegistrationId = transactionExisting.registrationId;
+          _localIdentityLoaded = true;
+          return;
+        }
+
+        await db
+            .into(db.signalLocalIdentity)
+            .insert(
+              SignalLocalIdentityCompanion(
+                id: const Value('local'),
+                identityKeyPair: Value(_identityKeyPair.serialize()),
+                registrationId: Value(_localRegistrationId),
+              ),
+            );
+        _localIdentityLoaded = true;
+      });
     }();
 
     try {
@@ -63,9 +77,9 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   }
 
   Future<SignalLocalIdentityData?> _loadLocalIdentity() async {
-    return (db.select(db.signalLocalIdentity)
-          ..where((row) => row.id.equals('local')))
-        .getSingleOrNull();
+    return (db.select(
+      db.signalLocalIdentity,
+    )..where((row) => row.id.equals('local'))).getSingleOrNull();
   }
 
   @override
@@ -111,13 +125,15 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
         return false;
       }
 
-      await db.into(db.signalIdentityKeys).insertOnConflictUpdate(
-        SignalIdentityKeysCompanion(
-          name: Value(address.getName()),
-          deviceId: Value(address.getDeviceId()),
-          identityKey: Value(serialized),
-        ),
-      );
+      await db
+          .into(db.signalIdentityKeys)
+          .insertOnConflictUpdate(
+            SignalIdentityKeysCompanion(
+              name: Value(address.getName()),
+              deviceId: Value(address.getDeviceId()),
+              identityKey: Value(serialized),
+            ),
+          );
       return true;
     } catch (error, stackTrace) {
       _logger.e(
@@ -165,13 +181,13 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   @override
   Future<IdentityKey?> getIdentity(SignalProtocolAddress address) async {
     try {
-      final row = (db.select(db.signalIdentityKeys)
-            ..where(
-              (entry) =>
-                  entry.name.equals(address.getName()) &
-                  entry.deviceId.equals(address.getDeviceId()),
-            ))
-          .getSingleOrNull();
+      final row =
+          (db.select(db.signalIdentityKeys)..where(
+                (entry) =>
+                    entry.name.equals(address.getName()) &
+                    entry.deviceId.equals(address.getDeviceId()),
+              ))
+              .getSingleOrNull();
 
       final result = await row;
       if (result == null) {
@@ -193,9 +209,9 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   @override
   Future<PreKeyRecord> loadPreKey(int preKeyId) async {
     try {
-      final row = (db.select(db.signalPreKeys)
-            ..where((entry) => entry.id.equals(preKeyId)))
-          .getSingleOrNull();
+      final row = (db.select(
+        db.signalPreKeys,
+      )..where((entry) => entry.id.equals(preKeyId))).getSingleOrNull();
 
       final record = await row;
       if (record == null) {
@@ -218,12 +234,14 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   Future<void> storePreKey(int preKeyId, PreKeyRecord record) async {
     try {
       final serialized = record.serialize();
-      await db.into(db.signalPreKeys).insertOnConflictUpdate(
-        SignalPreKeysCompanion(
-          id: Value(preKeyId),
-          record: Value(serialized),
-        ),
-      );
+      await db
+          .into(db.signalPreKeys)
+          .insertOnConflictUpdate(
+            SignalPreKeysCompanion(
+              id: Value(preKeyId),
+              record: Value(serialized),
+            ),
+          );
     } catch (error, stackTrace) {
       _logger.e(
         '[E2EE_TRACE] stage=prekey_store_error event=error pre_key_id=$preKeyId error_type=${error.runtimeType} error_message=${error.toString()}',
@@ -238,9 +256,9 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   @override
   Future<bool> containsPreKey(int preKeyId) async {
     try {
-      final row = (db.select(db.signalPreKeys)
-            ..where((entry) => entry.id.equals(preKeyId)))
-          .getSingleOrNull();
+      final row = (db.select(
+        db.signalPreKeys,
+      )..where((entry) => entry.id.equals(preKeyId))).getSingleOrNull();
       return await row != null;
     } catch (error, stackTrace) {
       _logger.e(
@@ -255,21 +273,21 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<void> removePreKey(int preKeyId) async {
-    await (db.delete(db.signalPreKeys)
-          ..where((entry) => entry.id.equals(preKeyId)))
-        .go();
+    await (db.delete(
+      db.signalPreKeys,
+    )..where((entry) => entry.id.equals(preKeyId))).go();
   }
 
   @override
   Future<SessionRecord> loadSession(SignalProtocolAddress address) async {
     try {
-      final row = (db.select(db.signalSessions)
-            ..where(
-              (entry) =>
-                  entry.name.equals(address.getName()) &
-                  entry.deviceId.equals(address.getDeviceId()),
-            ))
-          .getSingleOrNull();
+      final row =
+          (db.select(db.signalSessions)..where(
+                (entry) =>
+                    entry.name.equals(address.getName()) &
+                    entry.deviceId.equals(address.getDeviceId()),
+              ))
+              .getSingleOrNull();
 
       final result = await row;
       if (result == null) {
@@ -290,9 +308,11 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<List<int>> getSubDeviceSessions(String name) async {
-    final rows = await (db.select(db.signalSessions)
-          ..where((entry) => entry.name.equals(name) & entry.deviceId.isNotNull()))
-        .get();
+    final rows =
+        await (db.select(db.signalSessions)..where(
+              (entry) => entry.name.equals(name) & entry.deviceId.isNotNull(),
+            ))
+            .get();
 
     return rows.map((row) => row.deviceId).toList();
   }
@@ -304,13 +324,15 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   ) async {
     try {
       final serialized = record.serialize();
-      await db.into(db.signalSessions).insertOnConflictUpdate(
-        SignalSessionsCompanion(
-          name: Value(address.getName()),
-          deviceId: Value(address.getDeviceId()),
-          record: Value(serialized),
-        ),
-      );
+      await db
+          .into(db.signalSessions)
+          .insertOnConflictUpdate(
+            SignalSessionsCompanion(
+              name: Value(address.getName()),
+              deviceId: Value(address.getDeviceId()),
+              record: Value(serialized),
+            ),
+          );
     } catch (error, stackTrace) {
       _logger.e(
         '[E2EE_TRACE] stage=session_store_error event=error signal_address=${address.getName()}@${address.getDeviceId()} error_type=${error.runtimeType} error_message=${error.toString()}',
@@ -325,13 +347,13 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
   @override
   Future<bool> containsSession(SignalProtocolAddress address) async {
     try {
-      final row = (db.select(db.signalSessions)
-            ..where(
-              (entry) =>
-                  entry.name.equals(address.getName()) &
-                  entry.deviceId.equals(address.getDeviceId()),
-            ))
-          .getSingleOrNull();
+      final row =
+          (db.select(db.signalSessions)..where(
+                (entry) =>
+                    entry.name.equals(address.getName()) &
+                    entry.deviceId.equals(address.getDeviceId()),
+              ))
+              .getSingleOrNull();
       return await row != null;
     } catch (error, stackTrace) {
       _logger.e(
@@ -346,27 +368,26 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
 
   @override
   Future<void> deleteSession(SignalProtocolAddress address) async {
-    await (db.delete(db.signalSessions)
-          ..where(
-            (entry) =>
-                entry.name.equals(address.getName()) &
-                entry.deviceId.equals(address.getDeviceId()),
-          ))
+    await (db.delete(db.signalSessions)..where(
+          (entry) =>
+              entry.name.equals(address.getName()) &
+              entry.deviceId.equals(address.getDeviceId()),
+        ))
         .go();
   }
 
   @override
   Future<void> deleteAllSessions(String name) async {
-    await (db.delete(db.signalSessions)
-          ..where((entry) => entry.name.equals(name)))
-        .go();
+    await (db.delete(
+      db.signalSessions,
+    )..where((entry) => entry.name.equals(name))).go();
   }
 
   @override
   Future<SignedPreKeyRecord> loadSignedPreKey(int signedPreKeyId) async {
-    final row = (db.select(db.signalSignedPreKeys)
-          ..where((entry) => entry.id.equals(signedPreKeyId)))
-        .getSingleOrNull();
+    final row = (db.select(
+      db.signalSignedPreKeys,
+    )..where((entry) => entry.id.equals(signedPreKeyId))).getSingleOrNull();
 
     final result = await row;
     if (result == null) {
@@ -389,26 +410,28 @@ class DriftSignalProtocolStore implements SignalProtocolStore {
     int signedPreKeyId,
     SignedPreKeyRecord record,
   ) async {
-    await db.into(db.signalSignedPreKeys).insertOnConflictUpdate(
-      SignalSignedPreKeysCompanion(
-        id: Value(signedPreKeyId),
-        record: Value(record.serialize()),
-      ),
-    );
+    await db
+        .into(db.signalSignedPreKeys)
+        .insertOnConflictUpdate(
+          SignalSignedPreKeysCompanion(
+            id: Value(signedPreKeyId),
+            record: Value(record.serialize()),
+          ),
+        );
   }
 
   @override
   Future<bool> containsSignedPreKey(int signedPreKeyId) async {
-    final row = (db.select(db.signalSignedPreKeys)
-          ..where((entry) => entry.id.equals(signedPreKeyId)))
-        .getSingleOrNull();
+    final row = (db.select(
+      db.signalSignedPreKeys,
+    )..where((entry) => entry.id.equals(signedPreKeyId))).getSingleOrNull();
     return await row != null;
   }
 
   @override
   Future<void> removeSignedPreKey(int signedPreKeyId) async {
-    await (db.delete(db.signalSignedPreKeys)
-          ..where((entry) => entry.id.equals(signedPreKeyId)))
-        .go();
+    await (db.delete(
+      db.signalSignedPreKeys,
+    )..where((entry) => entry.id.equals(signedPreKeyId))).go();
   }
 }
