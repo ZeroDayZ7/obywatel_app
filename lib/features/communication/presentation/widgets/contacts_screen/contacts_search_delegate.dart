@@ -2,10 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/contacts_screen/contacts_contact_card.dart';
 
-class ContactsSearchDelegate extends SearchDelegate<Contact?> {
-  final List<Contact> contacts;
+class _NormalizedContact {
+  const _NormalizedContact({
+    required this.contact,
+    required this.normalizedDisplayName,
+  });
 
-  ContactsSearchDelegate({required this.contacts});
+  final Contact contact;
+  final String normalizedDisplayName;
+}
+
+class ContactsSearchDelegate extends SearchDelegate<Contact?> {
+  ContactsSearchDelegate({required List<Contact> contacts})
+    : _normalizedContacts = List.unmodifiable(
+        contacts.map(
+          (contact) => _NormalizedContact(
+            contact: contact,
+            normalizedDisplayName: contact.displayName.toLowerCase(),
+          ),
+        ),
+      );
+
+  final List<_NormalizedContact> _normalizedContacts;
 
   @override
   ThemeData appBarTheme(BuildContext context) {
@@ -53,8 +71,14 @@ class ContactsSearchDelegate extends SearchDelegate<Contact?> {
   Widget buildSuggestions(BuildContext context) => _buildSearchResults(context);
 
   Widget _buildSearchResults(BuildContext context) {
-    final filtered = contacts
-        .where((c) => c.displayName.toLowerCase().contains(query.toLowerCase()))
+    final normalizedQuery = query.trim().toLowerCase();
+    final filtered = _normalizedContacts
+        .where(
+          (entry) =>
+              normalizedQuery.isEmpty ||
+              entry.normalizedDisplayName.contains(normalizedQuery),
+        )
+        .map((entry) => entry.contact)
         .toList();
 
     if (filtered.isEmpty) {
