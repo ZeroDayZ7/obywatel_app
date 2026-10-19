@@ -92,6 +92,13 @@ class ChatsApiClient implements OutboxTransportClient {
     return data;
   }
 
+  Future<void> markConversationAsRead(String conversationId) async {
+    await _apiClient.post(
+      ApiEndpoints.markConversationAsRead(conversationId),
+      data: const <String, dynamic>{},
+    );
+  }
+
   Future<MessageEnvelope> sendMessageEnvelope(MessageEnvelope envelope) async {
     final response = await _apiClient.post(
       ApiEndpoints.messages,

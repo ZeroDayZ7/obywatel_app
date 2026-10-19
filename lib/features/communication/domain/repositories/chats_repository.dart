@@ -20,6 +20,7 @@ abstract class ChatsRepository {
     String? beforeId,
     int limit = 50,
   });
+  Future<void> markConversationAsRead(String conversationId);
   Future<void> sendMessage({
     required String conversationId,
     required String content,

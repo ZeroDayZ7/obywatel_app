@@ -183,6 +183,8 @@ class Conversations extends _$Conversations {
       type: targetConv.type,
       title: targetConv.title,
       lastSequence: targetConv.lastSequence,
+      lastReadSequence: targetConv.lastReadSequence,
+      unreadCount: targetConv.unreadCount,
       members: targetConv.members,
       messages: mergedMessages,
       updatedAt: message.createdAt,

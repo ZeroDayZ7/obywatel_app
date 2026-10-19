@@ -45,6 +45,8 @@ class WebSocketMessageHandler {
       switch (type) {
         case 'new_message':
         case 'conversation_updated':
+        case 'conversation_read':
+        case 'message_read':
         case 'contact_updated':
           _logger.i(
             'Odebrano sygnał WS typu $type. Uruchamianie odpowiedniej synchronizacji.',
@@ -89,6 +91,8 @@ WebSocketMessageHandler webSocketMessageHandler(Ref ref) {
           return;
         case 'new_message':
         case 'conversation_updated':
+        case 'conversation_read':
+        case 'message_read':
           await ref.read(chatSyncServiceProvider).syncPendingData();
           return;
         default:

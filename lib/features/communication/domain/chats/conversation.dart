@@ -21,6 +21,8 @@ abstract class Conversation with _$Conversation {
     required String type,
     String? title,
     @Default(0) int lastSequence,
+    @Default(0) int lastReadSequence,
+    @Default(0) int unreadCount,
     @Default([]) List<ConversationMember> members,
     List<Message?>? messages,
     DateTime? updatedAt,

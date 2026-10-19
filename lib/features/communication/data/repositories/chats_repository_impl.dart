@@ -882,14 +882,42 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final list = <Conversation>[];
     for (final entity in entities) {
       final messages = batchMessageMap[entity.id] ?? const <MessageEntity>[];
+      final memberRows = await (_db.select(
+        _db.conversationMembers,
+      )..where(
+        (tbl) =>
+            tbl.conversationId.equals(entity.id) & tbl.deletedAt.isNull(),
+      )).get();
+      final currentUserMember = memberRows.cast<ConversationMemberEntity?>().firstWhere(
+        (member) => member != null && member.userId == _currentUserId,
+        orElse: () => null,
+      );
+      final lastReadSequence = currentUserMember?.lastReadSequence.toInt() ?? 0;
+      final lastSequence = entity.lastSequence.toInt();
+      final unreadCount = lastSequence > lastReadSequence
+          ? lastSequence - lastReadSequence
+          : 0;
+
       await _hydratePlaintextCacheForIds(messages.map((message) => message.id));
       list.add(
         Conversation(
           id: entity.id,
           type: entity.type,
           title: entity.title,
-          lastSequence: entity.lastSequence.toInt(),
-          members: const [],
+          lastSequence: lastSequence,
+          lastReadSequence: lastReadSequence,
+          unreadCount: unreadCount,
+          members: memberRows
+              .map(
+                (m) => ConversationMember(
+                  id: m.id,
+                  conversationId: m.conversationId,
+                  userId: m.userId,
+                  role: m.role,
+                  lastReadSequence: m.lastReadSequence.toInt(),
+                ),
+              )
+              .toList(),
           messages: messages.map(_messageFromEntity).toList(),
           updatedAt: entity.updatedAt,
         ),
@@ -1186,6 +1214,25 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
       rethrow;
     }
+  }
+
+  @override
+  Future<void> markConversationAsRead(String conversationId) async {
+    final normalizedConversationId = conversationId.trim();
+    if (normalizedConversationId.isEmpty) {
+      return;
+    }
+
+    final latestSequence = await _db.chatsDao.getMaxMessageSequence(
+      normalizedConversationId,
+    );
+
+    await _apiClient.markConversationAsRead(normalizedConversationId);
+    await _db.chatsDao.updateLastReadSequence(
+      conversationId: normalizedConversationId,
+      userId: _currentUserId,
+      sequence: latestSequence,
+    );
   }
 
   @override

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_field.dart';
@@ -28,6 +29,14 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    Future.microtask(() async {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(chatsRepositoryProvider).markConversationAsRead(
+        widget.conversationId,
+      );
+    });
   }
 
   @override

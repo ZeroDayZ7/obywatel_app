@@ -192,11 +192,30 @@ Message mapMessageFromDto(
 }
 
 Conversation mapConversationFromDto(ConversationDto dto, String currentUserId) {
+  final currentMember = dto.members.firstWhere(
+    (member) => member.userId == currentUserId,
+    orElse: () => const ConversationMemberDto(
+      id: '',
+      conversationId: '',
+      userId: '',
+      role: '',
+      lastReadSequence: 0,
+    ),
+  );
+  final lastReadSequence = currentMember.userId == currentUserId
+      ? currentMember.lastReadSequence
+      : 0;
+  final unreadCount = dto.lastSequence > lastReadSequence
+      ? dto.lastSequence - lastReadSequence
+      : 0;
+
   return Conversation(
     id: dto.id,
     type: dto.type,
     title: dto.title,
     lastSequence: dto.lastSequence,
+    lastReadSequence: lastReadSequence,
+    unreadCount: unreadCount,
     members: dto.members
         .map(
           (m) => ConversationMember(
