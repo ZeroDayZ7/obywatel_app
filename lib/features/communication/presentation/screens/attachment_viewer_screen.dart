@@ -8,11 +8,9 @@ class AttachmentViewerScreen extends ConsumerStatefulWidget {
   const AttachmentViewerScreen({
     super.key,
     required this.attachmentId,
-    this.heroTag,
   });
 
   final String attachmentId;
-  final String? heroTag;
 
   @override
   ConsumerState<AttachmentViewerScreen> createState() =>
@@ -113,25 +111,22 @@ class _AttachmentViewerScreenState
                 panEnabled: true,
                 scaleEnabled: true,
                 boundaryMargin: const EdgeInsets.all(24),
-                child: Hero(
-                  tag: widget.heroTag ?? 'attachment-${widget.attachmentId}',
-                  child: Image.memory(
-                    Uint8List.fromList(bytes),
-                    fit: BoxFit.contain,
-                    gaplessPlayback: true,
-                    errorBuilder: (context, error, stackTrace) {
-                      return const SizedBox(
-                        width: 220,
-                        height: 220,
-                        child: Center(
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            color: Colors.white,
-                          ),
+                child: Image.memory(
+                  Uint8List.fromList(bytes),
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const SizedBox(
+                      width: 220,
+                      height: 220,
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.white,
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
               ),
             );

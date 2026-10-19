@@ -194,6 +194,7 @@ class _CommunicationTabViewState extends ConsumerState<CommunicationTabView> {
               onPressed: _handleAction,
               icon: const Icon(Icons.person_add_rounded),
               label: const Text('Dodaj kontakt'),
+              heroTag: null,
             )
           : null,
       body: SafeArea(

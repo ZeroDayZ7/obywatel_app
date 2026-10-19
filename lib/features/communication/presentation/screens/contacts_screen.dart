@@ -93,6 +93,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
             label: const Text('Dodaj kontakt'),
             backgroundColor: colorScheme.primary,
             foregroundColor: colorScheme.onPrimary,
+            heroTag: null,
           ),
         ),
       ],
