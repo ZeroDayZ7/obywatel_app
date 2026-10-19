@@ -1624,38 +1624,18 @@ class ChatsRepositoryImpl implements ChatsRepository {
         continue;
       }
 
-      final nestedPayload = payload['payload'] is Map
-          ? Map<String, dynamic>.from(payload['payload'] as Map)
-          : const <String, dynamic>{};
-      final directEnvelope =
-          payload['ciphertext'] != null ||
-              payload['conversationId'] != null ||
-              payload['messageId'] != null
-          ? payload
-          : nestedPayload;
-
-      final createdAtValue =
-          _readOutboxString(directEnvelope['createdAt']) ??
-          _readOutboxString(payload['createdAt']) ??
-          _readOutboxString(nestedPayload['createdAt']);
+      final createdAtValue = _readOutboxString(payload['createdAt']);
       final conversationId =
-          _readOutboxString(directEnvelope['conversationId']) ??
           _readOutboxString(payload['conversationId']) ??
           _readOutboxString(event.conversationId) ??
           '';
       final messageId =
-          _readOutboxString(directEnvelope['messageId']) ??
           _readOutboxString(payload['messageId']) ??
           _readOutboxString(event.id) ??
-          event.id;
-      final ciphertext =
-          _readOutboxString(directEnvelope['ciphertext']) ??
-          _readOutboxString(nestedPayload['ciphertext']) ??
           '';
+      final ciphertext = _readOutboxString(payload['ciphertext']) ?? '';
       final signalTypeString =
-          _readOutboxString(directEnvelope['type']) ??
           _readOutboxString(payload['type']) ??
-          _readOutboxString(directEnvelope['signalType']) ??
           _readOutboxString(payload['signalType']);
 
       final normalizedSignalType = normalizeSignalType(signalTypeString);
@@ -1671,10 +1651,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
         Message(
           id: messageId,
           conversationId: conversationId,
-          senderId:
-              _readOutboxString(directEnvelope['sender_id']) ??
-              _readOutboxString(directEnvelope['senderId']) ??
-              _currentUserId,
+          senderId: _currentUserId,
           content: ciphertext,
           isMine: true,
           createdAt: normalizeTransportTimestamp(

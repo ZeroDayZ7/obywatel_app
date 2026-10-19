@@ -186,12 +186,18 @@ void main() {
         'createdAt': DateTime.now().toUtc().toIso8601String(),
       };
 
-      final event = OutboxMessageEvent.fromJson(payload);
+      final event = OutboxMessageEvent.fromJson(
+        payload,
+        localId: 'local-outbox-id',
+      );
       expect(event.signalType, 2);
       expect(event.conversationId, conversationId);
 
       expect(
-        () => OutboxMessageEvent.fromJson({...payload, 'type': '0'}),
+        () => OutboxMessageEvent.fromJson(
+          {...payload, 'type': '0'},
+          localId: 'local-outbox-id',
+        ),
         throwsA(isA<FormatException>()),
       );
     },

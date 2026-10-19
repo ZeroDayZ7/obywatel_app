@@ -38,29 +38,17 @@ class OutboxMessageEvent {
 
   factory OutboxMessageEvent.fromJson(
     Map<String, dynamic> json, {
-    String fallbackId = '',
+    required String localId,
   }) {
-    final normalized = _normalizeEnvelope(json);
-    final rawMessageId =
-        _readString(normalized, ['messageId', 'id']) ?? fallbackId;
-    final rawConversationId =
-        _readString(normalized, ['conversationId']) ??
-        _readString(normalized, ['conversation_id']) ??
-        '';
-    final rawCiphertext =
-        _readString(normalized, ['ciphertext']) ??
-        _readString(normalized, ['encryptedPayload']) ??
-        '';
-    final rawEventId =
-        _readString(normalized, ['eventId', 'outboxEventId']) ?? rawMessageId;
-    final rawSignalType =
-        _readString(normalized, ['signalType', 'type']) ??
-        _readString(normalized, ['signal_type']) ??
-        _readString(normalized, ['messageType']);
+    final rawEventId = _readRequiredString(json, 'eventId');
+    final rawMessageId = _readOptionalString(json, 'messageId') ?? rawEventId;
+    final rawConversationId = _readRequiredString(json, 'conversationId');
+    final rawCiphertext = _readRequiredString(json, 'ciphertext');
+    final rawCreatedAt = _readRequiredString(json, 'createdAt');
 
     final messageId = rawMessageId.trim();
     if (messageId.isEmpty) {
-      throw const FormatException('Outbox payload is missing messageId.');
+      throw const FormatException('Outbox payload is missing eventId.');
     }
 
     final conversationId = rawConversationId.trim();
@@ -76,32 +64,24 @@ class OutboxMessageEvent {
       throw const FormatException('Outbox payload is missing ciphertext.');
     }
 
-    final signalType = normalizeSignalType(rawSignalType);
-    if (signalType == null || signalType <= 0) {
-      throw const FormatException(
-        'Outbox payload is missing a valid signalType.',
-      );
+    final signalType = _readSignalType(json, 'type');
+    final createdAt = normalizeTransportTimestamp(
+      parseTransportTimestamp(rawCreatedAt),
+    );
+    final eventId = rawEventId.trim();
+    if (eventId.isEmpty) {
+      throw const FormatException('Outbox payload is missing eventId.');
     }
 
-    final createdAtValue =
-        _readString(normalized, ['createdAt']) ??
-        _readString(normalized, ['created_at']) ??
-        DateTime.now().toUtc().toIso8601String();
-
     return OutboxMessageEvent(
-      id: fallbackId.trim().isNotEmpty ? fallbackId : messageId,
+      id: localId,
       messageId: messageId,
       conversationId: conversationId,
       ciphertext: ciphertext,
       signalType: signalType,
-      eventId: rawEventId.trim().isNotEmpty ? rawEventId : messageId,
-      createdAt: normalizeTransportTimestamp(
-        parseTransportTimestamp(createdAtValue),
-      ),
-      senderDeviceId: _readString(normalized, [
-        'senderDeviceId',
-        'sender_device_id',
-      ]),
+      eventId: eventId,
+      createdAt: createdAt,
+      senderDeviceId: _readOptionalString(json, 'senderDeviceId'),
     );
   }
 
@@ -119,36 +99,46 @@ class OutboxMessageEvent {
     };
   }
 
-  static Map<String, Object?> _normalizeEnvelope(Map<String, dynamic> json) {
-    final direct = <String, Object?>{};
-    for (final entry in json.entries) {
-      direct[entry.key.toString()] = entry.value;
+  static String _readRequiredString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is! String) {
+      throw FormatException('Outbox payload is missing required field: $key.');
     }
-
-    final nestedValue = direct['payload'];
-    if (nestedValue is Map) {
-      final merged = <String, Object?>{};
-      for (final entry in nestedValue.entries) {
-        merged[entry.key.toString()] = entry.value;
-      }
-      merged.addAll(direct);
-      return merged;
+    final normalized = value.trim();
+    if (normalized.isEmpty) {
+      throw FormatException('Outbox payload is missing required field: $key.');
     }
-    return direct;
+    return normalized;
   }
 
-  static String? _readString(Map<String, Object?> source, List<String> keys) {
-    for (final key in keys) {
-      final value = source[key];
-      if (value == null) {
-        continue;
+  static String? _readOptionalString(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value == null) {
+      return null;
+    }
+    final normalized = value.toString().trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  static int _readSignalType(Map<String, dynamic> json, String key) {
+    final value = json[key];
+    if (value is int) {
+      if (value <= 0) {
+        throw const FormatException(
+          'Outbox payload is missing a valid signalType.',
+        );
       }
-      final raw = value.toString().trim();
-      if (raw.isNotEmpty) {
-        return raw;
+      return value;
+    }
+    if (value is String) {
+      final parsed = int.tryParse(value.trim());
+      if (parsed != null && parsed > 0) {
+        return parsed;
       }
     }
-    return null;
+    throw const FormatException(
+      'Outbox payload is missing a valid signalType.',
+    );
   }
 }
 
@@ -200,7 +190,7 @@ class OutboxProcessor {
 
           final parsed = OutboxMessageEvent.fromJson(
             payloadMap,
-            fallbackId: event.id,
+            localId: event.id,
           );
           eventsByMessageId
               .putIfAbsent(parsed.messageId, () => <OutboxMessageEvent>[])

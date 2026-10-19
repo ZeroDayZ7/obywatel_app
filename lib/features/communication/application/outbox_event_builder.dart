@@ -67,10 +67,6 @@ Map<String, dynamic> buildOutboxEventPayload(
 
   final createdAt = message.createdAt.toUtc().toIso8601String();
   final ciphertext = (encryptedContent ?? message.encryptedPayload).trim();
-  final safeMessageId = _normalizeUuidString(
-    message.id,
-    fallback: const Uuid().v4(),
-  );
   final safeOutboxEventId = _normalizeUuidString(
     outboxEventId ?? message.id,
     fallback: const Uuid().v4(),
@@ -95,7 +91,6 @@ Map<String, dynamic> buildOutboxEventPayload(
   return {
     'eventId': safeOutboxEventId,
     'idempotencyKey': safeOutboxEventId,
-    'messageId': safeMessageId,
     'eventType': 'SEND_MESSAGE',
     'conversationId': normalizedConversationId,
     'senderDeviceId': sanitizedAppDeviceId,
