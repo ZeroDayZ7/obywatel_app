@@ -92,12 +92,16 @@ class ChatSyncService {
     }
   }
 
-  Future<void> syncPendingData() async {
-    if (_isDisposed || _isSyncing) {
+  Future<void> syncPendingData({bool force = false}) async {
+    if (_isDisposed) {
       return;
     }
 
-    final generation = _generation;
+    if (!force && _isSyncing) {
+      return;
+    }
+
+    final generation = force ? ++_generation : _generation;
     _isSyncing = true;
     _setCurrentStatus(SyncStatus.syncing, generation: generation);
 
@@ -132,6 +136,8 @@ class ChatSyncService {
       _isSyncing = false;
     }
   }
+
+  Future<void> forceSyncPendingData() => syncPendingData(force: true);
 
   Future<void> _flushOutbox() async {
     await _outboxProcessor.processPending();
@@ -168,6 +174,9 @@ class ChatSyncStatusController extends _$ChatSyncStatusController {
   SyncStatus build() => SyncStatus.idle;
 
   void update(SyncStatus status) {
+    if (!ref.mounted) {
+      return;
+    }
     state = status;
   }
 }

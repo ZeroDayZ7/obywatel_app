@@ -83,11 +83,11 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
         actions: [
           IconButton(
             onPressed: () async {
-              await ref.read(chatSyncServiceProvider).syncPendingData();
+              await ref.read(chatSyncServiceProvider).forceSyncPendingData();
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Zsynchronizowano wiadomości'),
+                    content: Text('Wymuszone odświeżenie czatu'),
                     duration: Duration(seconds: 1),
                     behavior: SnackBarBehavior.floating,
                   ),
@@ -95,7 +95,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
               }
             },
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Odśwież czat',
+            tooltip: 'Force sync',
           ),
           IconButton(
             onPressed: () {},
