@@ -9,6 +9,28 @@ class MessageBubble extends ConsumerWidget {
 
   final Message message;
 
+  static String heroTagForMessage({
+    required String messageId,
+    required String attachmentId,
+  }) {
+    final normalizedMessageId = messageId.trim();
+    final normalizedAttachmentId = attachmentId.trim();
+
+    if (normalizedMessageId.isNotEmpty && normalizedAttachmentId.isNotEmpty) {
+      return 'message-$normalizedMessageId-attachment-$normalizedAttachmentId';
+    }
+
+    if (normalizedMessageId.isNotEmpty) {
+      return 'message-$normalizedMessageId';
+    }
+
+    if (normalizedAttachmentId.isNotEmpty) {
+      return 'attachment-$normalizedAttachmentId';
+    }
+
+    return 'attachment-fallback';
+  }
+
   String get _displayContent {
     final content = message.content.trim();
     if (content.isNotEmpty) return content;
@@ -40,6 +62,11 @@ class MessageBubble extends ConsumerWidget {
           );
         }
 
+        final heroTag = heroTagForMessage(
+          messageId: message.id,
+          attachmentId: attachmentId,
+        );
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: GestureDetector(
@@ -47,13 +74,15 @@ class MessageBubble extends ConsumerWidget {
               Navigator.of(context).push(
                 MaterialPageRoute(
                   fullscreenDialog: true,
-                  builder: (_) =>
-                      AttachmentViewerScreen(attachmentId: attachmentId),
+                  builder: (_) => AttachmentViewerScreen(
+                    attachmentId: attachmentId,
+                    heroTag: heroTag,
+                  ),
                 ),
               );
             },
             child: Hero(
-              tag: 'attachment-$attachmentId',
+              tag: heroTag,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: ConstrainedBox(

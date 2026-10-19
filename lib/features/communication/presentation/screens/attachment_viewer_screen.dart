@@ -5,9 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/attachment_preview_provider.dart';
 
 class AttachmentViewerScreen extends ConsumerStatefulWidget {
-  const AttachmentViewerScreen({super.key, required this.attachmentId});
+  const AttachmentViewerScreen({
+    super.key,
+    required this.attachmentId,
+    this.heroTag,
+  });
 
   final String attachmentId;
+  final String? heroTag;
 
   @override
   ConsumerState<AttachmentViewerScreen> createState() =>
@@ -109,7 +114,7 @@ class _AttachmentViewerScreenState
                 scaleEnabled: true,
                 boundaryMargin: const EdgeInsets.all(24),
                 child: Hero(
-                  tag: 'attachment-${widget.attachmentId}',
+                  tag: widget.heroTag ?? 'attachment-${widget.attachmentId}',
                   child: Image.memory(
                     Uint8List.fromList(bytes),
                     fit: BoxFit.contain,
