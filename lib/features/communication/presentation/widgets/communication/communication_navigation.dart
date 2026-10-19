@@ -83,10 +83,103 @@ class CommunicationNavigationShell extends StatelessWidget {
         final useMediumRail = width >= 720 && width < 1100;
 
         if (isCompact) {
-          return NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: onSelected,
-            destinations: buildCommunicationNavigationDestinations(),
+          final colorScheme = Theme.of(context).colorScheme;
+
+          return SafeArea(
+            top: false,
+            child: Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Row(
+                children: List.generate(
+                  communicationNavigationItems.length,
+                  (index) {
+                    final item = communicationNavigationItems[index];
+                    final isSelected = selectedIndex == index;
+                    final iconColor = isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.72);
+                    final labelColor = isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurfaceVariant.withValues(alpha: 0.7);
+
+                    return Expanded(
+                      child: Semantics(
+                        selected: isSelected,
+                        button: true,
+                        label: item.label,
+                        child: InkWell(
+                          onTap: () => onSelected(index),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 4,
+                              horizontal: 4,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  curve: Curves.easeOutCubic,
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? colorScheme.primary.withValues(
+                                            alpha: 0.12,
+                                          )
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? colorScheme.primary.withValues(
+                                              alpha: 0.18,
+                                            )
+                                          : Colors.transparent,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Icon(
+                                    isSelected
+                                        ? item.selectedIcon
+                                        : item.icon,
+                                    color: iconColor,
+                                    size: 22,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  item.label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: labelColor,
+                                    letterSpacing: 0.1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
           );
         }
 
@@ -100,11 +193,32 @@ class CommunicationNavigationShell extends StatelessWidget {
             ? null
             : NavigationRailLabelType.none;
 
+        final railSurface = Theme.of(context).colorScheme.surface;
+        final railForeground = Theme.of(context).colorScheme.onSurfaceVariant;
+
         return Align(
           alignment: Alignment.topLeft,
           child: Padding(
             padding: const EdgeInsets.only(top: 12, bottom: 12, right: 8),
             child: NavigationRail(
+              backgroundColor: railSurface,
+              indicatorColor: Colors.transparent,
+              selectedIconTheme: IconThemeData(
+                color: Theme.of(context).colorScheme.primary,
+                size: 24,
+              ),
+              unselectedIconTheme: IconThemeData(
+                color: railForeground.withValues(alpha: 0.72),
+                size: 22,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+              unselectedLabelTextStyle: TextStyle(
+                color: railForeground.withValues(alpha: 0.7),
+                fontWeight: FontWeight.w500,
+              ),
               selectedIndex: selectedIndex,
               onDestinationSelected: onSelected,
               labelType: railLabelType,

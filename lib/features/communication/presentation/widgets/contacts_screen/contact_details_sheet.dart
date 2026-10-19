@@ -1,13 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
 import 'package:obywatel_plus/features/communication/application/contact_identity_verification_service.dart';
 import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 
 class ContactDetailsSheet extends ConsumerWidget {
   final Contact contact;
 
   const ContactDetailsSheet({super.key, required this.contact});
+
+  Future<void> _openSecureChat(BuildContext context, WidgetRef ref) async {
+    try {
+      final currentUserId = ref.read(currentUserIdProvider);
+      final peerUserId = contact.peerUserIdForCurrentUser(currentUserId);
+      final repository = ref.read(chatsRepositoryProvider);
+      final conversationId = await repository.ensureConversationForContact(
+        peerUserId,
+        title: contact.localAlias?.trim().isNotEmpty == true
+            ? contact.localAlias!
+            : contact.displayName,
+      );
+
+      if (!context.mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      if (!context.mounted) return;
+
+      context.push(
+        '/chats/${Uri.encodeComponent(conversationId)}',
+        extra: contact.localAlias?.trim().isNotEmpty == true
+            ? contact.localAlias!
+            : contact.displayName,
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nie udało się otworzyć bezpiecznego czatu: $error'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
 
   Future<void> _updateAlias(BuildContext context, WidgetRef ref) async {
     final controller = TextEditingController(text: contact.localAlias ?? '');
@@ -240,6 +278,15 @@ class ContactDetailsSheet extends ConsumerWidget {
                 onPressed: () => _updateAlias(context, ref),
                 icon: const Icon(Icons.edit_rounded),
                 label: const Text('Zmień lokalny alias'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _openSecureChat(context, ref),
+                icon: const Icon(Icons.lock_rounded),
+                label: const Text('Otwórz bezpieczny czat'),
               ),
             ),
             const SizedBox(height: 8),
