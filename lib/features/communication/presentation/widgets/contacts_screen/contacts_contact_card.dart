@@ -21,8 +21,7 @@ class ContactsContactCard extends ConsumerWidget {
     final isOnline = contact.isOnline ?? false;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(4),
@@ -33,8 +32,8 @@ class ContactsContactCard extends ConsumerWidget {
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 38,
+            height: 38,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: colorScheme.primaryContainer,
@@ -42,13 +41,13 @@ class ContactsContactCard extends ConsumerWidget {
             ),
             child: Text(
               displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: colorScheme.onPrimaryContainer,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: GestureDetector(
               onTap: () async {
@@ -80,84 +79,61 @@ class ContactsContactCard extends ConsumerWidget {
                   );
                 }
               },
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          displayName,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.w700,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  Expanded(
+                    child: Text(
+                      displayName,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
-                      if (isOnline)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                          child: Text(
-                            'ONLINE',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: colorScheme.onPrimaryContainer,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    contact.status,
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.shield_outlined,
-                        size: 12,
-                        color: colorScheme.primary,
+                  if (isOnline) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 5,
+                        vertical: 2,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Trust: verified / key exchange ready',
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                      child: Text(
+                        'ONLINE',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                          color: colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 10,
+                          letterSpacing: 0.5,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ],
               ),
             ),
           ),
+          const SizedBox(width: 4),
           IconButton(
+            constraints: const BoxConstraints(),
+            padding: const EdgeInsets.all(8),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
                 isScrollControlled: true,
                 useSafeArea: true,
-                shape: RoundedRectangleBorder(
+                shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
                 ),
                 builder: (_) => ContactDetailsSheet(contact: contact),
               );
             },
-            icon: const Icon(Icons.info_outline_rounded),
+            icon: const Icon(Icons.info_outline_rounded, size: 20),
             tooltip: 'Szczegóły kontaktu',
           ),
         ],

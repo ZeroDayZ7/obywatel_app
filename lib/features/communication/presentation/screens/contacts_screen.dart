@@ -235,17 +235,14 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   ),
                 ),
               ),
-              SliverPadding(
+            SliverPadding(
                 padding: EdgeInsets.symmetric(
                   horizontal: isDesktop ? 24.0 : 8.0,
                   vertical: 4.0,
                 ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (context, index) => Padding(
-                      padding: const EdgeInsets.only(bottom: 6.0),
-                      child: ContactsContactCard(contact: contacts[index]),
-                    ),
+                    (context, index) => ContactsContactCard(contact: contacts[index]),
                     childCount: contacts.length,
                   ),
                 ),
