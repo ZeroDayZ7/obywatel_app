@@ -77,6 +77,9 @@ class FakeChatsRepository implements ChatsRepository {
   }) async => const [];
 
   @override
+  Future<void> markConversationAsRead(String conversationId) async {}
+
+  @override
   Future<void> sendMessage({
     required String conversationId,
     required String content,

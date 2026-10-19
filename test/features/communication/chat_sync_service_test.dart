@@ -135,6 +135,9 @@ class _TestRepository implements ChatsRepository {
   }) async => const <Message>[];
 
   @override
+  Future<void> markConversationAsRead(String conversationId) async {}
+
+  @override
   Future<void> sendMessage({
     required String conversationId,
     required String content,
