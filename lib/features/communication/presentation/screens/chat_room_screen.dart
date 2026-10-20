@@ -222,11 +222,6 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.shield_outlined),
-            tooltip: 'Session status',
-          ),
-          IconButton(
-            onPressed: () {},
             icon: const Icon(Icons.more_vert_rounded),
             tooltip: 'More options',
           ),

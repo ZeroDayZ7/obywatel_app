@@ -105,7 +105,7 @@ Future<String?> persistValidatedAttachment({
 
   return localAttachmentStore.saveAttachment(
     attachmentId: attachmentId,
-    bytes: encryptedBytes,
+    bytes: decryptedBytes,
     mimeType: mimeType,
     fileName: fileName,
   );
@@ -118,7 +118,9 @@ final attachmentMetadataProvider =
         return Future.value(null);
       }
 
-      return ref.read(chatsRepositoryProvider).getAttachmentMetadata(normalized);
+      return ref
+          .read(chatsRepositoryProvider)
+          .getAttachmentMetadata(normalized);
     });
 
 @riverpod
