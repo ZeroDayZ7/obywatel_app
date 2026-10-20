@@ -22,6 +22,7 @@ import 'package:obywatel_plus/features/communication/data/datasources/messaging_
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
+import 'package:uuid/uuid.dart';
 
 class _FakeE2eeCryptoService extends E2eeCryptoService {
   _FakeE2eeCryptoService()
@@ -90,6 +91,34 @@ class _FakeChatsApiClient extends ChatsApiClient {
   }
 }
 
+class _FakeBundleApiClient extends ApiClient {
+  _FakeBundleApiClient(this.responsePayload)
+    : super(
+        dio: Dio(),
+        storage: SecureStorageService(
+          const FlutterSecureStorage(),
+          AppLogger(),
+        ),
+        logger: AppLogger(),
+      );
+
+  final Map<String, dynamic> responsePayload;
+
+  @override
+  Future<Response<dynamic>> get(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Options? options,
+    Map<String, String>? headers,
+  }) async {
+    return Response<dynamic>(
+      data: responsePayload,
+      statusCode: 200,
+      requestOptions: RequestOptions(path: path),
+    );
+  }
+}
+
 class _FakeMessagingActivationApiClient extends MessagingActivationApiClient {
   _FakeMessagingActivationApiClient()
     : super(
@@ -142,19 +171,37 @@ void main() {
   const secureStorageChannel = MethodChannel(
     'plugins.it_nomads.com/flutter_secure_storage',
   );
+  final inMemorySecureStorage = <String, String>{};
   TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .setMockMethodCallHandler(secureStorageChannel, (
         MethodCall methodCall,
       ) async {
         switch (methodCall.method) {
           case 'write':
+            final key = methodCall.arguments['key'] as String?;
+            final value = methodCall.arguments['value'] as String?;
+            if (key != null) {
+              if (value == null) {
+                inMemorySecureStorage.remove(key);
+              } else {
+                inMemorySecureStorage[key] = value;
+              }
+            }
+            return null;
           case 'delete':
+            final key = methodCall.arguments['key'] as String?;
+            if (key != null) {
+              inMemorySecureStorage.remove(key);
+            }
+            return null;
           case 'deleteAll':
+            inMemorySecureStorage.clear();
             return null;
           case 'read':
-            return null;
+            final key = methodCall.arguments['key'] as String?;
+            return key == null ? null : inMemorySecureStorage[key];
           case 'readAll':
-            return <String, String>{};
+            return Map<String, String>.from(inMemorySecureStorage);
           default:
             return null;
         }
@@ -211,6 +258,55 @@ void main() {
       expect(bundle.getPreKeyId(), isNull);
       expect(bundle.getSignedPreKeyId(), 1);
     });
+
+    test(
+      'persists the peer app-device mapping from a trusted backend bundle',
+      () async {
+        final logger = AppLogger();
+        final storage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final identity = generateIdentityKeyPair();
+        final signedPreKey = generateSignedPreKey(identity, 1);
+        final oneTimePreKey = generatePreKeys(1, 1).first;
+        final peerAppDeviceId = const Uuid().v4();
+
+        final fakeApiClient = _FakeBundleApiClient({
+          'registrationId': 123,
+          'deviceId': '1',
+          'appDeviceId': peerAppDeviceId,
+          'preKeyId': 7,
+          'preKeyPublic': base64Encode(
+            oneTimePreKey.getKeyPair().publicKey.serialize(),
+          ),
+          'signedPreKeyId': 1,
+          'signedPreKeyPublic': base64Encode(
+            signedPreKey.getKeyPair().publicKey.serialize(),
+          ),
+          'signedPreKeySignature': base64Encode(signedPreKey.signature),
+          'identityKey': base64Encode(identity.getPublicKey().serialize()),
+        });
+
+        final db = AppDatabase(NativeDatabase.memory());
+        addTearDown(() async => db.close());
+
+        final service = E2eeCryptoService(
+          storage,
+          logger,
+          fakeApiClient,
+          DeviceInfoService(logger),
+          DriftSignalProtocolStore(db),
+        );
+
+        final bundle = await service.fetchRemotePreKeyBundle('peer-user');
+        expect(bundle.getDeviceId(), 1);
+
+        final persisted = await storage.read(key: 'e2ee_signal_device_mapping');
+        expect(persisted, isNotNull);
+        expect(jsonDecode(persisted!)['peer-user'][peerAppDeviceId], 1);
+      },
+    );
 
     test(
       'acceptCurrentTerms initializes E2EE device identity after consent',
@@ -417,7 +513,16 @@ void main() {
         await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
         await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
 
-        final remoteBundle = PreKeyBundle(
+        final aliceIdentity = await aliceStore.getIdentityKeyPair();
+        final aliceSignedPreKey = generateSignedPreKey(aliceIdentity, 1);
+        final aliceOneTimePreKey = generatePreKeys(1, 1).first;
+        await aliceStore.storeSignedPreKey(
+          aliceSignedPreKey.id,
+          aliceSignedPreKey,
+        );
+        await aliceStore.storePreKey(aliceOneTimePreKey.id, aliceOneTimePreKey);
+
+        final bobRemoteBundle = PreKeyBundle(
           await bobStore.getLocalRegistrationId(),
           1,
           bobOneTimePreKey.id,
@@ -427,32 +532,53 @@ void main() {
           bobSignedPreKey.signature,
           bobIdentity.getPublicKey(),
         );
+        final aliceRemoteBundle = PreKeyBundle(
+          await aliceStore.getLocalRegistrationId(),
+          1,
+          aliceOneTimePreKey.id,
+          aliceOneTimePreKey.getKeyPair().publicKey,
+          aliceSignedPreKey.id,
+          aliceSignedPreKey.getKeyPair().publicKey,
+          aliceSignedPreKey.signature,
+          aliceIdentity.getPublicKey(),
+        );
 
         await aliceService.initializeSessionForPeer(
           'peer-user',
-          remoteBundle: remoteBundle,
+          remoteBundle: bobRemoteBundle,
+        );
+        await bobService.initializeSessionForPeer(
+          'peer-user',
+          remoteBundle: aliceRemoteBundle,
+        );
+
+        final senderAppDeviceId = const Uuid().v4();
+        await bobService.persistSignalDeviceMapping(
+          senderUserId: 'peer-user',
+          appDeviceId: senderAppDeviceId,
+          signalDeviceId: 1,
         );
 
         final message1 = await aliceService.encryptOutboundMessage(
           'peer-user',
           'hello signal 1',
-          senderDeviceId: 'device-1',
+          senderDeviceId: senderAppDeviceId,
         );
         final message2 = await aliceService.encryptOutboundMessage(
           'peer-user',
           'hello signal 2',
-          senderDeviceId: 'device-1',
+          senderDeviceId: senderAppDeviceId,
         );
 
         final plaintext1 = await bobService.decryptInboundMessage(
           senderUserId: 'peer-user',
-          senderDeviceId: '1',
+          senderDeviceId: senderAppDeviceId,
           ciphertextBase64: message1.ciphertext,
           type: message1.type,
         );
         final plaintext2 = await bobService.decryptInboundMessage(
           senderUserId: 'peer-user',
-          senderDeviceId: '1',
+          senderDeviceId: senderAppDeviceId,
           ciphertextBase64: message2.ciphertext,
           type: message2.type,
         );
@@ -515,7 +641,16 @@ void main() {
       await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
       await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
 
-      final remoteBundle = PreKeyBundle(
+      final aliceIdentity = await aliceStore.getIdentityKeyPair();
+      final aliceSignedPreKey = generateSignedPreKey(aliceIdentity, 1);
+      final aliceOneTimePreKey = generatePreKeys(1, 1).first;
+      await aliceStore.storeSignedPreKey(
+        aliceSignedPreKey.id,
+        aliceSignedPreKey,
+      );
+      await aliceStore.storePreKey(aliceOneTimePreKey.id, aliceOneTimePreKey);
+
+      final bobRemoteBundle = PreKeyBundle(
         await bobStore.getLocalRegistrationId(),
         1,
         bobOneTimePreKey.id,
@@ -525,16 +660,37 @@ void main() {
         bobSignedPreKey.signature,
         bobIdentity.getPublicKey(),
       );
+      final aliceRemoteBundle = PreKeyBundle(
+        await aliceStore.getLocalRegistrationId(),
+        1,
+        aliceOneTimePreKey.id,
+        aliceOneTimePreKey.getKeyPair().publicKey,
+        aliceSignedPreKey.id,
+        aliceSignedPreKey.getKeyPair().publicKey,
+        aliceSignedPreKey.signature,
+        aliceIdentity.getPublicKey(),
+      );
 
       await aliceService.initializeSessionForPeer(
         'peer-user',
-        remoteBundle: remoteBundle,
+        remoteBundle: bobRemoteBundle,
+      );
+      await bobService.initializeSessionForPeer(
+        'peer-user',
+        remoteBundle: aliceRemoteBundle,
+      );
+
+      final senderAppDeviceId = const Uuid().v4();
+      await bobService.persistSignalDeviceMapping(
+        senderUserId: 'peer-user',
+        appDeviceId: senderAppDeviceId,
+        signalDeviceId: 1,
       );
 
       final encrypted = await aliceService.encryptOutboundMessage(
         'peer-user',
         'secret message',
-        senderDeviceId: 'device-1',
+        senderDeviceId: senderAppDeviceId,
       );
 
       final tampered = base64Encode(
@@ -546,13 +702,103 @@ void main() {
       await expectLater(
         bobService.decryptInboundMessage(
           senderUserId: 'peer-user',
-          senderDeviceId: '1',
+          senderDeviceId: senderAppDeviceId,
           ciphertextBase64: tampered,
           type: encrypted.type,
         ),
         throwsA(isA<EncryptionFailureException>()),
       );
     });
+
+    test(
+      'rejects inbound decrypts without an explicit app-device mapping',
+      () async {
+        final logger = AppLogger();
+        final aliceStorage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final bobStorage = SecureStorageService(
+          const FlutterSecureStorage(),
+          logger,
+        );
+        final aliceApiClient = ApiClient(
+          dio: Dio(),
+          storage: aliceStorage,
+          logger: logger,
+        );
+        final bobApiClient = ApiClient(
+          dio: Dio(),
+          storage: bobStorage,
+          logger: logger,
+        );
+        final deviceInfoService = DeviceInfoService(logger);
+
+        final aliceDb = AppDatabase(NativeDatabase.memory());
+        final bobDb = AppDatabase(NativeDatabase.memory());
+        addTearDown(() async {
+          await aliceDb.close();
+          await bobDb.close();
+        });
+
+        final aliceStore = DriftSignalProtocolStore(aliceDb);
+        final bobStore = DriftSignalProtocolStore(bobDb);
+
+        final aliceService = E2eeCryptoService(
+          aliceStorage,
+          logger,
+          aliceApiClient,
+          deviceInfoService,
+          aliceStore,
+        );
+        final bobService = E2eeCryptoService(
+          bobStorage,
+          logger,
+          bobApiClient,
+          deviceInfoService,
+          bobStore,
+        );
+
+        final bobIdentity = await bobStore.getIdentityKeyPair();
+        final bobSignedPreKey = generateSignedPreKey(bobIdentity, 1);
+        final bobOneTimePreKey = generatePreKeys(1, 1).first;
+        await bobStore.storeSignedPreKey(bobSignedPreKey.id, bobSignedPreKey);
+        await bobStore.storePreKey(bobOneTimePreKey.id, bobOneTimePreKey);
+
+        final remoteBundle = PreKeyBundle(
+          await bobStore.getLocalRegistrationId(),
+          1,
+          bobOneTimePreKey.id,
+          bobOneTimePreKey.getKeyPair().publicKey,
+          bobSignedPreKey.id,
+          bobSignedPreKey.getKeyPair().publicKey,
+          bobSignedPreKey.signature,
+          bobIdentity.getPublicKey(),
+        );
+
+        await aliceService.initializeSessionForPeer(
+          'peer-user',
+          remoteBundle: remoteBundle,
+        );
+
+        final missingMappingAppDeviceId = const Uuid().v4();
+        final encrypted = await aliceService.encryptOutboundMessage(
+          'peer-user',
+          'secret message',
+          senderDeviceId: missingMappingAppDeviceId,
+        );
+
+        await expectLater(
+          bobService.decryptInboundMessage(
+            senderUserId: 'peer-user',
+            senderDeviceId: missingMappingAppDeviceId,
+            ciphertextBase64: encrypted.ciphertext,
+            type: encrypted.type,
+          ),
+          throwsA(isA<SignalDeviceMappingException>()),
+        );
+      },
+    );
 
     test(
       'keeps plaintext only in the in-memory cache and not in secure storage',
@@ -584,7 +830,9 @@ void main() {
         );
 
         final historyBefore = await repo.getMessageHistory('peer-user');
-        final storedMessageId = historyBefore.isNotEmpty ? historyBefore.first.id : 'missing';
+        final storedMessageId = historyBefore.isNotEmpty
+            ? historyBefore.first.id
+            : 'missing';
         expect(
           await secureStorage.read(key: 'chat_plaintext_$storedMessageId'),
           isNull,

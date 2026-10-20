@@ -299,7 +299,17 @@ class E2eeCryptoService {
       }
 
       final map = Map<String, dynamic>.from(payload);
-      return fromPreKeyBundleJson(map);
+      final bundle = fromPreKeyBundleJson(map);
+      final trustedAppDeviceId = (map['appDeviceId'] ?? '').toString().trim();
+      if (trustedAppDeviceId.isNotEmpty &&
+          Uuid.isValidUUID(fromString: trustedAppDeviceId)) {
+        await persistSignalDeviceMapping(
+          senderUserId: remoteUserId,
+          appDeviceId: trustedAppDeviceId,
+          signalDeviceId: bundle.getDeviceId(),
+        );
+      }
+      return bundle;
     } catch (error, stackTrace) {
       _logger.e(
         '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_fetch_error event=error remote_user_id=$remoteUserId error_type=${error.runtimeType} error_message=${error.toString()}',
@@ -737,6 +747,21 @@ class E2eeCryptoService {
       } else {
         plaintext = await sessionCipher.decryptFromSignal(
           SignalMessage.fromSerialized(ciphertextBytes),
+        );
+      }
+
+      try {
+        await persistSignalDeviceMapping(
+          senderUserId: senderUserId,
+          appDeviceId: senderDeviceId,
+          signalDeviceId: signalDeviceId,
+        );
+      } catch (persistError, persistStackTrace) {
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_mapping_persist_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId signal_device_id=$signalDeviceId error_type=${persistError.runtimeType}',
+          error: persistError,
+          stackTrace: persistStackTrace,
+          module: 'E2eeCrypto',
         );
       }
 
