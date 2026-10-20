@@ -27,6 +27,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
   late final ScrollController _scrollController;
   ProviderSubscription<AsyncValue<List<Message>>>? _chatSubscription;
   bool _isInitialScrollDone = false;
+  bool _hasSeenAnyMessage = false;
   int _unreadCount = 0;
   Set<String> _lastVisibleMessageIds = <String>{};
 
@@ -82,11 +83,16 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
       if (_lastVisibleMessageIds.isNotEmpty || _unreadCount > 0) {
         _setUnreadCount(0);
       }
-      _lastVisibleMessageIds = <String>{};
-      _isInitialScrollDone = false;
+
+      if (_hasSeenAnyMessage) {
+        _lastVisibleMessageIds = <String>{};
+        _isInitialScrollDone = false;
+      }
+
       return;
     }
 
+    _hasSeenAnyMessage = true;
     final currentIds = messages.map((msg) => msg.id).toSet();
 
     if (!_isInitialScrollDone) {
