@@ -39,7 +39,7 @@ final class MessagingActivationControllerProvider
 }
 
 String _$messagingActivationControllerHash() =>
-    r'bfa5ba630e2b044f8fbe45a0e4dbc4fbcb2390dc';
+    r'0be980068edc1a5bb59075e1f69c9f910a2190b2';
 
 abstract class _$MessagingActivationController
     extends $AsyncNotifier<MessagingActivationState> {

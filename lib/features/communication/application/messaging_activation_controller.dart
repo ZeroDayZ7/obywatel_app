@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
@@ -36,28 +37,47 @@ class MessagingActivationController extends _$MessagingActivationController {
     _ActivationContext context,
   ) async {
     final apiClient = ref.read(messagingActivationApiClientProvider);
+    final persisted = await _readPersistedState(context);
     final status = await apiClient.getActivationStatus();
     final terms = await apiClient.getCurrentTerms();
     final normalizedText = terms.text.trim();
+    final normalizedCurrentVersion = terms.version.trim();
+    final normalizedAcceptedVersion = status.termsVersion.trim();
+    final hasUsableTerms =
+        normalizedText.isNotEmpty && normalizedCurrentVersion.isNotEmpty;
     final hasConfirmedActivation =
-        status.status == 'active' && status.consentAccepted == true;
+        status.status == 'active' &&
+        status.consentAccepted == true &&
+        hasUsableTerms;
 
     final nextState = MessagingActivationState(
       userId: context.userId,
       deviceId: context.deviceId,
-      status: status.status,
+      status: hasConfirmedActivation ? status.status : status.status,
       consentAccepted: status.consentAccepted,
-      termsVersion: status.termsVersion.isNotEmpty ? status.termsVersion : null,
-      currentTermsVersion: terms.version.isNotEmpty ? terms.version : status.currentTermsVersion,
+      termsVersion: normalizedAcceptedVersion.isNotEmpty
+          ? normalizedAcceptedVersion
+          : null,
+      currentTermsVersion: normalizedCurrentVersion.isNotEmpty
+          ? normalizedCurrentVersion
+          : status.currentTermsVersion.trim().isNotEmpty
+              ? status.currentTermsVersion.trim()
+              : null,
       requiresTermsAcceptance: status.requiresTermsAcceptance,
       termsText: normalizedText.isNotEmpty ? normalizedText : null,
       hasLocalActivation: hasConfirmedActivation,
-      keyRegistrationStatus: 'not_started',
+      keyRegistrationStatus:
+          persisted?.keyRegistrationStatus ?? 'not_started',
       errorMessage: null,
     );
 
     if (hasConfirmedActivation) {
-      await _saveState(context, nextState);
+      final confirmedState = await _ensureDeviceIdentityReady(
+        nextState: nextState,
+        context: context,
+      );
+      await _saveState(context, confirmedState);
+      return confirmedState;
     }
 
     return nextState;
@@ -91,6 +111,13 @@ class MessagingActivationController extends _$MessagingActivationController {
       userId: context.userId,
       deviceId: context.deviceId,
     );
+  }
+
+  Future<bool> _isCurrentContext(_ActivationContext context) async {
+    final current = await _resolveContext();
+    return current != null &&
+        current.userId == context.userId &&
+        current.deviceId == context.deviceId;
   }
 
   Future<MessagingActivationState> _ensureDeviceIdentityReady({
@@ -224,13 +251,29 @@ class MessagingActivationController extends _$MessagingActivationController {
       state = const AsyncLoading();
 
       try {
+        if (!await _isCurrentContext(context)) {
+          return;
+        }
+
         final apiClient = ref.read(messagingActivationApiClientProvider);
         final terms = await apiClient.getCurrentTerms();
         final normalizedText = terms.text.trim();
         final normalizedVersion = terms.version.trim();
 
         if (normalizedText.isEmpty || normalizedVersion.isEmpty) {
-          throw StateError('Brak aktywnej treści regulaminu do akceptacji.');
+          if (requestId == _requestVersion) {
+            state = AsyncData(
+              currentState.copyWith(
+                userId: context.userId,
+                deviceId: context.deviceId,
+                termsText: null,
+                currentTermsVersion: null,
+                errorMessage:
+                    'Regulamin nie jest dostępny. Pobierz go ponownie, aby kontynuować.',
+              ),
+            );
+          }
+          return;
         }
 
         final updatedStatus = await apiClient.acceptTerms(
@@ -238,21 +281,48 @@ class MessagingActivationController extends _$MessagingActivationController {
           termsVersion: normalizedVersion,
         );
 
+        final isConfirmed =
+            updatedStatus.status == 'active' && updatedStatus.consentAccepted;
+
+        if (!isConfirmed) {
+          if (requestId == _requestVersion) {
+            state = AsyncData(
+              currentState.copyWith(
+                userId: context.userId,
+                deviceId: context.deviceId,
+                termsText: normalizedText,
+                currentTermsVersion: normalizedVersion,
+                errorMessage:
+                    'Backend nie potwierdził akceptacji regulaminu. Spróbuj ponownie później.',
+              ),
+            );
+          }
+          return;
+        }
+
         final nextState = currentState.copyWith(
           userId: context.userId,
           deviceId: context.deviceId,
           status: updatedStatus.status,
-          consentAccepted: updatedStatus.consentAccepted,
-          termsVersion: updatedStatus.termsVersion.isNotEmpty
-              ? updatedStatus.termsVersion
+          consentAccepted: true,
+          termsVersion: updatedStatus.termsVersion.trim().isNotEmpty
+              ? updatedStatus.termsVersion.trim()
               : normalizedVersion,
           currentTermsVersion: normalizedVersion,
-          requiresTermsAcceptance: updatedStatus.requiresTermsAcceptance,
+          requiresTermsAcceptance: false,
           termsText: normalizedText,
-          hasLocalActivation: updatedStatus.consentAccepted && updatedStatus.status == 'active',
+          hasLocalActivation: true,
           errorMessage: null,
-          keyRegistrationStatus: 'not_started',
+          keyRegistrationStatus: currentState.keyRegistrationStatus == 'completed'
+              ? 'completed'
+              : currentState.keyRegistrationStatus == 'failed'
+                  ? 'failed'
+                  : 'not_started',
         );
+
+        if (!await _isCurrentContext(context)) {
+          return;
+        }
 
         await _saveState(context, nextState);
         final resolved = await _ensureDeviceIdentityReady(
@@ -260,23 +330,39 @@ class MessagingActivationController extends _$MessagingActivationController {
           context: context,
         );
 
-        if (requestId == _requestVersion) {
+        if (requestId == _requestVersion && await _isCurrentContext(context)) {
           state = AsyncData(resolved);
         }
-      } on Exception {
+      } catch (error, stackTrace) {
         if (requestId == _requestVersion) {
           state = AsyncData(
             currentState.copyWith(
+              userId: context.userId,
+              deviceId: context.deviceId,
               errorMessage: 'Nie można aktywować komunikatora bez dostępu do sieci lub bez prawidłowego regulaminu.',
             ),
           );
         }
+        // ignore stack trace here; controller error state is surfaced to UI
+        debugPrintStack(stackTrace: stackTrace, label: error.toString());
       }
     });
   }
 
   Future<void> declineTerms() async {
     await _runExclusive((requestId, context) async {
+      final persisted = await _readPersistedState(context);
+      if (persisted != null && persisted.isActive) {
+        if (requestId == _requestVersion) {
+          state = AsyncData(
+            persisted.copyWith(
+              errorMessage: 'Aktywacja komunikatora jest już potwierdzona.',
+            ),
+          );
+        }
+        return;
+      }
+
       await _clearPersistedState(context);
 
       final clearedState = const MessagingActivationState(

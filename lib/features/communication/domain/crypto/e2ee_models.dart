@@ -1,3 +1,5 @@
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+
 typedef AppDeviceUuid = String;
 typedef SignalDeviceId = int;
 
@@ -37,15 +39,56 @@ class SignalCiphertextEnvelope {
   };
 
   factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
-    final typeValue = json['type'] ?? 1;
+    final typeValue = json['type'];
+    final parsedType = typeValue is int
+        ? typeValue
+        : typeValue == null
+            ? null
+            : int.tryParse(typeValue.toString());
+
+    if (parsedType == null ||
+        !{
+          CiphertextMessage.whisperType,
+          CiphertextMessage.prekeyType,
+          CiphertextMessage.senderKeyType,
+        }.contains(parsedType)) {
+      throw const FormatException(
+        'Signal ciphertext type is missing or invalid; refusing to infer a fallback type.',
+      );
+    }
+
+    final ciphertext = (json['ciphertext'] ?? '').toString().trim();
+    final senderDeviceId = (json['senderDeviceId'] ?? '').toString().trim();
+    final recipientUserId = (json['recipientUserId'] ?? '').toString().trim();
+    final recipientDeviceId = (json['recipientDeviceId'] ?? '').toString().trim();
+
+    if (ciphertext.isEmpty) {
+      throw const FormatException(
+        'Signal ciphertext payload is missing.',
+      );
+    }
+    if (senderDeviceId.isEmpty) {
+      throw const FormatException(
+        'Signal senderDeviceId is required and cannot be blank.',
+      );
+    }
+    if (recipientUserId.isEmpty) {
+      throw const FormatException(
+        'Signal recipientUserId is required and cannot be blank.',
+      );
+    }
+    if (recipientDeviceId.isEmpty || int.tryParse(recipientDeviceId) == null || int.parse(recipientDeviceId) <= 0) {
+      throw const FormatException(
+        'Signal recipientDeviceId is required and must be a positive numeric device id.',
+      );
+    }
+
     return SignalCiphertextEnvelope(
-      type: typeValue is int
-          ? typeValue
-          : int.tryParse(typeValue.toString()) ?? 1,
-      ciphertext: (json['ciphertext'] ?? '').toString(),
-      senderDeviceId: (json['senderDeviceId'] ?? '').toString(),
-      recipientUserId: (json['recipientUserId'] ?? '').toString(),
-      recipientDeviceId: (json['recipientDeviceId'] ?? '1').toString(),
+      type: parsedType,
+      ciphertext: ciphertext,
+      senderDeviceId: senderDeviceId,
+      recipientUserId: recipientUserId,
+      recipientDeviceId: recipientDeviceId,
     );
   }
 }

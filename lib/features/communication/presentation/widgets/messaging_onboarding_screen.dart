@@ -26,7 +26,8 @@ class MessagingOnboardingScreen extends ConsumerWidget {
 
     final currentState = activationState ?? state.value ?? const MessagingActivationState();
     final termsText = currentState.termsText?.trim();
-    final hasUsableTerms = (termsText != null && termsText.isNotEmpty);
+    final currentTermsVersion = currentState.currentTermsVersion?.trim();
+    final hasUsableTerms = currentState.hasUsableTerms;
 
     final errorMessage = currentState.errorMessage ??
         (!hasUsableTerms
@@ -60,6 +61,15 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (currentTermsVersion != null && currentTermsVersion.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Wersja: $currentTermsVersion',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     if (hasUsableTerms)
                       Container(
@@ -69,7 +79,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          termsText,
+                          termsText ?? '',
                           style: textTheme.bodyLarge,
                         ),
                       )

@@ -24,6 +24,10 @@ abstract class MessagingActivationState with _$MessagingActivationState {
   bool get isActive =>
       hasLocalActivation && status == 'active' && consentAccepted == true;
 
+  bool get hasUsableTerms =>
+      (termsText ?? '').trim().isNotEmpty &&
+      ((currentTermsVersion ?? termsVersion ?? '').trim().isNotEmpty);
+
   bool get shouldShowOnboarding => !hasLocalActivation || !isActive;
 
   factory MessagingActivationState.fromJson(Map<String, dynamic> json) =>
