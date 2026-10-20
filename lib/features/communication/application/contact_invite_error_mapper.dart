@@ -130,14 +130,26 @@ String _mapValidationDetail(String detail) {
         'contact already exists',
         'invite already exists',
         'request already exists',
+        'already in contacts',
+        'already invited',
+        'already requested',
+        'już istnieje',
+        'kontakt już istnieje',
+        'zaproszenie już istnieje',
+        'prośba już istnieje',
       ]) ||
-      (_containsAny(normalized, ['already exists']) &&
-          _containsAny(normalized, [
-            'contact',
-            'invite',
-            'request',
-            'relation',
-          ]))) {
+      ((_containsAny(normalized, ['already exists', 'already in contacts', 'już istnieje']) &&
+              _containsAny(normalized, [
+                'contact',
+                'invite',
+                'request',
+                'relation',
+                'kontakt',
+                'zaproszenie',
+                'prośba',
+              ]))) ||
+      (_containsAny(normalized, ['kontakt', 'zaproszenie', 'prośba', 'relacja']) &&
+          _containsAny(normalized, ['już istnieje', 'istnieje']))) {
     return _existingRelationMessage;
   }
 

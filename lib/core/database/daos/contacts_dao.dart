@@ -35,14 +35,16 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
     required String targetUserId,
   }) async {
     final existing =
-        await (select(contacts)..where(
-              (t) =>
-                  t.deletedAt.isNull() &
-                  ((t.ownerId.equals(currentUserId) &
-                          t.contactId.equals(targetUserId)) |
-                      (t.ownerId.equals(targetUserId) &
-                          t.contactId.equals(currentUserId))),
-            ))
+        await (select(contacts)
+              ..where(
+                (t) =>
+                    t.deletedAt.isNull() &
+                    ((t.ownerId.equals(currentUserId) &
+                            t.contactId.equals(targetUserId)) |
+                        (t.ownerId.equals(targetUserId) &
+                            t.contactId.equals(currentUserId))),
+              )
+              ..limit(1))
             .getSingleOrNull();
 
     return existing != null;
