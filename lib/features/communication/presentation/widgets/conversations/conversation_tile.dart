@@ -8,7 +8,16 @@ class ConversationTile extends StatelessWidget {
   final Conversation conversation;
   final VoidCallback? onTap;
 
-  const ConversationTile({super.key, required this.conversation, this.onTap});
+  // Tymczasowy placeholder: można ręcznie przełączać status online/offline
+  // w miejscu użycia widżetu, dopóki nie podłączymy realnego źródła danych.
+  final bool isOnline;
+
+  const ConversationTile({
+    super.key,
+    required this.conversation,
+    this.onTap,
+    this.isOnline = false,
+  });
 
   String _displayName() {
     final normalizedTitle = (conversation.title ?? '').trim();
@@ -23,17 +32,6 @@ class ConversationTile extends StatelessWidget {
     return 'Konwersacja #${id.substring(0, 4)}';
   }
 
-  String _sessionLabel() {
-    final id = conversation.id.trim();
-    if (id.isEmpty) {
-      return 'SESSION: -';
-    }
-    if (id.length <= 12) {
-      return 'SESSION: $id';
-    }
-    return 'SESSION: ${id.substring(0, 12)}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -42,116 +40,136 @@ class ConversationTile extends StatelessWidget {
       conversation.updatedAt,
     );
     final unreadCount = conversation.unreadCount;
+    final hasUnread = unreadCount > 0;
+
+    final statusColor = isOnline
+        ? const Color(0xFF00E676)
+        : colorScheme.outline.withValues(alpha: 0.6);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(4),
+        color: hasUnread
+            ? colorScheme.primaryContainer.withValues(alpha: 0.25)
+            : colorScheme.surfaceContainerHigh,
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+          color: hasUnread
+              ? colorScheme.primary.withValues(alpha: 0.6)
+              : colorScheme.outline.withValues(alpha: 0.2),
+          width: hasUnread ? 1.5 : 1.0,
         ),
       ),
-      child: InkWell(
-        onTap: onTap,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ConversationAvatar(conversation: conversation),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _displayName(),
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: colorScheme.onSurface,
-                            fontWeight: FontWeight.w700,
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Awatar z wbudowaną kropką statusu
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ConversationAvatar(conversation: conversation),
+                    Positioned(
+                      right: -1,
+                      bottom: -1,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: statusColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colorScheme.surfaceContainerHigh,
+                            width: 2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        timeText,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              _displayName(),
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: colorScheme.onSurface,
+                                fontWeight: hasUnread ? FontWeight.w800 : FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            timeText,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: hasUnread
+                                  ? colorScheme.primary
+                                  : colorScheme.onSurfaceVariant,
+                              fontWeight: hasUnread ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      DefaultTextStyle(
+                        style: theme.textTheme.bodyMedium!.copyWith(
+                          color: hasUnread
+                              ? colorScheme.onSurface
+                              : colorScheme.onSurfaceVariant,
+                          fontWeight: hasUnread ? FontWeight.w500 : FontWeight.normal,
                         ),
+                        child: ConversationPreview(conversation: conversation),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    _sessionLabel(),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  ConversationPreview(conversation: conversation),
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                  child: Text(
-                    'E2EE',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
                 ),
-                const SizedBox(height: 8),
-                if (unreadCount > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 7,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
-                    child: Center(
-                      child: Text(
-                        unreadCount > 99 ? '99+' : unreadCount.toString(),
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onPrimary,
-                          fontWeight: FontWeight.w700,
+                const SizedBox(width: 12),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (hasUnread)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                        child: Center(
+                          child: Text(
+                            unreadCount > 99 ? '99+' : unreadCount.toString(),
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                else
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: colorScheme.primary,
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
