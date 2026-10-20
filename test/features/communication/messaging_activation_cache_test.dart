@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 void main() {
@@ -86,6 +88,59 @@ void main() {
 
       expect(state.isActive, isFalse);
       expect(state.shouldShowOnboarding, isTrue);
+    });
+
+    test('hasUsableTerms requires a real current terms version, not accepted one', () {
+      const state = MessagingActivationState(
+        status: 'active',
+        consentAccepted: true,
+        termsText: 'Treść regulaminu',
+        termsVersion: 'v1',
+        currentTermsVersion: '',
+        hasLocalActivation: true,
+        keyRegistrationStatus: 'completed',
+      );
+
+      expect(state.hasUsableTerms, isFalse);
+      expect(state.isActive, isTrue);
+    });
+  });
+
+  group('SignalCiphertextEnvelope', () {
+    test('accepts a valid ciphertext envelope', () {
+      final envelope = SignalCiphertextEnvelope.fromJson({
+        'type': CiphertextMessage.prekeyType,
+        'ciphertext': 'Zm9v',
+        'senderDeviceId': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+        'recipientUserId': 'user-42',
+        'recipientDeviceId': '7',
+      });
+
+      expect(envelope.type, CiphertextMessage.prekeyType);
+      expect(envelope.recipientDeviceId, '7');
+    });
+
+    test('rejects missing or invalid recipient device id', () {
+      expect(
+        () => SignalCiphertextEnvelope.fromJson({
+          'type': CiphertextMessage.whisperType,
+          'ciphertext': 'Zm9v',
+          'senderDeviceId': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+          'recipientUserId': 'user-42',
+          'recipientDeviceId': '0',
+        }),
+        throwsFormatException,
+      );
+
+      expect(
+        () => SignalCiphertextEnvelope.fromJson({
+          'type': CiphertextMessage.whisperType,
+          'ciphertext': 'Zm9v',
+          'senderDeviceId': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+          'recipientUserId': 'user-42',
+        }),
+        throwsFormatException,
+      );
     });
   });
 }

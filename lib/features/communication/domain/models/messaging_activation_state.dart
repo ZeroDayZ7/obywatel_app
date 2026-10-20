@@ -26,7 +26,7 @@ abstract class MessagingActivationState with _$MessagingActivationState {
 
   bool get hasUsableTerms =>
       (termsText ?? '').trim().isNotEmpty &&
-      ((currentTermsVersion ?? termsVersion ?? '').trim().isNotEmpty);
+      (currentTermsVersion ?? '').trim().isNotEmpty;
 
   bool get shouldShowOnboarding => !hasLocalActivation || !isActive;
 
