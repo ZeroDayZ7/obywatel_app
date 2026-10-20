@@ -4,10 +4,10 @@ import 'package:obywatel_plus/features/communication/presentation/widgets/messag
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
 
 class MessageList extends StatelessWidget {
+  const MessageList({super.key, required this.messages, this.controller});
+
   final List<Message> messages;
   final ScrollController? controller;
-
-  const MessageList({super.key, required this.messages, this.controller});
 
   bool _shouldShowDateDivider(Message current, Message? previous) {
     if (previous == null) return true;
@@ -26,14 +26,26 @@ class MessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final orderedMessages = [...messages]
+      ..sort((a, b) {
+        final createdAtOrder = a.createdAt.compareTo(b.createdAt);
+        if (createdAtOrder != 0) {
+          return createdAtOrder;
+        }
+        return a.id.compareTo(b.id);
+      });
+
     return ListView.builder(
       controller: controller,
-      reverse: false,
+      reverse: true,
       padding: const EdgeInsets.symmetric(vertical: 8.0),
-      itemCount: messages.length,
+      itemCount: orderedMessages.length,
       itemBuilder: (context, index) {
-        final message = messages[index];
-        final previousMessage = index == 0 ? null : messages[index - 1];
+        final renderedIndex = orderedMessages.length - 1 - index;
+        final message = orderedMessages[renderedIndex];
+        final previousMessage = renderedIndex == 0
+            ? null
+            : orderedMessages[renderedIndex - 1];
         final showDivider = _shouldShowDateDivider(message, previousMessage);
 
         return Column(

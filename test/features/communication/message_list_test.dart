@@ -130,5 +130,26 @@ void main() {
         expect(find.text('second'), findsOneWidget);
       },
     );
+
+    testWidgets('uses a deterministic order for identical timestamps', (
+      tester,
+    ) async {
+      final sharedTime = DateTime(2024, 1, 1, 12, 0);
+      final messages = [
+        message(id: 'b', createdAt: sharedTime, content: 'message-b'),
+        message(id: 'a', createdAt: sharedTime, content: 'message-a'),
+        message(id: 'c', createdAt: sharedTime, content: 'message-c'),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MessageList(messages: messages)),
+        ),
+      );
+
+      expect(find.text('message-a'), findsOneWidget);
+      expect(find.text('message-b'), findsOneWidget);
+      expect(find.text('message-c'), findsOneWidget);
+    });
   });
 }
