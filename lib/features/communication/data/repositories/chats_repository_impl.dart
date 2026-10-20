@@ -2189,10 +2189,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
         normalizedType == 'text' || normalizedType == 'plain';
     final hasAttachment = (entity.attachmentId ?? '').trim().isNotEmpty;
 
-    _logger.i(
-      '[CHAT-FLOW-RENDER] Mapping message entity id=${entity.id} has_local_plaintext=${localPlaintext != null} attachmentId=${entity.attachmentId}',
-      module: 'ChatsRepository',
-    );
+    // _logger.i(
+    //   '[CHAT-FLOW-RENDER] Mapping message entity id=${entity.id} has_local_plaintext=${localPlaintext != null} attachmentId=${entity.attachmentId}',
+    //   module: 'ChatsRepository',
+    // );
 
     if (localPlaintext != null) {
       return Message(

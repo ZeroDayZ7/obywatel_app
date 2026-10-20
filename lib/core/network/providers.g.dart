@@ -9,6 +9,59 @@ part of 'providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(WsLifecycleRefresh)
+final wsLifecycleRefreshProvider = WsLifecycleRefreshProvider._();
+
+final class WsLifecycleRefreshProvider
+    extends $NotifierProvider<WsLifecycleRefresh, int> {
+  WsLifecycleRefreshProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'wsLifecycleRefreshProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$wsLifecycleRefreshHash();
+
+  @$internal
+  @override
+  WsLifecycleRefresh create() => WsLifecycleRefresh();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$wsLifecycleRefreshHash() =>
+    r'c79ab081dbb52fc77d31e4f76fcc2e28fe22cb07';
+
+abstract class _$WsLifecycleRefresh extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  void runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    element.handleCreate(ref, build);
+  }
+}
+
 @ProviderFor(globalWebSocketLifecycle)
 final globalWebSocketLifecycleProvider = GlobalWebSocketLifecycleProvider._();
 
@@ -49,7 +102,7 @@ final class GlobalWebSocketLifecycleProvider
 }
 
 String _$globalWebSocketLifecycleHash() =>
-    r'3a75994c6fdeb7cfcf8874c386b38cd1f383ffaf';
+    r'd1d37899c596ad8cca3d4e60f6dec45bf9cb774b';
 
 @ProviderFor(authFresh)
 final authFreshProvider = AuthFreshProvider._();

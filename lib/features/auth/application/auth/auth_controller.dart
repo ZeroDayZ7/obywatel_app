@@ -37,6 +37,10 @@ class AuthController extends _$AuthController {
 
   static const String _logModule = 'AUTH';
 
+  void _triggerWebSocketLifecycleRefresh() {
+    ref.read(wsLifecycleRefreshProvider.notifier).bump();
+  }
+
   @override
   AuthState build() {
     _log.i('Inicjalizacja AuthController...', module: _logModule);
@@ -140,6 +144,7 @@ class AuthController extends _$AuthController {
           user: cachedUser,
           isDeviceTrusted: true,
         );
+        _triggerWebSocketLifecycleRefresh();
 
         unawaited(_refreshSessionInBackground());
         return true;
@@ -193,6 +198,7 @@ class AuthController extends _$AuthController {
         module: _logModule,
       );
       state = AuthState.authenticated(user: user, isDeviceTrusted: true);
+      _triggerWebSocketLifecycleRefresh();
 
       _log.i(
         '[UNLOCK-SESSION][7] ✅ Sesja pomyślnie odblokowana i zweryfikowana.',
@@ -245,6 +251,7 @@ class AuthController extends _$AuthController {
         );
         await ref.read(securityServiceProvider.notifier).unlockApp();
         state = AuthState.authenticated(user: cachedUser, isDeviceTrusted: true);
+        _triggerWebSocketLifecycleRefresh();
         return true;
       }
 
@@ -355,6 +362,7 @@ class AuthController extends _$AuthController {
         user: refreshedUser,
         isDeviceTrusted: true,
       );
+      _triggerWebSocketLifecycleRefresh();
 
       _log.i(
         '[AUTH][BACKGROUND] /auth/me zakończone sukcesem — cache zaktualizowany.',

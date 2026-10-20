@@ -28,6 +28,16 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'providers.g.dart';
 
 @Riverpod(keepAlive: true)
+class WsLifecycleRefresh extends _$WsLifecycleRefresh {
+  @override
+  int build() => 0;
+
+  void bump() {
+    state = state + 1;
+  }
+}
+
+@Riverpod(keepAlive: true)
 void globalWebSocketLifecycle(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
   final client = ref.watch(appWebSocketClientProvider);
@@ -115,6 +125,14 @@ void globalWebSocketLifecycle(Ref ref) {
 
   ref.listen<AuthState>(authControllerProvider, (_, next) {
     unawaited(syncWithAuth(next));
+  });
+
+  ref.listen<int>(wsLifecycleRefreshProvider, (_, next) {
+    logger.d(
+      '[WS-LIFECYCLE] manual refresh trigger fired; value=$next',
+      module: 'WS-LIFECYCLE',
+    );
+    unawaited(syncWithAuth(ref.read(authControllerProvider)));
   });
 
   ref.listen<AsyncValue<NetworkState>>(networkStateProvider, (_, next) {

@@ -19,6 +19,7 @@ class AppWebSocketClient {
   StreamSubscription<dynamic>? _socketSubscription;
   late final StreamController<Map<String, dynamic>> _messageController;
   late final StreamController<WsConnectionStatus> _statusController;
+  WsConnectionStatus _currentStatus = WsConnectionStatus.disconnected;
 
   Timer? _pingTimer;
   Timer? _reconnectTimer;
@@ -33,7 +34,24 @@ class AppWebSocketClient {
   String? _sessionKey;
 
   Stream<Map<String, dynamic>> get messageStream => _messageController.stream;
-  Stream<WsConnectionStatus> get statusStream => _statusController.stream;
+  WsConnectionStatus get currentStatus => _currentStatus;
+  Stream<WsConnectionStatus> get statusStream => Stream.multi((controller) {
+        controller.add(_currentStatus);
+        final subscription = _statusController.stream.listen(
+          (status) {
+            controller.add(status);
+          },
+          onDone: () => controller.close(),
+          onError: (Object error, StackTrace stackTrace) {
+            controller.addError(error, stackTrace);
+          },
+        );
+
+        controller.onCancel = () async {
+          await subscription.cancel();
+        };
+      });
+
   bool get isConnected => !_disposed && _socket != null && !_isExplicitlyClosed;
 
   Future<void> connect(
@@ -69,7 +87,7 @@ class AppWebSocketClient {
     }
 
     _isConnecting = true;
-    _statusController.add(WsConnectionStatus.connecting);
+    _setStatus(WsConnectionStatus.connecting);
 
     _logger.i('[WS] Łączenie z URL: $url (Android/Windows)');
     _logger.d('[WS][3] about to call io.WebSocket.connect()', module: 'WS');
@@ -87,7 +105,8 @@ class AppWebSocketClient {
 
       _socket = socket;
       _reconnectAttempts = 0;
-      _statusController.add(WsConnectionStatus.connected);
+      _setStatus(WsConnectionStatus.connected);
+      _logger.i('[WS] Stan połączenia ustawiony na CONNECTED.');
       _startPingTimer();
 
       _socketSubscription = socket.listen(
@@ -179,12 +198,17 @@ class AppWebSocketClient {
     });
   }
 
+  void _setStatus(WsConnectionStatus status) {
+    _currentStatus = status;
+    _statusController.add(status);
+  }
+
   void _handleDisconnect() {
     _stopPingTimer();
     _socketSubscription?.cancel();
     _socketSubscription = null;
     _socket = null;
-    _statusController.add(WsConnectionStatus.disconnected);
+    _setStatus(WsConnectionStatus.disconnected);
 
     if (_disposed || _isExplicitlyClosed || _currentUrl == null) {
       return;
@@ -240,7 +264,7 @@ class AppWebSocketClient {
 
     _socketSubscription?.cancel();
     _socketSubscription = null;
-    _statusController.add(WsConnectionStatus.disconnected);
+    _setStatus(WsConnectionStatus.disconnected);
     _logger.i('[WS] Połączenie rozłączone na żądanie.');
   }
 

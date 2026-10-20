@@ -21,18 +21,18 @@ part 'pin_verification_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class PinVerificationNotifier extends _$PinVerificationNotifier {
   /// Flaga ręcznego włączania/wyłączania szczegółowych logów debugowych w tym pliku.
-  static const bool _enableVerboseLogging = false;
+  // static const bool _enableVerboseLogging = false;
 
   Timer? _lockoutTimer;
   bool _hasAttemptedAutoBiometrics = false;
 
   AppLogger get _log => ref.read(appLoggerProvider);
 
-  void _logDebug(String message) {
-    if (_enableVerboseLogging) {
-      _log.d(message);
-    }
-  }
+  // void _logDebug(String message) {
+  //   if (_enableVerboseLogging) {
+  //     _log.d(message);
+  //   }
+  // }
 
   @override
   PinVerificationState build() {
@@ -81,8 +81,8 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   }
 
   Future<void> verifyPin(List<int> pinCodes) async {
-    _log.i('[PIN-VERIFICATION] Weryfikacja PIN-u...');
-    _logDebug('[PIN-VERIFICATION] Długość pinCodes: ${pinCodes.length}');
+    // _log.i('[PIN-VERIFICATION] Weryfikacja PIN-u...');
+    // _logDebug('[PIN-VERIFICATION] Długość pinCodes: ${pinCodes.length}');
 
     state = const PinVerificationState.loading();
 
