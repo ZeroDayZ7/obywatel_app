@@ -4,7 +4,12 @@ import 'package:obywatel_plus/features/communication/application/messaging_activ
 import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 class MessagingOnboardingScreen extends ConsumerWidget {
-  const MessagingOnboardingScreen({super.key});
+  const MessagingOnboardingScreen({
+    super.key,
+    this.activationState,
+  });
+
+  final MessagingActivationState? activationState;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -19,9 +24,14 @@ class MessagingOnboardingScreen extends ConsumerWidget {
       );
     }
 
-    final activationState = state.value ?? const MessagingActivationState();
-    final termsText = activationState.termsText ??
-        'Komunikator XYZ umożliwia prowadzenie prywatnych rozmów z innymi użytkownikami Obywatel Plus. Przed rozpoczęciem korzystania z komunikatora zapoznaj się z zasadami usługi i potwierdź ich akceptację.';
+    final currentState = activationState ?? state.value ?? const MessagingActivationState();
+    final termsText = currentState.termsText?.trim();
+    final hasUsableTerms = (termsText != null && termsText.isNotEmpty);
+
+    final errorMessage = currentState.errorMessage ??
+        (!hasUsableTerms
+            ? 'Nie pobrano treści regulaminu. Spróbuj pobrać regulamin ponownie.'
+            : null);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -37,32 +47,47 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Komunikator XYZ',
+                      'Aktywacja komunikatora',
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Aktywacja i regulamin',
+                      'Regulamin',
                       style: textTheme.titleMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(16),
+                    if (hasUsableTerms)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          termsText,
+                          style: textTheme.bodyLarge,
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'Brak treści regulaminu do akceptacji. Pobierz regulamin ponownie, aby kontynuować.',
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onErrorContainer,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        termsText,
-                        style: textTheme.bodyLarge,
-                      ),
-                    ),
-                    if (activationState.errorMessage != null) ...[
+                    if (errorMessage != null) ...[
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -71,7 +96,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          activationState.errorMessage!,
+                          errorMessage,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onErrorContainer,
                           ),
@@ -80,9 +105,17 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                     ],
                     const SizedBox(height: 24),
                     FilledButton.icon(
-                      onPressed: state.isLoading ? null : () => controller.acceptCurrentTerms(),
+                      onPressed: state.isLoading || !hasUsableTerms
+                          ? null
+                          : () => controller.acceptCurrentTerms(),
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('Akceptuję regulamin'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: state.isLoading ? null : () => controller.load(),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Pobierz regulamin ponownie'),
                     ),
                     const SizedBox(height: 12),
                     TextButton.icon(

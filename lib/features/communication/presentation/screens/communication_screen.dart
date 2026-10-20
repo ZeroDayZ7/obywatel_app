@@ -35,7 +35,9 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
     }
 
     if (activationState.shouldShowOnboarding) {
-      return const MessagingOnboardingScreen();
+      return MessagingOnboardingScreen(
+        activationState: activationState,
+      );
     }
 
     return CommunicationTabView(initialIndex: widget.initialIndex);
