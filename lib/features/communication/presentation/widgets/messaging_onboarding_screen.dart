@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 class MessagingOnboardingScreen extends ConsumerWidget {
   const MessagingOnboardingScreen({super.key});

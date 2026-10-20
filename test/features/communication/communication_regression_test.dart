@@ -16,7 +16,6 @@ import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
-import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
@@ -26,6 +25,7 @@ import 'package:obywatel_plus/features/communication/data/repositories/chats_rep
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 class TestChatApiClient extends ChatsApiClient {
   TestChatApiClient({required ApiClient client}) : super(client);

@@ -1,163 +1,35 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/core/database/database.dart';
-import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/messaging_activation_repository.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'messaging_activation_controller.g.dart';
 
-class MessagingActivationState {
-  const MessagingActivationState({this.status, this.terms, this.errorMessage});
+class _ActivationContext {
+  const _ActivationContext({required this.userId, required this.deviceId});
 
-  final MessagingActivationDto? status;
-  final MessagingTermsDto? terms;
-  final String? errorMessage;
-
-  MessagingActivationState copyWith({
-    MessagingActivationDto? status,
-    MessagingTermsDto? terms,
-    String? errorMessage,
-    bool clearError = false,
-  }) {
-    return MessagingActivationState(
-      status: status ?? this.status,
-      terms: terms ?? this.terms,
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-    );
-  }
-
-  bool get isActive =>
-      status != null &&
-      status!.status == 'active' &&
-      status!.consentAccepted == true;
-
-  bool get shouldShowOnboarding {
-    if (errorMessage != null && status == null && terms == null) {
-      return false;
-    }
-    if (status == null && terms == null) {
-      return true;
-    }
-    if (isActive) {
-      return false;
-    }
-
-    final currentTermsVersion =
-        status?.currentTermsVersion ?? terms?.version ?? '';
-    final acceptedVersion = status?.termsVersion ?? '';
-    return status == null ||
-        status!.status == 'not_started' ||
-        status!.requiresTermsAcceptance ||
-        acceptedVersion != currentTermsVersion;
-  }
+  final String userId;
+  final String deviceId;
 }
 
 @riverpod
 class MessagingActivationController extends _$MessagingActivationController {
   int _requestVersion = 0;
 
-  Future<String?> _currentUserId() async {
-    final cachedUser = await ref.read(sessionServiceProvider).getCachedUser();
-    return cachedUser?.id;
-  }
-
-  Future<String> _currentDeviceId() async {
-    return ref.read(deviceInfoServiceProvider).getOrCreateDeviceId();
-  }
-
-  Future<void> _persistState(MessagingActivationState nextState) async {
-    final userId = await _currentUserId();
-    final deviceId = await _currentDeviceId();
-
-    if (userId == null || userId.trim().isEmpty) {
-      return;
-    }
-
-    final db = ref.read(appDatabaseProvider);
-    final row = MessagingActivationStateRow(
-      userId: userId,
-      deviceId: deviceId,
-      consentAccepted: nextState.status?.consentAccepted ?? false,
-      status: nextState.status?.status ?? 'not_started',
-      termsVersion:
-          nextState.status?.termsVersion ?? nextState.terms?.version ?? '',
-      currentTermsVersion:
-          nextState.status?.currentTermsVersion ??
-          nextState.terms?.version ??
-          '',
-      requiresTermsAcceptance:
-          nextState.status?.requiresTermsAcceptance ?? false,
-      keyRegistrationStatus: 'not_started',
-      lastError: nextState.errorMessage,
-      createdAt: DateTime.now().toUtc(),
-      updatedAt: DateTime.now().toUtc(),
-    );
-
-    await db.transaction(() async {
-      await db
-          .into(db.messagingActivationStates)
-          .insert(row, mode: InsertMode.insertOrReplace);
-    });
-  }
-
-  Future<MessagingActivationState?> _readPersistedState() async {
-    final userId = await _currentUserId();
-    final deviceId = await _currentDeviceId();
-
+  Future<_ActivationContext?> _resolveContext() async {
+    final user = await ref.read(sessionServiceProvider).getCachedUser();
+    final userId = user?.id;
     if (userId == null || userId.trim().isEmpty) {
       return null;
     }
 
-    final row =
-        await (ref
-                .read(appDatabaseProvider)
-                .select(ref.read(appDatabaseProvider).messagingActivationStates)
-              ..where(
-                (tbl) =>
-                    tbl.userId.equals(userId) & tbl.deviceId.equals(deviceId),
-              ))
-            .getSingleOrNull();
-
-    if (row == null) {
-      return null;
-    }
-
-    return MessagingActivationState(
-      status: MessagingActivationDto(
-        userId: row.userId,
-        status: row.status,
-        consentAccepted: row.consentAccepted,
-        termsVersion: row.termsVersion,
-        currentTermsVersion: row.currentTermsVersion,
-        requiresTermsAcceptance: row.requiresTermsAcceptance,
-        deviceId: row.deviceId,
-      ),
-      terms: row.termsVersion.isEmpty
-          ? null
-          : MessagingTermsDto(version: row.termsVersion, text: ''),
-      errorMessage: row.lastError,
-    );
-  }
-
-  Future<void> _clearPersistedState() async {
-    final userId = await _currentUserId();
-    final deviceId = await _currentDeviceId();
-    if (userId == null || userId.trim().isEmpty) {
-      return;
-    }
-
-    final db = ref.read(appDatabaseProvider);
-    await (db.delete(db.messagingActivationStates)..where(
-          (tbl) => tbl.userId.equals(userId) & tbl.deviceId.equals(deviceId),
-        ))
-        .go();
+    final deviceId = await ref.read(deviceInfoServiceProvider).getOrCreateDeviceId();
+    return _ActivationContext(userId: userId, deviceId: deviceId);
   }
 
   Future<MessagingActivationState> _loadStatus() async {
@@ -167,8 +39,39 @@ class MessagingActivationController extends _$MessagingActivationController {
     return MessagingActivationState(status: status, terms: terms);
   }
 
+  Future<void> _saveState(
+    _ActivationContext context,
+    MessagingActivationState state,
+  ) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    await repo.saveState(
+      userId: context.userId,
+      deviceId: context.deviceId,
+      state: state,
+    );
+  }
+
+  Future<MessagingActivationState?> _readPersistedState(
+    _ActivationContext context,
+  ) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    return repo.readForContext(
+      userId: context.userId,
+      deviceId: context.deviceId,
+    );
+  }
+
+  Future<void> _clearPersistedState(_ActivationContext context) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    await repo.clearForContext(
+      userId: context.userId,
+      deviceId: context.deviceId,
+    );
+  }
+
   Future<MessagingActivationState> _ensureDeviceIdentityReady({
     required MessagingActivationState nextState,
+    required _ActivationContext context,
   }) async {
     if (!nextState.isActive) {
       return nextState;
@@ -177,77 +80,118 @@ class MessagingActivationController extends _$MessagingActivationController {
     try {
       final cryptoService = ref.read(e2eeCryptoServiceProvider);
       await cryptoService.registerDeviceIdentity();
-      return nextState.copyWith(errorMessage: null);
-    } on Exception catch (error) {
-      return nextState.copyWith(
-        errorMessage:
-            'Regulamin został zaakceptowany, ale rejestracja kluczy E2EE nie została zakończona. Spróbuj ponownie.',
+      final persisted = nextState.copyWith(
+        keyRegistrationStatus: 'completed',
+        errorMessage: null,
       );
+      await _saveState(context, persisted);
+      return persisted;
+    } on Exception catch (_) {
+      final failedState = nextState.copyWith(
+        keyRegistrationStatus: 'failed',
+        errorMessage:
+            'Rejestracja kluczy E2EE nie została zakończona. Spróbuj ponownie.',
+      );
+      await _saveState(context, failedState);
+      return failedState;
     }
   }
 
-  Future<void> _executeWithRequestGuard(
-    Future<void> Function(int requestId) action,
+  Future<void> _runExclusive(
+    Future<void> Function(int requestId, _ActivationContext context) action,
   ) async {
+    final context = await _resolveContext();
+    if (context == null) {
+      state = const AsyncData(
+        MessagingActivationState(
+          status: null,
+          terms: null,
+          keyRegistrationStatus: 'not_started',
+          errorMessage: 'Brak aktywnej sesji użytkownika.',
+        ),
+      );
+      return;
+    }
+
     final requestId = ++_requestVersion;
-    await action(requestId);
+    await action(requestId, context);
   }
 
   @override
   FutureOr<MessagingActivationState> build() async {
-    final persisted = await _readPersistedState();
+    final context = await _resolveContext();
+    if (context == null) {
+      return const MessagingActivationState(
+        status: null,
+        terms: null,
+        keyRegistrationStatus: 'not_started',
+        errorMessage: 'Brak aktywnej sesji użytkownika.',
+      );
+    }
+
+    final persisted = await _readPersistedState(context);
     if (persisted != null) {
-      unawaited(_refreshInBackground());
+      unawaited(_refreshInBackground(context));
       return persisted;
     }
 
-    final nextState = await _loadStatus();
-    await _persistState(nextState);
-    return nextState;
+    try {
+      final nextState = await _loadStatus();
+      final saved = nextState.copyWith(
+        keyRegistrationStatus: nextState.isActive ? 'completed' : 'not_started',
+      );
+      await _saveState(context, saved);
+      return saved;
+    } on Exception {
+      return const MessagingActivationState(
+        status: null,
+        terms: null,
+        keyRegistrationStatus: 'not_started',
+        errorMessage: 'Brak dostępu do sieci. Stan aktywacji jest niekompletny.',
+      );
+    }
   }
 
-  Future<void> _refreshInBackground() async {
+  Future<void> _refreshInBackground(_ActivationContext context) async {
     final requestId = ++_requestVersion;
     try {
       final nextState = await _loadStatus();
       if (requestId != _requestVersion) {
         return;
       }
-      final persistedState = await _ensureDeviceIdentityReady(
+
+      final resolved = await _ensureDeviceIdentityReady(
         nextState: nextState,
+        context: context,
       );
-      await _persistState(persistedState);
-      state = AsyncData(persistedState);
+      state = AsyncData(resolved);
     } catch (_) {
-      // Offline or backend unavailable: keep the last persisted state.
+      // offline: keep the last persisted state as-is
     }
   }
 
   Future<void> load() async {
-    await _executeWithRequestGuard((requestId) async {
+    await _runExclusive((requestId, context) async {
       final currentState =
-          state.value ??
-          await _readPersistedState() ??
-          const MessagingActivationState();
+          state.value ?? await _readPersistedState(context) ?? const MessagingActivationState();
       state = const AsyncLoading();
 
       try {
         final nextState = await _loadStatus();
-        final resolvedState = await _ensureDeviceIdentityReady(
+        final resolved = await _ensureDeviceIdentityReady(
           nextState: nextState,
+          context: context,
         );
-        await _persistState(resolvedState);
         if (requestId == _requestVersion) {
-          state = AsyncData(resolvedState);
+          state = AsyncData(resolved);
         }
-      } on Exception catch (_) {
-        final fallbackState = await _readPersistedState() ?? currentState;
+      } on Exception {
+        final fallback = await _readPersistedState(context) ?? currentState;
         if (requestId == _requestVersion) {
           state = AsyncData(
-            fallbackState.copyWith(
-              errorMessage:
-                  fallbackState.errorMessage ??
-                  'Nie udało się pobrać stanu komunikatora. Został odczytany lokalny stan aplikacji.',
+            fallback.copyWith(
+              errorMessage: fallback.errorMessage ??
+                  'Nie udało się pobrać stanu komunikatora.',
             ),
           );
         }
@@ -256,19 +200,16 @@ class MessagingActivationController extends _$MessagingActivationController {
   }
 
   Future<void> acceptCurrentTerms() async {
-    await _executeWithRequestGuard((requestId) async {
+    await _runExclusive((requestId, context) async {
       final currentState =
-          state.value ??
-          await _readPersistedState() ??
-          const MessagingActivationState();
+          state.value ?? await _readPersistedState(context) ?? const MessagingActivationState();
       state = const AsyncLoading();
 
       try {
         final apiClient = ref.read(messagingActivationApiClientProvider);
         final terms = currentState.terms ?? await apiClient.getCurrentTerms();
-        final deviceId = await _currentDeviceId();
         final updatedStatus = await apiClient.acceptTerms(
-          deviceId: deviceId,
+          deviceId: context.deviceId,
           termsVersion: terms.version,
         );
 
@@ -276,20 +217,21 @@ class MessagingActivationController extends _$MessagingActivationController {
           status: updatedStatus,
           terms: terms,
           errorMessage: null,
+          keyRegistrationStatus: 'required',
         );
-        final resolvedState = await _ensureDeviceIdentityReady(
+        final resolved = await _ensureDeviceIdentityReady(
           nextState: nextState,
+          context: context,
         );
-        await _persistState(resolvedState);
+
         if (requestId == _requestVersion) {
-          state = AsyncData(resolvedState);
+          state = AsyncData(resolved);
         }
-      } on Exception catch (_) {
+      } on Exception {
         if (requestId == _requestVersion) {
           state = AsyncData(
             currentState.copyWith(
-              errorMessage:
-                  'Nie można aktywować komunikatora bez dostępności serwera.',
+              errorMessage: 'Nie można aktywować komunikatora bez dostępu do sieci.',
             ),
           );
         }
@@ -298,21 +240,18 @@ class MessagingActivationController extends _$MessagingActivationController {
   }
 
   Future<void> declineTerms() async {
-    await _executeWithRequestGuard((requestId) async {
-      final currentState =
-          state.value ??
-          await _readPersistedState() ??
-          const MessagingActivationState();
-      await _clearPersistedState();
+    await _runExclusive((requestId, context) async {
+      await _clearPersistedState(context);
+
+      final clearedState = const MessagingActivationState(
+        status: null,
+        terms: null,
+        keyRegistrationStatus: 'not_started',
+        errorMessage: 'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
+      );
+
       if (requestId == _requestVersion) {
-        state = AsyncData(
-          currentState.copyWith(
-            status: null,
-            errorMessage:
-                'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
-            clearError: false,
-          ),
-        );
+        state = AsyncData(clearedState);
       }
     });
   }

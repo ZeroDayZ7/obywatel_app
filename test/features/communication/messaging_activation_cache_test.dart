@@ -1,12 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 void main() {
-  group('MessagingActivationState persistence', () {
+  group('MessagingActivationState', () {
     test('round-trips active state and keeps onboarding hidden', () {
-      final original = MessagingActivationState(
-        status: const MessagingActivationDto(
+      const original = MessagingActivationState(
+        status: MessagingActivationDto(
           userId: 'user-1',
           status: 'active',
           consentAccepted: true,
@@ -14,14 +14,13 @@ void main() {
           currentTermsVersion: 'v2',
           requiresTermsAcceptance: false,
         ),
-        terms: const MessagingTermsDto(
+        terms: MessagingTermsDto(
           version: 'v2',
           text: 'Regulamin komunikatora',
         ),
       );
 
-      final json = original.toJson();
-      final restored = MessagingActivationState.fromJson(json);
+      final restored = original.copyWith();
 
       expect(restored.isActive, isTrue);
       expect(restored.shouldShowOnboarding, isFalse);
@@ -33,6 +32,29 @@ void main() {
       const state = MessagingActivationState();
 
       expect(state.shouldShowOnboarding, isTrue);
+    });
+
+    test('copyWith clears the status and terms when null is passed explicitly', () {
+      const original = MessagingActivationState(
+        status: MessagingActivationDto(
+          userId: 'user-1',
+          status: 'active',
+          consentAccepted: true,
+          termsVersion: 'v2',
+          currentTermsVersion: 'v2',
+          requiresTermsAcceptance: false,
+        ),
+        terms: MessagingTermsDto(
+          version: 'v2',
+          text: 'Regulamin komunikatora',
+        ),
+      );
+
+      final cleared = original.copyWith(status: null, terms: null, errorMessage: null);
+
+      expect(cleared.status, isNull);
+      expect(cleared.terms, isNull);
+      expect(cleared.errorMessage, isNull);
     });
   });
 }

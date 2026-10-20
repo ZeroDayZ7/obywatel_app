@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/communication/communication_tab_view.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/communication/messaging_activation_error.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messaging_onboarding_screen.dart';
@@ -16,14 +17,6 @@ class CommunicationScreen extends ConsumerStatefulWidget {
 }
 
 class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(messagingActivationControllerProvider.notifier).load();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(messagingActivationControllerProvider);
