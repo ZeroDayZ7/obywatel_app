@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store.dart';
 import 'package:obywatel_plus/core/storage/local_attachment_store_provider.dart';
@@ -109,6 +110,16 @@ Future<String?> persistValidatedAttachment({
     fileName: fileName,
   );
 }
+
+final attachmentMetadataProvider =
+    FutureProvider.family<Map<String, dynamic>?, String>((ref, attachmentId) {
+      final normalized = attachmentId.trim();
+      if (normalized.isEmpty) {
+        return Future.value(null);
+      }
+
+      return ref.read(chatsRepositoryProvider).getAttachmentMetadata(normalized);
+    });
 
 @riverpod
 FutureOr<Uint8List?> attachmentPreview(Ref ref, String attachmentId) async {

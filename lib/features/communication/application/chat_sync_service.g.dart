@@ -42,7 +42,7 @@ final class ChatSyncStatusControllerProvider
 }
 
 String _$chatSyncStatusControllerHash() =>
-    r'b8a1640474f67a43479e12900f6fdeff4315bc25';
+    r'7fc041488a37f47fdb4c7f6ebdeb23ccbc5a992f';
 
 abstract class _$ChatSyncStatusController extends $Notifier<SyncStatus> {
   SyncStatus build();
