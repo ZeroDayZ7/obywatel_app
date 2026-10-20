@@ -14,6 +14,7 @@ import 'package:obywatel_plus/core/database/tables/conversation_members.dart';
 import 'package:obywatel_plus/core/database/tables/conversations.dart';
 import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
 import 'package:obywatel_plus/core/database/tables/messages.dart';
+import 'package:obywatel_plus/core/database/tables/messaging_activation_states.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
 import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
 import 'package:obywatel_plus/core/database/tables/signal_identity_keys.dart';
@@ -38,6 +39,7 @@ part 'database.g.dart';
     Conversations,
     ConversationMembers,
     Messages,
+    MessagingActivationStates,
     OutboxEvents,
     SyncState,
     SignalLocalIdentity,
@@ -60,7 +62,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 12;
+  int get schemaVersion => 13;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -120,6 +122,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 12) {
         await m.addColumn(messages, messages.content);
+      }
+      if (from < 13) {
+        await m.createTable(messagingActivationStates);
       }
     },
     beforeOpen: (details) async {
