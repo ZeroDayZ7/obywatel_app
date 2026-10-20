@@ -6,6 +6,7 @@ import 'package:obywatel_plus/features/communication/data/repositories/chats_rep
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/active_chat_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/chat_app_bar.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/conversation_options_menu.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_field.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_list.dart';
 
@@ -220,11 +221,7 @@ class _ChatRoomScreenState extends ConsumerState<ChatRoomScreen> {
             icon: const Icon(Icons.refresh_rounded),
             tooltip: 'Force sync',
           ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.more_vert_rounded),
-            tooltip: 'More options',
-          ),
+          ConversationOptionsMenu(onSelected: (_) {}),
         ],
       ),
       body: Column(
