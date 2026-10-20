@@ -181,6 +181,10 @@ class _CommunicationTabViewState extends ConsumerState<CommunicationTabView> {
           icon: const Icon(Icons.arrow_back_rounded),
         ),
         actions: [
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8),
+            child: WebSocketStatusBar(),
+          ),
           if (!isCompact && _selectedIndex == 1)
             IconButton(
               tooltip: 'Dodaj kontakt',
@@ -214,16 +218,9 @@ class _CommunicationTabViewState extends ConsumerState<CommunicationTabView> {
               const VerticalDivider(width: 1),
             ],
             Expanded(
-              child: Column(
-                children: [
-                  const WebSocketStatusBar(),
-                  Expanded(
-                    child: IndexedStack(
-                      index: _selectedIndex,
-                      children: sectionContent,
-                    ),
-                  ),
-                ],
+              child: IndexedStack(
+                index: _selectedIndex,
+                children: sectionContent,
               ),
             ),
           ],

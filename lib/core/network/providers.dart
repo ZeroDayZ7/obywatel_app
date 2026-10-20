@@ -34,7 +34,16 @@ void globalWebSocketLifecycle(Ref ref) {
   String? lastAccessToken;
 
   Future<void> syncWithAuth(AuthState authState) async {
+    logger.d(
+      '[WS-LIFECYCLE][1] syncWithAuth start authState=$authState isAuthenticated=${authState.isAuthenticated}',
+      module: 'WS-LIFECYCLE',
+    );
+
     if (!authState.isAuthenticated) {
+      logger.d(
+        '[WS-LIFECYCLE][2] auth not authenticated; closing ws if needed. lastAccessToken=${lastAccessToken != null} isConnected=${client.isConnected}',
+        module: 'WS-LIFECYCLE',
+      );
       if (lastAccessToken != null || client.isConnected) {
         lastAccessToken = null;
         await client.disconnect();
@@ -44,6 +53,10 @@ void globalWebSocketLifecycle(Ref ref) {
 
     final token = await ref.read(authFreshProvider).token;
     final accessToken = token?.accessToken ?? '';
+    logger.d(
+      '[WS-LIFECYCLE][3] token resolved accessTokenPresent=${accessToken.isNotEmpty} lastAccessToken=${lastAccessToken != null} clientConnected=${client.isConnected}',
+      module: 'WS-LIFECYCLE',
+    );
 
     if (accessToken.isEmpty) {
       lastAccessToken = null;
@@ -52,13 +65,24 @@ void globalWebSocketLifecycle(Ref ref) {
     }
 
     final networkState = ref.read(networkStateProvider).asData?.value ??
-        NetworkState.unknown;
-    if (networkState == NetworkState.offline ||
-        networkState == NetworkState.unknown) {
+        NetworkState.online;
+    logger.d(
+      '[WS-LIFECYCLE][4] networkState=$networkState',
+      module: 'WS-LIFECYCLE',
+    );
+    if (networkState == NetworkState.offline) {
+      logger.d(
+        '[WS-LIFECYCLE][5] offline -> skip connect',
+        module: 'WS-LIFECYCLE',
+      );
       return;
     }
 
     if (lastAccessToken == accessToken && client.isConnected) {
+      logger.d(
+        '[WS-LIFECYCLE][6] token unchanged and socket connected -> skip reconnect',
+        module: 'WS-LIFECYCLE',
+      );
       return;
     }
 
@@ -74,6 +98,10 @@ void globalWebSocketLifecycle(Ref ref) {
     final wsUrl = '$normalizedBaseUrl${ApiEndpoints.wsMessaging}';
 
     logger.i('[WS-LIFECYCLE] Inicjalizacja połączenia WS pod adres: $wsUrl');
+    logger.d(
+      '[WS-LIFECYCLE][7] attempt connect sessionKeyPresent=${accessToken.isNotEmpty} headersPresent=${deviceFingerprint.isNotEmpty}',
+      module: 'WS-LIFECYCLE',
+    );
 
     await client.connect(
       wsUrl,

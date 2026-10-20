@@ -44,11 +44,18 @@ class AppWebSocketClient {
     final normalizedHeaders = headers ?? const <String, String>{};
     final generation = ++_connectGeneration;
 
+    _logger.d(
+      '[WS][0] connect() called url=$url sessionKeyPresent=${sessionKey != null && sessionKey.isNotEmpty} headers=${normalizedHeaders.keys.toList()}',
+      module: 'WS',
+    );
+
     if (_isConnecting && _currentUrl == url && _sessionKey == sessionKey) {
+      _logger.d('[WS][1] connect() skipped because same socket is already connecting', module: 'WS');
       return;
     }
 
     if (_socket != null && _currentUrl == url && _sessionKey == sessionKey) {
+      _logger.d('[WS][2] connect() skipped because socket already exists for same session', module: 'WS');
       return;
     }
 
@@ -65,6 +72,7 @@ class AppWebSocketClient {
     _statusController.add(WsConnectionStatus.connecting);
 
     _logger.i('[WS] Łączenie z URL: $url (Android/Windows)');
+    _logger.d('[WS][3] about to call io.WebSocket.connect()', module: 'WS');
 
     try {
       final socket = await io.WebSocket.connect(
