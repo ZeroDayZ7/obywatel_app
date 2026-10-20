@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 
 class WebSocketStatusBar extends ConsumerWidget {
   const WebSocketStatusBar({super.key});
@@ -13,7 +13,7 @@ class WebSocketStatusBar extends ConsumerWidget {
       return const SizedBox.shrink();
     }
 
-    final wsStatusValue = ref.watch(chatsWsStatusProvider);
+    final wsStatusValue = ref.watch(appWebSocketStatusProvider);
     final wsStatus = switch (wsStatusValue) {
       AsyncData(:final value) => value,
       _ => null,

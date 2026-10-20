@@ -102,4 +102,4 @@ final class ChatSyncServiceProvider
   }
 }
 
-String _$chatSyncServiceHash() => r'41766b77dd9ad7ae3d0b3251cf7e676fee279e58';
+String _$chatSyncServiceHash() => r'e1084c6d86d8bd3b6bc6a72a570e63d70b7d17df';

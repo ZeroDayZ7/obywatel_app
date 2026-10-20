@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -27,7 +27,7 @@ class ChatSyncService {
   }) : _outboxProcessor = outboxProcessor;
 
   final ChatsApiClient _apiClient;
-  final ChatsWsClient _wsClient;
+  final AppWebSocketClient _wsClient;
   final ChatsRepository _repository;
   final AppLogger _logger;
   final OutboxProcessor _outboxProcessor;
@@ -184,7 +184,7 @@ class ChatSyncStatusController extends _$ChatSyncStatusController {
 @Riverpod(keepAlive: true)
 ChatSyncService chatSyncService(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
-  final wsClient = ref.watch(chatsWsClientProvider);
+  final wsClient = ref.watch(appWebSocketClientProvider);
   final repository = ref.watch(chatsRepositoryProvider);
   final logger = ref.watch(appLoggerProvider);
   final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);

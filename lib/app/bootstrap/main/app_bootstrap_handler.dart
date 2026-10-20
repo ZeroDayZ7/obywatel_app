@@ -6,7 +6,9 @@ import 'package:obywatel_plus/app/bootstrap/presentation/error_app.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/force_update_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/maintenance_screen.dart';
 import 'package:obywatel_plus/app/bootstrap/presentation/splash_screen.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_observer.dart';
+import 'package:obywatel_plus/features/communication/application/websocket_message_handler.dart';
 
 class AppBootstrapHandler extends ConsumerStatefulWidget {
   final Widget child;
@@ -30,6 +32,8 @@ class _AppBootstrapHandlerState extends ConsumerState<AppBootstrapHandler> {
   @override
   Widget build(BuildContext context) {
     ref.watch(sessionObserverProvider);
+    ref.watch(globalWebSocketLifecycleProvider);
+    ref.watch(webSocketMessageHandlerProvider);
 
     final status = ref.watch(appInitProvider);
 

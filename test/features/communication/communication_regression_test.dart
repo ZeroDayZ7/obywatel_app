@@ -20,7 +20,6 @@ import 'package:obywatel_plus/features/communication/application/messaging_activ
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
@@ -532,11 +531,7 @@ void main() {
         final statuses = <SyncStatus>[];
         final service = ChatSyncService(
           chatsApiClient,
-          ChatsWsClient(
-            AppWebSocketClient(logger: logger),
-            logger,
-            deviceInfoService,
-          ),
+          AppWebSocketClient(logger: logger),
           repository,
           logger,
           statuses.add,
@@ -597,11 +592,7 @@ void main() {
       final statuses = <SyncStatus>[];
       final service = ChatSyncService(
         chatsApiClient,
-        ChatsWsClient(
-          AppWebSocketClient(logger: logger),
-          logger,
-          deviceInfoService,
-        ),
+        AppWebSocketClient(logger: logger),
         repository,
         logger,
         statuses.add,
@@ -695,11 +686,7 @@ void main() {
 
         final service = ChatSyncService(
           chatsApiClient,
-          ChatsWsClient(
-            AppWebSocketClient(logger: logger),
-            logger,
-            deviceInfoService,
-          ),
+          AppWebSocketClient(logger: logger),
           repository,
           logger,
           (_) {},
@@ -786,11 +773,7 @@ void main() {
 
       final service = ChatSyncService(
         chatsApiClient,
-        ChatsWsClient(
-          AppWebSocketClient(logger: logger),
-          logger,
-          deviceInfoService,
-        ),
+        AppWebSocketClient(logger: logger),
         repository,
         logger,
         (_) {},

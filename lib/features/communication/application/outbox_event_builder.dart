@@ -91,6 +91,7 @@ Map<String, dynamic> buildOutboxEventPayload(
   return {
     'eventId': safeOutboxEventId,
     'idempotencyKey': safeOutboxEventId,
+    'messageId': message.id,
     'eventType': 'SEND_MESSAGE',
     'conversationId': normalizedConversationId,
     'senderDeviceId': sanitizedAppDeviceId,

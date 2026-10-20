@@ -14,7 +14,6 @@ import 'package:obywatel_plus/features/communication/application/outbox/outbox_p
 import 'package:obywatel_plus/features/communication/application/outbox/outbox_transport_client.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
@@ -48,14 +47,10 @@ class _TestChatsApiClient extends ChatsApiClient {
   }
 }
 
-class _TrackingWsClient extends ChatsWsClient {
+class _TrackingWsClient extends AppWebSocketClient {
   _TrackingWsClient()
     : _statusController = StreamController<WsConnectionStatus>.broadcast(),
-      super(
-        AppWebSocketClient(logger: AppLogger()),
-        AppLogger(),
-        DeviceInfoService(AppLogger()),
-      );
+      super(logger: AppLogger());
 
   final StreamController<WsConnectionStatus> _statusController;
   int listenCount = 0;

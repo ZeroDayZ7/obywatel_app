@@ -1,14 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/websocket_message_handler.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 
-ChatsWsClient _buildWsClient() => ChatsWsClient(
-  AppWebSocketClient(logger: AppLogger()),
-  AppLogger(),
-  DeviceInfoService(AppLogger()),
+AppWebSocketClient _buildWsClient() => AppWebSocketClient(
+  logger: AppLogger(),
 );
 
 void main() {
