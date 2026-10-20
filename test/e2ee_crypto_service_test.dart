@@ -10,11 +10,14 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_user.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
@@ -313,8 +316,17 @@ void main() {
       () async {
         final fakeCrypto = _FakeE2eeCryptoService();
         final fakeApiClient = _FakeMessagingActivationApiClient();
+        final fakeSessionService = SessionService(
+          SecureStorageService(const FlutterSecureStorage(), AppLogger()),
+          AppLogger(),
+        );
+        await fakeSessionService.cacheUser(const AuthUser(id: 'user-1'));
+        final memoryDb = AppDatabase(NativeDatabase.memory());
+
         final container = ProviderContainer(
           overrides: [
+            appDatabaseProvider.overrideWithValue(memoryDb),
+            sessionServiceProvider.overrideWithValue(fakeSessionService),
             messagingActivationApiClientProvider.overrideWithValue(
               fakeApiClient,
             ),
@@ -324,6 +336,7 @@ void main() {
             e2eeCryptoServiceProvider.overrideWithValue(fakeCrypto),
           ],
         );
+        addTearDown(() async => await memoryDb.close());
         addTearDown(container.dispose);
 
         final controller = container.read(
@@ -340,7 +353,7 @@ void main() {
         final state = container
             .read(messagingActivationControllerProvider)
             .value;
-        expect(state?.status?.status, 'active');
+        expect(state?.status, 'active');
       },
     );
 

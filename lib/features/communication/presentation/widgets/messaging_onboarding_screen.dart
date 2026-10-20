@@ -20,7 +20,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
     }
 
     final activationState = state.value ?? const MessagingActivationState();
-    final termsText = activationState.terms?.text ??
+    final termsText = activationState.termsText ??
         'Komunikator XYZ umożliwia prowadzenie prywatnych rozmów z innymi użytkownikami Obywatel Plus. Przed rozpoczęciem korzystania z komunikatora zapoznaj się z zasadami usługi i potwierdź ich akceptację.';
 
     return Scaffold(

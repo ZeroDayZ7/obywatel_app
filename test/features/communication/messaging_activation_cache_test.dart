@@ -1,31 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 void main() {
   group('MessagingActivationState', () {
-    test('round-trips active state and keeps onboarding hidden', () {
-      const original = MessagingActivationState(
-        status: MessagingActivationDto(
-          userId: 'user-1',
-          status: 'active',
-          consentAccepted: true,
-          termsVersion: 'v2',
-          currentTermsVersion: 'v2',
-          requiresTermsAcceptance: false,
-        ),
-        terms: MessagingTermsDto(
-          version: 'v2',
-          text: 'Regulamin komunikatora',
-        ),
+    test('active local activation stays hidden from onboarding', () {
+      const state = MessagingActivationState(
+        status: 'active',
+        consentAccepted: true,
+        hasLocalActivation: true,
+        keyRegistrationStatus: 'completed',
       );
 
-      final restored = original.copyWith();
-
-      expect(restored.isActive, isTrue);
-      expect(restored.shouldShowOnboarding, isFalse);
-      expect(restored.status?.status, equals(original.status?.status));
-      expect(restored.terms?.version, equals(original.terms?.version));
+      expect(state.isActive, isTrue);
+      expect(state.shouldShowOnboarding, isFalse);
     });
 
     test('empty state still requires onboarding', () {
@@ -34,26 +21,19 @@ void main() {
       expect(state.shouldShowOnboarding, isTrue);
     });
 
-    test('copyWith clears the status and terms when null is passed explicitly', () {
+    test('copyWith clears the error message without touching active state', () {
       const original = MessagingActivationState(
-        status: MessagingActivationDto(
-          userId: 'user-1',
-          status: 'active',
-          consentAccepted: true,
-          termsVersion: 'v2',
-          currentTermsVersion: 'v2',
-          requiresTermsAcceptance: false,
-        ),
-        terms: MessagingTermsDto(
-          version: 'v2',
-          text: 'Regulamin komunikatora',
-        ),
+        status: 'active',
+        consentAccepted: true,
+        hasLocalActivation: true,
+        errorMessage: 'temporary error',
       );
 
-      final cleared = original.copyWith(status: null, terms: null, errorMessage: null);
+      final cleared = original.copyWith(errorMessage: null);
 
-      expect(cleared.status, isNull);
-      expect(cleared.terms, isNull);
+      expect(cleared.status, 'active');
+      expect(cleared.consentAccepted, isTrue);
+      expect(cleared.hasLocalActivation, isTrue);
       expect(cleared.errorMessage, isNull);
     });
   });

@@ -4,6 +4,7 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/messaging_activation_repository.dart';
 import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -36,7 +37,16 @@ class MessagingActivationController extends _$MessagingActivationController {
     final apiClient = ref.read(messagingActivationApiClientProvider);
     final status = await apiClient.getActivationStatus();
     final terms = await apiClient.getCurrentTerms();
-    return MessagingActivationState(status: status, terms: terms);
+
+    return MessagingActivationState(
+      status: status.status,
+      consentAccepted: status.consentAccepted,
+      termsVersion: status.termsVersion,
+      currentTermsVersion: status.currentTermsVersion,
+      requiresTermsAcceptance: status.requiresTermsAcceptance,
+      termsText: terms.text,
+      hasLocalActivation: false,
+    );
   }
 
   Future<void> _saveState(
@@ -77,6 +87,10 @@ class MessagingActivationController extends _$MessagingActivationController {
       return nextState;
     }
 
+    if (nextState.keyRegistrationStatus == 'completed') {
+      return nextState;
+    }
+
     try {
       final cryptoService = ref.read(e2eeCryptoServiceProvider);
       await cryptoService.registerDeviceIdentity();
@@ -105,7 +119,6 @@ class MessagingActivationController extends _$MessagingActivationController {
       state = const AsyncData(
         MessagingActivationState(
           status: null,
-          terms: null,
           keyRegistrationStatus: 'not_started',
           errorMessage: 'Brak aktywnej sesji użytkownika.',
         ),
@@ -123,7 +136,6 @@ class MessagingActivationController extends _$MessagingActivationController {
     if (context == null) {
       return const MessagingActivationState(
         status: null,
-        terms: null,
         keyRegistrationStatus: 'not_started',
         errorMessage: 'Brak aktywnej sesji użytkownika.',
       );
@@ -131,62 +143,54 @@ class MessagingActivationController extends _$MessagingActivationController {
 
     final persisted = await _readPersistedState(context);
     if (persisted != null) {
-      unawaited(_refreshInBackground(context));
+      if (persisted.isActive && persisted.keyRegistrationStatus != 'completed') {
+        return _ensureDeviceIdentityReady(
+          nextState: persisted,
+          context: context,
+        );
+      }
       return persisted;
     }
 
     try {
-      final nextState = await _loadStatus();
-      final saved = nextState.copyWith(
-        keyRegistrationStatus: nextState.isActive ? 'completed' : 'not_started',
-      );
-      await _saveState(context, saved);
-      return saved;
+      return await _loadStatus();
     } on Exception {
       return const MessagingActivationState(
         status: null,
-        terms: null,
         keyRegistrationStatus: 'not_started',
         errorMessage: 'Brak dostępu do sieci. Stan aktywacji jest niekompletny.',
       );
     }
   }
 
-  Future<void> _refreshInBackground(_ActivationContext context) async {
-    final requestId = ++_requestVersion;
-    try {
-      final nextState = await _loadStatus();
-      if (requestId != _requestVersion) {
+  Future<void> load() async {
+    await _runExclusive((requestId, context) async {
+      final persisted = await _readPersistedState(context);
+      final currentState = state.value ?? persisted ?? const MessagingActivationState();
+
+      if (persisted != null && persisted.isActive) {
+        final resolved = persisted.keyRegistrationStatus == 'completed'
+            ? persisted
+            : await _ensureDeviceIdentityReady(
+                nextState: persisted,
+                context: context,
+              );
+
+        if (requestId == _requestVersion) {
+          state = AsyncData(resolved);
+        }
         return;
       }
 
-      final resolved = await _ensureDeviceIdentityReady(
-        nextState: nextState,
-        context: context,
-      );
-      state = AsyncData(resolved);
-    } catch (_) {
-      // offline: keep the last persisted state as-is
-    }
-  }
-
-  Future<void> load() async {
-    await _runExclusive((requestId, context) async {
-      final currentState =
-          state.value ?? await _readPersistedState(context) ?? const MessagingActivationState();
       state = const AsyncLoading();
 
       try {
         final nextState = await _loadStatus();
-        final resolved = await _ensureDeviceIdentityReady(
-          nextState: nextState,
-          context: context,
-        );
         if (requestId == _requestVersion) {
-          state = AsyncData(resolved);
+          state = AsyncData(nextState);
         }
       } on Exception {
-        final fallback = await _readPersistedState(context) ?? currentState;
+        final fallback = persisted ?? currentState;
         if (requestId == _requestVersion) {
           state = AsyncData(
             fallback.copyWith(
@@ -207,18 +211,33 @@ class MessagingActivationController extends _$MessagingActivationController {
 
       try {
         final apiClient = ref.read(messagingActivationApiClientProvider);
-        final terms = currentState.terms ?? await apiClient.getCurrentTerms();
+        final terms = currentState.termsText == null
+            ? await apiClient.getCurrentTerms()
+            : MessagingTermsDto(
+                version: currentState.termsVersion ?? currentState.currentTermsVersion ?? '',
+                text: currentState.termsText ?? '',
+              );
+
         final updatedStatus = await apiClient.acceptTerms(
           deviceId: context.deviceId,
           termsVersion: terms.version,
         );
 
         final nextState = currentState.copyWith(
-          status: updatedStatus,
-          terms: terms,
+          userId: context.userId,
+          deviceId: context.deviceId,
+          status: updatedStatus.status,
+          consentAccepted: updatedStatus.consentAccepted,
+          termsVersion: updatedStatus.termsVersion,
+          currentTermsVersion: updatedStatus.currentTermsVersion,
+          requiresTermsAcceptance: updatedStatus.requiresTermsAcceptance,
+          termsText: terms.text,
+          hasLocalActivation: true,
           errorMessage: null,
           keyRegistrationStatus: 'required',
         );
+
+        await _saveState(context, nextState);
         final resolved = await _ensureDeviceIdentityReady(
           nextState: nextState,
           context: context,
@@ -245,7 +264,6 @@ class MessagingActivationController extends _$MessagingActivationController {
 
       final clearedState = const MessagingActivationState(
         status: null,
-        terms: null,
         keyRegistrationStatus: 'not_started',
         errorMessage: 'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
       );

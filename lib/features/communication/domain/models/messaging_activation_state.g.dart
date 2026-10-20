@@ -9,12 +9,15 @@ part of 'messaging_activation_state.dart';
 _MessagingActivationState _$MessagingActivationStateFromJson(
   Map<String, dynamic> json,
 ) => _MessagingActivationState(
-  status: json['status'] == null
-      ? null
-      : MessagingActivationDto.fromJson(json['status'] as Map<String, dynamic>),
-  terms: json['terms'] == null
-      ? null
-      : MessagingTermsDto.fromJson(json['terms'] as Map<String, dynamic>),
+  userId: json['userId'] as String?,
+  deviceId: json['deviceId'] as String?,
+  status: json['status'] as String?,
+  consentAccepted: json['consentAccepted'] as bool? ?? false,
+  termsVersion: json['termsVersion'] as String?,
+  currentTermsVersion: json['currentTermsVersion'] as String?,
+  requiresTermsAcceptance: json['requiresTermsAcceptance'] as bool? ?? false,
+  termsText: json['termsText'] as String?,
+  hasLocalActivation: json['hasLocalActivation'] as bool? ?? false,
   errorMessage: json['errorMessage'] as String?,
   keyRegistrationStatus:
       json['keyRegistrationStatus'] as String? ?? 'not_started',
@@ -23,8 +26,15 @@ _MessagingActivationState _$MessagingActivationStateFromJson(
 Map<String, dynamic> _$MessagingActivationStateToJson(
   _MessagingActivationState instance,
 ) => <String, dynamic>{
+  'userId': instance.userId,
+  'deviceId': instance.deviceId,
   'status': instance.status,
-  'terms': instance.terms,
+  'consentAccepted': instance.consentAccepted,
+  'termsVersion': instance.termsVersion,
+  'currentTermsVersion': instance.currentTermsVersion,
+  'requiresTermsAcceptance': instance.requiresTermsAcceptance,
+  'termsText': instance.termsText,
+  'hasLocalActivation': instance.hasLocalActivation,
   'errorMessage': instance.errorMessage,
   'keyRegistrationStatus': instance.keyRegistrationStatus,
 };

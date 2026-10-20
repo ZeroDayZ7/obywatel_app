@@ -22,15 +22,13 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
     final state = ref.watch(messagingActivationControllerProvider);
     final activationState = state.value ?? const MessagingActivationState();
 
-    if (state.isLoading &&
-        activationState.status == null &&
-        activationState.terms == null) {
+    final hasConfirmedActivation = activationState.hasLocalActivation && activationState.isActive;
+
+    if (state.isLoading && !hasConfirmedActivation && activationState.errorMessage == null) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (state.hasError &&
-        activationState.status == null &&
-        activationState.terms == null) {
+    if (state.hasError && activationState.errorMessage != null) {
       return MessagingActivationError(
         errorMessage: activationState.errorMessage,
       );

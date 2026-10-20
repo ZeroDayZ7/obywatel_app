@@ -20,7 +20,6 @@ import 'package:obywatel_plus/features/communication/application/outbox/outbox_p
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
-import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
@@ -377,116 +376,55 @@ void main() {
   });
 
   group('MessagingActivationState.copyWith', () {
-    test(
-      'copyWith keeps previous values unless a value is explicitly provided',
-      () {
-        const initial = MessagingActivationState(
-          status: null,
-          terms: null,
-          errorMessage: 'old error',
-        );
-
-        final updated = initial.copyWith();
-
-        expect(updated.status, isNull);
-        expect(updated.terms, isNull);
-        expect(updated.errorMessage, 'old error');
-      },
-    );
-
-    test('copyWith updates values when new ones are provided', () {
+    test('keeps previous values unless an explicit override is provided', () {
       const initial = MessagingActivationState(
-        status: null,
-        terms: null,
-        errorMessage: null,
+        status: 'active',
+        consentAccepted: true,
+        hasLocalActivation: true,
+        keyRegistrationStatus: 'completed',
+        errorMessage: 'old error',
+      );
+
+      final updated = initial.copyWith();
+
+      expect(updated.status, 'active');
+      expect(updated.hasLocalActivation, isTrue);
+      expect(updated.errorMessage, 'old error');
+    });
+
+    test('updates values when new values are provided', () {
+      const initial = MessagingActivationState(
+        status: 'not_started',
+        consentAccepted: false,
+        hasLocalActivation: false,
       );
 
       final updated = initial.copyWith(
-        status: MessagingActivationDto(
-          userId: 'user-1',
-          status: 'active',
-          consentAccepted: true,
-          termsVersion: '1',
-          currentTermsVersion: '1',
-          requiresTermsAcceptance: false,
-          deviceId: 'device-1',
-          activatedAt: DateTime.utc(2026, 10, 14),
-          createdAt: DateTime.utc(2026, 10, 14),
-          updatedAt: DateTime.utc(2026, 10, 14),
-        ),
-        terms: MessagingTermsDto(
-          version: '1',
-          text: 'body',
-          publishedAt: DateTime.utc(2026, 10, 14),
-        ),
+        status: 'active',
+        consentAccepted: true,
+        hasLocalActivation: true,
+        keyRegistrationStatus: 'required',
       );
 
-      expect(updated.status, isNotNull);
-      expect(updated.status!.status, 'active');
-      expect(updated.terms, isNotNull);
-      expect(updated.errorMessage, isNull);
+      expect(updated.status, 'active');
+      expect(updated.consentAccepted, isTrue);
+      expect(updated.hasLocalActivation, isTrue);
+      expect(updated.keyRegistrationStatus, 'required');
     });
 
-    test('explicit null clears status, terms and errorMessage', () {
-      final initial = MessagingActivationState(
-        status: MessagingActivationDto(
-          userId: 'user-1',
-          status: 'active',
-          consentAccepted: true,
-          termsVersion: '1',
-          currentTermsVersion: '1',
-          requiresTermsAcceptance: false,
-          deviceId: 'device-1',
-          activatedAt: DateTime.utc(2026, 10, 14),
-          createdAt: DateTime.utc(2026, 10, 14),
-          updatedAt: DateTime.utc(2026, 10, 14),
-        ),
-        terms: MessagingTermsDto(
-          version: '1',
-          text: 'body',
-          publishedAt: DateTime.utc(2026, 10, 14),
-        ),
+    test('explicit null clears errorMessage without touching activation state', () {
+      const initial = MessagingActivationState(
+        status: 'active',
+        consentAccepted: true,
+        hasLocalActivation: true,
         errorMessage: 'temporary error',
       );
 
-      final cleared = initial.copyWith(
-        status: null,
-        terms: null,
-        errorMessage: null,
-      );
+      final cleared = initial.copyWith(errorMessage: null);
 
-      expect(cleared.status, isNull);
-      expect(cleared.terms, isNull);
+      expect(cleared.status, 'active');
+      expect(cleared.consentAccepted, isTrue);
       expect(cleared.errorMessage, isNull);
-    });
-
-    test('clearing errorMessage does not touch the other fields', () {
-      final initial = MessagingActivationState(
-        status: MessagingActivationDto(
-          userId: 'user-1',
-          status: 'active',
-          consentAccepted: true,
-          termsVersion: '1',
-          currentTermsVersion: '1',
-          requiresTermsAcceptance: false,
-          deviceId: 'device-1',
-          activatedAt: DateTime.utc(2026, 10, 14),
-          createdAt: DateTime.utc(2026, 10, 14),
-          updatedAt: DateTime.utc(2026, 10, 14),
-        ),
-        terms: MessagingTermsDto(
-          version: '1',
-          text: 'body',
-          publishedAt: DateTime.utc(2026, 10, 14),
-        ),
-        errorMessage: 'persisted',
-      );
-
-      final updated = initial.copyWith(errorMessage: null);
-
-      expect(updated.status, isNotNull);
-      expect(updated.terms, isNotNull);
-      expect(updated.errorMessage, isNull);
     });
   });
 

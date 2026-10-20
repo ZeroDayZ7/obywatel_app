@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$MessagingActivationState {
 
- MessagingActivationDto? get status; MessagingTermsDto? get terms; String? get errorMessage; String get keyRegistrationStatus;
+ String? get userId; String? get deviceId; String? get status; bool get consentAccepted; String? get termsVersion; String? get currentTermsVersion; bool get requiresTermsAcceptance; String? get termsText; bool get hasLocalActivation; String? get errorMessage; String get keyRegistrationStatus;
 /// Create a copy of MessagingActivationState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $MessagingActivationStateCopyWith<MessagingActivationState> get copyWith => _$Me
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationState&&(identical(other.status, status) || other.status == status)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationState&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.termsText, termsText) || other.termsText == termsText)&&(identical(other.hasLocalActivation, hasLocalActivation) || other.hasLocalActivation == hasLocalActivation)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,terms,errorMessage,keyRegistrationStatus);
+int get hashCode => Object.hash(runtimeType,userId,deviceId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,termsText,hasLocalActivation,errorMessage,keyRegistrationStatus);
 
 @override
 String toString() {
-  return 'MessagingActivationState(status: $status, terms: $terms, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
+  return 'MessagingActivationState(userId: $userId, deviceId: $deviceId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, termsText: $termsText, hasLocalActivation: $hasLocalActivation, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
 }
 
 
@@ -48,11 +48,11 @@ abstract mixin class $MessagingActivationStateCopyWith<$Res>  {
   factory $MessagingActivationStateCopyWith(MessagingActivationState value, $Res Function(MessagingActivationState) _then) = _$MessagingActivationStateCopyWithImpl;
 @useResult
 $Res call({
- MessagingActivationDto? status, MessagingTermsDto? terms, String? errorMessage, String keyRegistrationStatus
+ String? userId, String? deviceId, String? status, bool consentAccepted, String? termsVersion, String? currentTermsVersion, bool requiresTermsAcceptance, String? termsText, bool hasLocalActivation, String? errorMessage, String keyRegistrationStatus
 });
 
 
-$MessagingActivationDtoCopyWith<$Res>? get status;$MessagingTermsDtoCopyWith<$Res>? get terms;
+
 
 }
 /// @nodoc
@@ -65,40 +65,23 @@ class _$MessagingActivationStateCopyWithImpl<$Res>
 
 /// Create a copy of MessagingActivationState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? status = freezed,Object? terms = freezed,Object? errorMessage = freezed,Object? keyRegistrationStatus = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? userId = freezed,Object? deviceId = freezed,Object? status = freezed,Object? consentAccepted = null,Object? termsVersion = freezed,Object? currentTermsVersion = freezed,Object? requiresTermsAcceptance = null,Object? termsText = freezed,Object? hasLocalActivation = null,Object? errorMessage = freezed,Object? keyRegistrationStatus = null,}) {
   return _then(_self.copyWith(
-status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as MessagingActivationDto?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
-as MessagingTermsDto?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String?,deviceId: freezed == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
+as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,consentAccepted: null == consentAccepted ? _self.consentAccepted : consentAccepted // ignore: cast_nullable_to_non_nullable
+as bool,termsVersion: freezed == termsVersion ? _self.termsVersion : termsVersion // ignore: cast_nullable_to_non_nullable
+as String?,currentTermsVersion: freezed == currentTermsVersion ? _self.currentTermsVersion : currentTermsVersion // ignore: cast_nullable_to_non_nullable
+as String?,requiresTermsAcceptance: null == requiresTermsAcceptance ? _self.requiresTermsAcceptance : requiresTermsAcceptance // ignore: cast_nullable_to_non_nullable
+as bool,termsText: freezed == termsText ? _self.termsText : termsText // ignore: cast_nullable_to_non_nullable
+as String?,hasLocalActivation: null == hasLocalActivation ? _self.hasLocalActivation : hasLocalActivation // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,keyRegistrationStatus: null == keyRegistrationStatus ? _self.keyRegistrationStatus : keyRegistrationStatus // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
-/// Create a copy of MessagingActivationState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MessagingActivationDtoCopyWith<$Res>? get status {
-    if (_self.status == null) {
-    return null;
-  }
 
-  return $MessagingActivationDtoCopyWith<$Res>(_self.status!, (value) {
-    return _then(_self.copyWith(status: value));
-  });
-}/// Create a copy of MessagingActivationState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MessagingTermsDtoCopyWith<$Res>? get terms {
-    if (_self.terms == null) {
-    return null;
-  }
-
-  return $MessagingTermsDtoCopyWith<$Res>(_self.terms!, (value) {
-    return _then(_self.copyWith(terms: value));
-  });
-}
 }
 
 
@@ -180,10 +163,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( MessagingActivationDto? status,  MessagingTermsDto? terms,  String? errorMessage,  String keyRegistrationStatus)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String? userId,  String? deviceId,  String? status,  bool consentAccepted,  String? termsVersion,  String? currentTermsVersion,  bool requiresTermsAcceptance,  String? termsText,  bool hasLocalActivation,  String? errorMessage,  String keyRegistrationStatus)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _MessagingActivationState() when $default != null:
-return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistrationStatus);case _:
+return $default(_that.userId,_that.deviceId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.termsText,_that.hasLocalActivation,_that.errorMessage,_that.keyRegistrationStatus);case _:
   return orElse();
 
 }
@@ -201,10 +184,10 @@ return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistratio
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( MessagingActivationDto? status,  MessagingTermsDto? terms,  String? errorMessage,  String keyRegistrationStatus)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String? userId,  String? deviceId,  String? status,  bool consentAccepted,  String? termsVersion,  String? currentTermsVersion,  bool requiresTermsAcceptance,  String? termsText,  bool hasLocalActivation,  String? errorMessage,  String keyRegistrationStatus)  $default,) {final _that = this;
 switch (_that) {
 case _MessagingActivationState():
-return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistrationStatus);case _:
+return $default(_that.userId,_that.deviceId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.termsText,_that.hasLocalActivation,_that.errorMessage,_that.keyRegistrationStatus);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -221,10 +204,10 @@ return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistratio
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( MessagingActivationDto? status,  MessagingTermsDto? terms,  String? errorMessage,  String keyRegistrationStatus)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String? userId,  String? deviceId,  String? status,  bool consentAccepted,  String? termsVersion,  String? currentTermsVersion,  bool requiresTermsAcceptance,  String? termsText,  bool hasLocalActivation,  String? errorMessage,  String keyRegistrationStatus)?  $default,) {final _that = this;
 switch (_that) {
 case _MessagingActivationState() when $default != null:
-return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistrationStatus);case _:
+return $default(_that.userId,_that.deviceId,_that.status,_that.consentAccepted,_that.termsVersion,_that.currentTermsVersion,_that.requiresTermsAcceptance,_that.termsText,_that.hasLocalActivation,_that.errorMessage,_that.keyRegistrationStatus);case _:
   return null;
 
 }
@@ -236,11 +219,18 @@ return $default(_that.status,_that.terms,_that.errorMessage,_that.keyRegistratio
 @JsonSerializable()
 
 class _MessagingActivationState extends MessagingActivationState {
-  const _MessagingActivationState({this.status, this.terms, this.errorMessage, this.keyRegistrationStatus = 'not_started'}): super._();
+  const _MessagingActivationState({this.userId, this.deviceId, this.status, this.consentAccepted = false, this.termsVersion, this.currentTermsVersion, this.requiresTermsAcceptance = false, this.termsText, this.hasLocalActivation = false, this.errorMessage, this.keyRegistrationStatus = 'not_started'}): super._();
   factory _MessagingActivationState.fromJson(Map<String, dynamic> json) => _$MessagingActivationStateFromJson(json);
 
-@override final  MessagingActivationDto? status;
-@override final  MessagingTermsDto? terms;
+@override final  String? userId;
+@override final  String? deviceId;
+@override final  String? status;
+@override@JsonKey() final  bool consentAccepted;
+@override final  String? termsVersion;
+@override final  String? currentTermsVersion;
+@override@JsonKey() final  bool requiresTermsAcceptance;
+@override final  String? termsText;
+@override@JsonKey() final  bool hasLocalActivation;
 @override final  String? errorMessage;
 @override@JsonKey() final  String keyRegistrationStatus;
 
@@ -257,16 +247,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationState&&(identical(other.status, status) || other.status == status)&&(identical(other.terms, terms) || other.terms == terms)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationState&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.termsText, termsText) || other.termsText == termsText)&&(identical(other.hasLocalActivation, hasLocalActivation) || other.hasLocalActivation == hasLocalActivation)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,status,terms,errorMessage,keyRegistrationStatus);
+int get hashCode => Object.hash(runtimeType,userId,deviceId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,termsText,hasLocalActivation,errorMessage,keyRegistrationStatus);
 
 @override
 String toString() {
-  return 'MessagingActivationState(status: $status, terms: $terms, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
+  return 'MessagingActivationState(userId: $userId, deviceId: $deviceId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, termsText: $termsText, hasLocalActivation: $hasLocalActivation, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
 }
 
 
@@ -277,11 +267,11 @@ abstract mixin class _$MessagingActivationStateCopyWith<$Res> implements $Messag
   factory _$MessagingActivationStateCopyWith(_MessagingActivationState value, $Res Function(_MessagingActivationState) _then) = __$MessagingActivationStateCopyWithImpl;
 @override @useResult
 $Res call({
- MessagingActivationDto? status, MessagingTermsDto? terms, String? errorMessage, String keyRegistrationStatus
+ String? userId, String? deviceId, String? status, bool consentAccepted, String? termsVersion, String? currentTermsVersion, bool requiresTermsAcceptance, String? termsText, bool hasLocalActivation, String? errorMessage, String keyRegistrationStatus
 });
 
 
-@override $MessagingActivationDtoCopyWith<$Res>? get status;@override $MessagingTermsDtoCopyWith<$Res>? get terms;
+
 
 }
 /// @nodoc
@@ -294,41 +284,24 @@ class __$MessagingActivationStateCopyWithImpl<$Res>
 
 /// Create a copy of MessagingActivationState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? status = freezed,Object? terms = freezed,Object? errorMessage = freezed,Object? keyRegistrationStatus = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? userId = freezed,Object? deviceId = freezed,Object? status = freezed,Object? consentAccepted = null,Object? termsVersion = freezed,Object? currentTermsVersion = freezed,Object? requiresTermsAcceptance = null,Object? termsText = freezed,Object? hasLocalActivation = null,Object? errorMessage = freezed,Object? keyRegistrationStatus = null,}) {
   return _then(_MessagingActivationState(
-status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as MessagingActivationDto?,terms: freezed == terms ? _self.terms : terms // ignore: cast_nullable_to_non_nullable
-as MessagingTermsDto?,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
+userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
+as String?,deviceId: freezed == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
+as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String?,consentAccepted: null == consentAccepted ? _self.consentAccepted : consentAccepted // ignore: cast_nullable_to_non_nullable
+as bool,termsVersion: freezed == termsVersion ? _self.termsVersion : termsVersion // ignore: cast_nullable_to_non_nullable
+as String?,currentTermsVersion: freezed == currentTermsVersion ? _self.currentTermsVersion : currentTermsVersion // ignore: cast_nullable_to_non_nullable
+as String?,requiresTermsAcceptance: null == requiresTermsAcceptance ? _self.requiresTermsAcceptance : requiresTermsAcceptance // ignore: cast_nullable_to_non_nullable
+as bool,termsText: freezed == termsText ? _self.termsText : termsText // ignore: cast_nullable_to_non_nullable
+as String?,hasLocalActivation: null == hasLocalActivation ? _self.hasLocalActivation : hasLocalActivation // ignore: cast_nullable_to_non_nullable
+as bool,errorMessage: freezed == errorMessage ? _self.errorMessage : errorMessage // ignore: cast_nullable_to_non_nullable
 as String?,keyRegistrationStatus: null == keyRegistrationStatus ? _self.keyRegistrationStatus : keyRegistrationStatus // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }
 
-/// Create a copy of MessagingActivationState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MessagingActivationDtoCopyWith<$Res>? get status {
-    if (_self.status == null) {
-    return null;
-  }
 
-  return $MessagingActivationDtoCopyWith<$Res>(_self.status!, (value) {
-    return _then(_self.copyWith(status: value));
-  });
-}/// Create a copy of MessagingActivationState
-/// with the given fields replaced by the non-null parameter values.
-@override
-@pragma('vm:prefer-inline')
-$MessagingTermsDtoCopyWith<$Res>? get terms {
-    if (_self.terms == null) {
-    return null;
-  }
-
-  return $MessagingTermsDtoCopyWith<$Res>(_self.terms!, (value) {
-    return _then(_self.copyWith(terms: value));
-  });
-}
 }
 
 // dart format on

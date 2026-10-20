@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
-import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
 import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -26,22 +25,18 @@ class MessagingActivationRepository {
       return null;
     }
 
-    final hasMeaningfulStatus =
-        row.status != 'not_started' || row.consentAccepted || row.requiresTermsAcceptance;
+    final hasConfirmedActivation =
+        row.status == 'active' && row.consentAccepted == true;
 
     return MessagingActivationState(
-      status: hasMeaningfulStatus
-          ? MessagingActivationDto(
-              userId: row.userId,
-              status: row.status,
-              consentAccepted: row.consentAccepted,
-              termsVersion: row.termsVersion,
-              currentTermsVersion: row.currentTermsVersion,
-              requiresTermsAcceptance: row.requiresTermsAcceptance,
-              deviceId: row.deviceId,
-            )
-          : null,
-      terms: null,
+      userId: row.userId,
+      deviceId: row.deviceId,
+      status: hasConfirmedActivation ? row.status : null,
+      consentAccepted: hasConfirmedActivation,
+      termsVersion: hasConfirmedActivation ? row.termsVersion : null,
+      currentTermsVersion: hasConfirmedActivation ? row.currentTermsVersion : null,
+      requiresTermsAcceptance: row.requiresTermsAcceptance,
+      hasLocalActivation: hasConfirmedActivation,
       keyRegistrationStatus: row.keyRegistrationStatus,
       errorMessage: row.keyRegistrationStatus == 'failed' ? row.lastError : null,
     );
@@ -62,11 +57,11 @@ class MessagingActivationRepository {
     final row = MessagingActivationStateRow(
       userId: userId,
       deviceId: deviceId,
-      consentAccepted: state.status?.consentAccepted ?? false,
-      status: state.status?.status ?? 'not_started',
-      termsVersion: state.status?.termsVersion ?? '',
-      currentTermsVersion: state.status?.currentTermsVersion ?? '',
-      requiresTermsAcceptance: state.status?.requiresTermsAcceptance ?? false,
+      consentAccepted: state.consentAccepted,
+      status: state.status ?? 'not_started',
+      termsVersion: state.termsVersion ?? '',
+      currentTermsVersion: state.currentTermsVersion ?? '',
+      requiresTermsAcceptance: state.requiresTermsAcceptance,
       keyRegistrationStatus: state.keyRegistrationStatus,
       lastError: state.keyRegistrationStatus == 'failed' ? state.errorMessage : null,
       createdAt: existing?.createdAt ?? now,
