@@ -205,29 +205,53 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
   }
 
-  MessageEntity? _selectPreferredAttachmentRow(
+  static String attachmentPlaceholderRowId(String attachmentId) {
+    final normalized = attachmentId.trim();
+    return normalized.isEmpty ? 'attachment:' : 'attachment:$normalized';
+  }
+
+  static MessageEntity? selectPreferredAttachmentRow(
     Iterable<MessageEntity> rows, {
     String? messageId,
+    String? attachmentId,
   }) {
+    MessageEntity? selectedRow;
     MessageEntity? nonPlaceholderRow;
+    final normalizedMessageId = messageId?.trim();
+    final normalizedAttachmentId = attachmentId?.trim();
+
     for (final row in rows) {
-      if (messageId != null &&
-          messageId.trim().isNotEmpty &&
-          row.id == messageId.trim()) {
+      if (normalizedMessageId != null &&
+          normalizedMessageId.isNotEmpty &&
+          row.id == normalizedMessageId) {
         return row;
       }
       if (!row.id.startsWith('attachment:')) {
         nonPlaceholderRow ??= row;
       }
+      if (normalizedAttachmentId != null &&
+          normalizedAttachmentId.isNotEmpty &&
+          row.id == attachmentPlaceholderRowId(normalizedAttachmentId)) {
+        selectedRow = row;
+      }
     }
+
     if (nonPlaceholderRow != null) {
       return nonPlaceholderRow;
     }
-    for (final row in rows) {
-      return row;
+    if (selectedRow != null) {
+      return selectedRow;
     }
-    return null;
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows.first;
   }
+
+  MessageEntity? _selectPreferredAttachmentRow(
+    Iterable<MessageEntity> rows, {
+    String? messageId,
+  }) => selectPreferredAttachmentRow(rows, messageId: messageId);
 
   Future<MessageEntity?> _findMessageRowWithAttachmentMetadata(
     String attachmentId,
@@ -465,7 +489,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).get();
     final byAttachment = byAttachmentRows.isEmpty
         ? null
-        : _selectPreferredAttachmentRow(byAttachmentRows, messageId: messageId);
+        : selectPreferredAttachmentRow(
+            byAttachmentRows,
+            messageId: messageId,
+            attachmentId: normalizedAttachmentId,
+          );
 
     Map<String, dynamic>? persistedMetadata;
     for (final row in byAttachmentRows) {
