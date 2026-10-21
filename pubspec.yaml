@@ -70,16 +70,14 @@ dependencies:
 
   flutter_launcher_icons: "^0.14.4"
   url_launcher: ^6.3.2
-  drift: ^2.30.0
-  drift_flutter: ^0.2.8
+  drift: ^2.35.2
+  drift_flutter: ^0.3.0
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.9.0
+  json_annotation: ^4.12.0
 
   flutter_root_jailbreak_checker: ^2.1.5
   flutter_native_splash: ^2.4.7
   crypto: ^3.0.7
-  drift_sqflite: ^2.0.1
-  sqflite_sqlcipher: ^3.4.0
   path: ^1.9.1
   vibration: ^3.1.3
   riverpod_annotation: ^4.0.0
@@ -96,19 +94,18 @@ dev_dependencies:
     sdk: flutter
 
   build_runner: ^2.15.1
-  drift_dev: ^2.30.0
+  drift_dev: ^2.35.1
   mocktail: ^1.0.4
-  freezed: ^3.2.3
+  freezed: ^4.0.2
   json_serializable: ^6.11.2
   flutter_gen_runner: ^5.13.0+1
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
   riverpod_generator: ^4.0.0+1
+
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

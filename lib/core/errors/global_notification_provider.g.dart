@@ -48,7 +48,7 @@ abstract class _$GlobalNotification extends $Notifier<List<AppNotification>> {
   List<AppNotification> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<List<AppNotification>, List<AppNotification>>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$GlobalNotification extends $Notifier<List<AppNotification>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

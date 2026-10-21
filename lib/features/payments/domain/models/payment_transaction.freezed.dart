@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'payment_transaction.dart';
@@ -9,6 +9,7 @@ part of 'payment_transaction.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PaymentTransactionCopyWith<PaymentTransaction> get copyWith => _$PaymentTransac
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentTransaction&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.date, date) || other.date == date)&&(identical(other.type, type) || other.type == type)&&(identical(other.category, category) || other.category == category));
+  final _this = this as PaymentTransaction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentTransaction&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.amount, _this.amount) || other.amount == _this.amount)&&(identical(other.date, _this.date) || other.date == _this.date)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.category, _this.category) || other.category == _this.category));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,amount,date,type,category);
+int get hashCode {
+  final _this = this as PaymentTransaction;
+  return Object.hash(runtimeType,_this.id,_this.title,_this.amount,_this.date,_this.type,_this.category);
+}
 
 @override
 String toString() {
-  return 'PaymentTransaction(id: $id, title: $title, amount: $amount, date: $date, type: $type, category: $category)';
+  final _this = this as PaymentTransaction;
+  return 'PaymentTransaction(id: ${_this.id}, title: ${_this.title}, amount: ${_this.amount}, date: ${_this.date}, type: ${_this.type}, category: ${_this.category})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PaymentTransactionCopyWithImpl<$Res>
 /// Create a copy of PaymentTransaction
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? amount = null,Object? date = null,Object? type = null,Object? category = null,}) {
-  return _then(_self.copyWith(
+  return _then(PaymentTransaction(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,amount: null == amount ? _self.amount : amount // ignore: cast_nullable_to_non_nullable
@@ -225,16 +231,18 @@ _$PaymentTransactionCopyWith<_PaymentTransaction> get copyWith => __$PaymentTran
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaymentTransaction&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.date, date) || other.date == date)&&(identical(other.type, type) || other.type == type)&&(identical(other.category, category) || other.category == category));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaymentTransaction&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.amount, amount) || other.amount == amount)&&(identical(other.date, date) || other.date == date)&&(identical(other.type, type) || other.type == type)&&(identical(other.category, category) || other.category == category));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,amount,date,type,category);
+int get hashCode {
+    return Object.hash(runtimeType,id,title,amount,date,type,category);
+}
 
 @override
 String toString() {
-  return 'PaymentTransaction(id: $id, title: $title, amount: $amount, date: $date, type: $type, category: $category)';
+    return 'PaymentTransaction(id: $id, title: $title, amount: $amount, date: $date, type: $type, category: $category)';
 }
 
 

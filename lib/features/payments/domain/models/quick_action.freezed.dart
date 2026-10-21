@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'quick_action.dart';
@@ -9,6 +9,7 @@ part of 'quick_action.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $QuickActionCopyWith<QuickAction> get copyWith => _$QuickActionCopyWithImpl<Quic
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAction&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.type, type) || other.type == type)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.colorKey, colorKey) || other.colorKey == colorKey));
+  final _this = this as QuickAction;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAction&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.label, _this.label) || other.label == _this.label)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.icon, _this.icon) || other.icon == _this.icon)&&(identical(other.colorKey, _this.colorKey) || other.colorKey == _this.colorKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,label,type,icon,colorKey);
+int get hashCode {
+  final _this = this as QuickAction;
+  return Object.hash(runtimeType,_this.id,_this.label,_this.type,_this.icon,_this.colorKey);
+}
 
 @override
 String toString() {
-  return 'QuickAction(id: $id, label: $label, type: $type, icon: $icon, colorKey: $colorKey)';
+  final _this = this as QuickAction;
+  return 'QuickAction(id: ${_this.id}, label: ${_this.label}, type: ${_this.type}, icon: ${_this.icon}, colorKey: ${_this.colorKey})';
 }
 
 
@@ -63,7 +69,7 @@ class _$QuickActionCopyWithImpl<$Res>
 /// Create a copy of QuickAction
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? label = null,Object? type = null,Object? icon = null,Object? colorKey = null,}) {
-  return _then(_self.copyWith(
+  return _then(QuickAction(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,label: null == label ? _self.label : label // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
@@ -223,16 +229,18 @@ _$QuickActionCopyWith<_QuickAction> get copyWith => __$QuickActionCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAction&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.type, type) || other.type == type)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.colorKey, colorKey) || other.colorKey == colorKey));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAction&&(identical(other.id, id) || other.id == id)&&(identical(other.label, label) || other.label == label)&&(identical(other.type, type) || other.type == type)&&(identical(other.icon, icon) || other.icon == icon)&&(identical(other.colorKey, colorKey) || other.colorKey == colorKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,label,type,icon,colorKey);
+int get hashCode {
+    return Object.hash(runtimeType,id,label,type,icon,colorKey);
+}
 
 @override
 String toString() {
-  return 'QuickAction(id: $id, label: $label, type: $type, icon: $icon, colorKey: $colorKey)';
+    return 'QuickAction(id: $id, label: $label, type: $type, icon: $icon, colorKey: $colorKey)';
 }
 
 

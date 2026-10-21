@@ -41,13 +41,13 @@ final class AppInitNotifierProvider
   }
 }
 
-String _$appInitNotifierHash() => r'998c37f6cc7d881703bface781b747af785f11e7';
+String _$appInitNotifierHash() => r'3aa9549c78e32b556c1cfb9eb69d4624ee58391b';
 
 abstract class _$AppInitNotifier extends $Notifier<AppInitStatus> {
   AppInitStatus build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AppInitStatus, AppInitStatus>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$AppInitNotifier extends $Notifier<AppInitStatus> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

@@ -39,7 +39,7 @@ abstract class _$Conversations extends $AsyncNotifier<List<Conversation>> {
   FutureOr<List<Conversation>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<Conversation>>, List<Conversation>>;
     final element =
@@ -50,6 +50,6 @@ abstract class _$Conversations extends $AsyncNotifier<List<Conversation>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

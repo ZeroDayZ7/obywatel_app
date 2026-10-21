@@ -10,7 +10,6 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_webrtc
   local_auth_windows
   secure_application
-  sqlite3_flutter_libs
   url_launcher_windows
 )
 

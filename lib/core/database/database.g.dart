@@ -7989,7 +7989,16 @@ class $$CryptoKeysTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CryptoKeysTable, CryptoKey>(table),
+                  BaseReferences<_$AppDatabase, $CryptoKeysTable, CryptoKey>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8253,7 +8262,16 @@ class $$NotificationsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$NotificationsTable, DbNotification>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $NotificationsTable,
+                    DbNotification
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8712,7 +8730,16 @@ class $$UserDocumentsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$UserDocumentsTable, DbUserDocument>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $UserDocumentsTable,
+                    DbUserDocument
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9070,7 +9097,16 @@ class $$ContactsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ContactsTable, ContactEntity>(table),
+                  BaseReferences<_$AppDatabase, $ContactsTable, ContactEntity>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9314,7 +9350,16 @@ class $$ConversationsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ConversationsTable, ConversationEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ConversationsTable,
+                    ConversationEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9587,7 +9632,19 @@ class $$ConversationMembersTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ConversationMembersTable,
+                    ConversationMemberEntity
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ConversationMembersTable,
+                    ConversationMemberEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9991,7 +10048,16 @@ class $$MessagesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$MessagesTable, MessageEntity>(table),
+                  BaseReferences<_$AppDatabase, $MessagesTable, MessageEntity>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10330,7 +10396,19 @@ class $$MessagingActivationStatesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $MessagingActivationStatesTable,
+                    MessagingActivationStateRow
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $MessagingActivationStatesTable,
+                    MessagingActivationStateRow
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10702,7 +10780,16 @@ class $$OutboxEventsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$OutboxEventsTable, OutboxEventEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $OutboxEventsTable,
+                    OutboxEventEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10887,7 +10974,16 @@ class $$SyncStateTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SyncStateTable, SyncStateEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SyncStateTable,
+                    SyncStateEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11084,7 +11180,19 @@ class $$SignalLocalIdentityTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $SignalLocalIdentityTable,
+                    SignalLocalIdentityData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalLocalIdentityTable,
+                    SignalLocalIdentityData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11280,7 +11388,18 @@ class $$SignalIdentityKeysTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalIdentityKeysTable, SignalIdentityKey>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalIdentityKeysTable,
+                    SignalIdentityKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11440,7 +11559,16 @@ class $$SignalPreKeysTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalPreKeysTable, SignalPreKey>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalPreKeysTable,
+                    SignalPreKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11608,7 +11736,18 @@ class $$SignalSignedPreKeysTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalSignedPreKeysTable, SignalSignedPreKey>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalSignedPreKeysTable,
+                    SignalSignedPreKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11795,7 +11934,16 @@ class $$SignalSessionsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalSessionsTable, SignalSession>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalSessionsTable,
+                    SignalSession
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),

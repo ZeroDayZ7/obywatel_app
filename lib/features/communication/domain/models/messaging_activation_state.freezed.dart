@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'messaging_activation_state.dart';
@@ -9,6 +9,7 @@ part of 'messaging_activation_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MessagingActivationStateCopyWith<MessagingActivationState> get copyWith => _$Me
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationState&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.termsText, termsText) || other.termsText == termsText)&&(identical(other.hasLocalActivation, hasLocalActivation) || other.hasLocalActivation == hasLocalActivation)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
+  final _this = this as MessagingActivationState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationState&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.deviceId, _this.deviceId) || other.deviceId == _this.deviceId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.consentAccepted, _this.consentAccepted) || other.consentAccepted == _this.consentAccepted)&&(identical(other.termsVersion, _this.termsVersion) || other.termsVersion == _this.termsVersion)&&(identical(other.currentTermsVersion, _this.currentTermsVersion) || other.currentTermsVersion == _this.currentTermsVersion)&&(identical(other.requiresTermsAcceptance, _this.requiresTermsAcceptance) || other.requiresTermsAcceptance == _this.requiresTermsAcceptance)&&(identical(other.termsText, _this.termsText) || other.termsText == _this.termsText)&&(identical(other.hasLocalActivation, _this.hasLocalActivation) || other.hasLocalActivation == _this.hasLocalActivation)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.keyRegistrationStatus, _this.keyRegistrationStatus) || other.keyRegistrationStatus == _this.keyRegistrationStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,deviceId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,termsText,hasLocalActivation,errorMessage,keyRegistrationStatus);
+int get hashCode {
+  final _this = this as MessagingActivationState;
+  return Object.hash(runtimeType,_this.userId,_this.deviceId,_this.status,_this.consentAccepted,_this.termsVersion,_this.currentTermsVersion,_this.requiresTermsAcceptance,_this.termsText,_this.hasLocalActivation,_this.errorMessage,_this.keyRegistrationStatus);
+}
 
 @override
 String toString() {
-  return 'MessagingActivationState(userId: $userId, deviceId: $deviceId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, termsText: $termsText, hasLocalActivation: $hasLocalActivation, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
+  final _this = this as MessagingActivationState;
+  return 'MessagingActivationState(userId: ${_this.userId}, deviceId: ${_this.deviceId}, status: ${_this.status}, consentAccepted: ${_this.consentAccepted}, termsVersion: ${_this.termsVersion}, currentTermsVersion: ${_this.currentTermsVersion}, requiresTermsAcceptance: ${_this.requiresTermsAcceptance}, termsText: ${_this.termsText}, hasLocalActivation: ${_this.hasLocalActivation}, errorMessage: ${_this.errorMessage}, keyRegistrationStatus: ${_this.keyRegistrationStatus})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MessagingActivationStateCopyWithImpl<$Res>
 /// Create a copy of MessagingActivationState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? userId = freezed,Object? deviceId = freezed,Object? status = freezed,Object? consentAccepted = null,Object? termsVersion = freezed,Object? currentTermsVersion = freezed,Object? requiresTermsAcceptance = null,Object? termsText = freezed,Object? hasLocalActivation = null,Object? errorMessage = freezed,Object? keyRegistrationStatus = null,}) {
-  return _then(_self.copyWith(
+  return _then(MessagingActivationState(
 userId: freezed == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String?,deviceId: freezed == deviceId ? _self.deviceId : deviceId // ignore: cast_nullable_to_non_nullable
 as String?,status: freezed == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -247,16 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationState&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.termsText, termsText) || other.termsText == termsText)&&(identical(other.hasLocalActivation, hasLocalActivation) || other.hasLocalActivation == hasLocalActivation)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationState&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.termsText, termsText) || other.termsText == termsText)&&(identical(other.hasLocalActivation, hasLocalActivation) || other.hasLocalActivation == hasLocalActivation)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.keyRegistrationStatus, keyRegistrationStatus) || other.keyRegistrationStatus == keyRegistrationStatus));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,deviceId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,termsText,hasLocalActivation,errorMessage,keyRegistrationStatus);
+int get hashCode {
+    return Object.hash(runtimeType,userId,deviceId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,termsText,hasLocalActivation,errorMessage,keyRegistrationStatus);
+}
 
 @override
 String toString() {
-  return 'MessagingActivationState(userId: $userId, deviceId: $deviceId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, termsText: $termsText, hasLocalActivation: $hasLocalActivation, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
+    return 'MessagingActivationState(userId: $userId, deviceId: $deviceId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, termsText: $termsText, hasLocalActivation: $hasLocalActivation, errorMessage: $errorMessage, keyRegistrationStatus: $keyRegistrationStatus)';
 }
 
 

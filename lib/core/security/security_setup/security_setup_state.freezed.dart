@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'security_setup_state.dart';
@@ -9,6 +9,7 @@ part of 'security_setup_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $SecuritySetupStateCopyWith<SecuritySetupState> get copyWith => _$SecuritySetupS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySetupState&&(identical(other.pinSet, pinSet) || other.pinSet == pinSet)&&(identical(other.biometricAvailable, biometricAvailable) || other.biometricAvailable == biometricAvailable)&&(identical(other.biometricSet, biometricSet) || other.biometricSet == biometricSet)&&(identical(other.trustDevice, trustDevice) || other.trustDevice == trustDevice));
+  final _this = this as SecuritySetupState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySetupState&&(identical(other.pinSet, _this.pinSet) || other.pinSet == _this.pinSet)&&(identical(other.biometricAvailable, _this.biometricAvailable) || other.biometricAvailable == _this.biometricAvailable)&&(identical(other.biometricSet, _this.biometricSet) || other.biometricSet == _this.biometricSet)&&(identical(other.trustDevice, _this.trustDevice) || other.trustDevice == _this.trustDevice));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pinSet,biometricAvailable,biometricSet,trustDevice);
+int get hashCode {
+  final _this = this as SecuritySetupState;
+  return Object.hash(runtimeType,_this.pinSet,_this.biometricAvailable,_this.biometricSet,_this.trustDevice);
+}
 
 @override
 String toString() {
-  return 'SecuritySetupState(pinSet: $pinSet, biometricAvailable: $biometricAvailable, biometricSet: $biometricSet, trustDevice: $trustDevice)';
+  final _this = this as SecuritySetupState;
+  return 'SecuritySetupState(pinSet: ${_this.pinSet}, biometricAvailable: ${_this.biometricAvailable}, biometricSet: ${_this.biometricSet}, trustDevice: ${_this.trustDevice})';
 }
 
 
@@ -63,7 +69,7 @@ class _$SecuritySetupStateCopyWithImpl<$Res>
 /// Create a copy of SecuritySetupState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? pinSet = null,Object? biometricAvailable = null,Object? biometricSet = null,Object? trustDevice = null,}) {
-  return _then(_self.copyWith(
+  return _then(SecuritySetupState(
 pinSet: null == pinSet ? _self.pinSet : pinSet // ignore: cast_nullable_to_non_nullable
 as bool,biometricAvailable: null == biometricAvailable ? _self.biometricAvailable : biometricAvailable // ignore: cast_nullable_to_non_nullable
 as bool,biometricSet: null == biometricSet ? _self.biometricSet : biometricSet // ignore: cast_nullable_to_non_nullable
@@ -221,16 +227,18 @@ _$SecuritySetupStateCopyWith<_SecuritySetupState> get copyWith => __$SecuritySet
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecuritySetupState&&(identical(other.pinSet, pinSet) || other.pinSet == pinSet)&&(identical(other.biometricAvailable, biometricAvailable) || other.biometricAvailable == biometricAvailable)&&(identical(other.biometricSet, biometricSet) || other.biometricSet == biometricSet)&&(identical(other.trustDevice, trustDevice) || other.trustDevice == trustDevice));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecuritySetupState&&(identical(other.pinSet, pinSet) || other.pinSet == pinSet)&&(identical(other.biometricAvailable, biometricAvailable) || other.biometricAvailable == biometricAvailable)&&(identical(other.biometricSet, biometricSet) || other.biometricSet == biometricSet)&&(identical(other.trustDevice, trustDevice) || other.trustDevice == trustDevice));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,pinSet,biometricAvailable,biometricSet,trustDevice);
+int get hashCode {
+    return Object.hash(runtimeType,pinSet,biometricAvailable,biometricSet,trustDevice);
+}
 
 @override
 String toString() {
-  return 'SecuritySetupState(pinSet: $pinSet, biometricAvailable: $biometricAvailable, biometricSet: $biometricSet, trustDevice: $trustDevice)';
+    return 'SecuritySetupState(pinSet: $pinSet, biometricAvailable: $biometricAvailable, biometricSet: $biometricSet, trustDevice: $trustDevice)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'auth_state.dart';
@@ -9,6 +9,7 @@ part of 'auth_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$AuthState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthState);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthState()';
+    return 'AuthState()';
 }
 
 
@@ -215,7 +216,7 @@ class _Initial extends AuthState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Initial);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Initial);
 }
 
 
@@ -224,7 +225,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthState.initial()';
+    return 'AuthState.initial()';
 }
 
 
@@ -247,7 +248,7 @@ class _Locked extends AuthState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Locked);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Locked);
 }
 
 
@@ -256,7 +257,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthState.locked()';
+    return 'AuthState.locked()';
 }
 
 
@@ -279,7 +280,7 @@ class _Unauthenticated extends AuthState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthenticated);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthenticated);
 }
 
 
@@ -288,7 +289,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthState.unauthenticated()';
+    return 'AuthState.unauthenticated()';
 }
 
 
@@ -311,7 +312,7 @@ class _Authenticating extends AuthState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticating);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticating);
 }
 
 
@@ -320,7 +321,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthState.authenticating()';
+    return 'AuthState.authenticating()';
 }
 
 
@@ -349,16 +350,18 @@ _$TwoFaRequiredCopyWith<_TwoFaRequired> get copyWith => __$TwoFaRequiredCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TwoFaRequired&&(identical(other.email, email) || other.email == email)&&(identical(other.tempToken, tempToken) || other.tempToken == tempToken));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TwoFaRequired&&(identical(other.email, email) || other.email == email)&&(identical(other.tempToken, tempToken) || other.tempToken == tempToken));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,email,tempToken);
+int get hashCode {
+    return Object.hash(runtimeType,email,tempToken);
+}
 
 @override
 String toString() {
-  return 'AuthState.twoFaRequired(email: $email, tempToken: $tempToken)';
+    return 'AuthState.twoFaRequired(email: $email, tempToken: $tempToken)';
 }
 
 
@@ -417,16 +420,18 @@ _$PartiallyAuthenticatedCopyWith<_PartiallyAuthenticated> get copyWith => __$Par
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PartiallyAuthenticated&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,setupToken,challenge);
+int get hashCode {
+    return Object.hash(runtimeType,setupToken,challenge);
+}
 
 @override
 String toString() {
-  return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge)';
+    return 'AuthState.partiallyAuthenticated(setupToken: $setupToken, challenge: $challenge)';
 }
 
 
@@ -485,16 +490,18 @@ _$AuthenticatedCopyWith<_Authenticated> get copyWith => __$AuthenticatedCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticated&&(identical(other.user, user) || other.user == user)&&(identical(other.isDeviceTrusted, isDeviceTrusted) || other.isDeviceTrusted == isDeviceTrusted));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Authenticated&&(identical(other.user, user) || other.user == user)&&(identical(other.isDeviceTrusted, isDeviceTrusted) || other.isDeviceTrusted == isDeviceTrusted));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,user,isDeviceTrusted);
+int get hashCode {
+    return Object.hash(runtimeType,user,isDeviceTrusted);
+}
 
 @override
 String toString() {
-  return 'AuthState.authenticated(user: $user, isDeviceTrusted: $isDeviceTrusted)';
+    return 'AuthState.authenticated(user: $user, isDeviceTrusted: $isDeviceTrusted)';
 }
 
 

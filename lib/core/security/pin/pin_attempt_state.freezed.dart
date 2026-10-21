@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'pin_attempt_state.dart';
@@ -9,6 +9,7 @@ part of 'pin_attempt_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PinAttemptStateCopyWith<PinAttemptState> get copyWith => _$PinAttemptStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PinAttemptState&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.lockUntil, lockUntil) || other.lockUntil == lockUntil));
+  final _this = this as PinAttemptState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PinAttemptState&&(identical(other.attempts, _this.attempts) || other.attempts == _this.attempts)&&(identical(other.lockUntil, _this.lockUntil) || other.lockUntil == _this.lockUntil));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,attempts,lockUntil);
+int get hashCode {
+  final _this = this as PinAttemptState;
+  return Object.hash(runtimeType,_this.attempts,_this.lockUntil);
+}
 
 @override
 String toString() {
-  return 'PinAttemptState(attempts: $attempts, lockUntil: $lockUntil)';
+  final _this = this as PinAttemptState;
+  return 'PinAttemptState(attempts: ${_this.attempts}, lockUntil: ${_this.lockUntil})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PinAttemptStateCopyWithImpl<$Res>
 /// Create a copy of PinAttemptState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? attempts = null,Object? lockUntil = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(PinAttemptState(
 attempts: null == attempts ? _self.attempts : attempts // ignore: cast_nullable_to_non_nullable
 as int,lockUntil: freezed == lockUntil ? _self.lockUntil : lockUntil // ignore: cast_nullable_to_non_nullable
 as DateTime?,
@@ -217,16 +223,18 @@ _$PinAttemptStateCopyWith<_PinAttemptState> get copyWith => __$PinAttemptStateCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PinAttemptState&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.lockUntil, lockUntil) || other.lockUntil == lockUntil));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PinAttemptState&&(identical(other.attempts, attempts) || other.attempts == attempts)&&(identical(other.lockUntil, lockUntil) || other.lockUntil == lockUntil));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,attempts,lockUntil);
+int get hashCode {
+    return Object.hash(runtimeType,attempts,lockUntil);
+}
 
 @override
 String toString() {
-  return 'PinAttemptState(attempts: $attempts, lockUntil: $lockUntil)';
+    return 'PinAttemptState(attempts: $attempts, lockUntil: $lockUntil)';
 }
 
 

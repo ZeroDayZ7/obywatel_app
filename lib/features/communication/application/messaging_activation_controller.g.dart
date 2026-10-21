@@ -46,7 +46,7 @@ abstract class _$MessagingActivationController
   FutureOr<MessagingActivationState> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref
             as $Ref<
@@ -64,6 +64,6 @@ abstract class _$MessagingActivationController
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

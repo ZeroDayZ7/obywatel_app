@@ -92,7 +92,7 @@ abstract class _$MessageInput extends $Notifier<MessageInputState> {
   MessageInputState build(String conversationId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<MessageInputState, MessageInputState>;
     final element =
         ref.element
@@ -102,6 +102,6 @@ abstract class _$MessageInput extends $Notifier<MessageInputState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

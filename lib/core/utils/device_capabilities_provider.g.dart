@@ -48,7 +48,7 @@ abstract class _$DeviceCapabilities extends $Notifier<DeviceCapabilitiesState> {
   DeviceCapabilitiesState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<DeviceCapabilitiesState, DeviceCapabilitiesState>;
     final element =
@@ -59,6 +59,6 @@ abstract class _$DeviceCapabilities extends $Notifier<DeviceCapabilitiesState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

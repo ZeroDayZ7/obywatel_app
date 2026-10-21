@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'conversation.dart';
@@ -9,6 +9,7 @@ part of 'conversation.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $ConversationMemberCopyWith<ConversationMember> get copyWith => _$ConversationMe
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConversationMember&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.role, role) || other.role == role)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence));
+  final _this = this as ConversationMember;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ConversationMember&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.conversationId, _this.conversationId) || other.conversationId == _this.conversationId)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.role, _this.role) || other.role == _this.role)&&(identical(other.lastReadSequence, _this.lastReadSequence) || other.lastReadSequence == _this.lastReadSequence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,userId,role,lastReadSequence);
+int get hashCode {
+  final _this = this as ConversationMember;
+  return Object.hash(runtimeType,_this.id,_this.conversationId,_this.userId,_this.role,_this.lastReadSequence);
+}
 
 @override
 String toString() {
-  return 'ConversationMember(id: $id, conversationId: $conversationId, userId: $userId, role: $role, lastReadSequence: $lastReadSequence)';
+  final _this = this as ConversationMember;
+  return 'ConversationMember(id: ${_this.id}, conversationId: ${_this.conversationId}, userId: ${_this.userId}, role: ${_this.role}, lastReadSequence: ${_this.lastReadSequence})';
 }
 
 
@@ -63,7 +69,7 @@ class _$ConversationMemberCopyWithImpl<$Res>
 /// Create a copy of ConversationMember
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? userId = null,Object? role = null,Object? lastReadSequence = null,}) {
-  return _then(_self.copyWith(
+  return _then(ConversationMember(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
@@ -229,16 +235,18 @@ _$ConversationMemberCopyWith<_ConversationMember> get copyWith => __$Conversatio
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConversationMember&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.role, role) || other.role == role)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConversationMember&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.role, role) || other.role == role)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,userId,role,lastReadSequence);
+int get hashCode {
+    return Object.hash(runtimeType,id,conversationId,userId,role,lastReadSequence);
+}
 
 @override
 String toString() {
-  return 'ConversationMember(id: $id, conversationId: $conversationId, userId: $userId, role: $role, lastReadSequence: $lastReadSequence)';
+    return 'ConversationMember(id: $id, conversationId: $conversationId, userId: $userId, role: $role, lastReadSequence: $lastReadSequence)';
 }
 
 
@@ -294,16 +302,21 @@ $ConversationCopyWith<Conversation> get copyWith => _$ConversationCopyWithImpl<C
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.lastSequence, lastSequence) || other.lastSequence == lastSequence)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other.members, members)&&const DeepCollectionEquality().equals(other.messages, messages)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as Conversation;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Conversation&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.lastSequence, _this.lastSequence) || other.lastSequence == _this.lastSequence)&&(identical(other.lastReadSequence, _this.lastReadSequence) || other.lastReadSequence == _this.lastReadSequence)&&(identical(other.unreadCount, _this.unreadCount) || other.unreadCount == _this.unreadCount)&&const DeepCollectionEquality().equals(other.members, _this.members)&&const DeepCollectionEquality().equals(other.messages, _this.messages)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,type,title,lastSequence,lastReadSequence,unreadCount,const DeepCollectionEquality().hash(members),const DeepCollectionEquality().hash(messages),updatedAt);
+int get hashCode {
+  final _this = this as Conversation;
+  return Object.hash(runtimeType,_this.id,_this.type,_this.title,_this.lastSequence,_this.lastReadSequence,_this.unreadCount,const DeepCollectionEquality().hash(_this.members),const DeepCollectionEquality().hash(_this.messages),_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'Conversation(id: $id, type: $type, title: $title, lastSequence: $lastSequence, lastReadSequence: $lastReadSequence, unreadCount: $unreadCount, members: $members, messages: $messages, updatedAt: $updatedAt)';
+  final _this = this as Conversation;
+  return 'Conversation(id: ${_this.id}, type: ${_this.type}, title: ${_this.title}, lastSequence: ${_this.lastSequence}, lastReadSequence: ${_this.lastReadSequence}, unreadCount: ${_this.unreadCount}, members: ${_this.members}, messages: ${_this.messages}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -332,7 +345,7 @@ class _$ConversationCopyWithImpl<$Res>
 /// Create a copy of Conversation
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? type = null,Object? title = freezed,Object? lastSequence = null,Object? lastReadSequence = null,Object? unreadCount = null,Object? members = null,Object? messages = freezed,Object? updatedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(Conversation(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,type: null == type ? _self.type : type // ignore: cast_nullable_to_non_nullable
 as String,title: freezed == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -483,7 +496,7 @@ return $default(_that.id,_that.type,_that.title,_that.lastSequence,_that.lastRea
 
 
 class _Conversation implements Conversation {
-  const _Conversation({required this.id, required this.type, this.title, this.lastSequence = 0, this.lastReadSequence = 0, this.unreadCount = 0, final  List<ConversationMember> members = const [], final  List<Message?>? messages, this.updatedAt}): _members = members,_messages = messages;
+  const _Conversation({required this.id, required this.type, this.title, this.lastSequence = 0, this.lastReadSequence = 0, this.unreadCount = 0,  List<ConversationMember> members = const [],  List<Message?>? messages, this.updatedAt}): _members = members,_messages = messages;
   
 
 @override final  String id;
@@ -520,16 +533,18 @@ _$ConversationCopyWith<_Conversation> get copyWith => __$ConversationCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.lastSequence, lastSequence) || other.lastSequence == lastSequence)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other._members, _members)&&const DeepCollectionEquality().equals(other._messages, _messages)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Conversation&&(identical(other.id, id) || other.id == id)&&(identical(other.type, type) || other.type == type)&&(identical(other.title, title) || other.title == title)&&(identical(other.lastSequence, lastSequence) || other.lastSequence == lastSequence)&&(identical(other.lastReadSequence, lastReadSequence) || other.lastReadSequence == lastReadSequence)&&(identical(other.unreadCount, unreadCount) || other.unreadCount == unreadCount)&&const DeepCollectionEquality().equals(other.members, _members)&&const DeepCollectionEquality().equals(other.messages, _messages)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,type,title,lastSequence,lastReadSequence,unreadCount,const DeepCollectionEquality().hash(_members),const DeepCollectionEquality().hash(_messages),updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,type,title,lastSequence,lastReadSequence,unreadCount,const DeepCollectionEquality().hash(_members),const DeepCollectionEquality().hash(_messages),updatedAt);
+}
 
 @override
 String toString() {
-  return 'Conversation(id: $id, type: $type, title: $title, lastSequence: $lastSequence, lastReadSequence: $lastReadSequence, unreadCount: $unreadCount, members: $members, messages: $messages, updatedAt: $updatedAt)';
+    return 'Conversation(id: $id, type: $type, title: $title, lastSequence: $lastSequence, lastReadSequence: $lastReadSequence, unreadCount: $unreadCount, members: $members, messages: $messages, updatedAt: $updatedAt)';
 }
 
 

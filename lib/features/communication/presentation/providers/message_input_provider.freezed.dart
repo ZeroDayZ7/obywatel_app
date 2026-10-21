@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'message_input_provider.dart';
@@ -9,6 +9,7 @@ part of 'message_input_provider.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PendingAttachmentCopyWith<PendingAttachment> get copyWith => _$PendingAttachmen
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingAttachment&&(identical(other.fileName, fileName) || other.fileName == fileName)&&const DeepCollectionEquality().equals(other.bytes, bytes)&&(identical(other.mimeType, mimeType) || other.mimeType == mimeType)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.isImage, isImage) || other.isImage == isImage));
+  final _this = this as PendingAttachment;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PendingAttachment&&(identical(other.fileName, _this.fileName) || other.fileName == _this.fileName)&&const DeepCollectionEquality().equals(other.bytes, _this.bytes)&&(identical(other.mimeType, _this.mimeType) || other.mimeType == _this.mimeType)&&(identical(other.filePath, _this.filePath) || other.filePath == _this.filePath)&&(identical(other.isImage, _this.isImage) || other.isImage == _this.isImage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fileName,const DeepCollectionEquality().hash(bytes),mimeType,filePath,isImage);
+int get hashCode {
+  final _this = this as PendingAttachment;
+  return Object.hash(runtimeType,_this.fileName,const DeepCollectionEquality().hash(_this.bytes),_this.mimeType,_this.filePath,_this.isImage);
+}
 
 @override
 String toString() {
-  return 'PendingAttachment(fileName: $fileName, bytes: $bytes, mimeType: $mimeType, filePath: $filePath, isImage: $isImage)';
+  final _this = this as PendingAttachment;
+  return 'PendingAttachment(fileName: ${_this.fileName}, bytes: ${_this.bytes}, mimeType: ${_this.mimeType}, filePath: ${_this.filePath}, isImage: ${_this.isImage})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PendingAttachmentCopyWithImpl<$Res>
 /// Create a copy of PendingAttachment
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? fileName = null,Object? bytes = null,Object? mimeType = null,Object? filePath = freezed,Object? isImage = null,}) {
-  return _then(_self.copyWith(
+  return _then(PendingAttachment(
 fileName: null == fileName ? _self.fileName : fileName // ignore: cast_nullable_to_non_nullable
 as String,bytes: null == bytes ? _self.bytes : bytes // ignore: cast_nullable_to_non_nullable
 as Uint8List,mimeType: null == mimeType ? _self.mimeType : mimeType // ignore: cast_nullable_to_non_nullable
@@ -229,16 +235,18 @@ _$PendingAttachmentCopyWith<_PendingAttachment> get copyWith => __$PendingAttach
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingAttachment&&(identical(other.fileName, fileName) || other.fileName == fileName)&&const DeepCollectionEquality().equals(other.bytes, bytes)&&(identical(other.mimeType, mimeType) || other.mimeType == mimeType)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.isImage, isImage) || other.isImage == isImage));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PendingAttachment&&(identical(other.fileName, fileName) || other.fileName == fileName)&&const DeepCollectionEquality().equals(other.bytes, bytes)&&(identical(other.mimeType, mimeType) || other.mimeType == mimeType)&&(identical(other.filePath, filePath) || other.filePath == filePath)&&(identical(other.isImage, isImage) || other.isImage == isImage));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,fileName,const DeepCollectionEquality().hash(bytes),mimeType,filePath,isImage);
+int get hashCode {
+    return Object.hash(runtimeType,fileName,const DeepCollectionEquality().hash(bytes),mimeType,filePath,isImage);
+}
 
 @override
 String toString() {
-  return 'PendingAttachment(fileName: $fileName, bytes: $bytes, mimeType: $mimeType, filePath: $filePath, isImage: $isImage)';
+    return 'PendingAttachment(fileName: $fileName, bytes: $bytes, mimeType: $mimeType, filePath: $filePath, isImage: $isImage)';
 }
 
 
@@ -294,16 +302,21 @@ $MessageInputStateCopyWith<MessageInputState> get copyWith => _$MessageInputStat
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.preparedAttachmentId, preparedAttachmentId) || other.preparedAttachmentId == preparedAttachmentId)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
+  final _this = this as MessageInputState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageInputState&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.attachment, _this.attachment) || other.attachment == _this.attachment)&&(identical(other.isSending, _this.isSending) || other.isSending == _this.isSending)&&(identical(other.errorMessage, _this.errorMessage) || other.errorMessage == _this.errorMessage)&&(identical(other.preparedAttachmentId, _this.preparedAttachmentId) || other.preparedAttachmentId == _this.preparedAttachmentId)&&(identical(other.uploadUrl, _this.uploadUrl) || other.uploadUrl == _this.uploadUrl)&&(identical(other.uploadedAttachmentId, _this.uploadedAttachmentId) || other.uploadedAttachmentId == _this.uploadedAttachmentId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,preparedAttachmentId,uploadUrl,uploadedAttachmentId);
+int get hashCode {
+  final _this = this as MessageInputState;
+  return Object.hash(runtimeType,_this.text,_this.attachment,_this.isSending,_this.errorMessage,_this.preparedAttachmentId,_this.uploadUrl,_this.uploadedAttachmentId);
+}
 
 @override
 String toString() {
-  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, preparedAttachmentId: $preparedAttachmentId, uploadUrl: $uploadUrl, uploadedAttachmentId: $uploadedAttachmentId)';
+  final _this = this as MessageInputState;
+  return 'MessageInputState(text: ${_this.text}, attachment: ${_this.attachment}, isSending: ${_this.isSending}, errorMessage: ${_this.errorMessage}, preparedAttachmentId: ${_this.preparedAttachmentId}, uploadUrl: ${_this.uploadUrl}, uploadedAttachmentId: ${_this.uploadedAttachmentId})';
 }
 
 
@@ -332,7 +345,7 @@ class _$MessageInputStateCopyWithImpl<$Res>
 /// Create a copy of MessageInputState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? attachment = freezed,Object? isSending = null,Object? errorMessage = freezed,Object? preparedAttachmentId = freezed,Object? uploadUrl = freezed,Object? uploadedAttachmentId = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(MessageInputState(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,attachment: freezed == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
 as PendingAttachment?,isSending: null == isSending ? _self.isSending : isSending // ignore: cast_nullable_to_non_nullable
@@ -514,16 +527,18 @@ _$MessageInputStateCopyWith<_MessageInputState> get copyWith => __$MessageInputS
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.preparedAttachmentId, preparedAttachmentId) || other.preparedAttachmentId == preparedAttachmentId)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageInputState&&(identical(other.text, text) || other.text == text)&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.isSending, isSending) || other.isSending == isSending)&&(identical(other.errorMessage, errorMessage) || other.errorMessage == errorMessage)&&(identical(other.preparedAttachmentId, preparedAttachmentId) || other.preparedAttachmentId == preparedAttachmentId)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.uploadedAttachmentId, uploadedAttachmentId) || other.uploadedAttachmentId == uploadedAttachmentId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachment,isSending,errorMessage,preparedAttachmentId,uploadUrl,uploadedAttachmentId);
+int get hashCode {
+    return Object.hash(runtimeType,text,attachment,isSending,errorMessage,preparedAttachmentId,uploadUrl,uploadedAttachmentId);
+}
 
 @override
 String toString() {
-  return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, preparedAttachmentId: $preparedAttachmentId, uploadUrl: $uploadUrl, uploadedAttachmentId: $uploadedAttachmentId)';
+    return 'MessageInputState(text: $text, attachment: $attachment, isSending: $isSending, errorMessage: $errorMessage, preparedAttachmentId: $preparedAttachmentId, uploadUrl: $uploadUrl, uploadedAttachmentId: $uploadedAttachmentId)';
 }
 
 

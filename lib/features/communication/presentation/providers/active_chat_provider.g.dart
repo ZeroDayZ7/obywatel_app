@@ -162,7 +162,7 @@ abstract class _$ActiveChat extends $StreamNotifier<List<Message>> {
   Stream<List<Message>> build(String conversationId);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<Message>>, List<Message>>;
     final element =
         ref.element
@@ -172,6 +172,6 @@ abstract class _$ActiveChat extends $StreamNotifier<List<Message>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

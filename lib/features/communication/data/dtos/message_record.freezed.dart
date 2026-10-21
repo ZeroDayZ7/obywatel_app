@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'message_record.dart';
@@ -9,6 +9,7 @@ part of 'message_record.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MessageRecordCopyWith<MessageRecord> get copyWith => _$MessageRecordCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageRecord&&(identical(other.id, id) || other.id == id)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.isDelivered, isDelivered) || other.isDelivered == isDelivered)&&(identical(other.version, version) || other.version == version));
+  final _this = this as MessageRecord;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageRecord&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.messageId, _this.messageId) || other.messageId == _this.messageId)&&(identical(other.conversationId, _this.conversationId) || other.conversationId == _this.conversationId)&&(identical(other.senderUserId, _this.senderUserId) || other.senderUserId == _this.senderUserId)&&(identical(other.senderDeviceId, _this.senderDeviceId) || other.senderDeviceId == _this.senderDeviceId)&&(identical(other.recipientUserId, _this.recipientUserId) || other.recipientUserId == _this.recipientUserId)&&(identical(other.recipientDeviceId, _this.recipientDeviceId) || other.recipientDeviceId == _this.recipientDeviceId)&&(identical(other.ciphertext, _this.ciphertext) || other.ciphertext == _this.ciphertext)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt)&&(identical(other.isDelivered, _this.isDelivered) || other.isDelivered == _this.isDelivered)&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,createdAt,expiresAt,isDelivered,version);
+int get hashCode {
+  final _this = this as MessageRecord;
+  return Object.hash(runtimeType,_this.id,_this.messageId,_this.conversationId,_this.senderUserId,_this.senderDeviceId,_this.recipientUserId,_this.recipientDeviceId,_this.ciphertext,_this.type,_this.createdAt,_this.expiresAt,_this.isDelivered,_this.version);
+}
 
 @override
 String toString() {
-  return 'MessageRecord(id: $id, messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, createdAt: $createdAt, expiresAt: $expiresAt, isDelivered: $isDelivered, version: $version)';
+  final _this = this as MessageRecord;
+  return 'MessageRecord(id: ${_this.id}, messageId: ${_this.messageId}, conversationId: ${_this.conversationId}, senderUserId: ${_this.senderUserId}, senderDeviceId: ${_this.senderDeviceId}, recipientUserId: ${_this.recipientUserId}, recipientDeviceId: ${_this.recipientDeviceId}, ciphertext: ${_this.ciphertext}, type: ${_this.type}, createdAt: ${_this.createdAt}, expiresAt: ${_this.expiresAt}, isDelivered: ${_this.isDelivered}, version: ${_this.version})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MessageRecordCopyWithImpl<$Res>
 /// Create a copy of MessageRecord
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = freezed,Object? messageId = freezed,Object? conversationId = freezed,Object? senderUserId = freezed,Object? senderDeviceId = freezed,Object? recipientUserId = freezed,Object? recipientDeviceId = freezed,Object? ciphertext = freezed,Object? type = freezed,Object? createdAt = freezed,Object? expiresAt = freezed,Object? isDelivered = null,Object? version = null,}) {
-  return _then(_self.copyWith(
+  return _then(MessageRecord(
 id: freezed == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String?,messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
 as String?,conversationId: freezed == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -251,16 +257,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageRecord&&(identical(other.id, id) || other.id == id)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.isDelivered, isDelivered) || other.isDelivered == isDelivered)&&(identical(other.version, version) || other.version == version));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageRecord&&(identical(other.id, id) || other.id == id)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.isDelivered, isDelivered) || other.isDelivered == isDelivered)&&(identical(other.version, version) || other.version == version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,createdAt,expiresAt,isDelivered,version);
+int get hashCode {
+    return Object.hash(runtimeType,id,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,createdAt,expiresAt,isDelivered,version);
+}
 
 @override
 String toString() {
-  return 'MessageRecord(id: $id, messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, createdAt: $createdAt, expiresAt: $expiresAt, isDelivered: $isDelivered, version: $version)';
+    return 'MessageRecord(id: $id, messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, createdAt: $createdAt, expiresAt: $expiresAt, isDelivered: $isDelivered, version: $version)';
 }
 
 

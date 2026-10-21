@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'version_models.dart';
@@ -9,6 +9,7 @@ part of 'version_models.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $VersionStateCopyWith<VersionState> get copyWith => _$VersionStateCopyWithImpl<V
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is VersionState&&(identical(other.minVersion, minVersion) || other.minVersion == minVersion)&&(identical(other.latestVersion, latestVersion) || other.latestVersion == latestVersion)&&(identical(other.forceUpdate, forceUpdate) || other.forceUpdate == forceUpdate));
+  final _this = this as VersionState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is VersionState&&(identical(other.minVersion, _this.minVersion) || other.minVersion == _this.minVersion)&&(identical(other.latestVersion, _this.latestVersion) || other.latestVersion == _this.latestVersion)&&(identical(other.forceUpdate, _this.forceUpdate) || other.forceUpdate == _this.forceUpdate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,minVersion,latestVersion,forceUpdate);
+int get hashCode {
+  final _this = this as VersionState;
+  return Object.hash(runtimeType,_this.minVersion,_this.latestVersion,_this.forceUpdate);
+}
 
 @override
 String toString() {
-  return 'VersionState(minVersion: $minVersion, latestVersion: $latestVersion, forceUpdate: $forceUpdate)';
+  final _this = this as VersionState;
+  return 'VersionState(minVersion: ${_this.minVersion}, latestVersion: ${_this.latestVersion}, forceUpdate: ${_this.forceUpdate})';
 }
 
 
@@ -66,7 +72,7 @@ class _$VersionStateCopyWithImpl<$Res>
 /// Create a copy of VersionState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? minVersion = null,Object? latestVersion = null,Object? forceUpdate = null,}) {
-  return _then(_self.copyWith(
+  return _then(VersionState(
 minVersion: null == minVersion ? _self.minVersion : minVersion // ignore: cast_nullable_to_non_nullable
 as String,latestVersion: null == latestVersion ? _self.latestVersion : latestVersion // ignore: cast_nullable_to_non_nullable
 as String,forceUpdate: null == forceUpdate ? _self.forceUpdate : forceUpdate // ignore: cast_nullable_to_non_nullable
@@ -225,16 +231,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _VersionState&&(identical(other.minVersion, minVersion) || other.minVersion == minVersion)&&(identical(other.latestVersion, latestVersion) || other.latestVersion == latestVersion)&&(identical(other.forceUpdate, forceUpdate) || other.forceUpdate == forceUpdate));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _VersionState&&(identical(other.minVersion, minVersion) || other.minVersion == minVersion)&&(identical(other.latestVersion, latestVersion) || other.latestVersion == latestVersion)&&(identical(other.forceUpdate, forceUpdate) || other.forceUpdate == forceUpdate));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,minVersion,latestVersion,forceUpdate);
+int get hashCode {
+    return Object.hash(runtimeType,minVersion,latestVersion,forceUpdate);
+}
 
 @override
 String toString() {
-  return 'VersionState(minVersion: $minVersion, latestVersion: $latestVersion, forceUpdate: $forceUpdate)';
+    return 'VersionState(minVersion: $minVersion, latestVersion: $latestVersion, forceUpdate: $forceUpdate)';
 }
 
 

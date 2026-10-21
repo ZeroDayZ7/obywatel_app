@@ -40,10 +40,9 @@ class NotificationSettingsNotifier extends _$NotificationSettingsNotifier {
       await _prefs.writeBool(key, value);
       // TODO: Replace with backend sync service once API contract is ready.
       // await ref.read(notificationSyncServiceProvider).syncNotificationSetting(key, value);
-    } catch (error, _) {
+    } catch (_) {
       state = previous;
       // UI remains consistent and the previous value is restored.
-      // A global logger can be used here when available.
     }
   }
 

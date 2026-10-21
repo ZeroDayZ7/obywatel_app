@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'decrypted_message_content.dart';
@@ -9,6 +9,7 @@ part of 'decrypted_message_content.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DecryptedMessageContentCopyWith<DecryptedMessageContent> get copyWith => _$Decr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DecryptedMessageContent&&(identical(other.text, text) || other.text == text)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.attachmentKey, attachmentKey) || other.attachmentKey == attachmentKey)&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256));
+  final _this = this as DecryptedMessageContent;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DecryptedMessageContent&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.attachmentId, _this.attachmentId) || other.attachmentId == _this.attachmentId)&&(identical(other.attachmentKey, _this.attachmentKey) || other.attachmentKey == _this.attachmentKey)&&(identical(other.fileName, _this.fileName) || other.fileName == _this.fileName)&&(identical(other.contentType, _this.contentType) || other.contentType == _this.contentType)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.sha256, _this.sha256) || other.sha256 == _this.sha256));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachmentId,attachmentKey,fileName,contentType,size,sha256);
+int get hashCode {
+  final _this = this as DecryptedMessageContent;
+  return Object.hash(runtimeType,_this.text,_this.attachmentId,_this.attachmentKey,_this.fileName,_this.contentType,_this.size,_this.sha256);
+}
 
 @override
 String toString() {
-  return 'DecryptedMessageContent(text: $text, attachmentId: $attachmentId, attachmentKey: $attachmentKey, fileName: $fileName, contentType: $contentType, size: $size, sha256: $sha256)';
+  final _this = this as DecryptedMessageContent;
+  return 'DecryptedMessageContent(text: ${_this.text}, attachmentId: ${_this.attachmentId}, attachmentKey: ${_this.attachmentKey}, fileName: ${_this.fileName}, contentType: ${_this.contentType}, size: ${_this.size}, sha256: ${_this.sha256})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DecryptedMessageContentCopyWithImpl<$Res>
 /// Create a copy of DecryptedMessageContent
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? text = null,Object? attachmentId = freezed,Object? attachmentKey = freezed,Object? fileName = freezed,Object? contentType = freezed,Object? size = freezed,Object? sha256 = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(DecryptedMessageContent(
 text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,attachmentId: freezed == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
 as String?,attachmentKey: freezed == attachmentKey ? _self.attachmentKey : attachmentKey // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ _$DecryptedMessageContentCopyWith<_DecryptedMessageContent> get copyWith => __$D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DecryptedMessageContent&&(identical(other.text, text) || other.text == text)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.attachmentKey, attachmentKey) || other.attachmentKey == attachmentKey)&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DecryptedMessageContent&&(identical(other.text, text) || other.text == text)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.attachmentKey, attachmentKey) || other.attachmentKey == attachmentKey)&&(identical(other.fileName, fileName) || other.fileName == fileName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,text,attachmentId,attachmentKey,fileName,contentType,size,sha256);
+int get hashCode {
+    return Object.hash(runtimeType,text,attachmentId,attachmentKey,fileName,contentType,size,sha256);
+}
 
 @override
 String toString() {
-  return 'DecryptedMessageContent(text: $text, attachmentId: $attachmentId, attachmentKey: $attachmentKey, fileName: $fileName, contentType: $contentType, size: $size, sha256: $sha256)';
+    return 'DecryptedMessageContent(text: $text, attachmentId: $attachmentId, attachmentKey: $attachmentKey, fileName: $fileName, contentType: $contentType, size: $size, sha256: $sha256)';
 }
 
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'message_dto.dart';
@@ -9,6 +9,7 @@ part of 'message_dto.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MessageDtoCopyWith<MessageDto> get copyWith => _$MessageDtoCopyWithImpl<Message
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.type, type) || other.type == type)&&(identical(other.sequence, sequence) || other.sequence == sequence)&&(identical(other.version, version) || other.version == version)&&(identical(other.encryptedPayload, encryptedPayload) || other.encryptedPayload == encryptedPayload)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as MessageDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.conversationId, _this.conversationId) || other.conversationId == _this.conversationId)&&(identical(other.senderId, _this.senderId) || other.senderId == _this.senderId)&&(identical(other.senderDeviceId, _this.senderDeviceId) || other.senderDeviceId == _this.senderDeviceId)&&(identical(other.attachmentId, _this.attachmentId) || other.attachmentId == _this.attachmentId)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.sequence, _this.sequence) || other.sequence == _this.sequence)&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.encryptedPayload, _this.encryptedPayload) || other.encryptedPayload == _this.encryptedPayload)&&(identical(other.nonce, _this.nonce) || other.nonce == _this.nonce)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,senderDeviceId,attachmentId,type,sequence,version,encryptedPayload,nonce,createdAt);
+int get hashCode {
+  final _this = this as MessageDto;
+  return Object.hash(runtimeType,_this.id,_this.conversationId,_this.senderId,_this.senderDeviceId,_this.attachmentId,_this.type,_this.sequence,_this.version,_this.encryptedPayload,_this.nonce,_this.createdAt);
+}
 
 @override
 String toString() {
-  return 'MessageDto(id: $id, conversationId: $conversationId, senderId: $senderId, senderDeviceId: $senderDeviceId, attachmentId: $attachmentId, type: $type, sequence: $sequence, version: $version, encryptedPayload: $encryptedPayload, nonce: $nonce, createdAt: $createdAt)';
+  final _this = this as MessageDto;
+  return 'MessageDto(id: ${_this.id}, conversationId: ${_this.conversationId}, senderId: ${_this.senderId}, senderDeviceId: ${_this.senderDeviceId}, attachmentId: ${_this.attachmentId}, type: ${_this.type}, sequence: ${_this.sequence}, version: ${_this.version}, encryptedPayload: ${_this.encryptedPayload}, nonce: ${_this.nonce}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MessageDtoCopyWithImpl<$Res>
 /// Create a copy of MessageDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? conversationId = null,Object? senderId = null,Object? senderDeviceId = freezed,Object? attachmentId = freezed,Object? type = null,Object? sequence = null,Object? version = null,Object? encryptedPayload = null,Object? nonce = freezed,Object? createdAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(MessageDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,conversationId: null == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
 as String,senderId: null == senderId ? _self.senderId : senderId // ignore: cast_nullable_to_non_nullable
@@ -247,16 +253,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.type, type) || other.type == type)&&(identical(other.sequence, sequence) || other.sequence == sequence)&&(identical(other.version, version) || other.version == version)&&(identical(other.encryptedPayload, encryptedPayload) || other.encryptedPayload == encryptedPayload)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageDto&&(identical(other.id, id) || other.id == id)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderId, senderId) || other.senderId == senderId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.type, type) || other.type == type)&&(identical(other.sequence, sequence) || other.sequence == sequence)&&(identical(other.version, version) || other.version == version)&&(identical(other.encryptedPayload, encryptedPayload) || other.encryptedPayload == encryptedPayload)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,conversationId,senderId,senderDeviceId,attachmentId,type,sequence,version,encryptedPayload,nonce,createdAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,conversationId,senderId,senderDeviceId,attachmentId,type,sequence,version,encryptedPayload,nonce,createdAt);
+}
 
 @override
 String toString() {
-  return 'MessageDto(id: $id, conversationId: $conversationId, senderId: $senderId, senderDeviceId: $senderDeviceId, attachmentId: $attachmentId, type: $type, sequence: $sequence, version: $version, encryptedPayload: $encryptedPayload, nonce: $nonce, createdAt: $createdAt)';
+    return 'MessageDto(id: $id, conversationId: $conversationId, senderId: $senderId, senderDeviceId: $senderDeviceId, attachmentId: $attachmentId, type: $type, sequence: $sequence, version: $version, encryptedPayload: $encryptedPayload, nonce: $nonce, createdAt: $createdAt)';
 }
 
 

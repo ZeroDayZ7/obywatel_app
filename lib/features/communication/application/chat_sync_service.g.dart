@@ -48,7 +48,7 @@ abstract class _$ChatSyncStatusController extends $Notifier<SyncStatus> {
   SyncStatus build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SyncStatus, SyncStatus>;
     final element =
         ref.element
@@ -58,7 +58,7 @@ abstract class _$ChatSyncStatusController extends $Notifier<SyncStatus> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

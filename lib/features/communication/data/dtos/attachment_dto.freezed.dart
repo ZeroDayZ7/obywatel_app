@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'attachment_dto.dart';
@@ -9,6 +9,7 @@ part of 'attachment_dto.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AttachmentDtoCopyWith<AttachmentDto> get copyWith => _$AttachmentDtoCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentDto&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.fileKey, fileKey) || other.fileKey == fileKey)&&(identical(other.originalName, originalName) || other.originalName == originalName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.metadata, metadata)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as AttachmentDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.conversationId, _this.conversationId) || other.conversationId == _this.conversationId)&&(identical(other.messageId, _this.messageId) || other.messageId == _this.messageId)&&(identical(other.fileKey, _this.fileKey) || other.fileKey == _this.fileKey)&&(identical(other.originalName, _this.originalName) || other.originalName == _this.originalName)&&(identical(other.contentType, _this.contentType) || other.contentType == _this.contentType)&&(identical(other.size, _this.size) || other.size == _this.size)&&(identical(other.sha256, _this.sha256) || other.sha256 == _this.sha256)&&(identical(other.status, _this.status) || other.status == _this.status)&&const DeepCollectionEquality().equals(other.metadata, _this.metadata)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,conversationId,messageId,fileKey,originalName,contentType,size,sha256,status,const DeepCollectionEquality().hash(metadata),createdAt,updatedAt);
+int get hashCode {
+  final _this = this as AttachmentDto;
+  return Object.hash(runtimeType,_this.id,_this.userId,_this.conversationId,_this.messageId,_this.fileKey,_this.originalName,_this.contentType,_this.size,_this.sha256,_this.status,const DeepCollectionEquality().hash(_this.metadata),_this.createdAt,_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentDto(id: $id, userId: $userId, conversationId: $conversationId, messageId: $messageId, fileKey: $fileKey, originalName: $originalName, contentType: $contentType, size: $size, sha256: $sha256, status: $status, metadata: $metadata, createdAt: $createdAt, updatedAt: $updatedAt)';
+  final _this = this as AttachmentDto;
+  return 'AttachmentDto(id: ${_this.id}, userId: ${_this.userId}, conversationId: ${_this.conversationId}, messageId: ${_this.messageId}, fileKey: ${_this.fileKey}, originalName: ${_this.originalName}, contentType: ${_this.contentType}, size: ${_this.size}, sha256: ${_this.sha256}, status: ${_this.status}, metadata: ${_this.metadata}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AttachmentDtoCopyWithImpl<$Res>
 /// Create a copy of AttachmentDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? userId = null,Object? conversationId = freezed,Object? messageId = freezed,Object? fileKey = null,Object? originalName = null,Object? contentType = null,Object? size = null,Object? sha256 = freezed,Object? status = null,Object? metadata = null,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AttachmentDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,conversationId: freezed == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
@@ -221,7 +227,7 @@ return $default(_that.id,_that.userId,_that.conversationId,_that.messageId,_that
 @JsonSerializable()
 
 class _AttachmentDto implements AttachmentDto {
-  const _AttachmentDto({required this.id, required this.userId, this.conversationId, this.messageId, required this.fileKey, required this.originalName, required this.contentType, required this.size, this.sha256, required this.status, final  Map<String, dynamic> metadata = const <String, dynamic>{}, this.createdAt, this.updatedAt}): _metadata = metadata;
+  const _AttachmentDto({required this.id, required this.userId, this.conversationId, this.messageId, required this.fileKey, required this.originalName, required this.contentType, required this.size, this.sha256, required this.status,  Map<String, dynamic> metadata = const <String, dynamic>{}, this.createdAt, this.updatedAt}): _metadata = metadata;
   factory _AttachmentDto.fromJson(Map<String, dynamic> json) => _$AttachmentDtoFromJson(json);
 
 @override final  String id;
@@ -257,16 +263,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentDto&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.fileKey, fileKey) || other.fileKey == fileKey)&&(identical(other.originalName, originalName) || other.originalName == originalName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other._metadata, _metadata)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentDto&&(identical(other.id, id) || other.id == id)&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.fileKey, fileKey) || other.fileKey == fileKey)&&(identical(other.originalName, originalName) || other.originalName == originalName)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.size, size) || other.size == size)&&(identical(other.sha256, sha256) || other.sha256 == sha256)&&(identical(other.status, status) || other.status == status)&&const DeepCollectionEquality().equals(other.metadata, _metadata)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,userId,conversationId,messageId,fileKey,originalName,contentType,size,sha256,status,const DeepCollectionEquality().hash(_metadata),createdAt,updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,userId,conversationId,messageId,fileKey,originalName,contentType,size,sha256,status,const DeepCollectionEquality().hash(_metadata),createdAt,updatedAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentDto(id: $id, userId: $userId, conversationId: $conversationId, messageId: $messageId, fileKey: $fileKey, originalName: $originalName, contentType: $contentType, size: $size, sha256: $sha256, status: $status, metadata: $metadata, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'AttachmentDto(id: $id, userId: $userId, conversationId: $conversationId, messageId: $messageId, fileKey: $fileKey, originalName: $originalName, contentType: $contentType, size: $size, sha256: $sha256, status: $status, metadata: $metadata, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -333,16 +341,21 @@ $AttachmentUploadResponseDtoCopyWith<AttachmentUploadResponseDto> get copyWith =
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentUploadResponseDto&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  final _this = this as AttachmentUploadResponseDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentUploadResponseDto&&(identical(other.attachment, _this.attachment) || other.attachment == _this.attachment)&&(identical(other.uploadUrl, _this.uploadUrl) || other.uploadUrl == _this.uploadUrl)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,attachment,uploadUrl,expiresAt);
+int get hashCode {
+  final _this = this as AttachmentUploadResponseDto;
+  return Object.hash(runtimeType,_this.attachment,_this.uploadUrl,_this.expiresAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentUploadResponseDto(attachment: $attachment, uploadUrl: $uploadUrl, expiresAt: $expiresAt)';
+  final _this = this as AttachmentUploadResponseDto;
+  return 'AttachmentUploadResponseDto(attachment: ${_this.attachment}, uploadUrl: ${_this.uploadUrl}, expiresAt: ${_this.expiresAt})';
 }
 
 
@@ -371,7 +384,7 @@ class _$AttachmentUploadResponseDtoCopyWithImpl<$Res>
 /// Create a copy of AttachmentUploadResponseDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? attachment = null,Object? uploadUrl = null,Object? expiresAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(AttachmentUploadResponseDto(
 attachment: null == attachment ? _self.attachment : attachment // ignore: cast_nullable_to_non_nullable
 as AttachmentDto,uploadUrl: null == uploadUrl ? _self.uploadUrl : uploadUrl // ignore: cast_nullable_to_non_nullable
 as String,expiresAt: null == expiresAt ? _self.expiresAt : expiresAt // ignore: cast_nullable_to_non_nullable
@@ -545,16 +558,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentUploadResponseDto&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentUploadResponseDto&&(identical(other.attachment, attachment) || other.attachment == attachment)&&(identical(other.uploadUrl, uploadUrl) || other.uploadUrl == uploadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,attachment,uploadUrl,expiresAt);
+int get hashCode {
+    return Object.hash(runtimeType,attachment,uploadUrl,expiresAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentUploadResponseDto(attachment: $attachment, uploadUrl: $uploadUrl, expiresAt: $expiresAt)';
+    return 'AttachmentUploadResponseDto(attachment: $attachment, uploadUrl: $uploadUrl, expiresAt: $expiresAt)';
 }
 
 
@@ -620,16 +635,21 @@ $AttachmentDownloadResponseDtoCopyWith<AttachmentDownloadResponseDto> get copyWi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentDownloadResponseDto&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.downloadUrl, downloadUrl) || other.downloadUrl == downloadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+  final _this = this as AttachmentDownloadResponseDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AttachmentDownloadResponseDto&&(identical(other.attachmentId, _this.attachmentId) || other.attachmentId == _this.attachmentId)&&(identical(other.contentType, _this.contentType) || other.contentType == _this.contentType)&&(identical(other.downloadUrl, _this.downloadUrl) || other.downloadUrl == _this.downloadUrl)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,attachmentId,contentType,downloadUrl,expiresAt);
+int get hashCode {
+  final _this = this as AttachmentDownloadResponseDto;
+  return Object.hash(runtimeType,_this.attachmentId,_this.contentType,_this.downloadUrl,_this.expiresAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentDownloadResponseDto(attachmentId: $attachmentId, contentType: $contentType, downloadUrl: $downloadUrl, expiresAt: $expiresAt)';
+  final _this = this as AttachmentDownloadResponseDto;
+  return 'AttachmentDownloadResponseDto(attachmentId: ${_this.attachmentId}, contentType: ${_this.contentType}, downloadUrl: ${_this.downloadUrl}, expiresAt: ${_this.expiresAt})';
 }
 
 
@@ -658,7 +678,7 @@ class _$AttachmentDownloadResponseDtoCopyWithImpl<$Res>
 /// Create a copy of AttachmentDownloadResponseDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? attachmentId = null,Object? contentType = null,Object? downloadUrl = null,Object? expiresAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(AttachmentDownloadResponseDto(
 attachmentId: null == attachmentId ? _self.attachmentId : attachmentId // ignore: cast_nullable_to_non_nullable
 as String,contentType: null == contentType ? _self.contentType : contentType // ignore: cast_nullable_to_non_nullable
 as String,downloadUrl: null == downloadUrl ? _self.downloadUrl : downloadUrl // ignore: cast_nullable_to_non_nullable
@@ -825,16 +845,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentDownloadResponseDto&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.downloadUrl, downloadUrl) || other.downloadUrl == downloadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AttachmentDownloadResponseDto&&(identical(other.attachmentId, attachmentId) || other.attachmentId == attachmentId)&&(identical(other.contentType, contentType) || other.contentType == contentType)&&(identical(other.downloadUrl, downloadUrl) || other.downloadUrl == downloadUrl)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,attachmentId,contentType,downloadUrl,expiresAt);
+int get hashCode {
+    return Object.hash(runtimeType,attachmentId,contentType,downloadUrl,expiresAt);
+}
 
 @override
 String toString() {
-  return 'AttachmentDownloadResponseDto(attachmentId: $attachmentId, contentType: $contentType, downloadUrl: $downloadUrl, expiresAt: $expiresAt)';
+    return 'AttachmentDownloadResponseDto(attachmentId: $attachmentId, contentType: $contentType, downloadUrl: $downloadUrl, expiresAt: $expiresAt)';
 }
 
 

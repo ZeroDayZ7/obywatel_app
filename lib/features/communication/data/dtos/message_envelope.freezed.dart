@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'message_envelope.dart';
@@ -9,6 +9,7 @@ part of 'message_envelope.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MessageEnvelopeCopyWith<MessageEnvelope> get copyWith => _$MessageEnvelopeCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageEnvelope&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.version, version) || other.version == version));
+  final _this = this as MessageEnvelope;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessageEnvelope&&(identical(other.messageId, _this.messageId) || other.messageId == _this.messageId)&&(identical(other.conversationId, _this.conversationId) || other.conversationId == _this.conversationId)&&(identical(other.senderUserId, _this.senderUserId) || other.senderUserId == _this.senderUserId)&&(identical(other.senderDeviceId, _this.senderDeviceId) || other.senderDeviceId == _this.senderDeviceId)&&(identical(other.recipientUserId, _this.recipientUserId) || other.recipientUserId == _this.recipientUserId)&&(identical(other.recipientDeviceId, _this.recipientDeviceId) || other.recipientDeviceId == _this.recipientDeviceId)&&(identical(other.ciphertext, _this.ciphertext) || other.ciphertext == _this.ciphertext)&&(identical(other.type, _this.type) || other.type == _this.type)&&(identical(other.nonce, _this.nonce) || other.nonce == _this.nonce)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.expiresAt, _this.expiresAt) || other.expiresAt == _this.expiresAt)&&(identical(other.version, _this.version) || other.version == _this.version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,nonce,createdAt,expiresAt,version);
+int get hashCode {
+  final _this = this as MessageEnvelope;
+  return Object.hash(runtimeType,_this.messageId,_this.conversationId,_this.senderUserId,_this.senderDeviceId,_this.recipientUserId,_this.recipientDeviceId,_this.ciphertext,_this.type,_this.nonce,_this.createdAt,_this.expiresAt,_this.version);
+}
 
 @override
 String toString() {
-  return 'MessageEnvelope(messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, nonce: $nonce, createdAt: $createdAt, expiresAt: $expiresAt, version: $version)';
+  final _this = this as MessageEnvelope;
+  return 'MessageEnvelope(messageId: ${_this.messageId}, conversationId: ${_this.conversationId}, senderUserId: ${_this.senderUserId}, senderDeviceId: ${_this.senderDeviceId}, recipientUserId: ${_this.recipientUserId}, recipientDeviceId: ${_this.recipientDeviceId}, ciphertext: ${_this.ciphertext}, type: ${_this.type}, nonce: ${_this.nonce}, createdAt: ${_this.createdAt}, expiresAt: ${_this.expiresAt}, version: ${_this.version})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MessageEnvelopeCopyWithImpl<$Res>
 /// Create a copy of MessageEnvelope
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? messageId = freezed,Object? conversationId = freezed,Object? senderUserId = freezed,Object? senderDeviceId = freezed,Object? recipientUserId = freezed,Object? recipientDeviceId = freezed,Object? ciphertext = freezed,Object? type = freezed,Object? nonce = freezed,Object? createdAt = freezed,Object? expiresAt = freezed,Object? version = null,}) {
-  return _then(_self.copyWith(
+  return _then(MessageEnvelope(
 messageId: freezed == messageId ? _self.messageId : messageId // ignore: cast_nullable_to_non_nullable
 as String?,conversationId: freezed == conversationId ? _self.conversationId : conversationId // ignore: cast_nullable_to_non_nullable
 as String?,senderUserId: freezed == senderUserId ? _self.senderUserId : senderUserId // ignore: cast_nullable_to_non_nullable
@@ -249,16 +255,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageEnvelope&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.version, version) || other.version == version));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessageEnvelope&&(identical(other.messageId, messageId) || other.messageId == messageId)&&(identical(other.conversationId, conversationId) || other.conversationId == conversationId)&&(identical(other.senderUserId, senderUserId) || other.senderUserId == senderUserId)&&(identical(other.senderDeviceId, senderDeviceId) || other.senderDeviceId == senderDeviceId)&&(identical(other.recipientUserId, recipientUserId) || other.recipientUserId == recipientUserId)&&(identical(other.recipientDeviceId, recipientDeviceId) || other.recipientDeviceId == recipientDeviceId)&&(identical(other.ciphertext, ciphertext) || other.ciphertext == ciphertext)&&(identical(other.type, type) || other.type == type)&&(identical(other.nonce, nonce) || other.nonce == nonce)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.expiresAt, expiresAt) || other.expiresAt == expiresAt)&&(identical(other.version, version) || other.version == version));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,nonce,createdAt,expiresAt,version);
+int get hashCode {
+    return Object.hash(runtimeType,messageId,conversationId,senderUserId,senderDeviceId,recipientUserId,recipientDeviceId,ciphertext,type,nonce,createdAt,expiresAt,version);
+}
 
 @override
 String toString() {
-  return 'MessageEnvelope(messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, nonce: $nonce, createdAt: $createdAt, expiresAt: $expiresAt, version: $version)';
+    return 'MessageEnvelope(messageId: $messageId, conversationId: $conversationId, senderUserId: $senderUserId, senderDeviceId: $senderDeviceId, recipientUserId: $recipientUserId, recipientDeviceId: $recipientDeviceId, ciphertext: $ciphertext, type: $type, nonce: $nonce, createdAt: $createdAt, expiresAt: $expiresAt, version: $version)';
 }
 
 

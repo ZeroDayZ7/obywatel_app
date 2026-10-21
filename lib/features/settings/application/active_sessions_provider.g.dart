@@ -39,7 +39,7 @@ abstract class _$ActiveSessions extends $AsyncNotifier<List<UserSession>> {
   FutureOr<List<UserSession>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<UserSession>>, List<UserSession>>;
     final element =
@@ -50,6 +50,6 @@ abstract class _$ActiveSessions extends $AsyncNotifier<List<UserSession>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

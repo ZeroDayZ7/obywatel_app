@@ -882,16 +882,19 @@ class ChatsRepositoryImpl implements ChatsRepository {
     final list = <Conversation>[];
     for (final entity in entities) {
       final messages = batchMessageMap[entity.id] ?? const <MessageEntity>[];
-      final memberRows = await (_db.select(
-        _db.conversationMembers,
-      )..where(
-        (tbl) =>
-            tbl.conversationId.equals(entity.id) & tbl.deletedAt.isNull(),
-      )).get();
-      final currentUserMember = memberRows.cast<ConversationMemberEntity?>().firstWhere(
-        (member) => member != null && member.userId == _currentUserId,
-        orElse: () => null,
-      );
+      final memberRows =
+          await (_db.select(_db.conversationMembers)..where(
+                (tbl) =>
+                    tbl.conversationId.equals(entity.id) &
+                    tbl.deletedAt.isNull(),
+              ))
+              .get();
+      final currentUserMember = memberRows
+          .cast<ConversationMemberEntity?>()
+          .firstWhere(
+            (member) => member != null && member.userId == _currentUserId,
+            orElse: () => null,
+          );
       final lastReadSequence = currentUserMember?.lastReadSequence.toInt() ?? 0;
       final lastSequence = entity.lastSequence.toInt();
       final unreadCount = lastSequence > lastReadSequence
@@ -1200,11 +1203,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     try {
       final entities = await _db.chatsDao.watchActiveConversations().first;
       if (entities.isNotEmpty) {
-        return _buildConversationList(entities);
+        return await _buildConversationList(entities);
       }
 
       final dtos = await _apiClient.getConversations();
-      return saveConversationsFromRemote(dtos);
+      return await saveConversationsFromRemote(dtos);
     } catch (e, st) {
       _logger.e(
         'Błąd podczas pobierania konwersacji',
