@@ -5,10 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/attachment_preview_provider.dart';
 
 class AttachmentViewerScreen extends ConsumerStatefulWidget {
-  const AttachmentViewerScreen({
-    super.key,
-    required this.attachmentId,
-  });
+  const AttachmentViewerScreen({super.key, required this.attachmentId});
 
   final String attachmentId;
 
@@ -103,32 +100,42 @@ class _AttachmentViewerScreenState
               );
             }
 
-            return Center(
-              child: InteractiveViewer(
-                transformationController: _transformationController,
-                minScale: 1.0,
-                maxScale: 4.0,
-                panEnabled: true,
-                scaleEnabled: true,
-                boundaryMargin: const EdgeInsets.all(24),
-                child: Image.memory(
-                  Uint8List.fromList(bytes),
-                  fit: BoxFit.contain,
-                  gaplessPlayback: true,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const SizedBox(
-                      width: 220,
-                      height: 220,
-                      child: Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.white,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                return InteractiveViewer(
+                  transformationController: _transformationController,
+                  clipBehavior: Clip.none,
+                  constrained: false,
+                  minScale: 1.0,
+                  maxScale: 8.0,
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  boundaryMargin: EdgeInsets.all(
+                    (constraints.maxWidth + constraints.maxHeight) * 0.75,
+                  ),
+                  child: SizedBox(
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    child: Image.memory(
+                      Uint8List.fromList(bytes),
+                      fit: BoxFit.contain,
+                      gaplessPlayback: true,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const SizedBox(
+                          width: 220,
+                          height: 220,
+                          child: Center(
+                            child: Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
             );
           },
           error: (error, stackTrace) => _buildErrorState(error),
