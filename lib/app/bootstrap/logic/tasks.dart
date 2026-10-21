@@ -43,8 +43,11 @@ class StorageInitTask implements StartupTask {
     );
 
     if (kDebugMode) {
-      // await storage.debugPrintAll();
-      // await prefs.debugPrintAll();
+      // await prefs.clearAll();
+      // await storage.clearAll();
+
+      await storage.debugPrintAll();
+      await prefs.debugPrintAll();
 
       // final db = database ?? databaseBuilder?.call();
       // if (db != null) {
@@ -61,8 +64,8 @@ class StorageInitTask implements StartupTask {
     }
 
     try {
-      await prefs.clearAll();
-      await storage.clearAll();
+      // await prefs.clearAll();
+      // await storage.clearAll();
 
       // final db = database ?? databaseBuilder?.call();
 

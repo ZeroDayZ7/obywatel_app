@@ -113,35 +113,40 @@ class SecuritySetupBody extends ConsumerWidget {
   Widget _buildTrustDeviceSwitch(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: state.trustDevice
-              ? theme.colorScheme.primary.withValues(alpha: 0.5)
-              : Colors.transparent,
+    return Material(
+      color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+      borderRadius: BorderRadius.circular(16),
+      clipBehavior: Clip
+          .antiAlias, // Zapewnia ładne przycinanie efektu kliknięcia do zaokrąglonych rogów
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: state.trustDevice
+                ? theme.colorScheme.primary.withValues(alpha: 0.5)
+                : Colors.transparent,
+          ),
         ),
-      ),
-      child: SwitchListTile(
-        secondary: Icon(
-          state.trustDevice
-              ? Icons.verified_user
-              : Icons.enhanced_encryption_outlined,
-          color: state.trustDevice ? theme.colorScheme.primary : null,
+        child: SwitchListTile(
+          secondary: Icon(
+            state.trustDevice
+                ? Icons.verified_user
+                : Icons.enhanced_encryption_outlined,
+            color: state.trustDevice ? theme.colorScheme.primary : null,
+          ),
+          title: Text(
+            LocaleKeys.security_setup_trust_device_title.tr(),
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(
+            LocaleKeys.security_setup_trust_device_desc.tr(),
+            style: theme.textTheme.bodySmall,
+          ),
+          value: state.trustDevice,
+          onChanged: (value) {
+            ref.read(securitySetupProvider.notifier).toggleTrustDevice(value);
+          },
         ),
-        title: Text(
-          LocaleKeys.security_setup_trust_device_title.tr(),
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          LocaleKeys.security_setup_trust_device_desc.tr(),
-          style: theme.textTheme.bodySmall,
-        ),
-        value: state.trustDevice,
-        onChanged: (value) {
-          ref.read(securitySetupProvider.notifier).toggleTrustDevice(value);
-        },
       ),
     );
   }

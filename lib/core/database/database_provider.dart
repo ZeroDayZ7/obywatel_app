@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
@@ -29,7 +28,10 @@ AppDatabase appDatabase(Ref ref) {
         32,
         (i) => Random.secure().nextInt(256),
       );
-      encryptionKey = base64Url.encode(values);
+      
+      // ZAMIAST Base64 -> Zamieniamy 32 bajty bezpośrednio na 64-znakowy HEX
+      encryptionKey = values.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+      
       await storage.write(key: StorageKeys.databaseKey, value: encryptionKey);
     }
 
