@@ -1,4 +1,6 @@
 // lib\app\bootstrap\logic\tasks.dart
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/app/bootstrap/app_init_status.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
@@ -9,6 +11,8 @@ import 'package:obywatel_plus/core/security/device_integrity/device_integrity_fa
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 bool shouldResetLocalDataForDevelopment({
   required bool isDebugMode,
@@ -43,8 +47,8 @@ class StorageInitTask implements StartupTask {
     );
 
     if (kDebugMode) {
-      // await prefs.clearAll();
-      // await storage.clearAll();
+      await prefs.clearAll();
+      await storage.clearAll();
 
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
@@ -57,6 +61,21 @@ class StorageInitTask implements StartupTask {
       //     debugPrint('[StorageInitTask] ⚠️ Nie udało się zrzucić tabel bazy: $e');
       //   }
       // }
+
+      final db = database ?? databaseBuilder?.call();
+      if (db != null) {
+        try {
+          await db.close();
+        } catch (_) {}
+      }
+
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final file = File(p.join(dbFolder.path, 'obywatel_plus_encrypted.sqlite'));
+      
+      if (file.existsSync()) {
+        file.deleteSync();
+        debugPrint('[StorageInitTask] ✅ Fizyczny plik bazy danych został usunięty z urządzenia.');
+      }
     }
 
     if (!shouldResetForDevelopment) {
