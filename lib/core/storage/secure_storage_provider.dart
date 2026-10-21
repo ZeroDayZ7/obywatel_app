@@ -26,7 +26,11 @@ class SecureStorageService {
     try {
       await _storage.write(key: key, value: value);
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to write key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to write key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -36,7 +40,11 @@ class SecureStorageService {
     try {
       return await _storage.read(key: key);
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to read key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to read key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -45,7 +53,10 @@ class SecureStorageService {
     await write(key: key, value: value.toString());
   }
 
-  Future<bool> readBool({required String key, bool defaultValue = false}) async {
+  Future<bool> readBool({
+    required String key,
+    bool defaultValue = false,
+  }) async {
     final value = await read(key: key);
 
     if (value == null) {
@@ -60,7 +71,11 @@ class SecureStorageService {
     try {
       await _storage.delete(key: key);
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to delete key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to delete key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -77,6 +92,20 @@ class SecureStorageService {
 
   /// Debug: print all key-value pairs using AppLogger
   Future<void> debugPrintAll() async {
-    // Metoda pozostaje pusta lub opcjonalna, jeśli nie jest już potrzebna
+    final all = await _storage.readAll();
+    if (all.isEmpty) {
+      _logger.d(
+        '===== SecureStorage: no entries. =====',
+        module: 'SecureStorage',
+      );
+    } else {
+      _logger.d(
+        '===== SecureStorage contains ${all.length} entries =====',
+        module: 'SecureStorage',
+      );
+      all.forEach((key, value) {
+        _logger.d('• $key: $value', module: 'SecureStorage');
+      });
+    }
   }
 }

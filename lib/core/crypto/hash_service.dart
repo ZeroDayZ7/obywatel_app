@@ -88,7 +88,6 @@ class HashService {
       // Porównanie w czasie stałym (constant-time comparison)
       final isValid = const ListEquality().equals(calculatedHash, expectedHash);
 
-      _logger.d('HashService: Verification result: $isValid');
       return isValid;
     } catch (e, st) {
       _logger.e('HashService: Verification error', error: e, stackTrace: st);

@@ -20,6 +20,7 @@ class BootstrapConfig {
 final bootstrapConfigProvider = Provider<BootstrapConfig>((ref) {
   const developerResetEnabled = bool.fromEnvironment(
     'reset_local_storage',
+    // defaultValue: true,
     defaultValue: false,
   );
 

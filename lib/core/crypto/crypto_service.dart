@@ -35,13 +35,13 @@ Future<List<int>> secureSignWorker(SignRequest request) async {
     pinBytes: utf8.encode(request.pin),
     salt: request.salt,
   );
-  
+
   final secretBox = SecretBox.fromConcatenation(
     request.encryptedPrivateKey,
     nonceLength: 12,
     macLength: 16,
   );
-  
+
   final clearPrivateKeyBytes = await AesGcm.with256bits().decrypt(
     secretBox,
     secretKey: kek,
@@ -52,7 +52,7 @@ Future<List<int>> secureSignWorker(SignRequest request) async {
 
   final privateKey = Curve.decodePrivatePoint(privateKeyBytes);
   final signature = Curve.calculateSignature(privateKey, messageBytes);
-  
+
   kdf.wipe(clearPrivateKeyBytes);
   kdf.wipe(privateKeyBytes);
 
@@ -89,13 +89,15 @@ class CryptoService extends _$CryptoService {
     );
 
     if (encryptedBase64 == null || encryptedBase64.isEmpty) {
-      _log.e('[CryptoService] Brak zapisanego klucza prywatnego w SecureStorage.');
+      _log.e(
+        '[CryptoService] Brak zapisanego klucza prywatnego w SecureStorage.',
+      );
       throw Exception('Brak zapisanego klucza prywatnego na urządzeniu.');
     }
 
     try {
       final encryptedData = base64Decode(encryptedBase64);
-      
+
       final kek = await ref
           .read(kdfServiceProvider)
           .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
@@ -116,9 +118,15 @@ class CryptoService extends _$CryptoService {
       _activeDeviceKeyPair = await algorithm.newKeyPairFromSeed(seed);
 
       ref.read(kdfServiceProvider).wipe(clearPrivateKeyBytes);
-      _log.i('[CryptoService] Klucz prywatny został pomyślnie odblokowany i załadowany do RAM.');
+      _log.i(
+        '[CryptoService] Klucz prywatny został pomyślnie odblokowany i załadowany do RAM.',
+      );
     } catch (e, st) {
-      _log.e('[CryptoService] Błąd podczas odszyfrowywania klucza prywatnego', error: e, stackTrace: st);
+      _log.e(
+        '[CryptoService] Błąd podczas odszyfrowywania klucza prywatnego',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -145,7 +153,11 @@ class CryptoService extends _$CryptoService {
       );
       return result;
     } catch (e, st) {
-      _log.e('[CryptoService] Błąd podczas podpisywania wiadomości w workerze', error: e, stackTrace: st);
+      _log.e(
+        '[CryptoService] Błąd podczas podpisywania wiadomości w workerze',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -163,7 +175,9 @@ class CryptoService extends _$CryptoService {
     String domain = 'obywatel.gov.pl',
   }) async {
     if (_activeDeviceKeyPair == null) {
-      _log.e('[CryptoService] Brak aktywnego klucza w RAM podczas próby podpisania challenge\'a.');
+      _log.e(
+        '[CryptoService] Brak aktywnego klucza w RAM podczas próby podpisania challenge\'a.',
+      );
       throw Exception('No active key');
     }
 
@@ -182,14 +196,20 @@ class CryptoService extends _$CryptoService {
 
       return base64Encode(signature.bytes);
     } catch (e, st) {
-      _log.e('[CryptoService] Błąd podczas podpisywania challenge\'a', error: e, stackTrace: st);
+      _log.e(
+        '[CryptoService] Błąd podczas podpisywania challenge\'a',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
 
   Future<void> finalizeAndPersist(List<int> pinBytes, List<int> salt) async {
     if (_activeDeviceKeyPair == null) {
-      _log.e('[CryptoService] _activeDeviceKeyPair jest null podczas finalizeAndPersist.');
+      _log.e(
+        '[CryptoService] _activeDeviceKeyPair jest null podczas finalizeAndPersist.',
+      );
       return;
     }
 
@@ -219,14 +239,20 @@ class CryptoService extends _$CryptoService {
       final pubKeyBase64 = base64Encode(publicKey.bytes);
 
       await storage.write(
-        key: StorageKeys.devicePrivateKey,
+        key: StorageKeys.devicePublicKey,
         value: pubKeyBase64,
       );
 
       ref.read(kdfServiceProvider).wipe(privKeyBytes);
-      _log.i('[CryptoService] Klucze urządzenia zostały zaszyfrowane i zapisane w SecureStorage.');
+      _log.i(
+        '[CryptoService] Klucze urządzenia zostały zaszyfrowane i zapisane w SecureStorage.',
+      );
     } catch (e, st) {
-      _log.e('[CryptoService] Błąd podczas zapisu kluczy', error: e, stackTrace: st);
+      _log.e(
+        '[CryptoService] Błąd podczas zapisu kluczy',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }

@@ -35,36 +35,51 @@ class StorageInitTask implements StartupTask {
   @override
   String get name => 'Storage & Database';
 
-
-
   @override
   Future<AppInitStatus?> initialize() async {
-    final db = database ?? databaseBuilder?.call();
-
-    // Wyrzewamy połączenie z bazą (Warmup query)
-    if (db != null) {
-      try {
-        // To wywołanie wymusza natychmiastowe wykonanie openConnection() oraz setup()
-        await db.customSelect('SELECT 1;').get();
-        debugPrint('[StorageInitTask] ✅ Database connection initialized & encrypted.');
-      } catch (e, st) {
-        debugPrint('[StorageInitTask] ❌ Database initialization failed: $e\n$st');
-        return const AppInitStatus.blocked(reason: 'database_init_failed');
-      }
-    }
-
     final shouldResetForDevelopment = shouldResetLocalDataForDevelopment(
       isDebugMode: kDebugMode,
       developerResetEnabled: developerResetEnabled,
     );
+
+    if (kDebugMode) {
+      // await storage.debugPrintAll();
+      // await prefs.debugPrintAll();
+
+      // final db = database ?? databaseBuilder?.call();
+      // if (db != null) {
+      //   try {
+      //     await db.dumpDatabaseTables();
+      //   } catch (e) {
+      //     debugPrint('[StorageInitTask] ⚠️ Nie udało się zrzucić tabel bazy: $e');
+      //   }
+      // }
+    }
 
     if (!shouldResetForDevelopment) {
       return null;
     }
 
     try {
-      // await prefs.clearAll();
-      // await storage.clearAll();
+      await prefs.clearAll();
+      await storage.clearAll();
+
+      // final db = database ?? databaseBuilder?.call();
+
+      // if (db != null) {
+      //   try {
+      //     // To wywołanie wymusza natychmiastowe wykonanie openConnection() oraz setup()
+      //     await db.customSelect('SELECT 1;').get();
+      //     debugPrint(
+      //       '[StorageInitTask] ✅ Database connection initialized & encrypted.',
+      //     );
+      //   } catch (e, st) {
+      //     debugPrint(
+      //       '[StorageInitTask] ❌ Database initialization failed: $e\n$st',
+      //     );
+      //     return const AppInitStatus.blocked(reason: 'database_init_failed');
+      //   }
+      // }
       return null;
     } catch (e, st) {
       debugPrint('[StorageInitTask] ❌ Reset failed: $e\n$st');
