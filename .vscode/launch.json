@@ -9,6 +9,14 @@
       "deviceId": "5200d78bfa479449"
     },
     {
+      "name": "Flutter Profile on Phone",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "5200d78bfa479449",
+      "flutterMode": "profile"
+    },
+    {
       "name": "Flutter on Windows",
       "request": "launch",
       "type": "dart",

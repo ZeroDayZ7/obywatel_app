@@ -61,12 +61,26 @@ abstract class ApiEndpoints {
   static String markConversationAsRead(String id) => '/conversations/$id/read';
 
   // ===========================================================================
+  // --- MESSAGING ACTIVATION & TERMS ---
+  // ===========================================================================
+  static String get messagingTerms => '/messaging/terms';
+  static String get messagingActivationStatus => '/messaging/activation';
+  static String get messagingActivation => '/messaging/activation';
+  static String get messagingAcceptTerms => '/messaging/activation/consent';
+
+  // ===========================================================================
   // --- DELTA SYNC & OUTBOX (Offline-First) ---
   // ===========================================================================
   static String get syncDelta => '/sync/delta';
   static String get syncOutbox => '/sync/outbox';
   static String get messageHistory => '/messages/history';
   static String get messages => '/messages';
+
+  // --- ATTACHMENTS ---
+  static String get attachmentUpload => '/attachments/upload';
+  static String get attachmentFinalize => '/attachments/finalize';
+  static String attachmentById(String id) => '/attachments/$id';
+  static String attachmentDownload(String id) => '/attachments/$id/download';
 
   // ===========================================================================
   // --- E2EE CRYPTO KEYS EXCHANGE (Signal Protocol / X3DH) ---
@@ -77,5 +91,5 @@ abstract class ApiEndpoints {
   // ===========================================================================
   // --- REAL-TIME WEBSOCKET ---
   // ===========================================================================
-  static String wsMessaging(String token) => '/ws/messaging?token=$token';
+  static String get wsMessaging => '/ws';
 }

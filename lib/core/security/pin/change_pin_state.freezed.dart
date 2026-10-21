@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'change_pin_state.dart';
@@ -9,6 +9,7 @@ part of 'change_pin_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePinState);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePinState);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState()';
+    return 'ChangePinState()';
 }
 
 
@@ -209,7 +210,7 @@ class _EnterOld extends ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterOld);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterOld);
 }
 
 
@@ -218,7 +219,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState.enterOld()';
+    return 'ChangePinState.enterOld()';
 }
 
 
@@ -241,7 +242,7 @@ class _EnterNew extends ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterNew);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterNew);
 }
 
 
@@ -250,7 +251,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState.enterNew()';
+    return 'ChangePinState.enterNew()';
 }
 
 
@@ -273,7 +274,7 @@ class _ConfirmNew extends ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfirmNew);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfirmNew);
 }
 
 
@@ -282,7 +283,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState.confirmNew()';
+    return 'ChangePinState.confirmNew()';
 }
 
 
@@ -305,7 +306,7 @@ class _Loading extends ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
 }
 
 
@@ -314,7 +315,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState.loading()';
+    return 'ChangePinState.loading()';
 }
 
 
@@ -337,7 +338,7 @@ class _Success extends ChangePinState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success);
 }
 
 
@@ -346,7 +347,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ChangePinState.success()';
+    return 'ChangePinState.success()';
 }
 
 
@@ -374,16 +375,18 @@ _$ErrorCopyWith<_Error> get copyWith => __$ErrorCopyWithImpl<_Error>(this, _$ide
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,messageKey);
+int get hashCode {
+    return Object.hash(runtimeType,messageKey);
+}
 
 @override
 String toString() {
-  return 'ChangePinState.error(messageKey: $messageKey)';
+    return 'ChangePinState.error(messageKey: $messageKey)';
 }
 
 

@@ -41,13 +41,13 @@ final class CryptoServiceProvider
   }
 }
 
-String _$cryptoServiceHash() => r'183f7764b59c147bd15bf8cb0beae8dd118b83e3';
+String _$cryptoServiceHash() => r'69d12f83248c43bb42de06ce519c3ec4ead9181a';
 
 abstract class _$CryptoService extends $Notifier<void> {
   void build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<void, void>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$CryptoService extends $Notifier<void> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

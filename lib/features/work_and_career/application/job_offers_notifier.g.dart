@@ -39,7 +39,7 @@ abstract class _$JobOffersNotifier extends $AsyncNotifier<List<JobOffer>> {
   FutureOr<List<JobOffer>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<List<JobOffer>>, List<JobOffer>>;
     final element =
         ref.element
@@ -49,6 +49,6 @@ abstract class _$JobOffersNotifier extends $AsyncNotifier<List<JobOffer>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

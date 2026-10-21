@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'device_capabilities_state.dart';
@@ -9,6 +9,7 @@ part of 'device_capabilities_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $DeviceCapabilitiesStateCopyWith<DeviceCapabilitiesState> get copyWith => _$Devi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeviceCapabilitiesState&&(identical(other.hasVibration, hasVibration) || other.hasVibration == hasVibration)&&(identical(other.hasAmplitudeControl, hasAmplitudeControl) || other.hasAmplitudeControl == hasAmplitudeControl)&&(identical(other.hasCustomVibrations, hasCustomVibrations) || other.hasCustomVibrations == hasCustomVibrations)&&(identical(other.initialized, initialized) || other.initialized == initialized));
+  final _this = this as DeviceCapabilitiesState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeviceCapabilitiesState&&(identical(other.hasVibration, _this.hasVibration) || other.hasVibration == _this.hasVibration)&&(identical(other.hasAmplitudeControl, _this.hasAmplitudeControl) || other.hasAmplitudeControl == _this.hasAmplitudeControl)&&(identical(other.hasCustomVibrations, _this.hasCustomVibrations) || other.hasCustomVibrations == _this.hasCustomVibrations)&&(identical(other.initialized, _this.initialized) || other.initialized == _this.initialized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,hasVibration,hasAmplitudeControl,hasCustomVibrations,initialized);
+int get hashCode {
+  final _this = this as DeviceCapabilitiesState;
+  return Object.hash(runtimeType,_this.hasVibration,_this.hasAmplitudeControl,_this.hasCustomVibrations,_this.initialized);
+}
 
 @override
 String toString() {
-  return 'DeviceCapabilitiesState(hasVibration: $hasVibration, hasAmplitudeControl: $hasAmplitudeControl, hasCustomVibrations: $hasCustomVibrations, initialized: $initialized)';
+  final _this = this as DeviceCapabilitiesState;
+  return 'DeviceCapabilitiesState(hasVibration: ${_this.hasVibration}, hasAmplitudeControl: ${_this.hasAmplitudeControl}, hasCustomVibrations: ${_this.hasCustomVibrations}, initialized: ${_this.initialized})';
 }
 
 
@@ -63,7 +69,7 @@ class _$DeviceCapabilitiesStateCopyWithImpl<$Res>
 /// Create a copy of DeviceCapabilitiesState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? hasVibration = null,Object? hasAmplitudeControl = null,Object? hasCustomVibrations = null,Object? initialized = null,}) {
-  return _then(_self.copyWith(
+  return _then(DeviceCapabilitiesState(
 hasVibration: null == hasVibration ? _self.hasVibration : hasVibration // ignore: cast_nullable_to_non_nullable
 as bool,hasAmplitudeControl: null == hasAmplitudeControl ? _self.hasAmplitudeControl : hasAmplitudeControl // ignore: cast_nullable_to_non_nullable
 as bool,hasCustomVibrations: null == hasCustomVibrations ? _self.hasCustomVibrations : hasCustomVibrations // ignore: cast_nullable_to_non_nullable
@@ -221,16 +227,18 @@ _$DeviceCapabilitiesStateCopyWith<_DeviceCapabilitiesState> get copyWith => __$D
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeviceCapabilitiesState&&(identical(other.hasVibration, hasVibration) || other.hasVibration == hasVibration)&&(identical(other.hasAmplitudeControl, hasAmplitudeControl) || other.hasAmplitudeControl == hasAmplitudeControl)&&(identical(other.hasCustomVibrations, hasCustomVibrations) || other.hasCustomVibrations == hasCustomVibrations)&&(identical(other.initialized, initialized) || other.initialized == initialized));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _DeviceCapabilitiesState&&(identical(other.hasVibration, hasVibration) || other.hasVibration == hasVibration)&&(identical(other.hasAmplitudeControl, hasAmplitudeControl) || other.hasAmplitudeControl == hasAmplitudeControl)&&(identical(other.hasCustomVibrations, hasCustomVibrations) || other.hasCustomVibrations == hasCustomVibrations)&&(identical(other.initialized, initialized) || other.initialized == initialized));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,hasVibration,hasAmplitudeControl,hasCustomVibrations,initialized);
+int get hashCode {
+    return Object.hash(runtimeType,hasVibration,hasAmplitudeControl,hasCustomVibrations,initialized);
+}
 
 @override
 String toString() {
-  return 'DeviceCapabilitiesState(hasVibration: $hasVibration, hasAmplitudeControl: $hasAmplitudeControl, hasCustomVibrations: $hasCustomVibrations, initialized: $initialized)';
+    return 'DeviceCapabilitiesState(hasVibration: $hasVibration, hasAmplitudeControl: $hasAmplitudeControl, hasCustomVibrations: $hasCustomVibrations, initialized: $initialized)';
 }
 
 

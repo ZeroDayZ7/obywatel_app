@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/app/config/env.dart';
 import 'package:obywatel_plus/app/config/services_config.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
-import 'package:obywatel_plus/core/network/clients/device_fingerprint_interceptor.dart';
+import 'package:obywatel_plus/core/network/interceptors/device_fingerprint_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/global_error_interceptor.dart';
 import 'package:obywatel_plus/core/network/interceptors/logging_interceptor.dart';
 import 'package:obywatel_plus/core/network/network_manager.dart';
@@ -25,7 +25,7 @@ Dio createDioInstance({
     DioProfile.public => ServicesConfig.versionBaseUrl,
     DioProfile.authenticated ||
     DioProfile.refreshToken ||
-    DioProfile.noAuthAuth => ServicesConfig.authBaseUrl,
+    DioProfile.noAuthAuth => ServicesConfig.apiBaseUrl,
   };
 
   final dio = Dio(

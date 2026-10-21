@@ -4,6 +4,9 @@ import 'package:drift/drift.dart';
 class OutboxEvents extends Table {
   TextColumn get id => text()();
 
+  // Stable identity for a logical outbox operation across retries.
+  TextColumn get outboxEventId => text().nullable()();
+
   // Typ jednostki zmienianej w outboxie: CONTACT, CONVERSATION, MESSAGE
   TextColumn get entityType => text().withDefault(const Constant('GENERIC'))();
   TextColumn get entityId => text().nullable()();
@@ -22,6 +25,9 @@ class OutboxEvents extends Table {
   // Licznik nieudanych prób synchronizacji
   IntColumn get retryCount => integer().withDefault(const Constant(0))();
   IntColumn get attemptCount => integer().withDefault(const Constant(0))();
+
+  // Retry gate for exponential backoff.
+  DateTimeColumn get nextAttemptAt => dateTime().nullable()();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'settings_section.dart';
@@ -9,6 +9,7 @@ part of 'settings_section.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $SettingsSectionCopyWith<SettingsSection> get copyWith => _$SettingsSectionCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsSection&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.items, items));
+  final _this = this as SettingsSection;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsSection&&(identical(other.title, _this.title) || other.title == _this.title)&&const DeepCollectionEquality().equals(other.items, _this.items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,title,const DeepCollectionEquality().hash(items));
+int get hashCode {
+  final _this = this as SettingsSection;
+  return Object.hash(runtimeType,_this.title,const DeepCollectionEquality().hash(_this.items));
+}
 
 @override
 String toString() {
-  return 'SettingsSection(title: $title, items: $items)';
+  final _this = this as SettingsSection;
+  return 'SettingsSection(title: ${_this.title}, items: ${_this.items})';
 }
 
 
@@ -63,7 +69,7 @@ class _$SettingsSectionCopyWithImpl<$Res>
 /// Create a copy of SettingsSection
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? title = null,Object? items = null,}) {
-  return _then(_self.copyWith(
+  return _then(SettingsSection(
 title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,items: null == items ? _self.items : items // ignore: cast_nullable_to_non_nullable
 as List<ActionItem>,
@@ -201,7 +207,7 @@ return $default(_that.title,_that.items);case _:
 
 
 class _SettingsSection implements SettingsSection {
-  const _SettingsSection({required this.title, required final  List<ActionItem> items}): _items = items;
+  const _SettingsSection({required this.title, required  List<ActionItem> items}): _items = items;
   
 
 @override final  String title;
@@ -223,16 +229,18 @@ _$SettingsSectionCopyWith<_SettingsSection> get copyWith => __$SettingsSectionCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsSection&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other._items, _items));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsSection&&(identical(other.title, title) || other.title == title)&&const DeepCollectionEquality().equals(other.items, _items));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,title,const DeepCollectionEquality().hash(_items));
+int get hashCode {
+    return Object.hash(runtimeType,title,const DeepCollectionEquality().hash(_items));
+}
 
 @override
 String toString() {
-  return 'SettingsSection(title: $title, items: $items)';
+    return 'SettingsSection(title: $title, items: $items)';
 }
 
 

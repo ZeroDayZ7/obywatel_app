@@ -1,11 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 
 class ContactsErrorView extends ConsumerWidget {
   final Object error;
 
   const ContactsErrorView({super.key, required this.error});
+
+  String _userFriendlyMessage(Object error) {
+    if (error is NetworkException) {
+      return 'Sprawdź połączenie z internetem i spróbuj ponownie.';
+    }
+
+    return 'Spróbuj ponownie za chwilę.';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -33,7 +42,7 @@ class ContactsErrorView extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              '$error',
+              _userFriendlyMessage(error),
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall?.copyWith(
                 color: colorScheme.error,

@@ -48,7 +48,7 @@ abstract class _$ResetPasswordNotifier extends $Notifier<ResetPasswordState> {
   ResetPasswordState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<ResetPasswordState, ResetPasswordState>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$ResetPasswordNotifier extends $Notifier<ResetPasswordState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'wallet_balance.dart';
@@ -9,6 +9,7 @@ part of 'wallet_balance.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $WalletBalanceCopyWith<WalletBalance> get copyWith => _$WalletBalanceCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WalletBalance&&(identical(other.total, total) || other.total == total)&&(identical(other.incomeToday, incomeToday) || other.incomeToday == incomeToday)&&(identical(other.expenseToday, expenseToday) || other.expenseToday == expenseToday)&&(identical(other.currency, currency) || other.currency == currency));
+  final _this = this as WalletBalance;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WalletBalance&&(identical(other.total, _this.total) || other.total == _this.total)&&(identical(other.incomeToday, _this.incomeToday) || other.incomeToday == _this.incomeToday)&&(identical(other.expenseToday, _this.expenseToday) || other.expenseToday == _this.expenseToday)&&(identical(other.currency, _this.currency) || other.currency == _this.currency));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,total,incomeToday,expenseToday,currency);
+int get hashCode {
+  final _this = this as WalletBalance;
+  return Object.hash(runtimeType,_this.total,_this.incomeToday,_this.expenseToday,_this.currency);
+}
 
 @override
 String toString() {
-  return 'WalletBalance(total: $total, incomeToday: $incomeToday, expenseToday: $expenseToday, currency: $currency)';
+  final _this = this as WalletBalance;
+  return 'WalletBalance(total: ${_this.total}, incomeToday: ${_this.incomeToday}, expenseToday: ${_this.expenseToday}, currency: ${_this.currency})';
 }
 
 
@@ -63,7 +69,7 @@ class _$WalletBalanceCopyWithImpl<$Res>
 /// Create a copy of WalletBalance
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? total = null,Object? incomeToday = null,Object? expenseToday = null,Object? currency = null,}) {
-  return _then(_self.copyWith(
+  return _then(WalletBalance(
 total: null == total ? _self.total : total // ignore: cast_nullable_to_non_nullable
 as double,incomeToday: null == incomeToday ? _self.incomeToday : incomeToday // ignore: cast_nullable_to_non_nullable
 as double,expenseToday: null == expenseToday ? _self.expenseToday : expenseToday // ignore: cast_nullable_to_non_nullable
@@ -221,16 +227,18 @@ _$WalletBalanceCopyWith<_WalletBalance> get copyWith => __$WalletBalanceCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WalletBalance&&(identical(other.total, total) || other.total == total)&&(identical(other.incomeToday, incomeToday) || other.incomeToday == incomeToday)&&(identical(other.expenseToday, expenseToday) || other.expenseToday == expenseToday)&&(identical(other.currency, currency) || other.currency == currency));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _WalletBalance&&(identical(other.total, total) || other.total == total)&&(identical(other.incomeToday, incomeToday) || other.incomeToday == incomeToday)&&(identical(other.expenseToday, expenseToday) || other.expenseToday == expenseToday)&&(identical(other.currency, currency) || other.currency == currency));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,total,incomeToday,expenseToday,currency);
+int get hashCode {
+    return Object.hash(runtimeType,total,incomeToday,expenseToday,currency);
+}
 
 @override
 String toString() {
-  return 'WalletBalance(total: $total, incomeToday: $incomeToday, expenseToday: $expenseToday, currency: $currency)';
+    return 'WalletBalance(total: $total, incomeToday: $incomeToday, expenseToday: $expenseToday, currency: $currency)';
 }
 
 

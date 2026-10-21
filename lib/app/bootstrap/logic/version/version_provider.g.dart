@@ -94,7 +94,7 @@ abstract class _$VersionNotifier extends $Notifier<VersionState> {
   VersionState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<VersionState, VersionState>;
     final element =
         ref.element
@@ -104,6 +104,6 @@ abstract class _$VersionNotifier extends $Notifier<VersionState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

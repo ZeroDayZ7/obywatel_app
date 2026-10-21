@@ -33,13 +33,13 @@ final class ConversationsProvider
   Conversations create() => Conversations();
 }
 
-String _$conversationsHash() => r'8dca0aec8e990850d813986c969098bd3f3952a1';
+String _$conversationsHash() => r'61e171093ffdd915572a5caec1be99065546493a';
 
 abstract class _$Conversations extends $AsyncNotifier<List<Conversation>> {
   FutureOr<List<Conversation>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<Conversation>>, List<Conversation>>;
     final element =
@@ -50,6 +50,6 @@ abstract class _$Conversations extends $AsyncNotifier<List<Conversation>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

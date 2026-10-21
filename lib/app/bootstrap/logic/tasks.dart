@@ -10,38 +10,81 @@ import 'package:obywatel_plus/core/security/security/security_service_provider.d
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 
+bool shouldResetLocalDataForDevelopment({
+  required bool isDebugMode,
+  required bool developerResetEnabled,
+}) {
+  return isDebugMode && developerResetEnabled;
+}
+
 class StorageInitTask implements StartupTask {
   final SecureStorageService storage;
   final SharedPreferencesService prefs;
-  final AppDatabase database;
+  final AppDatabase? database;
+  final AppDatabase Function()? databaseBuilder;
+  final bool developerResetEnabled;
 
   StorageInitTask({
     required this.storage,
     required this.prefs,
-    required this.database,
-  });
+    this.database,
+    this.databaseBuilder,
+    this.developerResetEnabled = false,
+  }) : assert(database != null || databaseBuilder != null);
 
   @override
   String get name => 'Storage & Database';
 
   @override
   Future<AppInitStatus?> initialize() async {
+    final shouldResetForDevelopment = shouldResetLocalDataForDevelopment(
+      isDebugMode: kDebugMode,
+      developerResetEnabled: developerResetEnabled,
+    );
+
     if (kDebugMode) {
-      // await Future.wait([
-      //   storage.clearAll(),
-      //   prefs.clearAll(),
-      //   database.clearDatabase(),
-      // ]);
-
-      // await storage.clearAll();
-      // await Future.delayed(const Duration(seconds: 2));
       // await storage.debugPrintAll();
+      // await prefs.debugPrintAll();
 
-      await storage.debugPrintAll();
-      await prefs.debugPrintAll();
+      // final db = database ?? databaseBuilder?.call();
+      // if (db != null) {
+      //   try {
+      //     await db.dumpDatabaseTables();
+      //   } catch (e) {
+      //     debugPrint('[StorageInitTask] ⚠️ Nie udało się zrzucić tabel bazy: $e');
+      //   }
+      // }
     }
 
-    return null;
+    if (!shouldResetForDevelopment) {
+      return null;
+    }
+
+    try {
+      await prefs.clearAll();
+      await storage.clearAll();
+
+      // final db = database ?? databaseBuilder?.call();
+
+      // if (db != null) {
+      //   try {
+      //     // To wywołanie wymusza natychmiastowe wykonanie openConnection() oraz setup()
+      //     await db.customSelect('SELECT 1;').get();
+      //     debugPrint(
+      //       '[StorageInitTask] ✅ Database connection initialized & encrypted.',
+      //     );
+      //   } catch (e, st) {
+      //     debugPrint(
+      //       '[StorageInitTask] ❌ Database initialization failed: $e\n$st',
+      //     );
+      //     return const AppInitStatus.blocked(reason: 'database_init_failed');
+      //   }
+      // }
+      return null;
+    } catch (e, st) {
+      debugPrint('[StorageInitTask] ❌ Reset failed: $e\n$st');
+      return const AppInitStatus.blocked(reason: 'storage_reset_failed');
+    }
   }
 }
 

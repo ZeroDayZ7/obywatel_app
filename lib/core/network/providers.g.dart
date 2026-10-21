@@ -9,6 +9,101 @@ part of 'providers.dart';
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
 
+@ProviderFor(WsLifecycleRefresh)
+final wsLifecycleRefreshProvider = WsLifecycleRefreshProvider._();
+
+final class WsLifecycleRefreshProvider
+    extends $NotifierProvider<WsLifecycleRefresh, int> {
+  WsLifecycleRefreshProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'wsLifecycleRefreshProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$wsLifecycleRefreshHash();
+
+  @$internal
+  @override
+  WsLifecycleRefresh create() => WsLifecycleRefresh();
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(int value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<int>(value),
+    );
+  }
+}
+
+String _$wsLifecycleRefreshHash() =>
+    r'c79ab081dbb52fc77d31e4f76fcc2e28fe22cb07';
+
+abstract class _$WsLifecycleRefresh extends $Notifier<int> {
+  int build();
+  @$mustCallSuper
+  @override
+  WhenComplete runBuild() {
+    final ref = this.ref as $Ref<int, int>;
+    final element =
+        ref.element
+            as $ClassProviderElement<
+              AnyNotifier<int, int>,
+              int,
+              Object?,
+              Object?
+            >;
+    return element.handleCreate(ref, build);
+  }
+}
+
+@ProviderFor(globalWebSocketLifecycle)
+final globalWebSocketLifecycleProvider = GlobalWebSocketLifecycleProvider._();
+
+final class GlobalWebSocketLifecycleProvider
+    extends $FunctionalProvider<void, void, void>
+    with $Provider<void> {
+  GlobalWebSocketLifecycleProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'globalWebSocketLifecycleProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$globalWebSocketLifecycleHash();
+
+  @$internal
+  @override
+  $ProviderElement<void> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  void create(Ref ref) {
+    return globalWebSocketLifecycle(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(void value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<void>(value),
+    );
+  }
+}
+
+String _$globalWebSocketLifecycleHash() =>
+    r'd1d37899c596ad8cca3d4e60f6dec45bf9cb774b';
+
 @ProviderFor(authFresh)
 final authFreshProvider = AuthFreshProvider._();
 
@@ -94,7 +189,7 @@ final class AuthDioProvider extends $FunctionalProvider<Dio, Dio, Dio>
   }
 }
 
-String _$authDioHash() => r'3f1f1ad99d2e8238882a993eeee6026fe36c2b17';
+String _$authDioHash() => r'76f732eae6ab762618c4a4951739b5b36d985832';
 
 @ProviderFor(refreshDio)
 final refreshDioProvider = RefreshDioProvider._();
@@ -257,6 +352,96 @@ final class ApiClientProvider
 
 String _$apiClientHash() => r'a5b461a3c5bcb7cd7880a74b4806ee7b682c1c89';
 
+@ProviderFor(appWebSocketClient)
+final appWebSocketClientProvider = AppWebSocketClientProvider._();
+
+final class AppWebSocketClientProvider
+    extends
+        $FunctionalProvider<
+          AppWebSocketClient,
+          AppWebSocketClient,
+          AppWebSocketClient
+        >
+    with $Provider<AppWebSocketClient> {
+  AppWebSocketClientProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appWebSocketClientProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appWebSocketClientHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppWebSocketClient> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
+
+  @override
+  AppWebSocketClient create(Ref ref) {
+    return appWebSocketClient(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppWebSocketClient value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppWebSocketClient>(value),
+    );
+  }
+}
+
+String _$appWebSocketClientHash() =>
+    r'85334deae5d959d06ef2a1eca4f6271b178bbd72';
+
+@ProviderFor(appWebSocketStatus)
+final appWebSocketStatusProvider = AppWebSocketStatusProvider._();
+
+final class AppWebSocketStatusProvider
+    extends
+        $FunctionalProvider<
+          AsyncValue<WsConnectionStatus>,
+          WsConnectionStatus,
+          Stream<WsConnectionStatus>
+        >
+    with
+        $FutureModifier<WsConnectionStatus>,
+        $StreamProvider<WsConnectionStatus> {
+  AppWebSocketStatusProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'appWebSocketStatusProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$appWebSocketStatusHash();
+
+  @$internal
+  @override
+  $StreamProviderElement<WsConnectionStatus> $createElement(
+    $ProviderPointer pointer,
+  ) => $StreamProviderElement(pointer);
+
+  @override
+  Stream<WsConnectionStatus> create(Ref ref) {
+    return appWebSocketStatus(ref);
+  }
+}
+
+String _$appWebSocketStatusHash() =>
+    r'e9223bcd167e1f64d24da5ce31440ee65afbcc79';
+
 @ProviderFor(noAuthApiClient)
 final noAuthApiClientProvider = NoAuthApiClientProvider._();
 
@@ -340,51 +525,3 @@ final class PublicApiClientProvider
 }
 
 String _$publicApiClientHash() => r'20b91b552704a886f8ae3ff7b5aca36f8d9154e9';
-
-@ProviderFor(appWebSocketClient)
-final appWebSocketClientProvider = AppWebSocketClientProvider._();
-
-final class AppWebSocketClientProvider
-    extends
-        $FunctionalProvider<
-          AppWebSocketClient,
-          AppWebSocketClient,
-          AppWebSocketClient
-        >
-    with $Provider<AppWebSocketClient> {
-  AppWebSocketClientProvider._()
-    : super(
-        from: null,
-        argument: null,
-        retry: null,
-        name: r'appWebSocketClientProvider',
-        isAutoDispose: false,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
-
-  @override
-  String debugGetCreateSourceHash() => _$appWebSocketClientHash();
-
-  @$internal
-  @override
-  $ProviderElement<AppWebSocketClient> $createElement(
-    $ProviderPointer pointer,
-  ) => $ProviderElement(pointer);
-
-  @override
-  AppWebSocketClient create(Ref ref) {
-    return appWebSocketClient(ref);
-  }
-
-  /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(AppWebSocketClient value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<AppWebSocketClient>(value),
-    );
-  }
-}
-
-String _$appWebSocketClientHash() =>
-    r'df7e7d7895b863519e64a5e69b4ca7e720d00018';

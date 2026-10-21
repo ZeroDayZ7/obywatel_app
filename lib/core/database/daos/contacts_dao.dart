@@ -30,6 +30,26 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
+  Future<bool> hasExistingRelationForUser({
+    required String currentUserId,
+    required String targetUserId,
+  }) async {
+    final existing =
+        await (select(contacts)
+              ..where(
+                (t) =>
+                    t.deletedAt.isNull() &
+                    ((t.ownerId.equals(currentUserId) &
+                            t.contactId.equals(targetUserId)) |
+                        (t.ownerId.equals(targetUserId) &
+                            t.contactId.equals(currentUserId))),
+              )
+              ..limit(1))
+            .getSingleOrNull();
+
+    return existing != null;
+  }
+
   Future<BigInt> getMaxContactVersion() async {
     final maxVerExpr = contacts.version.max();
     final query = selectOnly(contacts)..addColumns([maxVerExpr]);
@@ -58,11 +78,11 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
     await (update(contacts)
           ..where((t) => t.contactId.equals(contactId) & t.deletedAt.isNull()))
         .write(
-      ContactsCompanion(
-        localAlias: Value(normalized),
-        updatedAt: Value(DateTime.now()),
-      ),
-    );
+          ContactsCompanion(
+            localAlias: Value(normalized),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
   }
 
   Future<void> updateStatus({
@@ -75,5 +95,43 @@ class ContactsDao extends DatabaseAccessor<AppDatabase>
         updatedAt: Value(DateTime.now()),
       ),
     );
+  }
+
+  Future<ContactEntity?> getPendingPlaceholderForRelation({
+    required String contactId,
+    required String currentUserId,
+    required String relationOwnerId,
+  }) {
+    return (select(contacts)
+          ..where(
+            (t) =>
+                t.contactId.equals(contactId) &
+                t.status.equals('pending') &
+                t.deletedAt.isNull() &
+                ((t.ownerId.equals('local_user')) |
+                    (t.ownerId.equals(currentUserId)) |
+                    (t.ownerId.equals(relationOwnerId))),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
+        .getSingleOrNull();
+  }
+
+  Future<void> removePendingDuplicatesForRelation({
+    required String contactId,
+    required String currentUserId,
+    required String relationOwnerId,
+    required String keepRowId,
+  }) async {
+    await (delete(contacts)..where(
+          (t) =>
+              t.contactId.equals(contactId) &
+              t.status.equals('pending') &
+              t.deletedAt.isNull() &
+              t.id.isNotValue(keepRowId) &
+              ((t.ownerId.equals('local_user')) |
+                  (t.ownerId.equals(currentUserId)) |
+                  (t.ownerId.equals(relationOwnerId))),
+        ))
+        .go();
   }
 }

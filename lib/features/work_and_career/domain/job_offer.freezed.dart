@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'job_offer.dart';
@@ -9,6 +9,7 @@ part of 'job_offer.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $JobOfferCopyWith<JobOffer> get copyWith => _$JobOfferCopyWithImpl<JobOffer>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is JobOffer&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.company, company) || other.company == company)&&(identical(other.location, location) || other.location == location)&&(identical(other.salary, salary) || other.salary == salary)&&(identical(other.type, type) || other.type == type));
+  final _this = this as JobOffer;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is JobOffer&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.company, _this.company) || other.company == _this.company)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.salary, _this.salary) || other.salary == _this.salary)&&(identical(other.type, _this.type) || other.type == _this.type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,company,location,salary,type);
+int get hashCode {
+  final _this = this as JobOffer;
+  return Object.hash(runtimeType,_this.id,_this.title,_this.company,_this.location,_this.salary,_this.type);
+}
 
 @override
 String toString() {
-  return 'JobOffer(id: $id, title: $title, company: $company, location: $location, salary: $salary, type: $type)';
+  final _this = this as JobOffer;
+  return 'JobOffer(id: ${_this.id}, title: ${_this.title}, company: ${_this.company}, location: ${_this.location}, salary: ${_this.salary}, type: ${_this.type})';
 }
 
 
@@ -66,7 +72,7 @@ class _$JobOfferCopyWithImpl<$Res>
 /// Create a copy of JobOffer
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? company = null,Object? location = null,Object? salary = null,Object? type = null,}) {
-  return _then(_self.copyWith(
+  return _then(JobOffer(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,company: null == company ? _self.company : company // ignore: cast_nullable_to_non_nullable
@@ -231,16 +237,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _JobOffer&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.company, company) || other.company == company)&&(identical(other.location, location) || other.location == location)&&(identical(other.salary, salary) || other.salary == salary)&&(identical(other.type, type) || other.type == type));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _JobOffer&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.company, company) || other.company == company)&&(identical(other.location, location) || other.location == location)&&(identical(other.salary, salary) || other.salary == salary)&&(identical(other.type, type) || other.type == type));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,title,company,location,salary,type);
+int get hashCode {
+    return Object.hash(runtimeType,id,title,company,location,salary,type);
+}
 
 @override
 String toString() {
-  return 'JobOffer(id: $id, title: $title, company: $company, location: $location, salary: $salary, type: $type)';
+    return 'JobOffer(id: $id, title: $title, company: $company, location: $location, salary: $salary, type: $type)';
 }
 
 

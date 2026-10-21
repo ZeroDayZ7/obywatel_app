@@ -7,28 +7,30 @@ part of 'contact_dto.dart';
 // **************************************************************************
 
 _ContactDto _$ContactDtoFromJson(Map<String, dynamic> json) => _ContactDto(
-  id: json['ID'] as String,
-  ownerId: json['OwnerID'] as String,
-  contactId: json['ContactID'] as String,
-  status: json['Status'] as String,
-  localAlias: json['local_alias'] as String?,
-  version: (json['Version'] as num).toInt(),
-  createdAt: json['created_at'] == null
+  id: json['id'] as String,
+  ownerId: json['ownerId'] as String,
+  contactId: json['contactId'] as String,
+  status: json['status'] as String,
+  direction: json['direction'] as String,
+  localAlias: json['localAlias'] as String?,
+  version: (json['version'] as num).toInt(),
+  createdAt: json['createdAt'] == null
       ? null
-      : DateTime.parse(json['created_at'] as String),
-  updatedAt: json['updated_at'] == null
+      : DateTime.parse(json['createdAt'] as String),
+  updatedAt: json['updatedAt'] == null
       ? null
-      : DateTime.parse(json['updated_at'] as String),
+      : DateTime.parse(json['updatedAt'] as String),
 );
 
 Map<String, dynamic> _$ContactDtoToJson(_ContactDto instance) =>
     <String, dynamic>{
-      'ID': instance.id,
-      'OwnerID': instance.ownerId,
-      'ContactID': instance.contactId,
-      'Status': instance.status,
-      'local_alias': instance.localAlias,
-      'Version': instance.version,
-      'created_at': instance.createdAt?.toIso8601String(),
-      'updated_at': instance.updatedAt?.toIso8601String(),
+      'id': instance.id,
+      'ownerId': instance.ownerId,
+      'contactId': instance.contactId,
+      'status': instance.status,
+      'direction': instance.direction,
+      'localAlias': instance.localAlias,
+      'version': instance.version,
+      'createdAt': instance.createdAt?.toIso8601String(),
+      'updatedAt': instance.updatedAt?.toIso8601String(),
     };

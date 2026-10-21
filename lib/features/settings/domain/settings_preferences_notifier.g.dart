@@ -53,7 +53,7 @@ abstract class _$SettingsPreferencesNotifier
   SettingsPreferencesState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<SettingsPreferencesState, SettingsPreferencesState>;
     final element =
@@ -64,6 +64,6 @@ abstract class _$SettingsPreferencesNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

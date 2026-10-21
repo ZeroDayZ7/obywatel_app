@@ -32,10 +32,10 @@ final class AppProviderObserver extends ProviderObserver {
     }
 
     // Zwięzłe logowanie bez wielkich odstępów i nowej linii
-    _logger.d(
-      'Updated: $name | PREV: $previousValue -> NEXT: $newValue',
-      module: 'Riverpod',
-    );
+    // _logger.d(
+    //   'Updated: $name | PREV: $previousValue -> NEXT: $newValue',
+    //   module: 'Riverpod',
+    // );
   }
 
   @override

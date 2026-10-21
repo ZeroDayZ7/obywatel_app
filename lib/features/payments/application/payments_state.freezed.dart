@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'payments_state.dart';
@@ -9,6 +9,7 @@ part of 'payments_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $PaymentsStateCopyWith<PaymentsState> get copyWith => _$PaymentsStateCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentsState&&(identical(other.balance, balance) || other.balance == balance)&&const DeepCollectionEquality().equals(other.transactions, transactions)&&const DeepCollectionEquality().equals(other.quickActions, quickActions)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error));
+  final _this = this as PaymentsState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PaymentsState&&(identical(other.balance, _this.balance) || other.balance == _this.balance)&&const DeepCollectionEquality().equals(other.transactions, _this.transactions)&&const DeepCollectionEquality().equals(other.quickActions, _this.quickActions)&&(identical(other.isLoading, _this.isLoading) || other.isLoading == _this.isLoading)&&(identical(other.error, _this.error) || other.error == _this.error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,balance,const DeepCollectionEquality().hash(transactions),const DeepCollectionEquality().hash(quickActions),isLoading,error);
+int get hashCode {
+  final _this = this as PaymentsState;
+  return Object.hash(runtimeType,_this.balance,const DeepCollectionEquality().hash(_this.transactions),const DeepCollectionEquality().hash(_this.quickActions),_this.isLoading,_this.error);
+}
 
 @override
 String toString() {
-  return 'PaymentsState(balance: $balance, transactions: $transactions, quickActions: $quickActions, isLoading: $isLoading, error: $error)';
+  final _this = this as PaymentsState;
+  return 'PaymentsState(balance: ${_this.balance}, transactions: ${_this.transactions}, quickActions: ${_this.quickActions}, isLoading: ${_this.isLoading}, error: ${_this.error})';
 }
 
 
@@ -63,7 +69,7 @@ class _$PaymentsStateCopyWithImpl<$Res>
 /// Create a copy of PaymentsState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? balance = null,Object? transactions = null,Object? quickActions = null,Object? isLoading = null,Object? error = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(PaymentsState(
 balance: null == balance ? _self.balance : balance // ignore: cast_nullable_to_non_nullable
 as WalletBalance,transactions: null == transactions ? _self.transactions : transactions // ignore: cast_nullable_to_non_nullable
 as List<PaymentTransaction>,quickActions: null == quickActions ? _self.quickActions : quickActions // ignore: cast_nullable_to_non_nullable
@@ -213,7 +219,7 @@ return $default(_that.balance,_that.transactions,_that.quickActions,_that.isLoad
 
 
 class _PaymentsState implements PaymentsState {
-  const _PaymentsState({required this.balance, required final  List<PaymentTransaction> transactions, required final  List<QuickAction> quickActions, this.isLoading = false, this.error}): _transactions = transactions,_quickActions = quickActions;
+  const _PaymentsState({required this.balance, required  List<PaymentTransaction> transactions, required  List<QuickAction> quickActions, this.isLoading = false, this.error}): _transactions = transactions,_quickActions = quickActions;
   
 
 @override final  WalletBalance balance;
@@ -244,16 +250,18 @@ _$PaymentsStateCopyWith<_PaymentsState> get copyWith => __$PaymentsStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaymentsState&&(identical(other.balance, balance) || other.balance == balance)&&const DeepCollectionEquality().equals(other._transactions, _transactions)&&const DeepCollectionEquality().equals(other._quickActions, _quickActions)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PaymentsState&&(identical(other.balance, balance) || other.balance == balance)&&const DeepCollectionEquality().equals(other.transactions, _transactions)&&const DeepCollectionEquality().equals(other.quickActions, _quickActions)&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.error, error) || other.error == error));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,balance,const DeepCollectionEquality().hash(_transactions),const DeepCollectionEquality().hash(_quickActions),isLoading,error);
+int get hashCode {
+    return Object.hash(runtimeType,balance,const DeepCollectionEquality().hash(_transactions),const DeepCollectionEquality().hash(_quickActions),isLoading,error);
+}
 
 @override
 String toString() {
-  return 'PaymentsState(balance: $balance, transactions: $transactions, quickActions: $quickActions, isLoading: $isLoading, error: $error)';
+    return 'PaymentsState(balance: $balance, transactions: $transactions, quickActions: $quickActions, isLoading: $isLoading, error: $error)';
 }
 
 

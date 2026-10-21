@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'contact.dart';
@@ -9,12 +9,13 @@ part of 'contact.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$Contact {
 
- String get id; String get ownerId; String get contactUserId; String get status; String? get localAlias; String get displayName; String? get avatarUrl; bool? get isOnline; DateTime? get createdAt;
+ String get id; String get ownerId; String get contactUserId; String get status; String get direction; String? get localAlias; String get displayName; String? get avatarUrl; bool? get isOnline; DateTime? get createdAt;
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +26,21 @@ $ContactCopyWith<Contact> get copyWith => _$ContactCopyWithImpl<Contact>(this as
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.status, status) || other.status == status)&&(identical(other.localAlias, localAlias) || other.localAlias == localAlias)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as Contact;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Contact&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.ownerId, _this.ownerId) || other.ownerId == _this.ownerId)&&(identical(other.contactUserId, _this.contactUserId) || other.contactUserId == _this.contactUserId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.direction, _this.direction) || other.direction == _this.direction)&&(identical(other.localAlias, _this.localAlias) || other.localAlias == _this.localAlias)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.avatarUrl, _this.avatarUrl) || other.avatarUrl == _this.avatarUrl)&&(identical(other.isOnline, _this.isOnline) || other.isOnline == _this.isOnline)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,contactUserId,status,localAlias,displayName,avatarUrl,isOnline,createdAt);
+int get hashCode {
+  final _this = this as Contact;
+  return Object.hash(runtimeType,_this.id,_this.ownerId,_this.contactUserId,_this.status,_this.direction,_this.localAlias,_this.displayName,_this.avatarUrl,_this.isOnline,_this.createdAt);
+}
 
 @override
 String toString() {
-  return 'Contact(id: $id, ownerId: $ownerId, contactUserId: $contactUserId, status: $status, localAlias: $localAlias, displayName: $displayName, avatarUrl: $avatarUrl, isOnline: $isOnline, createdAt: $createdAt)';
+  final _this = this as Contact;
+  return 'Contact(id: ${_this.id}, ownerId: ${_this.ownerId}, contactUserId: ${_this.contactUserId}, status: ${_this.status}, direction: ${_this.direction}, localAlias: ${_this.localAlias}, displayName: ${_this.displayName}, avatarUrl: ${_this.avatarUrl}, isOnline: ${_this.isOnline}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -45,7 +51,7 @@ abstract mixin class $ContactCopyWith<$Res>  {
   factory $ContactCopyWith(Contact value, $Res Function(Contact) _then) = _$ContactCopyWithImpl;
 @useResult
 $Res call({
- String id, String ownerId, String contactUserId, String status, String? localAlias, String displayName, String? avatarUrl, bool? isOnline, DateTime? createdAt
+ String id, String ownerId, String contactUserId, String status, String direction, String? localAlias, String displayName, String? avatarUrl, bool? isOnline, DateTime? createdAt
 });
 
 
@@ -62,12 +68,13 @@ class _$ContactCopyWithImpl<$Res>
 
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? ownerId = null,Object? contactUserId = null,Object? status = null,Object? localAlias = freezed,Object? displayName = null,Object? avatarUrl = freezed,Object? isOnline = freezed,Object? createdAt = freezed,}) {
-  return _then(_self.copyWith(
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? ownerId = null,Object? contactUserId = null,Object? status = null,Object? direction = null,Object? localAlias = freezed,Object? displayName = null,Object? avatarUrl = freezed,Object? isOnline = freezed,Object? createdAt = freezed,}) {
+  return _then(Contact(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,contactUserId: null == contactUserId ? _self.contactUserId : contactUserId // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
 as String,localAlias: freezed == localAlias ? _self.localAlias : localAlias // ignore: cast_nullable_to_non_nullable
 as String?,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable
@@ -158,10 +165,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactUserId,  String status,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactUserId,  String status,  String direction,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _Contact() when $default != null:
-return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.direction,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
   return orElse();
 
 }
@@ -179,10 +186,10 @@ return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.lo
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactUserId,  String status,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String ownerId,  String contactUserId,  String status,  String direction,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)  $default,) {final _that = this;
 switch (_that) {
 case _Contact():
-return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.direction,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -199,10 +206,10 @@ return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.lo
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String ownerId,  String contactUserId,  String status,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String ownerId,  String contactUserId,  String status,  String direction,  String? localAlias,  String displayName,  String? avatarUrl,  bool? isOnline,  DateTime? createdAt)?  $default,) {final _that = this;
 switch (_that) {
 case _Contact() when $default != null:
-return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
+return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.direction,_that.localAlias,_that.displayName,_that.avatarUrl,_that.isOnline,_that.createdAt);case _:
   return null;
 
 }
@@ -214,13 +221,14 @@ return $default(_that.id,_that.ownerId,_that.contactUserId,_that.status,_that.lo
 
 
 class _Contact implements Contact {
-  const _Contact({required this.id, required this.ownerId, required this.contactUserId, required this.status, this.localAlias, required this.displayName, this.avatarUrl, this.isOnline, this.createdAt});
+  const _Contact({required this.id, required this.ownerId, required this.contactUserId, required this.status, required this.direction, this.localAlias, required this.displayName, this.avatarUrl, this.isOnline, this.createdAt});
   
 
 @override final  String id;
 @override final  String ownerId;
 @override final  String contactUserId;
 @override final  String status;
+@override final  String direction;
 @override final  String? localAlias;
 @override final  String displayName;
 @override final  String? avatarUrl;
@@ -237,16 +245,18 @@ _$ContactCopyWith<_Contact> get copyWith => __$ContactCopyWithImpl<_Contact>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.status, status) || other.status == status)&&(identical(other.localAlias, localAlias) || other.localAlias == localAlias)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Contact&&(identical(other.id, id) || other.id == id)&&(identical(other.ownerId, ownerId) || other.ownerId == ownerId)&&(identical(other.contactUserId, contactUserId) || other.contactUserId == contactUserId)&&(identical(other.status, status) || other.status == status)&&(identical(other.direction, direction) || other.direction == direction)&&(identical(other.localAlias, localAlias) || other.localAlias == localAlias)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.avatarUrl, avatarUrl) || other.avatarUrl == avatarUrl)&&(identical(other.isOnline, isOnline) || other.isOnline == isOnline)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,ownerId,contactUserId,status,localAlias,displayName,avatarUrl,isOnline,createdAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,ownerId,contactUserId,status,direction,localAlias,displayName,avatarUrl,isOnline,createdAt);
+}
 
 @override
 String toString() {
-  return 'Contact(id: $id, ownerId: $ownerId, contactUserId: $contactUserId, status: $status, localAlias: $localAlias, displayName: $displayName, avatarUrl: $avatarUrl, isOnline: $isOnline, createdAt: $createdAt)';
+    return 'Contact(id: $id, ownerId: $ownerId, contactUserId: $contactUserId, status: $status, direction: $direction, localAlias: $localAlias, displayName: $displayName, avatarUrl: $avatarUrl, isOnline: $isOnline, createdAt: $createdAt)';
 }
 
 
@@ -257,7 +267,7 @@ abstract mixin class _$ContactCopyWith<$Res> implements $ContactCopyWith<$Res> {
   factory _$ContactCopyWith(_Contact value, $Res Function(_Contact) _then) = __$ContactCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String ownerId, String contactUserId, String status, String? localAlias, String displayName, String? avatarUrl, bool? isOnline, DateTime? createdAt
+ String id, String ownerId, String contactUserId, String status, String direction, String? localAlias, String displayName, String? avatarUrl, bool? isOnline, DateTime? createdAt
 });
 
 
@@ -274,12 +284,13 @@ class __$ContactCopyWithImpl<$Res>
 
 /// Create a copy of Contact
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? ownerId = null,Object? contactUserId = null,Object? status = null,Object? localAlias = freezed,Object? displayName = null,Object? avatarUrl = freezed,Object? isOnline = freezed,Object? createdAt = freezed,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? ownerId = null,Object? contactUserId = null,Object? status = null,Object? direction = null,Object? localAlias = freezed,Object? displayName = null,Object? avatarUrl = freezed,Object? isOnline = freezed,Object? createdAt = freezed,}) {
   return _then(_Contact(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,ownerId: null == ownerId ? _self.ownerId : ownerId // ignore: cast_nullable_to_non_nullable
 as String,contactUserId: null == contactUserId ? _self.contactUserId : contactUserId // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
+as String,direction: null == direction ? _self.direction : direction // ignore: cast_nullable_to_non_nullable
 as String,localAlias: freezed == localAlias ? _self.localAlias : localAlias // ignore: cast_nullable_to_non_nullable
 as String?,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,avatarUrl: freezed == avatarUrl ? _self.avatarUrl : avatarUrl // ignore: cast_nullable_to_non_nullable

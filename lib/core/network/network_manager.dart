@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'network_manager.g.dart';
 
 enum NetworkState {
   unknown,
@@ -155,15 +157,15 @@ class NetworkManager {
   }
 }
 
-final networkManagerProvider = Provider<NetworkManager>((ref) {
+@Riverpod(keepAlive: true)
+NetworkManager networkManager(Ref ref) {
   final manager = NetworkManager();
-
   ref.onDispose(manager.dispose);
-
   return manager;
-});
+}
 
-final networkStateProvider = StreamProvider<NetworkState>((ref) {
+@riverpod
+Stream<NetworkState> networkState(Ref ref) {
   final manager = ref.watch(networkManagerProvider);
   return manager.stream;
-});
+}

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'log_models.dart';
@@ -9,6 +9,7 @@ part of 'log_models.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $BreadcrumbCopyWith<Breadcrumb> get copyWith => _$BreadcrumbCopyWithImpl<Breadcr
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is Breadcrumb&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.message, message) || other.message == message)&&(identical(other.level, level) || other.level == level)&&(identical(other.module, module) || other.module == module));
+  final _this = this as Breadcrumb;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is Breadcrumb&&(identical(other.timestamp, _this.timestamp) || other.timestamp == _this.timestamp)&&(identical(other.message, _this.message) || other.message == _this.message)&&(identical(other.level, _this.level) || other.level == _this.level)&&(identical(other.module, _this.module) || other.module == _this.module));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,timestamp,message,level,module);
+int get hashCode {
+  final _this = this as Breadcrumb;
+  return Object.hash(runtimeType,_this.timestamp,_this.message,_this.level,_this.module);
+}
 
 @override
 String toString() {
-  return 'Breadcrumb(timestamp: $timestamp, message: $message, level: $level, module: $module)';
+  final _this = this as Breadcrumb;
+  return 'Breadcrumb(timestamp: ${_this.timestamp}, message: ${_this.message}, level: ${_this.level}, module: ${_this.module})';
 }
 
 
@@ -66,7 +72,7 @@ class _$BreadcrumbCopyWithImpl<$Res>
 /// Create a copy of Breadcrumb
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? timestamp = null,Object? message = null,Object? level = null,Object? module = null,}) {
-  return _then(_self.copyWith(
+  return _then(Breadcrumb(
 timestamp: null == timestamp ? _self.timestamp : timestamp // ignore: cast_nullable_to_non_nullable
 as String,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
@@ -227,16 +233,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Breadcrumb&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.message, message) || other.message == message)&&(identical(other.level, level) || other.level == level)&&(identical(other.module, module) || other.module == module));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Breadcrumb&&(identical(other.timestamp, timestamp) || other.timestamp == timestamp)&&(identical(other.message, message) || other.message == message)&&(identical(other.level, level) || other.level == level)&&(identical(other.module, module) || other.module == module));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,timestamp,message,level,module);
+int get hashCode {
+    return Object.hash(runtimeType,timestamp,message,level,module);
+}
 
 @override
 String toString() {
-  return 'Breadcrumb(timestamp: $timestamp, message: $message, level: $level, module: $module)';
+    return 'Breadcrumb(timestamp: $timestamp, message: $message, level: $level, module: $module)';
 }
 
 
@@ -294,16 +302,21 @@ $LogPayloadCopyWith<LogPayload> get copyWith => _$LogPayloadCopyWithImpl<LogPayl
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is LogPayload&&(identical(other.level, level) || other.level == level)&&(identical(other.message, message) || other.message == message)&&(identical(other.env, env) || other.env == env)&&(identical(other.error, error) || other.error == error)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace)&&const DeepCollectionEquality().equals(other.breadcrumbs, breadcrumbs)&&(identical(other.service, service) || other.service == service));
+  final _this = this as LogPayload;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is LogPayload&&(identical(other.level, _this.level) || other.level == _this.level)&&(identical(other.message, _this.message) || other.message == _this.message)&&(identical(other.env, _this.env) || other.env == _this.env)&&(identical(other.error, _this.error) || other.error == _this.error)&&(identical(other.stackTrace, _this.stackTrace) || other.stackTrace == _this.stackTrace)&&const DeepCollectionEquality().equals(other.breadcrumbs, _this.breadcrumbs)&&(identical(other.service, _this.service) || other.service == _this.service));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,level,message,env,error,stackTrace,const DeepCollectionEquality().hash(breadcrumbs),service);
+int get hashCode {
+  final _this = this as LogPayload;
+  return Object.hash(runtimeType,_this.level,_this.message,_this.env,_this.error,_this.stackTrace,const DeepCollectionEquality().hash(_this.breadcrumbs),_this.service);
+}
 
 @override
 String toString() {
-  return 'LogPayload(level: $level, message: $message, env: $env, error: $error, stackTrace: $stackTrace, breadcrumbs: $breadcrumbs, service: $service)';
+  final _this = this as LogPayload;
+  return 'LogPayload(level: ${_this.level}, message: ${_this.message}, env: ${_this.env}, error: ${_this.error}, stackTrace: ${_this.stackTrace}, breadcrumbs: ${_this.breadcrumbs}, service: ${_this.service})';
 }
 
 
@@ -332,7 +345,7 @@ class _$LogPayloadCopyWithImpl<$Res>
 /// Create a copy of LogPayload
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? level = null,Object? message = null,Object? env = null,Object? error = freezed,Object? stackTrace = freezed,Object? breadcrumbs = null,Object? service = null,}) {
-  return _then(_self.copyWith(
+  return _then(LogPayload(
 level: null == level ? _self.level : level // ignore: cast_nullable_to_non_nullable
 as LogLevel,message: null == message ? _self.message : message // ignore: cast_nullable_to_non_nullable
 as String,env: null == env ? _self.env : env // ignore: cast_nullable_to_non_nullable
@@ -475,7 +488,7 @@ return $default(_that.level,_that.message,_that.env,_that.error,_that.stackTrace
 @JsonSerializable()
 
 class _LogPayload implements LogPayload {
-  const _LogPayload({required this.level, required this.message, required this.env, this.error, this.stackTrace, required final  List<Breadcrumb> breadcrumbs, this.service = 'obywatel_app'}): _breadcrumbs = breadcrumbs;
+  const _LogPayload({required this.level, required this.message, required this.env, this.error, this.stackTrace, required  List<Breadcrumb> breadcrumbs, this.service = 'obywatel_app'}): _breadcrumbs = breadcrumbs;
   factory _LogPayload.fromJson(Map<String, dynamic> json) => _$LogPayloadFromJson(json);
 
 @override final  LogLevel level;
@@ -505,16 +518,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LogPayload&&(identical(other.level, level) || other.level == level)&&(identical(other.message, message) || other.message == message)&&(identical(other.env, env) || other.env == env)&&(identical(other.error, error) || other.error == error)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace)&&const DeepCollectionEquality().equals(other._breadcrumbs, _breadcrumbs)&&(identical(other.service, service) || other.service == service));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LogPayload&&(identical(other.level, level) || other.level == level)&&(identical(other.message, message) || other.message == message)&&(identical(other.env, env) || other.env == env)&&(identical(other.error, error) || other.error == error)&&(identical(other.stackTrace, stackTrace) || other.stackTrace == stackTrace)&&const DeepCollectionEquality().equals(other.breadcrumbs, _breadcrumbs)&&(identical(other.service, service) || other.service == service));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,level,message,env,error,stackTrace,const DeepCollectionEquality().hash(_breadcrumbs),service);
+int get hashCode {
+    return Object.hash(runtimeType,level,message,env,error,stackTrace,const DeepCollectionEquality().hash(_breadcrumbs),service);
+}
 
 @override
 String toString() {
-  return 'LogPayload(level: $level, message: $message, env: $env, error: $error, stackTrace: $stackTrace, breadcrumbs: $breadcrumbs, service: $service)';
+    return 'LogPayload(level: $level, message: $message, env: $env, error: $error, stackTrace: $stackTrace, breadcrumbs: $breadcrumbs, service: $service)';
 }
 
 

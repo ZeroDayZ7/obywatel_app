@@ -38,7 +38,7 @@ class PinValidationException implements Exception {
 /// Serwis obsługi PIN
 class PinService {
   /// Flaga ręcznego włączania/wyłączania szczegółowych logów debugowych w tym pliku.
-  static const bool _enableVerboseLogging = false;
+  // static const bool _enableVerboseLogging = false;
 
   final SecureStorageService _storage;
   final HashService _hashService;
@@ -63,11 +63,11 @@ class PinService {
         _crypto = crypto,
         _logger = logger;
 
-  void _logDebug(String message) {
-    if (_enableVerboseLogging) {
-      _logger.d(message);
-    }
-  }
+  // void _logDebug(String message) {
+  //   if (_enableVerboseLogging) {
+  //     _logger.d(message);
+  //   }
+  // }
 
   // ---------------------------------------------------------------------------
   // INIT / SET PIN
@@ -108,8 +108,8 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<bool> verifyPin(List<int> pinCodes) async {
-    _logger.i('[PIN-SERVICE] Weryfikacja PIN...');
-    _logDebug('[PIN-SERVICE] Długość PIN: ${pinCodes.length}');
+    // _logger.i('[PIN-SERVICE] Weryfikacja PIN...');
+    // _logDebug('[PIN-SERVICE] Długość PIN: ${pinCodes.length}');
 
     _validatePinList(pinCodes);
 

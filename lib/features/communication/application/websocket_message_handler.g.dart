@@ -55,4 +55,4 @@ final class WebSocketMessageHandlerProvider
 }
 
 String _$webSocketMessageHandlerHash() =>
-    r'591a88914db3a1e1dbc8d7e32e41a437542e7bf9';
+    r'f3a2d6b08f3cab97e91132b5da9bb53e82d76c91';

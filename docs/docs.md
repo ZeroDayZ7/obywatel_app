@@ -1,5 +1,8 @@
 adb devices
 
+dart run build_runner clean
+dart run build_runner build
+
 5200d78bfa479449 device 17
 310008a89dd353f9 unauthorized 16
 

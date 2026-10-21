@@ -42,14 +42,14 @@ final class PinVerificationNotifierProvider
 }
 
 String _$pinVerificationNotifierHash() =>
-    r'20483b038d650f058521cd34c6b077282073eff8';
+    r'a47d4d18310ca8617a9405b832cab8c0c0ef9e92';
 
 abstract class _$PinVerificationNotifier
     extends $Notifier<PinVerificationState> {
   PinVerificationState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PinVerificationState, PinVerificationState>;
     final element =
         ref.element
@@ -59,6 +59,6 @@ abstract class _$PinVerificationNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

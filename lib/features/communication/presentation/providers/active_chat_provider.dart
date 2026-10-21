@@ -1,8 +1,8 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
-import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
+import 'dart:async';
+
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
+import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'active_chat_provider.g.dart';
@@ -13,48 +13,46 @@ enum E2eeSessionUiStatus {
   failed,
 }
 
-final chatE2eeSessionStatusProvider = FutureProvider.family<
-    E2eeSessionUiStatus,
-    String
->((ref, conversationId) async {
-  final currentUserId = ref.watch(currentUserIdProvider);
-  final remoteUserId = conversationId
-      .split(':')
-      .where((id) => id.trim().isNotEmpty && id != currentUserId)
-      .firstOrNull ?? '';
-
-  if (remoteUserId.isEmpty) {
-    return E2eeSessionUiStatus.ready;
-  }
-
+@riverpod
+FutureOr<E2eeSessionUiStatus> chatE2eeSessionStatus(
+  Ref ref,
+  String conversationId,
+) async {
   try {
     final repository = ref.read(chatsRepositoryProvider);
+    final remoteUserId = await repository.resolvePeerUserIdForConversation(
+      conversationId,
+    );
+    if (remoteUserId == conversationId.trim()) {
+      return E2eeSessionUiStatus.ready;
+    }
     await repository.ensureE2eeSessionForContact(remoteUserId);
     return E2eeSessionUiStatus.ready;
+  } on ArgumentError {
+    return E2eeSessionUiStatus.failed;
   } catch (_) {
     return E2eeSessionUiStatus.failed;
   }
-});
+}
 
 @riverpod
 class ActiveChat extends _$ActiveChat {
+  late ChatsRepository _repository;
+
   @override
   Stream<List<Message>> build(String conversationId) {
-    final repository = ref.watch(chatsRepositoryProvider);
-    return repository.watchMessagesForConversation(conversationId);
+    _repository = ref.watch(chatsRepositoryProvider);
+    return _repository.watchMessagesForConversation(conversationId);
   }
 
-  Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  Future<void> sendMessage(String text, {String? attachmentId}) async {
+    final normalizedText = text.trim();
+    if (normalizedText.isEmpty && attachmentId == null) return;
 
-    final cryptoService = ref.read(e2eeCryptoServiceProvider);
-    final repository = ref.read(chatsRepositoryProvider);
-
-    final encrypted = await cryptoService.encryptMessage(conversationId, text);
-
-    await repository.sendMessage(
+    await _repository.sendMessage(
       conversationId: conversationId,
-      content: encrypted.ciphertextBase64,
+      content: normalizedText,
+      attachmentId: attachmentId,
     );
   }
 }

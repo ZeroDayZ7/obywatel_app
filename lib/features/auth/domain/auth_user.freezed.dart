@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'auth_user.dart';
@@ -9,6 +9,7 @@ part of 'auth_user.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $AuthUserCopyWith<AuthUser> get copyWith => _$AuthUserCopyWithImpl<AuthUser>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+  final _this = this as AuthUser;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthUser&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.username, _this.username) || other.username == _this.username)&&(identical(other.email, _this.email) || other.email == _this.email)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.role, _this.role) || other.role == _this.role)&&const DeepCollectionEquality().equals(other.permissions, _this.permissions)&&(identical(other.lastLogin, _this.lastLogin) || other.lastLogin == _this.lastLogin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,email,displayName,status,role,const DeepCollectionEquality().hash(permissions),lastLogin);
+int get hashCode {
+  final _this = this as AuthUser;
+  return Object.hash(runtimeType,_this.id,_this.username,_this.email,_this.displayName,_this.status,_this.role,const DeepCollectionEquality().hash(_this.permissions),_this.lastLogin);
+}
 
 @override
 String toString() {
-  return 'AuthUser(id: $id, username: $username, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
+  final _this = this as AuthUser;
+  return 'AuthUser(id: ${_this.id}, username: ${_this.username}, email: ${_this.email}, displayName: ${_this.displayName}, status: ${_this.status}, role: ${_this.role}, permissions: ${_this.permissions}, lastLogin: ${_this.lastLogin})';
 }
 
 
@@ -66,7 +72,7 @@ class _$AuthUserCopyWithImpl<$Res>
 /// Create a copy of AuthUser
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? username = null,Object? email = null,Object? displayName = null,Object? status = null,Object? role = null,Object? permissions = null,Object? lastLogin = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(AuthUser(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
 as String,email: null == email ? _self.email : email // ignore: cast_nullable_to_non_nullable
@@ -210,7 +216,7 @@ return $default(_that.id,_that.username,_that.email,_that.displayName,_that.stat
 @JsonSerializable()
 
 class _AuthUser extends AuthUser {
-  const _AuthUser({@JsonKey(readValue: _readUserId) required this.id, @JsonKey(readValue: _readUsername) this.username = '', @JsonKey(readValue: _readEmail) this.email = '', @JsonKey(readValue: _readDisplayName) this.displayName = '', this.status = 'ACTIVE', this.role = 'CITIZEN', @JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], @JsonKey(readValue: _readLastLogin, name: 'last_login') this.lastLogin}): _permissions = permissions,super._();
+  const _AuthUser({@JsonKey(readValue: _readUserId) required this.id, @JsonKey(readValue: _readUsername) this.username = '', @JsonKey(readValue: _readEmail) this.email = '', @JsonKey(readValue: _readDisplayName) this.displayName = '', this.status = 'ACTIVE', this.role = 'CITIZEN', @JsonKey(readValue: _readPermissions)  List<String> permissions = const [], @JsonKey(readValue: _readLastLogin, name: 'last_login') this.lastLogin}): _permissions = permissions,super._();
   factory _AuthUser.fromJson(Map<String, dynamic> json) => _$AuthUserFromJson(json);
 
 @override@JsonKey(readValue: _readUserId) final  String id;
@@ -241,16 +247,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _AuthUser&&(identical(other.id, id) || other.id == id)&&(identical(other.username, username) || other.username == username)&&(identical(other.email, email) || other.email == email)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.status, status) || other.status == status)&&(identical(other.role, role) || other.role == role)&&const DeepCollectionEquality().equals(other.permissions, _permissions)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,username,email,displayName,status,role,const DeepCollectionEquality().hash(_permissions),lastLogin);
+int get hashCode {
+    return Object.hash(runtimeType,id,username,email,displayName,status,role,const DeepCollectionEquality().hash(_permissions),lastLogin);
+}
 
 @override
 String toString() {
-  return 'AuthUser(id: $id, username: $username, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
+    return 'AuthUser(id: $id, username: $username, email: $email, displayName: $displayName, status: $status, role: $role, permissions: $permissions, lastLogin: $lastLogin)';
 }
 
 

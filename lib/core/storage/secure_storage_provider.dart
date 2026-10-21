@@ -9,8 +9,7 @@ part 'secure_storage_provider.g.dart';
 SecureStorageService secureStorage(Ref ref) {
   final logger = ref.watch(appLoggerProvider);
 
-  const androidOptions = AndroidOptions(resetOnError: true);
-
+  const androidOptions = AndroidOptions(resetOnError: false);
   const storage = FlutterSecureStorage(aOptions: androidOptions);
 
   return SecureStorageService(storage, logger);
@@ -26,10 +25,12 @@ class SecureStorageService {
   Future<void> write({required String key, required String value}) async {
     try {
       await _storage.write(key: key, value: value);
-      // Logujemy klucz i wartość
-      _logger.d('SecureStorage: wrote key "$key" with value: $value');
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to write key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to write key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -37,11 +38,13 @@ class SecureStorageService {
   /// Read a string value from secure storage
   Future<String?> read({required String key}) async {
     try {
-      final result = await _storage.read(key: key);
-      _logger.d('SecureStorage: read key "$key", value present: ${result != null}');
-      return result;
+      return await _storage.read(key: key);
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to read key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to read key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -50,7 +53,10 @@ class SecureStorageService {
     await write(key: key, value: value.toString());
   }
 
-  Future<bool> readBool({required String key, bool defaultValue = false}) async {
+  Future<bool> readBool({
+    required String key,
+    bool defaultValue = false,
+  }) async {
     final value = await read(key: key);
 
     if (value == null) {
@@ -64,9 +70,12 @@ class SecureStorageService {
   Future<void> delete({required String key}) async {
     try {
       await _storage.delete(key: key);
-      _logger.d('SecureStorage: deleted key "$key"');
     } catch (e, st) {
-      _logger.e('SecureStorage: failed to delete key "$key"', error: e, stackTrace: st);
+      _logger.e(
+        'SecureStorage: failed to delete key "$key"',
+        error: e,
+        stackTrace: st,
+      );
       rethrow;
     }
   }
@@ -85,9 +94,15 @@ class SecureStorageService {
   Future<void> debugPrintAll() async {
     final all = await _storage.readAll();
     if (all.isEmpty) {
-      _logger.d('===== SecureStorage: no entries. =====', module: 'SecureStorage');
+      _logger.d(
+        '===== SecureStorage: no entries. =====',
+        module: 'SecureStorage',
+      );
     } else {
-      _logger.d('===== SecureStorage contains ${all.length} entries =====', module: 'SecureStorage');
+      _logger.d(
+        '===== SecureStorage contains ${all.length} entries =====',
+        module: 'SecureStorage',
+      );
       all.forEach((key, value) {
         _logger.d('• $key: $value', module: 'SecureStorage');
       });

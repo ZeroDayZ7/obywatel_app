@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/foundation.dart'; // <-- Tutaj jest debugPrint
 import 'package:obywatel_plus/core/database/daos/chats_dao.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/crypto_keys_dao.dart';
@@ -14,6 +15,7 @@ import 'package:obywatel_plus/core/database/tables/conversation_members.dart';
 import 'package:obywatel_plus/core/database/tables/conversations.dart';
 import 'package:obywatel_plus/core/database/tables/crypto_keys.dart';
 import 'package:obywatel_plus/core/database/tables/messages.dart';
+import 'package:obywatel_plus/core/database/tables/messaging_activation_states.dart';
 import 'package:obywatel_plus/core/database/tables/notifications.dart';
 import 'package:obywatel_plus/core/database/tables/outbox_events.dart';
 import 'package:obywatel_plus/core/database/tables/signal_identity_keys.dart';
@@ -38,6 +40,7 @@ part 'database.g.dart';
     Conversations,
     ConversationMembers,
     Messages,
+    MessagingActivationStates,
     OutboxEvents,
     SyncState,
     SignalLocalIdentity,
@@ -60,49 +63,28 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
-      if (from < 2) {
-        await m.addColumn(notifications, notifications.deletedAt);
-      }
-      if (from < 3) {
-        await m.createTable(userDocuments);
-      }
-      if (from < 4) {
-        await m.createTable(contacts);
-        await m.createTable(conversations);
-        await m.createTable(conversationMembers);
-        await m.createTable(messages);
-        await m.createTable(outboxEvents);
-      }
-      if (from < 5) {
-        await m.createTable(syncState);
-      }
-      if (from < 6) {
-        await m.createTable(signalLocalIdentity);
-        await m.createTable(signalIdentityKeys);
-        await m.createTable(signalPreKeys);
-        await m.createTable(signalSignedPreKeys);
-        await m.createTable(signalSessions);
-      }
-      if (from < 7) {
-        await m.addColumn(contacts, contacts.syncState);
-        await m.addColumn(contacts, contacts.direction);
-        await m.addColumn(contacts, contacts.changeSequence);
-        await m.addColumn(outboxEvents, outboxEvents.entityType);
-        await m.addColumn(outboxEvents, outboxEvents.entityId);
-        await m.addColumn(outboxEvents, outboxEvents.attemptCount);
-        await m.addColumn(outboxEvents, outboxEvents.updatedAt);
-      }
+      // Brak migracji – czysty start od wersji 1
     },
     beforeOpen: (details) async {
       await customStatement('PRAGMA foreign_keys = ON');
     },
   );
+
+  Future<void> clearSignalStore() async {
+    await transaction(() async {
+      await delete(signalLocalIdentity).go();
+      await delete(signalIdentityKeys).go();
+      await delete(signalPreKeys).go();
+      await delete(signalSignedPreKeys).go();
+      await delete(signalSessions).go();
+    });
+  }
 
   Future<void> clearDatabase() async {
     await transaction(() async {
@@ -110,6 +92,22 @@ class AppDatabase extends _$AppDatabase {
         await delete(table).go();
       }
     });
+  }
+
+  Future<void> dumpDatabaseTables() async {
+    debugPrint('=== [DATABASE DUMP] START ===');
+    for (final table in allTables) {
+      try {
+        final rows = await select(table).get();
+        debugPrint('Tabela [${table.actualTableName}] - Liczba wierszy: ${rows.length}');
+        for (final row in rows) {
+          debugPrint('  -> $row');
+        }
+      } catch (e) {
+        debugPrint('Tabela [${table.actualTableName}] - Błąd odczytu: $e');
+      }
+    }
+    debugPrint('=== [DATABASE DUMP] END ===');
   }
 }
 
@@ -121,7 +119,36 @@ QueryExecutor openConnection(String encryptionKey) {
     return NativeDatabase.createInBackground(
       file,
       setup: (rawDb) {
-        rawDb.execute("PRAGMA key = '$encryptionKey';");
+        final cipher = rawDb.select('PRAGMA cipher;');
+
+        if (cipher.isEmpty) {
+          throw UnsupportedError('SQLite3MultipleCiphers is unavailable.');
+        }
+
+        final safeKey = encryptionKey.replaceAll("'", "''");
+        rawDb.execute("PRAGMA key = '$safeKey';");
+
+        try {
+          rawDb.select('SELECT count(*) FROM sqlite_master;');
+        } catch (e) {
+          if (e.toString().contains('code 26') || e.toString().contains('not a database')) {
+            debugPrint('[DATABASE-SECURITY] ⚠️ Stary plik bazy jest niekompatybilny. Usuwam plik i tworzę świeżą bazę...');
+            
+            try { rawDb.close(); } catch (_) {}
+            
+            if (file.existsSync()) {
+              file.deleteSync();
+            }
+
+            rawDb.execute("PRAGMA key = '$safeKey';");
+            rawDb.select('SELECT count(*) FROM sqlite_master;');
+            debugPrint('[DATABASE-SECURITY] ✅ Świeża zaszyfrowana baza została zainicjalizowana.');
+          } else {
+            rethrow;
+          }
+        }
+
+        debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
       },
     );
   });

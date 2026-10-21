@@ -1,21 +1,132 @@
 import 'package:flutter/material.dart';
-import 'package:obywatel_plus/features/communication/domain/models/contact.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/features/auth/presentation/providers/auth_providers.dart';
+import 'package:obywatel_plus/features/communication/application/contact_identity_verification_service.dart';
+import 'package:obywatel_plus/features/communication/application/contacts_service.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
 
-class ContactDetailsSheet extends StatelessWidget {
+class ContactDetailsSheet extends ConsumerWidget {
   final Contact contact;
 
   const ContactDetailsSheet({super.key, required this.contact});
 
+  Future<void> _openSecureChat(BuildContext context, WidgetRef ref) async {
+    try {
+      final currentUserId = ref.read(currentUserIdProvider);
+      final peerUserId = contact.peerUserIdForCurrentUser(currentUserId);
+      final repository = ref.read(chatsRepositoryProvider);
+      final conversationId = await repository.ensureConversationForContact(
+        peerUserId,
+        title: contact.localAlias?.trim().isNotEmpty == true
+            ? contact.localAlias!
+            : contact.displayName,
+      );
+
+      if (!context.mounted) return;
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      if (!context.mounted) return;
+
+      context.push(
+        '/chats/${Uri.encodeComponent(conversationId)}',
+        extra: contact.localAlias?.trim().isNotEmpty == true
+            ? contact.localAlias!
+            : contact.displayName,
+      );
+    } catch (error) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Nie udało się otworzyć bezpiecznego czatu: $error'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateAlias(BuildContext context, WidgetRef ref) async {
+    final controller = TextEditingController(text: contact.localAlias ?? '');
+    final newAlias = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Zmień lokalny alias'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: 'Wpisz alias kontaktu'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (newAlias == null || !context.mounted) {
+      return;
+    }
+
+    final alias = newAlias.trim();
+    if (alias.isEmpty) {
+      return;
+    }
+
+    await ref
+        .read(contactsServiceProvider)
+        .updateLocalAlias(contact.contactUserId, alias);
+
+    if (context.mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final fingerprint = contact.contactUserId
-        .replaceAll(RegExp(r'[^A-Za-z0-9]'), '')
-        .toUpperCase();
-    final shortFingerprint = fingerprint.length > 16
-        ? fingerprint.substring(0, 16)
-        : fingerprint;
+    final verificationAsync = ref.watch(
+      contactIdentityVerificationProvider(contact.contactUserId),
+    );
+    final verification = verificationAsync.maybeWhen(
+      data: (state) => state,
+      orElse: () => const ContactIdentityVerificationState(
+        status: ContactIdentityVerificationStatus.unknown,
+      ),
+    );
+
+    final statusTitle = switch (verification.status) {
+      ContactIdentityVerificationStatus.unknown =>
+        'Brak znanej tożsamości Signal',
+      ContactIdentityVerificationStatus.unverified =>
+        'Tożsamość znana, ale nieweryfikowana',
+      ContactIdentityVerificationStatus.verified =>
+        'Tożsamość zweryfikowana ręcznie',
+      ContactIdentityVerificationStatus.changed =>
+        'Tożsamość kontaktu zmieniła się',
+    };
+    final statusDescription = switch (verification.status) {
+      ContactIdentityVerificationStatus.unknown =>
+        'Klucz tożsamości nie jest jeszcze znany dla tego urządzenia Signal. Sesja musi zostać zainicjalizowana, a następnie zrobiona jest ręczna weryfikacja.',
+      ContactIdentityVerificationStatus.unverified =>
+        'Konieczne jest ręczne potwierdzenie klucza kontaktu, ponieważ odczytano go z witryny Signal bez lokalnej weryfikacji.',
+      ContactIdentityVerificationStatus.verified =>
+        'Ta tożsamość została potwierdzona lokalnie i jest powiązana z tym użytkownikiem i urządzeniem Signal.',
+      ContactIdentityVerificationStatus.changed =>
+        'Wykryto nowy klucz tożsamości. Poprzednie potwierdzenie jest nieważne do czasu ponownej weryfikacji.',
+    };
+
+    final fingerprint = verification.fingerprint;
 
     return SafeArea(
       child: Padding(
@@ -125,24 +236,34 @@ class ContactDetailsSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Public Identity Key Fingerprint',
+                    statusTitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  SelectableText(
-                    shortFingerprint,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.5,
+                  if (fingerprint != null) ...[
+                    const SizedBox(height: 8),
+                    SelectableText(
+                      fingerprint,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
+                  ] else ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'Brak znanego klucza Signal dla tego kontaktu.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 8),
                   Text(
-                    'Safety number: verified / trusted / manual confirmation required',
+                    statusDescription,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.onSurfaceVariant,
                     ),
@@ -151,25 +272,35 @@ class ContactDetailsSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.lock_outline_rounded),
-                    label: const Text('Rozpocznij Bezpieczny Czat'),
-                  ),
-                ),
-              ],
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _updateAlias(context, ref),
+                icon: const Icon(Icons.edit_rounded),
+                label: const Text('Zmień lokalny alias'),
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _openSecureChat(context, ref),
+                icon: const Icon(Icons.lock_rounded),
+                label: const Text('Otwórz bezpieczny czat'),
+              ),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () {},
-                    icon: const Icon(Icons.key_rounded),
-                    label: const Text('Zarządzaj Kluczami'),
+                  child: FilledButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.verified_user_rounded),
+                    label: Text(
+                      verification.isVerified
+                          ? 'Tożsamość zweryfikowana'
+                          : 'Ręczna weryfikacja niedostępna',
+                    ),
                   ),
                 ),
               ],

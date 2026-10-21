@@ -21,14 +21,15 @@ class SettingsPreferencesNotifier extends _$SettingsPreferencesNotifier {
 
   Future<void> _saveAndUpdate({
     required Future<void> Function() persist,
-    required SettingsPreferencesState Function(SettingsPreferencesState old) update,
+    required SettingsPreferencesState Function(SettingsPreferencesState old)
+    update,
   }) async {
     final previous = state;
     state = update(state);
 
     try {
       await persist();
-    } catch (error, _) {
+    } catch (_) {
       state = previous;
     }
   }

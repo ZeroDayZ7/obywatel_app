@@ -6,12 +6,19 @@ class Messages extends Table {
   TextColumn get conversationId => text()();
   TextColumn get senderId => text()();
   TextColumn get senderDeviceId => text()();
-  
+  TextColumn get attachmentId => text().nullable()();
+
+  // Jawny tekst wiadomości zapisany lokalnie po pomyślnym odszyfrowaniu.
+  // To jest główny stan persystowany w bazie; ciphertext jest traktowany jako legacy fallback.
+  TextColumn get content => text().withDefault(const Constant(''))();
+
   // Typ wiadomości: 'text', 'media', 'system'
   TextColumn get type => text().withDefault(const Constant('text'))();
   
-  // Monotoniczny numer sekwencyjny w danej konwersacji
-  Int64Column get sequence => int64()();
+  // Monotoniczny numer sekwencyjny w danej konwersacji.
+  // Lokalnie tworzone wiadomości oczekujące na synchronizację mają sequence null,
+  // ponieważ sekwencję nadaje wyłącznie serwer po zsyncowaniu delta.
+  Int64Column get sequence => int64().nullable()();
   
   // Zaszyfrowany ładunek wiadomości (AES-GCM / Signal Protocol)
   BlobColumn get encryptedPayload => blob()();
@@ -21,6 +28,9 @@ class Messages extends Table {
   
   // Globalny wskaźnik wersji w mikroserwisie do synchronizacji Delta Sync
   Int64Column get version => int64().withDefault(Constant(BigInt.from(1)))();
+
+  // Minimalny status lokalnej wiadomości dla Phase 5: pending/sent
+  TextColumn get status => text().withDefault(const Constant('pending'))();
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();

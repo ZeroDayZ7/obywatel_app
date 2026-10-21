@@ -39,7 +39,7 @@ abstract class _$Documents extends $StreamNotifier<List<DocumentModel>> {
   Stream<List<DocumentModel>> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<DocumentModel>>, List<DocumentModel>>;
     final element =
@@ -50,7 +50,7 @@ abstract class _$Documents extends $StreamNotifier<List<DocumentModel>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }
 

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'settings_preferences_state.dart';
@@ -9,6 +9,7 @@ part of 'settings_preferences_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $SettingsPreferencesStateCopyWith<SettingsPreferencesState> get copyWith => _$Se
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt));
+  final _this = this as SettingsPreferencesState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SettingsPreferencesState&&(identical(other.appLockTimeout, _this.appLockTimeout) || other.appLockTimeout == _this.appLockTimeout)&&(identical(other.biometricPrompt, _this.biometricPrompt) || other.biometricPrompt == _this.biometricPrompt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appLockTimeout,biometricPrompt);
+int get hashCode {
+  final _this = this as SettingsPreferencesState;
+  return Object.hash(runtimeType,_this.appLockTimeout,_this.biometricPrompt);
+}
 
 @override
 String toString() {
-  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, biometricPrompt: $biometricPrompt)';
+  final _this = this as SettingsPreferencesState;
+  return 'SettingsPreferencesState(appLockTimeout: ${_this.appLockTimeout}, biometricPrompt: ${_this.biometricPrompt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$SettingsPreferencesStateCopyWithImpl<$Res>
 /// Create a copy of SettingsPreferencesState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? appLockTimeout = null,Object? biometricPrompt = null,}) {
-  return _then(_self.copyWith(
+  return _then(SettingsPreferencesState(
 appLockTimeout: null == appLockTimeout ? _self.appLockTimeout : appLockTimeout // ignore: cast_nullable_to_non_nullable
 as AppLockTimeout,biometricPrompt: null == biometricPrompt ? _self.biometricPrompt : biometricPrompt // ignore: cast_nullable_to_non_nullable
 as bool,
@@ -223,16 +229,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SettingsPreferencesState&&(identical(other.appLockTimeout, appLockTimeout) || other.appLockTimeout == appLockTimeout)&&(identical(other.biometricPrompt, biometricPrompt) || other.biometricPrompt == biometricPrompt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,appLockTimeout,biometricPrompt);
+int get hashCode {
+    return Object.hash(runtimeType,appLockTimeout,biometricPrompt);
+}
 
 @override
 String toString() {
-  return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, biometricPrompt: $biometricPrompt)';
+    return 'SettingsPreferencesState(appLockTimeout: $appLockTimeout, biometricPrompt: $biometricPrompt)';
 }
 
 

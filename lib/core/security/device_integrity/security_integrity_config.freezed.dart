@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'security_integrity_config.dart';
@@ -9,6 +9,7 @@ part of 'security_integrity_config.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $SecurityIntegrityConfigCopyWith<SecurityIntegrityConfig> get copyWith => _$Secu
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps)&&(identical(other.expectedPackageHash, expectedPackageHash) || other.expectedPackageHash == expectedPackageHash));
+  final _this = this as SecurityIntegrityConfig;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityIntegrityConfig&&(identical(other.blockRooted, _this.blockRooted) || other.blockRooted == _this.blockRooted)&&(identical(other.blockEmulator, _this.blockEmulator) || other.blockEmulator == _this.blockEmulator)&&(identical(other.blockDeveloperMode, _this.blockDeveloperMode) || other.blockDeveloperMode == _this.blockDeveloperMode)&&(identical(other.blockDangerousApps, _this.blockDangerousApps) || other.blockDangerousApps == _this.blockDangerousApps)&&(identical(other.expectedPackageHash, _this.expectedPackageHash) || other.expectedPackageHash == _this.expectedPackageHash));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps,expectedPackageHash);
+int get hashCode {
+  final _this = this as SecurityIntegrityConfig;
+  return Object.hash(runtimeType,_this.blockRooted,_this.blockEmulator,_this.blockDeveloperMode,_this.blockDangerousApps,_this.expectedPackageHash);
+}
 
 @override
 String toString() {
-  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps, expectedPackageHash: $expectedPackageHash)';
+  final _this = this as SecurityIntegrityConfig;
+  return 'SecurityIntegrityConfig(blockRooted: ${_this.blockRooted}, blockEmulator: ${_this.blockEmulator}, blockDeveloperMode: ${_this.blockDeveloperMode}, blockDangerousApps: ${_this.blockDangerousApps}, expectedPackageHash: ${_this.expectedPackageHash})';
 }
 
 
@@ -63,7 +69,7 @@ class _$SecurityIntegrityConfigCopyWithImpl<$Res>
 /// Create a copy of SecurityIntegrityConfig
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? blockRooted = null,Object? blockEmulator = null,Object? blockDeveloperMode = null,Object? blockDangerousApps = null,Object? expectedPackageHash = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SecurityIntegrityConfig(
 blockRooted: null == blockRooted ? _self.blockRooted : blockRooted // ignore: cast_nullable_to_non_nullable
 as bool,blockEmulator: null == blockEmulator ? _self.blockEmulator : blockEmulator // ignore: cast_nullable_to_non_nullable
 as bool,blockDeveloperMode: null == blockDeveloperMode ? _self.blockDeveloperMode : blockDeveloperMode // ignore: cast_nullable_to_non_nullable
@@ -223,16 +229,18 @@ _$SecurityIntegrityConfigCopyWith<_SecurityIntegrityConfig> get copyWith => __$S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps)&&(identical(other.expectedPackageHash, expectedPackageHash) || other.expectedPackageHash == expectedPackageHash));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityIntegrityConfig&&(identical(other.blockRooted, blockRooted) || other.blockRooted == blockRooted)&&(identical(other.blockEmulator, blockEmulator) || other.blockEmulator == blockEmulator)&&(identical(other.blockDeveloperMode, blockDeveloperMode) || other.blockDeveloperMode == blockDeveloperMode)&&(identical(other.blockDangerousApps, blockDangerousApps) || other.blockDangerousApps == blockDangerousApps)&&(identical(other.expectedPackageHash, expectedPackageHash) || other.expectedPackageHash == expectedPackageHash));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps,expectedPackageHash);
+int get hashCode {
+    return Object.hash(runtimeType,blockRooted,blockEmulator,blockDeveloperMode,blockDangerousApps,expectedPackageHash);
+}
 
 @override
 String toString() {
-  return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps, expectedPackageHash: $expectedPackageHash)';
+    return 'SecurityIntegrityConfig(blockRooted: $blockRooted, blockEmulator: $blockEmulator, blockDeveloperMode: $blockDeveloperMode, blockDangerousApps: $blockDangerousApps, expectedPackageHash: $expectedPackageHash)';
 }
 
 

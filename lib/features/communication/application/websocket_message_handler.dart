@@ -2,27 +2,29 @@ import 'dart:async';
 
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
+import 'package:obywatel_plus/features/communication/presentation/providers/contacts_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'websocket_message_handler.g.dart';
 
 class WebSocketMessageHandler {
-  final ChatsWsClient _wsClient;
-  final AppLogger _logger;
-  final Future<void> Function() _onSignalReceived;
-  StreamSubscription<Map<String, dynamic>>? _subscription;
-
   WebSocketMessageHandler(
     this._wsClient,
     this._logger,
     this._onSignalReceived,
   );
 
+  final AppWebSocketClient _wsClient;
+  final AppLogger _logger;
+  final Future<void> Function(String type) _onSignalReceived;
+  StreamSubscription<Map<String, dynamic>>? _subscription;
+
   void init() {
-    _subscription = _wsClient.rawMessagesStream.listen(
-      _handleRawMessage,
+    _subscription = _wsClient.messageStream.listen(
+      handleIncomingMessage,
       onError: (error) {
         _logger.e(
           'Błąd na strumieniu WebSocket',
@@ -33,20 +35,26 @@ class WebSocketMessageHandler {
     );
   }
 
-  void _handleRawMessage(Map<String, dynamic> json) {
+  Future<void> _handleIncomingMessageAsync(Map<String, dynamic> json) async {
     try {
-      final type = json['type'] as String?;
+      final type = (json['type'] ?? '').toString();
+      if (type.isEmpty) {
+        _logger.i('Pusty typ wiadomości WS', module: 'WSHandler');
+        return;
+      }
 
       switch (type) {
         case 'new_message':
         case 'conversation_updated':
+        case 'conversation_read':
+        case 'message_read':
         case 'contact_updated':
           _logger.i(
-            'Odebrano sygnał WS typu $type. Uruchamianie delta sync.',
+            'Odebrano sygnał WS typu $type. Uruchamianie odpowiedniej synchronizacji.',
             module: 'WSHandler',
           );
-          unawaited(_onSignalReceived());
-          break;
+          await _onSignalReceived(type);
+          return;
         default:
           _logger.i('Nieznany typ wiadomości WS: $type', module: 'WSHandler');
       }
@@ -60,6 +68,10 @@ class WebSocketMessageHandler {
     }
   }
 
+  void handleIncomingMessage(Map<String, dynamic> json) {
+    unawaited(_handleIncomingMessageAsync(json));
+  }
+
   void dispose() {
     _subscription?.cancel();
   }
@@ -67,18 +79,31 @@ class WebSocketMessageHandler {
 
 @riverpod
 WebSocketMessageHandler webSocketMessageHandler(Ref ref) {
-  final wsClient = ref.watch(chatsWsClientProvider);
+  final wsClient = ref.watch(appWebSocketClientProvider);
   final logger = ref.watch(appLoggerProvider);
 
   final handler = WebSocketMessageHandler(
     wsClient,
     logger,
-    () async {
-      await ref.read(chatSyncServiceProvider).syncPendingData();
+    (type) async {
+      switch (type) {
+        case 'contact_updated':
+          await ref.read(contactsSyncProvider.notifier).sync();
+          return;
+        case 'new_message':
+        case 'conversation_updated':
+        case 'conversation_read':
+        case 'message_read':
+          await ref.read(chatSyncServiceProvider).syncPendingData();
+          return;
+        default:
+          return;
+      }
     },
   );
+
   handler.init();
 
-  ref.onDispose(() => handler.dispose());
+  ref.onDispose(handler.dispose);
   return handler;
 }

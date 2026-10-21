@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'user_session.dart';
@@ -9,6 +9,7 @@ part of 'user_session.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $UserSessionCopyWith<UserSession> get copyWith => _$UserSessionCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSession&&(identical(other.id, id) || other.id == id)&&(identical(other.deviceName, deviceName) || other.deviceName == deviceName)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.fingerprint, fingerprint) || other.fingerprint == fingerprint)&&(identical(other.location, location) || other.location == location)&&(identical(other.isCurrent, isCurrent) || other.isCurrent == isCurrent));
+  final _this = this as UserSession;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserSession&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.deviceName, _this.deviceName) || other.deviceName == _this.deviceName)&&(identical(other.platform, _this.platform) || other.platform == _this.platform)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.fingerprint, _this.fingerprint) || other.fingerprint == _this.fingerprint)&&(identical(other.location, _this.location) || other.location == _this.location)&&(identical(other.isCurrent, _this.isCurrent) || other.isCurrent == _this.isCurrent));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,deviceName,platform,createdAt,fingerprint,location,isCurrent);
+int get hashCode {
+  final _this = this as UserSession;
+  return Object.hash(runtimeType,_this.id,_this.deviceName,_this.platform,_this.createdAt,_this.fingerprint,_this.location,_this.isCurrent);
+}
 
 @override
 String toString() {
-  return 'UserSession(id: $id, deviceName: $deviceName, platform: $platform, createdAt: $createdAt, fingerprint: $fingerprint, location: $location, isCurrent: $isCurrent)';
+  final _this = this as UserSession;
+  return 'UserSession(id: ${_this.id}, deviceName: ${_this.deviceName}, platform: ${_this.platform}, createdAt: ${_this.createdAt}, fingerprint: ${_this.fingerprint}, location: ${_this.location}, isCurrent: ${_this.isCurrent})';
 }
 
 
@@ -66,7 +72,7 @@ class _$UserSessionCopyWithImpl<$Res>
 /// Create a copy of UserSession
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? deviceName = null,Object? platform = null,Object? createdAt = null,Object? fingerprint = null,Object? location = freezed,Object? isCurrent = null,}) {
-  return _then(_self.copyWith(
+  return _then(UserSession(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,deviceName: null == deviceName ? _self.deviceName : deviceName // ignore: cast_nullable_to_non_nullable
 as String,platform: null == platform ? _self.platform : platform // ignore: cast_nullable_to_non_nullable
@@ -233,16 +239,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserSession&&(identical(other.id, id) || other.id == id)&&(identical(other.deviceName, deviceName) || other.deviceName == deviceName)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.fingerprint, fingerprint) || other.fingerprint == fingerprint)&&(identical(other.location, location) || other.location == location)&&(identical(other.isCurrent, isCurrent) || other.isCurrent == isCurrent));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserSession&&(identical(other.id, id) || other.id == id)&&(identical(other.deviceName, deviceName) || other.deviceName == deviceName)&&(identical(other.platform, platform) || other.platform == platform)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.fingerprint, fingerprint) || other.fingerprint == fingerprint)&&(identical(other.location, location) || other.location == location)&&(identical(other.isCurrent, isCurrent) || other.isCurrent == isCurrent));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,deviceName,platform,createdAt,fingerprint,location,isCurrent);
+int get hashCode {
+    return Object.hash(runtimeType,id,deviceName,platform,createdAt,fingerprint,location,isCurrent);
+}
 
 @override
 String toString() {
-  return 'UserSession(id: $id, deviceName: $deviceName, platform: $platform, createdAt: $createdAt, fingerprint: $fingerprint, location: $location, isCurrent: $isCurrent)';
+    return 'UserSession(id: $id, deviceName: $deviceName, platform: $platform, createdAt: $createdAt, fingerprint: $fingerprint, location: $location, isCurrent: $isCurrent)';
 }
 
 
