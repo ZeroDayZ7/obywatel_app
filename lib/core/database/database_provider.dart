@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:drift/drift.dart';
@@ -10,9 +11,23 @@ import 'package:obywatel_plus/core/database/daos/user_documents_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'database_provider.g.dart';
+
+Future<void> deleteLocalDatabaseFiles() async {
+  final dbFolder = await getApplicationDocumentsDirectory();
+  final dbPath = p.join(dbFolder.path, 'obywatel_plus_encrypted.sqlite');
+
+  for (final suffix in ['', '-wal', '-shm', '-journal']) {
+    final file = File('$dbPath$suffix');
+    if (await file.exists()) {
+      await file.delete();
+    }
+  }
+}
 
 class DatabaseKeyCodec {
   const DatabaseKeyCodec._();

@@ -5,6 +5,7 @@ import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
 import 'package:obywatel_plus/app/bootstrap/migration_service.dart';
 import 'package:obywatel_plus/core/database/database.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
@@ -30,7 +31,7 @@ class StorageInitTask implements StartupTask {
     this.database,
     this.databaseBuilder,
     this.developerResetEnabled = false,
-  }) : assert(database != null || databaseBuilder != null);
+  });
 
   @override
   String get name => 'Storage & Database';
@@ -43,35 +44,8 @@ class StorageInitTask implements StartupTask {
     );
 
     if (kDebugMode) {
-      // await prefs.clearAll();
-      // await storage.clearAll();
-
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
-
-      // final db = database ?? databaseBuilder?.call();
-      // if (db != null) {
-      //   try {
-      //     await db.dumpDatabaseTables();
-      //   } catch (e) {
-      //     debugPrint('[StorageInitTask] ⚠️ Nie udało się zrzucić tabel bazy: $e');
-      //   }
-      // }
-
-      // final db = database ?? databaseBuilder?.call();
-      // if (db != null) {
-      //   try {
-      //     await db.close();
-      //   } catch (_) {}
-      // }
-
-      // final dbFolder = await getApplicationDocumentsDirectory();
-      // final file = File(p.join(dbFolder.path, 'obywatel_plus_encrypted.sqlite'));
-      
-      // if (file.existsSync()) {
-      //   file.deleteSync();
-      //   debugPrint('[StorageInitTask] ✅ Fizyczny plik bazy danych został usunięty z urządzenia.');
-      // }
     }
 
     if (!shouldResetForDevelopment) {
@@ -79,25 +53,17 @@ class StorageInitTask implements StartupTask {
     }
 
     try {
-      // await prefs.clearAll();
-      // await storage.clearAll();
+      if (database != null) {
+        try {
+          await database!.close();
+        } catch (_) {}
+      }
 
-      // final db = database ?? databaseBuilder?.call();
+      await deleteLocalDatabaseFiles();
+      await storage.clearAll();
+      await prefs.clearAll();
 
-      // if (db != null) {
-      //   try {
-      //     // To wywołanie wymusza natychmiastowe wykonanie openConnection() oraz setup()
-      //     await db.customSelect('SELECT 1;').get();
-      //     debugPrint(
-      //       '[StorageInitTask] ✅ Database connection initialized & encrypted.',
-      //     );
-      //   } catch (e, st) {
-      //     debugPrint(
-      //       '[StorageInitTask] ❌ Database initialization failed: $e\n$st',
-      //     );
-      //     return const AppInitStatus.blocked(reason: 'database_init_failed');
-      //   }
-      // }
+      debugPrint('[StorageInitTask] ✅ Local DB reset completed.');
       return null;
     } catch (e, st) {
       debugPrint('[StorageInitTask] ❌ Reset failed: $e\n$st');
