@@ -1,31 +1,14 @@
-// lib/features/home/presentation/pages/quick_access_screen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
+import 'package:obywatel_plus/features/home/application/quick_access_notifier.dart';
+import 'package:obywatel_plus/features/home/domain/models/quick_access_item.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/home_app_bar.dart';
 import 'package:obywatel_plus/features/home/presentation/widgets/main_drawer.dart';
 
-enum QuickAccessAccent { primary, secondary, tertiary, error }
-
-class QuickAccessItem {
-  final String title;
-  final String? subtitle;
-  final IconData icon;
-  final QuickAccessAccent accent;
-  final String route;
-
-  const QuickAccessItem({
-    required this.title,
-    this.subtitle,
-    required this.icon,
-    required this.accent,
-    required this.route,
-  });
-}
-
-class QuickAccessScreen extends StatelessWidget {
+class QuickAccessScreen extends ConsumerStatefulWidget {
   const QuickAccessScreen({super.key});
 
   static const _communicationItem = QuickAccessItem(
@@ -44,18 +27,17 @@ class QuickAccessScreen extends StatelessWidget {
     route: AppRoutes.eVoting,
   );
 
-  static final _marketItem = QuickAccessItem(
-    title: 'Giełda Zaufania',
-    subtitle: 'Rynek reputacji',
-    icon: Icons.trending_up_rounded,
-    accent: QuickAccessAccent.tertiary,
-    route: AppRoutes.eVotingExchangePath(),
-  );
+class _QuickAccessScreenState extends ConsumerState<QuickAccessScreen> {
+  bool _editMode = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final items = ref.watch(quickAccessProvider);
+    final visibleItems = _editMode
+        ? items
+        : items.where((item) => item.isEnabled).toList();
 
     return AppScaffold(
       appBar: const HomeAppBar(),
@@ -109,10 +91,51 @@ class QuickAccessScreen extends StatelessWidget {
       ),
     );
   }
+
+  Future<void> _showRenameDialog(BuildContext context, QuickAccessItem item) async {
+    final controller = TextEditingController(text: item.title);
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Zmień nazwę modułu'),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLength: 28,
+            decoration: const InputDecoration(hintText: 'Nazwa modułu'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Anuluj'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
+              child: const Text('Zapisz'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result == null || result.isEmpty) return;
+
+    await ref.read(quickAccessProvider.notifier).updateItem(
+      item.id,
+      title: result,
+    );
+  }
 }
 
 class _QuickAccessCard extends StatelessWidget {
   final QuickAccessItem item;
+  final bool editMode;
+  final VoidCallback onToggleEnabled;
+  final VoidCallback onMoveUp;
+  final VoidCallback onMoveDown;
+  final VoidCallback onRename;
 
   const _QuickAccessCard({required this.item});
 
@@ -130,6 +153,7 @@ class _QuickAccessCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final accentColor = _resolveAccentColor(colorScheme);
+    final enabled = item.isEnabled;
 
     return Container(
       height: 100, // Stała wysokość dla lekko prostokątnego kształtu
