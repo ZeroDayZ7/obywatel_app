@@ -14,6 +14,50 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'database_provider.g.dart';
 
+class DatabaseKeyCodec {
+  const DatabaseKeyCodec._();
+
+  static String encodeKeyBytes(List<int> bytes) {
+    if (bytes.length != 32) {
+      throw const FormatException(
+        'Database encryption key must be exactly 32 bytes.',
+      );
+    }
+    return bytes.map((byte) => byte.toRadixString(16).padLeft(2, '0')).join();
+  }
+
+  static List<int> decodeHexKey(String rawValue) {
+    final normalized = rawValue.trim();
+    if (normalized.isEmpty) {
+      throw const FormatException('Database encryption key is empty.');
+    }
+    if (normalized.length % 2 != 0) {
+      throw const FormatException(
+        'Database encryption key hex must have an even number of characters.',
+      );
+    }
+
+    final decoded = <int>[];
+    for (var index = 0; index < normalized.length; index += 2) {
+      final byteString = normalized.substring(index, index + 2);
+      try {
+        decoded.add(int.parse(byteString, radix: 16));
+      } on FormatException {
+        throw FormatException(
+          'Database encryption key contains invalid hex: $byteString',
+        );
+      }
+    }
+
+    if (decoded.length != 32) {
+      throw FormatException(
+        'Database encryption key must decode to exactly 32 bytes, got ${decoded.length} bytes.',
+      );
+    }
+    return decoded;
+  }
+}
+
 @Riverpod(keepAlive: true)
 AppDatabase appDatabase(Ref ref) {
   ref.keepAlive();
@@ -28,10 +72,9 @@ AppDatabase appDatabase(Ref ref) {
         32,
         (i) => Random.secure().nextInt(256),
       );
-      
-      // ZAMIAST Base64 -> Zamieniamy 32 bajty bezpośrednio na 64-znakowy HEX
-      encryptionKey = values.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
-      
+
+      encryptionKey = DatabaseKeyCodec.encodeKeyBytes(values);
+
       await storage.write(key: StorageKeys.databaseKey, value: encryptionKey);
     }
 

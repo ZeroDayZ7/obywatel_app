@@ -343,7 +343,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return null;
     }
 
-    final secretKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final secretKey = SecretKey(DatabaseKeyCodec.decodeHexKey(wrappingKeyValue));
     final unwrapped = await _symmetricCrypto.unwrapKey(
       wrappedKeyBase64: wrappedKey,
       wrappingKey: secretKey,
@@ -372,7 +372,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    final wrappingKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final wrappingKey = SecretKey(DatabaseKeyCodec.decodeHexKey(wrappingKeyValue));
     final wrapped = await _symmetricCrypto.wrapKey(
       keyToWrap: SecretKey(base64Decode(normalizedKey)),
       wrappingKey: wrappingKey,
