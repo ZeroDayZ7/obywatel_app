@@ -10,49 +10,66 @@ import 'package:obywatel_plus/core/security/security/security_service_provider.d
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 
+bool shouldResetLocalDataForDevelopment({
+  required bool isDebugMode,
+  required bool developerResetEnabled,
+}) {
+  return isDebugMode && developerResetEnabled;
+}
+
 class StorageInitTask implements StartupTask {
   final SecureStorageService storage;
   final SharedPreferencesService prefs;
-  final AppDatabase database;
+  final AppDatabase? database;
+  final AppDatabase Function()? databaseBuilder;
+  final bool developerResetEnabled;
 
   StorageInitTask({
     required this.storage,
     required this.prefs,
-    required this.database,
-  });
+    this.database,
+    this.databaseBuilder,
+    this.developerResetEnabled = false,
+  }) : assert(database != null || databaseBuilder != null);
 
   @override
   String get name => 'Storage & Database';
 
 
+
   @override
   Future<AppInitStatus?> initialize() async {
+    final db = database ?? databaseBuilder?.call();
 
-    const bool shouldResetForTesting = kDebugMode && true;
-
-    if (shouldResetForTesting) {
-      // debugPrint('[StorageInitTask] 🧹 Rozpoczęcie czyszczenia stanu aplikacji do zera...');
-
+    // Wyrzewamy połączenie z bazą (Warmup query)
+    if (db != null) {
       try {
-        // await storage.clearAll();
-        // await prefs.clearAll();
-
-        // await database.clearSignalStore();
-        // await database.clearDatabase();
-
-        // await database.close();
-        
-        // debugPrint('[StorageInitTask] ✅ Aplikacja wyczyszczona pomyślnie. Stan początkowy gotowy.');
+        // To wywołanie wymusza natychmiastowe wykonanie openConnection() oraz setup()
+        await db.customSelect('SELECT 1;').get();
+        debugPrint('[StorageInitTask] ✅ Database connection initialized & encrypted.');
       } catch (e, st) {
-        debugPrint('[StorageInitTask] ❌ Błąd podczas czyszczenia storage/bazy: $e\n$st');
+        debugPrint('[StorageInitTask] ❌ Database initialization failed: $e\n$st');
+        return const AppInitStatus.blocked(reason: 'database_init_failed');
       }
-
-      // if (kDebugMode) {
-      //   await storage.debugPrintAll();
-      //   await prefs.debugPrintAll();
-      // }
     }
-    return null;
+
+    final shouldResetForDevelopment = shouldResetLocalDataForDevelopment(
+      isDebugMode: kDebugMode,
+      developerResetEnabled: developerResetEnabled,
+    );
+
+    if (!shouldResetForDevelopment) {
+      return null;
+    }
+
+    try {
+      // await prefs.clearAll();
+      // await storage.clearAll();
+      return null;
+    } catch (e, st) {
+      debugPrint('[StorageInitTask] ❌ Reset failed: $e\n$st');
+      return const AppInitStatus.blocked(reason: 'storage_reset_failed');
+    }
   }
 }
 

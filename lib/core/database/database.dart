@@ -159,7 +159,21 @@ QueryExecutor openConnection(String encryptionKey) {
     return NativeDatabase.createInBackground(
       file,
       setup: (rawDb) {
-        rawDb.execute("PRAGMA key = '$encryptionKey';");
+        // Verify that SQLite3MultipleCiphers is available.
+        final cipher = rawDb.select('PRAGMA cipher;');
+
+        if (cipher.isEmpty) {
+          throw UnsupportedError('SQLite3MultipleCiphers is unavailable.');
+        }
+
+        // PRAGMA key does not reliably support bound parameters.
+        final escapedKey = encryptionKey.replaceAll("'", "''");
+        rawDb.execute("PRAGMA key = '$escapedKey';");
+
+        // Force a read so an invalid key fails during initialization.
+        rawDb.select('SELECT count(*) FROM sqlite_master;');
+
+        print('[DATABASE-SECURITY] Cipher available; database key verified.');
       },
     );
   });

@@ -18,12 +18,18 @@ class BootstrapConfig {
 }
 
 final bootstrapConfigProvider = Provider<BootstrapConfig>((ref) {
+  const developerResetEnabled = bool.fromEnvironment(
+    'reset_local_storage',
+    defaultValue: false,
+  );
+
   return BootstrapConfig(
     sequentialTasks: [
       StorageInitTask(
         storage: ref.read(secureStorageProvider),
         prefs: ref.read(activePrefsProvider),
-        database: ref.read(appDatabaseProvider),
+        databaseBuilder: () => ref.read(appDatabaseProvider),
+        developerResetEnabled: developerResetEnabled,
       ),
       // MigrationTask(ref.read(migrationServiceProvider)),
       SecurityInitTask(ref.read(securityServiceProvider.notifier)),
