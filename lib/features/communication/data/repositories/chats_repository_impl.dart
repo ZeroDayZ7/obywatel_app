@@ -50,6 +50,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return OutboxEvent(
       id: row.id,
       payload: row.payload,
+      eventType: row.eventType,
       conversationId: row.conversationId,
       retryCount: row.retryCount,
       nextAttemptAt: row.nextAttemptAt,
@@ -343,7 +344,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return null;
     }
 
-    final secretKey = SecretKey(DatabaseKeyCodec.decodeHexKey(wrappingKeyValue));
+    final secretKey = SecretKey(
+      DatabaseKeyCodec.decodeHexKey(wrappingKeyValue),
+    );
     final unwrapped = await _symmetricCrypto.unwrapKey(
       wrappedKeyBase64: wrappedKey,
       wrappingKey: secretKey,
@@ -372,7 +375,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    final wrappingKey = SecretKey(DatabaseKeyCodec.decodeHexKey(wrappingKeyValue));
+    final wrappingKey = SecretKey(
+      DatabaseKeyCodec.decodeHexKey(wrappingKeyValue),
+    );
     final wrapped = await _symmetricCrypto.wrapKey(
       keyToWrap: SecretKey(base64Decode(normalizedKey)),
       wrappingKey: wrappingKey,
@@ -1602,6 +1607,36 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return normalized.isEmpty ? null : normalized;
   }
 
+  static bool shouldProcessSignalMessageEvent(dynamic event) {
+    final payload = switch (event) {
+      OutboxEvent row => row.payload,
+      OutboxEventEntity row => row.payload,
+      _ => '',
+    };
+
+    final directType = switch (event) {
+      OutboxEvent row => row.eventType,
+      OutboxEventEntity row => row.eventType,
+      _ => null,
+    }?.trim();
+
+    if (directType != null && directType.isNotEmpty) {
+      return directType == 'SEND_MESSAGE';
+    }
+
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) {
+        return false;
+      }
+
+      final payloadType = decoded['eventType']?.toString().trim();
+      return payloadType == 'SEND_MESSAGE';
+    } catch (_) {
+      return false;
+    }
+  }
+
   Map<String, dynamic>? _decodeOutboxPayload(String rawPayload) {
     if (rawPayload.trim().isEmpty) {
       return null;
@@ -1669,6 +1704,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final messages = <Message>[];
     for (final event in events) {
+      if (!ChatsRepositoryImpl.shouldProcessSignalMessageEvent(event)) {
+        continue;
+      }
+
       final payload = _decodeOutboxPayload(event.payload);
       if (payload == null) {
         continue;
