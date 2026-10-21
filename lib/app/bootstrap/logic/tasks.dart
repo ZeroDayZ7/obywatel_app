@@ -47,8 +47,8 @@ class StorageInitTask implements StartupTask {
     );
 
     if (kDebugMode) {
-      await prefs.clearAll();
-      await storage.clearAll();
+      // await prefs.clearAll();
+      // await storage.clearAll();
 
       await storage.debugPrintAll();
       await prefs.debugPrintAll();

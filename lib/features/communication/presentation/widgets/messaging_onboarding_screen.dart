@@ -31,7 +31,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
 
     final errorMessage = currentState.errorMessage ??
         (!hasUsableTerms
-            ? 'Nie pobrano treści regulaminu. Spróbuj pobrać regulamin ponownie.'
+            ? 'Problem z siecią. Regulamin nie jest dostępny. Spróbuj ponownie za chwilę.'
             : null);
 
     return Scaffold(
@@ -114,25 +114,33 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: state.isLoading || !hasUsableTerms
-                          ? null
-                          : () => controller.acceptCurrentTerms(),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Akceptuję regulamin'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: state.isLoading ? null : () => controller.load(),
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Pobierz regulamin ponownie'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: state.isLoading ? null : () => controller.declineTerms(),
-                      icon: const Icon(Icons.close),
-                      label: const Text('Zrezygnuj'),
-                    ),
+                    if (!hasUsableTerms) ...[
+                      FilledButton.icon(
+                        onPressed: state.isLoading
+                            ? null
+                            : () {
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        label: const Text('Wróć do menu głównego'),
+                      ),
+                    ] else ...[
+                      FilledButton.icon(
+                        onPressed: state.isLoading
+                            ? null
+                            : () => controller.acceptCurrentTerms(),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text('Akceptuję regulamin'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: state.isLoading ? null : () => controller.declineTerms(),
+                        icon: const Icon(Icons.close),
+                        label: const Text('Zrezygnuj'),
+                      ),
+                    ],
                   ],
                 ),
               ),

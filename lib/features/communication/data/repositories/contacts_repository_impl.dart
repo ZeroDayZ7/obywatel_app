@@ -251,6 +251,106 @@ class ContactsRepositoryImpl implements ContactsRepository {
   }
 
   @override
+  Future<void> cancelRequest(String requestId) async {
+    if (!_hasCurrentUserId) {
+      _logger.w(
+        '[CONTACTS-CANCEL-01] REPOSITORY: pominięto anulowanie — brak zalogowanego użytkownika.',
+      );
+      return;
+    }
+
+    final normalizedId = requestId.trim();
+    if (normalizedId.isEmpty) {
+      throw const ValidationException(
+        message: 'Brak identyfikatora zaproszenia do anulowania.',
+        code: 'INVALID_CONTACT_REQUEST_ID',
+      );
+    }
+
+    _logger.i(
+      '[CONTACTS-CANCEL-02] REPOSITORY: rozpoczęto anulowanie dla $normalizedId',
+    );
+
+    try {
+      await _apiClient.cancelRequest(normalizedId);
+      _logger.i(
+        '[CONTACTS-CANCEL-03] REPOSITORY: backend potwierdził anulowanie dla $normalizedId',
+      );
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[CONTACTS-CANCEL-99] REPOSITORY: błąd anulowania dla $normalizedId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'contacts_repository_impl',
+          context: ErrorDescription(
+            'Failed to cancel contact request on backend',
+          ),
+        ),
+      );
+      rethrow;
+    }
+
+    final now = DateTime.now().toUtc();
+    final eventId = const Uuid().v7();
+
+    await _dao.db.transaction(() async {
+      final affected = await (_dao.update(_dao.contacts)
+            ..where(
+              (t) =>
+                  t.id.equals(normalizedId) &
+                  t.ownerId.equals(_currentUserId!) &
+                  t.deletedAt.isNull() &
+                  t.status.equals('pending') &
+                  t.direction.equals('outgoing'),
+            ))
+          .write(
+            ContactsCompanion(
+              status: const Value('blocked'),
+              deletedAt: Value(now),
+              syncState: const Value('pending_delete'),
+              updatedAt: Value(now),
+            ),
+          );
+
+      if (affected == 0) {
+        _logger.w(
+          '[CONTACTS-CANCEL-04] REPOSITORY: brak lokalnego rekordu do usunięcia po sukcesie backendu id=$normalizedId',
+        );
+        return;
+      }
+
+      await _outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(eventId),
+          entityType: const Value('CONTACT'),
+          entityId: Value(normalizedId),
+          eventType: const Value('REMOVE_CONTACT'),
+          conversationId: const Value.absent(),
+          payload: Value(
+            jsonEncode({
+              'entityType': 'CONTACT',
+              'entityId': normalizedId,
+              'eventType': 'REMOVE_CONTACT',
+              'action': 'CANCEL',
+              'createdAt': now.toUtc().toIso8601String(),
+            }),
+          ),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+  }
+
+  @override
   Future<void> updateLocalAlias(String contactId, String localAlias) async {
     final normalized = ContactIdentifier.parse(contactId).normalized;
     final normalizedAlias = ContactIdentifier.normalizeAlias(localAlias);

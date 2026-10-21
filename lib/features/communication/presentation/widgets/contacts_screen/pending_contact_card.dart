@@ -57,6 +57,41 @@ class _PendingContactCardState extends ConsumerState<PendingContactCard> {
     }
   }
 
+  Future<void> _handleCancelOutgoing() async {
+    if (_isProcessing) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final repository = ref.read(contactsRepositoryProvider);
+      await repository.cancelRequest(widget.contact.id);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Zaproszenie do ${widget.contact.displayName} zostało anulowane.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: context.statusColors.warning,
+        ),
+      );
+    } catch (error) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(mapContactInviteError(error)),
+          backgroundColor: Theme.of(context).colorScheme.error,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -138,19 +173,32 @@ class _PendingContactCardState extends ConsumerState<PendingContactCard> {
               ],
             )
           else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'Wysłano',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w700,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    'Wysłano',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _isProcessing ? null : _handleCancelOutgoing,
+                  tooltip: 'Anuluj zaproszenie',
+                  color: colorScheme.error,
+                  icon: const Icon(Icons.cancel_outlined),
+                ),
+              ],
             ),
         ],
       ),

@@ -46,6 +46,21 @@ class ContactsService {
     }
   }
 
+  Future<void> cancelRequest(String requestId) async {
+    _logger.i('[CONTACTS-CANCEL-01] UI: anulowanie zaproszenia id=$requestId');
+    try {
+      await _repository.cancelRequest(requestId);
+      _logger.i('[CONTACTS-CANCEL-06] UI: anulowanie potwierdzone id=$requestId');
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[CONTACTS-CANCEL-99] UI: błąd anulowania zaproszenia id=$requestId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
   Future<void> updateLocalAlias(String contactId, String localAlias) async {
     await _repository.updateLocalAlias(contactId, localAlias);
   }
