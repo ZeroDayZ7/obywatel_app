@@ -270,7 +270,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
         state = state.copyWith(
           isBiometricEnabled: false,
-          canUseBiometrics: false,
+          canUseBiometrics: true,
         );
         _logger.i(
           '🚫 Biometrics disabled and cleared from SecureStorage',
@@ -297,7 +297,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   @override
   Future<void> lockApp() async {
-    if (state.isSetupCompleted && state.isPinConfigured) {
+    if (state.isSetupCompleted && state.localSecurityMethod != LocalSecurityMethod.none) {
       state = state.copyWith(hasLocalLock: true);
       _logger.i('🔒 App Locked');
     }

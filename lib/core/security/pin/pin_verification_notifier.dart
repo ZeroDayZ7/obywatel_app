@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -26,6 +28,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
   Timer? _lockoutTimer;
   bool _hasAttemptedAutoBiometrics = false;
+  bool _isBiometricPromptInProgress = false;
 
   AppLogger get _log => ref.read(appLoggerProvider);
 
@@ -52,15 +55,23 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     return const PinVerificationState.idle();
   }
 
-  /// Wyzwalanie autoryzacji biometrycznej przeniesione do Notifiera
+  /// Wyzwalanie autoryzacji biometrycznej przeniesione do Notifiera.
+  /// Biometria ma tylko potwierdzić tożsamość; nie zastępuje weryfikacji lokalnego PIN-u/hasła.
   Future<void> triggerBiometricAuth({bool isAutoPrompt = false}) async {
-    if (isAutoPrompt && _hasAttemptedAutoBiometrics) return;
-
     final securityState = ref.read(securityServiceProvider);
     if (!securityState.isBiometricEnabled || !securityState.canUseBiometrics) {
       return;
     }
 
+    if (_isBiometricPromptInProgress) {
+      return;
+    }
+
+    if (isAutoPrompt && _hasAttemptedAutoBiometrics) {
+      return;
+    }
+
+    _isBiometricPromptInProgress = true;
     if (isAutoPrompt) {
       _hasAttemptedAutoBiometrics = true;
     }
@@ -73,11 +84,60 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
         persistAcrossBackgrounding: true,
       );
 
-      if (authenticated) {
-        await ref.read(securityServiceProvider.notifier).unlockApp();
+      if (!authenticated) {
+        _log.w(
+          '[PIN-VERIFICATION] Biometria odrzucona lub nie została potwierdzona. Ekran blokady pozostaje aktywny.',
+        );
+        state = const PinVerificationState.error();
+        return;
       }
+
+      final sessionValid = await ref
+          .read(authControllerProvider.notifier)
+          .unlockWithPinAndValidateSession();
+
+      if (!sessionValid) {
+        _log.w(
+          '[PIN-VERIFICATION] Biometria potwierdziła tożsamość, ale sesja nie została odblokowana. Ekran blokady pozostaje aktywny.',
+        );
+        state = const PinVerificationState.error();
+        return;
+      }
+
+      await ref.read(securityServiceProvider.notifier).unlockApp();
+      state = const PinVerificationState.success();
+      _log.i('[PIN-VERIFICATION] Biometria zakończona sukcesem. Ekran blokady został zamknięty.');
+    } on PlatformException catch (e) {
+      final code = e.code;
+      if (code == 'userCanceled' || code == 'UserCanceled') {
+        _log.i('[PIN-VERIFICATION] Anulowanie biometrii przez użytkownika. Zostawiam ekran blokady.');
+        state = const PinVerificationState.error();
+        return;
+      }
+      _log.w(
+        '[PIN-VERIFICATION] PlatformException podczas biometrii: ${e.code}',
+        error: e,
+      );
+      state = const PinVerificationState.error();
+    } on LocalAuthException catch (e) {
+      final isCanceled = e.code == LocalAuthExceptionCode.userCanceled ||
+          e.code == LocalAuthExceptionCode.systemCanceled;
+
+      if (isCanceled) {
+        _log.i('[PIN-VERIFICATION] LocalAuthException userCanceled. Ekran blokady pozostaje aktywny.');
+        state = const PinVerificationState.error();
+        return;
+      }
+      _log.w(
+        '[PIN-VERIFICATION] LocalAuthException podczas biometrii: ${e.code} ${e.description ?? ""}',
+        error: e,
+      );
+      state = const PinVerificationState.error();
     } catch (e, st) {
       _log.w('Błąd autoryzacji biometrycznej', error: e, stackTrace: st);
+      state = const PinVerificationState.error();
+    } finally {
+      _isBiometricPromptInProgress = false;
     }
   }
 
