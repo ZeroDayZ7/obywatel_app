@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SecuritySetupState {
 
- bool get pinSet; bool get biometricAvailable; bool get biometricSet; bool get trustDevice;
+ bool get pinSet; bool get biometricAvailable; bool get biometricSet; LocalSecurityMethod get localSecurityMethod; bool get secretConfigured; SecuritySetupStage get setupStage; bool get trustDevice;
 /// Create a copy of SecuritySetupState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $SecuritySetupStateCopyWith<SecuritySetupState> get copyWith => _$SecuritySetupS
 @override
 bool operator ==(Object other) {
   final _this = this as SecuritySetupState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySetupState&&(identical(other.pinSet, _this.pinSet) || other.pinSet == _this.pinSet)&&(identical(other.biometricAvailable, _this.biometricAvailable) || other.biometricAvailable == _this.biometricAvailable)&&(identical(other.biometricSet, _this.biometricSet) || other.biometricSet == _this.biometricSet)&&(identical(other.trustDevice, _this.trustDevice) || other.trustDevice == _this.trustDevice));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecuritySetupState&&(identical(other.pinSet, _this.pinSet) || other.pinSet == _this.pinSet)&&(identical(other.biometricAvailable, _this.biometricAvailable) || other.biometricAvailable == _this.biometricAvailable)&&(identical(other.biometricSet, _this.biometricSet) || other.biometricSet == _this.biometricSet)&&(identical(other.localSecurityMethod, _this.localSecurityMethod) || other.localSecurityMethod == _this.localSecurityMethod)&&(identical(other.secretConfigured, _this.secretConfigured) || other.secretConfigured == _this.secretConfigured)&&(identical(other.setupStage, _this.setupStage) || other.setupStage == _this.setupStage)&&(identical(other.trustDevice, _this.trustDevice) || other.trustDevice == _this.trustDevice));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SecuritySetupState;
-  return Object.hash(runtimeType,_this.pinSet,_this.biometricAvailable,_this.biometricSet,_this.trustDevice);
+  return Object.hash(runtimeType,_this.pinSet,_this.biometricAvailable,_this.biometricSet,_this.localSecurityMethod,_this.secretConfigured,_this.setupStage,_this.trustDevice);
 }
 
 @override
 String toString() {
   final _this = this as SecuritySetupState;
-  return 'SecuritySetupState(pinSet: ${_this.pinSet}, biometricAvailable: ${_this.biometricAvailable}, biometricSet: ${_this.biometricSet}, trustDevice: ${_this.trustDevice})';
+  return 'SecuritySetupState(pinSet: ${_this.pinSet}, biometricAvailable: ${_this.biometricAvailable}, biometricSet: ${_this.biometricSet}, localSecurityMethod: ${_this.localSecurityMethod}, secretConfigured: ${_this.secretConfigured}, setupStage: ${_this.setupStage}, trustDevice: ${_this.trustDevice})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $SecuritySetupStateCopyWith<$Res>  {
   factory $SecuritySetupStateCopyWith(SecuritySetupState value, $Res Function(SecuritySetupState) _then) = _$SecuritySetupStateCopyWithImpl;
 @useResult
 $Res call({
- bool pinSet, bool biometricAvailable, bool biometricSet, bool trustDevice
+ bool pinSet, bool biometricAvailable, bool biometricSet, LocalSecurityMethod localSecurityMethod, bool secretConfigured, SecuritySetupStage setupStage, bool trustDevice
 });
 
 
@@ -68,12 +68,15 @@ class _$SecuritySetupStateCopyWithImpl<$Res>
 
 /// Create a copy of SecuritySetupState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? pinSet = null,Object? biometricAvailable = null,Object? biometricSet = null,Object? trustDevice = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? pinSet = null,Object? biometricAvailable = null,Object? biometricSet = null,Object? localSecurityMethod = null,Object? secretConfigured = null,Object? setupStage = null,Object? trustDevice = null,}) {
   return _then(SecuritySetupState(
 pinSet: null == pinSet ? _self.pinSet : pinSet // ignore: cast_nullable_to_non_nullable
 as bool,biometricAvailable: null == biometricAvailable ? _self.biometricAvailable : biometricAvailable // ignore: cast_nullable_to_non_nullable
 as bool,biometricSet: null == biometricSet ? _self.biometricSet : biometricSet // ignore: cast_nullable_to_non_nullable
-as bool,trustDevice: null == trustDevice ? _self.trustDevice : trustDevice // ignore: cast_nullable_to_non_nullable
+as bool,localSecurityMethod: null == localSecurityMethod ? _self.localSecurityMethod : localSecurityMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,secretConfigured: null == secretConfigured ? _self.secretConfigured : secretConfigured // ignore: cast_nullable_to_non_nullable
+as bool,setupStage: null == setupStage ? _self.setupStage : setupStage // ignore: cast_nullable_to_non_nullable
+as SecuritySetupStage,trustDevice: null == trustDevice ? _self.trustDevice : trustDevice // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }
@@ -156,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  bool trustDevice)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  LocalSecurityMethod localSecurityMethod,  bool secretConfigured,  SecuritySetupStage setupStage,  bool trustDevice)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SecuritySetupState() when $default != null:
-return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.trustDevice);case _:
+return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.localSecurityMethod,_that.secretConfigured,_that.setupStage,_that.trustDevice);case _:
   return orElse();
 
 }
@@ -177,10 +180,10 @@ return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  bool trustDevice)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  LocalSecurityMethod localSecurityMethod,  bool secretConfigured,  SecuritySetupStage setupStage,  bool trustDevice)  $default,) {final _that = this;
 switch (_that) {
 case _SecuritySetupState():
-return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.trustDevice);}
+return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.localSecurityMethod,_that.secretConfigured,_that.setupStage,_that.trustDevice);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -194,10 +197,10 @@ return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.t
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  bool trustDevice)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool pinSet,  bool biometricAvailable,  bool biometricSet,  LocalSecurityMethod localSecurityMethod,  bool secretConfigured,  SecuritySetupStage setupStage,  bool trustDevice)?  $default,) {final _that = this;
 switch (_that) {
 case _SecuritySetupState() when $default != null:
-return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.trustDevice);case _:
+return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.localSecurityMethod,_that.secretConfigured,_that.setupStage,_that.trustDevice);case _:
   return null;
 
 }
@@ -209,12 +212,15 @@ return $default(_that.pinSet,_that.biometricAvailable,_that.biometricSet,_that.t
 
 
 class _SecuritySetupState extends SecuritySetupState {
-  const _SecuritySetupState({required this.pinSet, required this.biometricAvailable, required this.biometricSet, this.trustDevice = false}): super._();
+  const _SecuritySetupState({required this.pinSet, required this.biometricAvailable, required this.biometricSet, this.localSecurityMethod = LocalSecurityMethod.none, this.secretConfigured = false, this.setupStage = SecuritySetupStage.notStarted, this.trustDevice = false}): super._();
   
 
 @override final  bool pinSet;
 @override final  bool biometricAvailable;
 @override final  bool biometricSet;
+@override@JsonKey() final  LocalSecurityMethod localSecurityMethod;
+@override@JsonKey() final  bool secretConfigured;
+@override@JsonKey() final  SecuritySetupStage setupStage;
 @override@JsonKey() final  bool trustDevice;
 
 /// Create a copy of SecuritySetupState
@@ -227,18 +233,18 @@ _$SecuritySetupStateCopyWith<_SecuritySetupState> get copyWith => __$SecuritySet
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecuritySetupState&&(identical(other.pinSet, pinSet) || other.pinSet == pinSet)&&(identical(other.biometricAvailable, biometricAvailable) || other.biometricAvailable == biometricAvailable)&&(identical(other.biometricSet, biometricSet) || other.biometricSet == biometricSet)&&(identical(other.trustDevice, trustDevice) || other.trustDevice == trustDevice));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecuritySetupState&&(identical(other.pinSet, pinSet) || other.pinSet == pinSet)&&(identical(other.biometricAvailable, biometricAvailable) || other.biometricAvailable == biometricAvailable)&&(identical(other.biometricSet, biometricSet) || other.biometricSet == biometricSet)&&(identical(other.localSecurityMethod, localSecurityMethod) || other.localSecurityMethod == localSecurityMethod)&&(identical(other.secretConfigured, secretConfigured) || other.secretConfigured == secretConfigured)&&(identical(other.setupStage, setupStage) || other.setupStage == setupStage)&&(identical(other.trustDevice, trustDevice) || other.trustDevice == trustDevice));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,pinSet,biometricAvailable,biometricSet,trustDevice);
+    return Object.hash(runtimeType,pinSet,biometricAvailable,biometricSet,localSecurityMethod,secretConfigured,setupStage,trustDevice);
 }
 
 @override
 String toString() {
-    return 'SecuritySetupState(pinSet: $pinSet, biometricAvailable: $biometricAvailable, biometricSet: $biometricSet, trustDevice: $trustDevice)';
+    return 'SecuritySetupState(pinSet: $pinSet, biometricAvailable: $biometricAvailable, biometricSet: $biometricSet, localSecurityMethod: $localSecurityMethod, secretConfigured: $secretConfigured, setupStage: $setupStage, trustDevice: $trustDevice)';
 }
 
 
@@ -249,7 +255,7 @@ abstract mixin class _$SecuritySetupStateCopyWith<$Res> implements $SecuritySetu
   factory _$SecuritySetupStateCopyWith(_SecuritySetupState value, $Res Function(_SecuritySetupState) _then) = __$SecuritySetupStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool pinSet, bool biometricAvailable, bool biometricSet, bool trustDevice
+ bool pinSet, bool biometricAvailable, bool biometricSet, LocalSecurityMethod localSecurityMethod, bool secretConfigured, SecuritySetupStage setupStage, bool trustDevice
 });
 
 
@@ -266,12 +272,15 @@ class __$SecuritySetupStateCopyWithImpl<$Res>
 
 /// Create a copy of SecuritySetupState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? pinSet = null,Object? biometricAvailable = null,Object? biometricSet = null,Object? trustDevice = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? pinSet = null,Object? biometricAvailable = null,Object? biometricSet = null,Object? localSecurityMethod = null,Object? secretConfigured = null,Object? setupStage = null,Object? trustDevice = null,}) {
   return _then(_SecuritySetupState(
 pinSet: null == pinSet ? _self.pinSet : pinSet // ignore: cast_nullable_to_non_nullable
 as bool,biometricAvailable: null == biometricAvailable ? _self.biometricAvailable : biometricAvailable // ignore: cast_nullable_to_non_nullable
 as bool,biometricSet: null == biometricSet ? _self.biometricSet : biometricSet // ignore: cast_nullable_to_non_nullable
-as bool,trustDevice: null == trustDevice ? _self.trustDevice : trustDevice // ignore: cast_nullable_to_non_nullable
+as bool,localSecurityMethod: null == localSecurityMethod ? _self.localSecurityMethod : localSecurityMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,secretConfigured: null == secretConfigured ? _self.secretConfigured : secretConfigured // ignore: cast_nullable_to_non_nullable
+as bool,setupStage: null == setupStage ? _self.setupStage : setupStage // ignore: cast_nullable_to_non_nullable
+as SecuritySetupStage,trustDevice: null == trustDevice ? _self.trustDevice : trustDevice // ignore: cast_nullable_to_non_nullable
 as bool,
   ));
 }

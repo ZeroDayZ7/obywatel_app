@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
@@ -84,10 +85,25 @@ class PinService {
     }
   }
 
-  Future<void> setPin(List<int> pinCodes) async {
-    _validatePinList(pinCodes);
+  Future<void> setLocalSecret({
+    required LocalSecurityMethod method,
+    required List<int> secretBytes,
+  }) async {
+    if (method == LocalSecurityMethod.none) {
+      throw PinValidationException(
+        'Local security method must be either pin or password.',
+      );
+    }
 
-    final localCopy = List<int>.from(pinCodes);
+    if (method == LocalSecurityMethod.pin) {
+      _validatePinList(secretBytes);
+    } else if (method == LocalSecurityMethod.password) {
+      if (secretBytes.isEmpty) {
+        throw PinValidationException('errors.required_password');
+      }
+    }
+
+    final localCopy = List<int>.from(secretBytes);
     final buffer = SecureBuffer(localCopy.length);
     try {
       for (int i = 0; i < localCopy.length; i++) {
@@ -96,24 +112,74 @@ class PinService {
 
       final hash = await _hashService.hash(buffer.view);
       await _storage.write(key: StorageKeys.pinHash, value: hash);
-      _logger.i('[PIN-SERVICE] Hash PIN-u pomyślnie zapisany.');
+      await _storage.write(
+        key: StorageKeys.localSecurityMethod,
+        value: method.name,
+      );
+      _logger.i('[PIN-SERVICE] Hash lokalnego sekretu pomyślnie zapisany.');
     } finally {
       buffer.dispose();
       _wipe(localCopy);
     }
   }
 
+  Future<void> setPin(List<int> pinCodes) async {
+    await setLocalSecret(
+      method: LocalSecurityMethod.pin,
+      secretBytes: pinCodes,
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // VERIFY / UNLOCK
   // ---------------------------------------------------------------------------
 
-  Future<bool> verifyPin(List<int> pinCodes) async {
-    // _logger.i('[PIN-SERVICE] Weryfikacja PIN...');
-    // _logDebug('[PIN-SERVICE] Długość PIN: ${pinCodes.length}');
+  Future<LocalSecurityMethod> readStoredLocalSecurityMethod() async {
+    final rawMethod = await _storage.read(key: StorageKeys.localSecurityMethod);
+    switch (rawMethod?.trim().toLowerCase()) {
+      case 'pin':
+        return LocalSecurityMethod.pin;
+      case 'password':
+        return LocalSecurityMethod.password;
+      default:
+        return LocalSecurityMethod.none;
+    }
+  }
 
-    _validatePinList(pinCodes);
+  Future<bool> verifyLocalSecret({
+    required LocalSecurityMethod method,
+    required List<int> secretBytes,
+  }) async {
+    if (method == LocalSecurityMethod.none) {
+      return false;
+    }
 
-    final workingCopy = List<int>.from(pinCodes);
+    final storedMethod = await readStoredLocalSecurityMethod();
+    if (storedMethod == LocalSecurityMethod.none) {
+      // Backward compatibility: older installs without the persisted method are
+      // treated as PIN-based if the caller explicitly validates PIN.
+      if (method != LocalSecurityMethod.pin) {
+        _logger.w(
+          '[PIN-SERVICE] Brak zapisanego LocalSecurityMethod dla hasła lokalnego.',
+        );
+        return false;
+      }
+    } else if (storedMethod != method) {
+      _logger.w(
+        '[PIN-SERVICE] Niezgodność metody lokalnego zabezpieczenia: stored=$storedMethod, requested=$method',
+      );
+      return false;
+    }
+
+    if (method == LocalSecurityMethod.pin) {
+      _validatePinList(secretBytes);
+    } else if (method == LocalSecurityMethod.password) {
+      if (secretBytes.isEmpty) {
+        return false;
+      }
+    }
+
+    final workingCopy = List<int>.from(secretBytes);
     final buffer = SecureBuffer(workingCopy.length);
 
     try {
@@ -129,7 +195,7 @@ class PinService {
 
       final valid = await _hashService.verify(buffer.view, storedHash);
       if (!valid) {
-        _logger.w('[PIN-SERVICE] Hash PIN-u niepoprawny.');
+        _logger.w('[PIN-SERVICE] Hash lokalnego sekretu niepoprawny.');
         return false;
       }
 
@@ -150,11 +216,11 @@ class PinService {
         encryptedMasterKey: encryptedMasterKey,
       );
 
-      _logger.i('✅ [PIN-SERVICE] PIN poprawny, sesja odblokowana.');
+      _logger.i('✅ [PIN-SERVICE] Lokalny sekret poprawny, sesja odblokowana.');
       return true;
     } catch (e, st) {
       _logger.e(
-        '❌ [PIN-SERVICE] Błąd weryfikacji PIN-u!',
+        '❌ [PIN-SERVICE] Błąd weryfikacji lokalnego sekretu!',
         error: e,
         stackTrace: st,
       );
@@ -163,6 +229,21 @@ class PinService {
       buffer.dispose();
       _wipe(workingCopy);
     }
+  }
+
+  Future<bool> verifyPin(List<int> pinCodes) async {
+    final storedMethod = await readStoredLocalSecurityMethod();
+    if (storedMethod == LocalSecurityMethod.password) {
+      _logger.w(
+        '[PIN-SERVICE] PIN verification requested while password-based local security is configured.',
+      );
+      return false;
+    }
+
+    return verifyLocalSecret(
+      method: LocalSecurityMethod.pin,
+      secretBytes: pinCodes,
+    );
   }
 
   Future<void> _unlockSession({

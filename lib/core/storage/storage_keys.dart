@@ -20,6 +20,7 @@ abstract final class StorageKeys {
 
   static const String userPin = 'user_pin';
   static const String pinHash = 'pin_hash';
+  static const String localSecurityMethod = 'local_security_method';
   static const String setupCompleted = 'setup_completed';
   static const String localLockEnabled = 'local_lock_enabled';
   static const String isPinConfigured = 'isPinConfigured';

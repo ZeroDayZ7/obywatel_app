@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
@@ -143,7 +144,8 @@ class FeedbackService {
       };
 
       await _platform.playSound(sound);
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Error playing sound: $e');
       // Jest to tylko lokalny efekt aplikacji; nie wolno wywoływać awarii UI.
     }
   }
