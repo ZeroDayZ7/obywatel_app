@@ -12,6 +12,12 @@ import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
 
 class SecuritySettingsConfig {
+  static String buildChangeMethodPath(LocalSecurityMethod method) =>
+      '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_method&method=${method.name}';
+
+  static String buildChangeSecretPath(LocalSecurityMethod method) =>
+      '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_secret&method=${method.name}';
+
   static List<SettingsSection> getSections(
     BuildContext context,
     WidgetRef ref, {
@@ -25,10 +31,8 @@ class SecuritySettingsConfig {
         ? 'Hasło lokalne'
         : 'Brak';
 
-    final currentLocalMethodAction =
-        state.localSecurityMethod == LocalSecurityMethod.password
-        ? '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?method=password'
-        : '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?method=pin';
+    final changeMethodAction = buildChangeMethodPath(state.localSecurityMethod);
+    final changeSecretAction = buildChangeSecretPath(state.localSecurityMethod);
 
     return [
       SettingsSection(
@@ -39,7 +43,7 @@ class SecuritySettingsConfig {
             title: 'Aktywna metoda',
             subtitle: 'Obecnie: $activeLocalMethod',
             type: ActionType.navigation,
-            onTap: () => context.push(currentLocalMethodAction),
+            onTap: () => context.push(changeMethodAction),
           ),
           ActionItem(
             icon: Icons.lock_person_outlined,
@@ -50,7 +54,7 @@ class SecuritySettingsConfig {
                 ? 'Wymagaj poprawnego obecnego PIN-u, aby zmienić kod.'
                 : 'Wymagaj obecnego hasła lokalnego do zmiany odblokowania.',
             type: ActionType.navigation,
-            onTap: () => context.push(currentLocalMethodAction),
+            onTap: () => context.push(changeSecretAction),
           ),
         ],
       ),
