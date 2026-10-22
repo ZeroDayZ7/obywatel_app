@@ -85,6 +85,7 @@ class _FakePinService extends PinService {
         hashService: ref.read(hashServiceProvider),
         kdfService: ref.read(kdfServiceProvider),
         crypto: ref.read(symmetricCryptoProvider),
+        cryptoService: ref.read(cryptoServiceProvider.notifier),
         deviceInfoService: ref.read(deviceInfoServiceProvider),
         logger: ref.read(appLoggerProvider),
       );

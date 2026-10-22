@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
@@ -11,6 +14,8 @@ import 'package:obywatel_plus/core/errors/app_notification.dart';
 import 'package:obywatel_plus/core/errors/global_notification_provider.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_notifier.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_state.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 
 class ChangePinScreen extends ConsumerStatefulWidget {
   const ChangePinScreen({super.key});
@@ -84,8 +89,54 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         });
   }
 
+  LocalSecurityMethod? _parseRouteMethod(String? rawMethod) {
+    if (rawMethod == null || rawMethod.isEmpty) {
+      return null;
+    }
+
+    for (final method in LocalSecurityMethod.values) {
+      if (method.name == rawMethod) {
+        return method;
+      }
+    }
+
+    return null;
+  }
+
+  LocalSecurityMethod? get _method {
+    final securityState = ref.watch(securityServiceProvider);
+    final query = GoRouter.of(
+      context,
+    ).routeInformationProvider.value.uri.queryParameters;
+    final routeMethod = _parseRouteMethod(query['method']);
+
+    if (!securityState.initialized) {
+      return null;
+    }
+
+    if (securityState.localSecurityMethod == LocalSecurityMethod.none) {
+      return null;
+    }
+
+    if (routeMethod != null && routeMethod != securityState.localSecurityMethod) {
+      return null;
+    }
+
+    return securityState.localSecurityMethod;
+  }
+
+  List<int> _secretBytesFrom(String value) {
+    return _method == LocalSecurityMethod.password
+        ? utf8.encode(value)
+        : value.codeUnits.toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final securityState = ref.watch(securityServiceProvider);
+    final method = _method;
+    final isPasswordMode = method == LocalSecurityMethod.password;
+
     ref.listen<ChangePinState>(changePinProvider, (prev, next) {
       next.maybeWhen(
         enterOld: () => _goTo(0),
@@ -110,64 +161,97 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final state = ref.watch(changePinProvider);
     final isLoading = state.maybeWhen(loading: () => true, orElse: () => false);
 
+    if (!securityState.initialized || method == null) {
+      return AppScaffold(
+        size: ContainerSize.compact,
+        alignment: Alignment.center,
+        appBar: AppBar(
+          title: const Text('Zmień lokalne odblokowanie'),
+          centerTitle: true,
+        ),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return AppScaffold(
       size: ContainerSize.compact,
       alignment: Alignment.center,
       appBar: AppBar(
-        title: Text(LocaleKeys.settings_common_change_pin.tr()),
+        title: Text(
+          isPasswordMode
+              ? 'Hasło lokalne'
+              : LocaleKeys.settings_common_change_pin.tr(),
+        ),
         centerTitle: true,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            height: 300,
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _buildStep(
-                  title: LocaleKeys.pin_dialog_enter_old_pin.tr(),
-                  controller: _oldPinController,
-                  focusNode: _oldPinFocus,
-                  isLoading: isLoading,
-                  onCompleted: (pin) {
-                    ref
-                        .read(changePinProvider.notifier)
-                        .verifyOldPin(pin.codeUnits.toList());
-                    _oldPinController.clear();
-                  },
-                ),
-                _buildStep(
-                  title: LocaleKeys.pin_dialog_set_pin_title.tr(),
-                  controller: _newPinController,
-                  focusNode: _newPinFocus,
-                  isLoading: isLoading,
-                  onCompleted: (pin) {
-                    ref
-                        .read(changePinProvider.notifier)
-                        .setNewPin(pin.codeUnits.toList());
-                    _newPinController.clear();
-                  },
-                ),
-                _buildStep(
-                  title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
-                  controller: _confirmPinController,
-                  focusNode: _confirmPinFocus,
-                  isLoading: isLoading,
-                  onCompleted: (pin) {
-                    Future.microtask(() async {
-                      await ref
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              height: 340,
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildStep(
+                    title: isPasswordMode
+                        ? 'Podaj obecne hasło lokalne'
+                        : LocaleKeys.pin_dialog_enter_old_pin.tr(),
+                    controller: _oldPinController,
+                    focusNode: _oldPinFocus,
+                    isLoading: isLoading,
+                    isPasswordMode: isPasswordMode,
+                    submitLabel: 'Dalej',
+                    onCompleted: (pin) {
+                      ref
                           .read(changePinProvider.notifier)
-                          .confirmAndSave(pin.codeUnits.toList());
-                      _confirmPinController.clear();
-                    });
-                  },
-                ),
-              ],
+                          .verifyOldPin(_secretBytesFrom(pin), method: method);
+                    },
+                  ),
+                  _buildStep(
+                    title: isPasswordMode
+                        ? 'Ustaw nowe hasło lokalne'
+                        : LocaleKeys.pin_dialog_set_pin_title.tr(),
+                    controller: _newPinController,
+                    focusNode: _newPinFocus,
+                    isLoading: isLoading,
+                    isPasswordMode: isPasswordMode,
+                    submitLabel: 'Dalej',
+                    onCompleted: (pin) {
+                      ref
+                          .read(changePinProvider.notifier)
+                          .setNewPin(_secretBytesFrom(pin), method: method);
+                    },
+                  ),
+                  _buildStep(
+                    title: isPasswordMode
+                        ? 'Powtórz nowe hasło lokalne'
+                        : LocaleKeys.pin_dialog_repeat_pin_title.tr(),
+                    controller: _confirmPinController,
+                    focusNode: _confirmPinFocus,
+                    isLoading: isLoading,
+                    isPasswordMode: isPasswordMode,
+                    submitLabel: 'Zapisz',
+                    onCompleted: (pin) {
+                      Future.microtask(() async {
+                        await ref
+                            .read(changePinProvider.notifier)
+                            .confirmAndSave(
+                              _secretBytesFrom(pin),
+                              method: method,
+                            );
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -177,7 +261,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     required TextEditingController controller,
     required FocusNode focusNode,
     required void Function(String) onCompleted,
+    required String submitLabel,
     bool isLoading = false,
+    bool isPasswordMode = false,
   }) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -199,19 +285,33 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
           controller: controller,
           focusNode: focusNode,
           autofocus: false,
-          labelText: LocaleKeys.pin_dialog_enter_4_digits.tr(),
+          labelText: isPasswordMode
+              ? 'Hasło lokalne'
+              : LocaleKeys.pin_dialog_enter_4_digits.tr(),
           obscureText: true,
           enabled: !isLoading,
-          keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(4),
-          ],
+          keyboardType: isPasswordMode
+              ? TextInputType.visiblePassword
+              : TextInputType.number,
+          inputFormatters: isPasswordMode
+              ? [LengthLimitingTextInputFormatter(64)]
+              : [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(4),
+                ],
           onChanged: (val) {
-            if (val.length == 4 && !isLoading) {
+            if (!isPasswordMode && !isLoading && val.length == 4) {
               onCompleted(val);
             }
           },
+        ),
+        const SizedBox(height: Spacing.xl),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: isLoading ? null : () => onCompleted(controller.text),
+            child: Text(submitLabel),
+          ),
         ),
       ],
     );

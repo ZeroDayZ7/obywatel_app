@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/crypto/kdf_service.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
@@ -94,6 +95,7 @@ void main() {
         hashService: HashService(logger),
         kdfService: KdfService(logger),
         crypto: SymmetricCrypto(logger),
+        cryptoService: CryptoService(),
         deviceInfoService: DeviceInfoService(logger),
         logger: logger,
       );
@@ -120,6 +122,7 @@ void main() {
         hashService: HashService(logger),
         kdfService: kdf,
         crypto: crypto,
+        cryptoService: CryptoService(),
         deviceInfoService: DeviceInfoService(logger),
         logger: logger,
       );

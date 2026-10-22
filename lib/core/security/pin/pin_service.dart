@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/crypto/hash_service.dart';
 import 'package:obywatel_plus/core/crypto/kdf_service.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
@@ -22,6 +23,7 @@ PinService pinService(Ref ref) {
     hashService: ref.watch(hashServiceProvider),
     kdfService: ref.watch(kdfServiceProvider),
     crypto: ref.watch(symmetricCryptoProvider),
+    cryptoService: ref.watch(cryptoServiceProvider.notifier),
     deviceInfoService: ref.watch(deviceInfoServiceProvider),
     logger: ref.watch(appLoggerProvider),
   );
@@ -45,6 +47,7 @@ class PinService {
   final HashService _hashService;
   final KdfService _kdfService;
   final SymmetricCrypto _crypto;
+  final CryptoService _cryptoService;
   final AppLogger _logger;
 
   SecretKey? _sessionKey;
@@ -56,13 +59,15 @@ class PinService {
     required HashService hashService,
     required KdfService kdfService,
     required SymmetricCrypto crypto,
+    required CryptoService cryptoService,
     required DeviceInfoService deviceInfoService,
     required AppLogger logger,
-  })  : _storage = storage,
-        _hashService = hashService,
-        _kdfService = kdfService,
-        _crypto = crypto,
-        _logger = logger;
+  }) : _storage = storage,
+       _hashService = hashService,
+       _kdfService = kdfService,
+       _crypto = crypto,
+       _cryptoService = cryptoService,
+       _logger = logger;
 
   // void _logDebug(String message) {
   //   if (_enableVerboseLogging) {
@@ -128,6 +133,109 @@ class PinService {
       method: LocalSecurityMethod.pin,
       secretBytes: pinCodes,
     );
+  }
+
+  Future<void> updateLocalSecret({
+    required LocalSecurityMethod currentMethod,
+    required LocalSecurityMethod targetMethod,
+    required List<int> currentSecret,
+    required List<int> newSecret,
+  }) async {
+    if (currentMethod == LocalSecurityMethod.none ||
+        targetMethod == LocalSecurityMethod.none) {
+      throw PinValidationException(
+        'Local security method must be either pin or password.',
+      );
+    }
+
+    if (currentSecret.isEmpty || newSecret.isEmpty) {
+      throw PinValidationException('errors.invalid_current_secret');
+    }
+
+    final storedMethod = await readStoredLocalSecurityMethod();
+    final expectedCurrentMethod = currentMethod == LocalSecurityMethod.none
+        ? storedMethod
+        : currentMethod;
+
+    if (storedMethod != LocalSecurityMethod.none &&
+        storedMethod != expectedCurrentMethod) {
+      throw PinValidationException(
+        'Requested current method does not match stored local security method.',
+      );
+    }
+
+    final validCurrentSecret = await verifyLocalSecret(
+      method: expectedCurrentMethod,
+      secretBytes: currentSecret,
+    );
+
+    if (!validCurrentSecret) {
+      throw PinValidationException('errors.invalid_current_secret');
+    }
+
+    final previousHash = await _storage.read(key: StorageKeys.pinHash);
+    final previousSalt = await _storage.read(key: StorageKeys.kekSalt);
+    final previousEncryptedKey = await _storage.read(
+      key: StorageKeys.devicePrivateKey,
+    );
+    final previousMethod = storedMethod == LocalSecurityMethod.none
+        ? expectedCurrentMethod
+        : storedMethod;
+
+    if (previousHash == null ||
+        previousSalt == null ||
+        previousEncryptedKey == null) {
+      throw PinValidationException('errors.security_state_missing');
+    }
+
+    final newSecretCopy = List<int>.from(newSecret);
+    final newSalt = _kdfService.generateSalt();
+
+    try {
+      await _cryptoService.finalizeAndPersist(newSecretCopy, newSalt);
+      final newHash = await _hashService.hash(newSecretCopy);
+
+      await _storage.write(
+        key: StorageKeys.kekSalt,
+        value: base64Encode(newSalt),
+      );
+      await _storage.write(key: StorageKeys.pinHash, value: newHash);
+      await _storage.write(
+        key: StorageKeys.localSecurityMethod,
+        value: targetMethod.name,
+      );
+
+      _logger.i(
+        '[PIN-SERVICE] Lokalny sekret został zaktualizowany i klucz został przeopakowany zgodnie z nową metodą $targetMethod.',
+      );
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[PIN-SERVICE] Błąd podczas rotacji lokalnego sekretu. Przywracam poprzedni stan zabezpieczeń.',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      if (previousSalt.isNotEmpty) {
+        await _storage.write(key: StorageKeys.kekSalt, value: previousSalt);
+      }
+      if (previousEncryptedKey.isNotEmpty) {
+        await _storage.write(
+          key: StorageKeys.devicePrivateKey,
+          value: previousEncryptedKey,
+        );
+      }
+      if (previousHash.isNotEmpty) {
+        await _storage.write(key: StorageKeys.pinHash, value: previousHash);
+      }
+      await _storage.write(
+        key: StorageKeys.localSecurityMethod,
+        value: previousMethod.name,
+      );
+
+      rethrow;
+    } finally {
+      _wipe(newSecretCopy);
+    }
   }
 
   // ---------------------------------------------------------------------------
