@@ -7,6 +7,7 @@ import 'package:obywatel_plus/core/crypto/kdf_service.dart';
 import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
+import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -52,6 +53,35 @@ void main() {
       expect(Validators.validatePassword('Abc123!'), isNull);
       expect(Validators.validatePassword('1234'), isNotNull);
       expect(Validators.validatePassword('Abcdef!'), isNotNull);
+    });
+
+    test('password lock state remains active without falling back to PIN', () {
+      final state = SecuritySetupState.initial().copyWith(
+        localSecurityMethod: LocalSecurityMethod.password,
+        secretConfigured: true,
+      );
+
+      expect(state.localSecurityMethod, LocalSecurityMethod.password);
+      expect(state.isPasswordMethod, isTrue);
+      expect(state.isPinMethod, isFalse);
+    });
+
+    test('security lock respects stored method and rejects invalid none state', () {
+      final passwordState = SecurityState.initial().copyWith(
+        hasLocalLock: true,
+        isSetupCompleted: true,
+        initialized: true,
+        localSecurityMethod: LocalSecurityMethod.password,
+      );
+      expect(passwordState.shouldShowLock, isTrue);
+
+      final invalidState = SecurityState.initial().copyWith(
+        hasLocalLock: true,
+        isSetupCompleted: true,
+        initialized: true,
+        localSecurityMethod: LocalSecurityMethod.none,
+      );
+      expect(invalidState.shouldShowLock, isFalse);
     });
   });
 

@@ -11,6 +11,7 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -80,15 +81,20 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     }
   }
 
-  Future<void> verifyPin(List<int> pinCodes) async {
-    // _log.i('[PIN-VERIFICATION] Weryfikacja PIN-u...');
-    // _logDebug('[PIN-VERIFICATION] Długość pinCodes: ${pinCodes.length}');
-
+  Future<void> verifyLocalSecret({
+    required LocalSecurityMethod method,
+    required List<int> secretBytes,
+  }) async {
     state = const PinVerificationState.loading();
 
-    final ok = await ref.read(pinServiceProvider).verifyPin(pinCodes);
+    final ok = await ref.read(pinServiceProvider).verifyLocalSecret(
+      method: method,
+      secretBytes: secretBytes,
+    );
     if (!ok) {
-      _log.w('[PIN-VERIFICATION] Nieudana weryfikacja PIN-u w PinService.');
+      _log.w(
+        '[PIN-VERIFICATION] Nieudana weryfikacja lokalnego sekretu w PinService dla metody $method.',
+      );
       await _handleFailedAttempt();
       return;
     }
@@ -104,9 +110,10 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     try {
       final salt = base64Decode(saltBase64);
-      await ref
-          .read(cryptoServiceProvider.notifier)
-          .loadAndUnlockPrivateKey(pinBytes: pinCodes, salt: salt);
+      await ref.read(cryptoServiceProvider.notifier).loadAndUnlockPrivateKey(
+        pinBytes: secretBytes,
+        salt: salt,
+      );
     } catch (e, st) {
       _log.e(
         '[PIN-VERIFICATION] Błąd odszyfrowywania klucza prywatnego!',
@@ -125,12 +132,28 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     if (!sessionValid) {
       _log.w(
-        '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym PIN-ie. Zachowano odblokowanie lokalne.',
+        '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym lokalnym sekrecie. Zachowano odblokowanie lokalne.',
       );
       return;
     }
 
-    _log.i('✅ [PIN-VERIFICATION] Proces weryfikacji PIN zakończony sukcesem.');
+    _log.i(
+      '✅ [PIN-VERIFICATION] Proces weryfikacji lokalnego sekretu zakończony sukcesem.',
+    );
+  }
+
+  Future<void> verifyPin(List<int> pinCodes) async {
+    await verifyLocalSecret(
+      method: LocalSecurityMethod.pin,
+      secretBytes: pinCodes,
+    );
+  }
+
+  Future<void> verifyPassword(String password) async {
+    await verifyLocalSecret(
+      method: LocalSecurityMethod.password,
+      secretBytes: utf8.encode(password),
+    );
   }
 
   Future<void> _handleFailedAttempt() async {

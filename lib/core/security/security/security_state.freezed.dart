@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$SecurityState {
 
- bool get hasLocalLock; bool get isPinConfigured; bool get isBiometricEnabled; bool get canUseBiometrics; bool get isSetupCompleted; bool get initialized;
+ bool get hasLocalLock; bool get isPinConfigured; bool get isBiometricEnabled; bool get canUseBiometrics; bool get isSetupCompleted; bool get initialized; LocalSecurityMethod get localSecurityMethod;
 /// Create a copy of SecurityState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $SecurityStateCopyWith<SecurityState> get copyWith => _$SecurityStateCopyWithImp
 @override
 bool operator ==(Object other) {
   final _this = this as SecurityState;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityState&&(identical(other.hasLocalLock, _this.hasLocalLock) || other.hasLocalLock == _this.hasLocalLock)&&(identical(other.isPinConfigured, _this.isPinConfigured) || other.isPinConfigured == _this.isPinConfigured)&&(identical(other.isBiometricEnabled, _this.isBiometricEnabled) || other.isBiometricEnabled == _this.isBiometricEnabled)&&(identical(other.canUseBiometrics, _this.canUseBiometrics) || other.canUseBiometrics == _this.canUseBiometrics)&&(identical(other.isSetupCompleted, _this.isSetupCompleted) || other.isSetupCompleted == _this.isSetupCompleted)&&(identical(other.initialized, _this.initialized) || other.initialized == _this.initialized));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SecurityState&&(identical(other.hasLocalLock, _this.hasLocalLock) || other.hasLocalLock == _this.hasLocalLock)&&(identical(other.isPinConfigured, _this.isPinConfigured) || other.isPinConfigured == _this.isPinConfigured)&&(identical(other.isBiometricEnabled, _this.isBiometricEnabled) || other.isBiometricEnabled == _this.isBiometricEnabled)&&(identical(other.canUseBiometrics, _this.canUseBiometrics) || other.canUseBiometrics == _this.canUseBiometrics)&&(identical(other.isSetupCompleted, _this.isSetupCompleted) || other.isSetupCompleted == _this.isSetupCompleted)&&(identical(other.initialized, _this.initialized) || other.initialized == _this.initialized)&&(identical(other.localSecurityMethod, _this.localSecurityMethod) || other.localSecurityMethod == _this.localSecurityMethod));
 }
 
 
 @override
 int get hashCode {
   final _this = this as SecurityState;
-  return Object.hash(runtimeType,_this.hasLocalLock,_this.isPinConfigured,_this.isBiometricEnabled,_this.canUseBiometrics,_this.isSetupCompleted,_this.initialized);
+  return Object.hash(runtimeType,_this.hasLocalLock,_this.isPinConfigured,_this.isBiometricEnabled,_this.canUseBiometrics,_this.isSetupCompleted,_this.initialized,_this.localSecurityMethod);
 }
 
 @override
 String toString() {
   final _this = this as SecurityState;
-  return 'SecurityState(hasLocalLock: ${_this.hasLocalLock}, isPinConfigured: ${_this.isPinConfigured}, isBiometricEnabled: ${_this.isBiometricEnabled}, canUseBiometrics: ${_this.canUseBiometrics}, isSetupCompleted: ${_this.isSetupCompleted}, initialized: ${_this.initialized})';
+  return 'SecurityState(hasLocalLock: ${_this.hasLocalLock}, isPinConfigured: ${_this.isPinConfigured}, isBiometricEnabled: ${_this.isBiometricEnabled}, canUseBiometrics: ${_this.canUseBiometrics}, isSetupCompleted: ${_this.isSetupCompleted}, initialized: ${_this.initialized}, localSecurityMethod: ${_this.localSecurityMethod})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $SecurityStateCopyWith<$Res>  {
   factory $SecurityStateCopyWith(SecurityState value, $Res Function(SecurityState) _then) = _$SecurityStateCopyWithImpl;
 @useResult
 $Res call({
- bool hasLocalLock, bool isPinConfigured, bool isBiometricEnabled, bool canUseBiometrics, bool isSetupCompleted, bool initialized
+ bool hasLocalLock, bool isPinConfigured, bool isBiometricEnabled, bool canUseBiometrics, bool isSetupCompleted, bool initialized, LocalSecurityMethod localSecurityMethod
 });
 
 
@@ -68,7 +68,7 @@ class _$SecurityStateCopyWithImpl<$Res>
 
 /// Create a copy of SecurityState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? hasLocalLock = null,Object? isPinConfigured = null,Object? isBiometricEnabled = null,Object? canUseBiometrics = null,Object? isSetupCompleted = null,Object? initialized = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? hasLocalLock = null,Object? isPinConfigured = null,Object? isBiometricEnabled = null,Object? canUseBiometrics = null,Object? isSetupCompleted = null,Object? initialized = null,Object? localSecurityMethod = null,}) {
   return _then(SecurityState(
 hasLocalLock: null == hasLocalLock ? _self.hasLocalLock : hasLocalLock // ignore: cast_nullable_to_non_nullable
 as bool,isPinConfigured: null == isPinConfigured ? _self.isPinConfigured : isPinConfigured // ignore: cast_nullable_to_non_nullable
@@ -76,7 +76,8 @@ as bool,isBiometricEnabled: null == isBiometricEnabled ? _self.isBiometricEnable
 as bool,canUseBiometrics: null == canUseBiometrics ? _self.canUseBiometrics : canUseBiometrics // ignore: cast_nullable_to_non_nullable
 as bool,isSetupCompleted: null == isSetupCompleted ? _self.isSetupCompleted : isSetupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,localSecurityMethod: null == localSecurityMethod ? _self.localSecurityMethod : localSecurityMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,
   ));
 }
 
@@ -158,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized,  LocalSecurityMethod localSecurityMethod)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _SecurityState() when $default != null:
-return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized);case _:
+return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized,_that.localSecurityMethod);case _:
   return orElse();
 
 }
@@ -179,10 +180,10 @@ return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnable
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized,  LocalSecurityMethod localSecurityMethod)  $default,) {final _that = this;
 switch (_that) {
 case _SecurityState():
-return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized);}
+return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized,_that.localSecurityMethod);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -196,10 +197,10 @@ return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnable
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool hasLocalLock,  bool isPinConfigured,  bool isBiometricEnabled,  bool canUseBiometrics,  bool isSetupCompleted,  bool initialized,  LocalSecurityMethod localSecurityMethod)?  $default,) {final _that = this;
 switch (_that) {
 case _SecurityState() when $default != null:
-return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized);case _:
+return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnabled,_that.canUseBiometrics,_that.isSetupCompleted,_that.initialized,_that.localSecurityMethod);case _:
   return null;
 
 }
@@ -211,7 +212,7 @@ return $default(_that.hasLocalLock,_that.isPinConfigured,_that.isBiometricEnable
 
 
 class _SecurityState extends SecurityState {
-  const _SecurityState({required this.hasLocalLock, required this.isPinConfigured, required this.isBiometricEnabled, required this.canUseBiometrics, required this.isSetupCompleted, required this.initialized}): super._();
+  const _SecurityState({required this.hasLocalLock, required this.isPinConfigured, required this.isBiometricEnabled, required this.canUseBiometrics, required this.isSetupCompleted, required this.initialized, this.localSecurityMethod = LocalSecurityMethod.none}): super._();
   
 
 @override final  bool hasLocalLock;
@@ -220,6 +221,7 @@ class _SecurityState extends SecurityState {
 @override final  bool canUseBiometrics;
 @override final  bool isSetupCompleted;
 @override final  bool initialized;
+@override@JsonKey() final  LocalSecurityMethod localSecurityMethod;
 
 /// Create a copy of SecurityState
 /// with the given fields replaced by the non-null parameter values.
@@ -231,18 +233,18 @@ _$SecurityStateCopyWith<_SecurityState> get copyWith => __$SecurityStateCopyWith
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityState&&(identical(other.hasLocalLock, hasLocalLock) || other.hasLocalLock == hasLocalLock)&&(identical(other.isPinConfigured, isPinConfigured) || other.isPinConfigured == isPinConfigured)&&(identical(other.isBiometricEnabled, isBiometricEnabled) || other.isBiometricEnabled == isBiometricEnabled)&&(identical(other.canUseBiometrics, canUseBiometrics) || other.canUseBiometrics == canUseBiometrics)&&(identical(other.isSetupCompleted, isSetupCompleted) || other.isSetupCompleted == isSetupCompleted)&&(identical(other.initialized, initialized) || other.initialized == initialized));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SecurityState&&(identical(other.hasLocalLock, hasLocalLock) || other.hasLocalLock == hasLocalLock)&&(identical(other.isPinConfigured, isPinConfigured) || other.isPinConfigured == isPinConfigured)&&(identical(other.isBiometricEnabled, isBiometricEnabled) || other.isBiometricEnabled == isBiometricEnabled)&&(identical(other.canUseBiometrics, canUseBiometrics) || other.canUseBiometrics == canUseBiometrics)&&(identical(other.isSetupCompleted, isSetupCompleted) || other.isSetupCompleted == isSetupCompleted)&&(identical(other.initialized, initialized) || other.initialized == initialized)&&(identical(other.localSecurityMethod, localSecurityMethod) || other.localSecurityMethod == localSecurityMethod));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,hasLocalLock,isPinConfigured,isBiometricEnabled,canUseBiometrics,isSetupCompleted,initialized);
+    return Object.hash(runtimeType,hasLocalLock,isPinConfigured,isBiometricEnabled,canUseBiometrics,isSetupCompleted,initialized,localSecurityMethod);
 }
 
 @override
 String toString() {
-    return 'SecurityState(hasLocalLock: $hasLocalLock, isPinConfigured: $isPinConfigured, isBiometricEnabled: $isBiometricEnabled, canUseBiometrics: $canUseBiometrics, isSetupCompleted: $isSetupCompleted, initialized: $initialized)';
+    return 'SecurityState(hasLocalLock: $hasLocalLock, isPinConfigured: $isPinConfigured, isBiometricEnabled: $isBiometricEnabled, canUseBiometrics: $canUseBiometrics, isSetupCompleted: $isSetupCompleted, initialized: $initialized, localSecurityMethod: $localSecurityMethod)';
 }
 
 
@@ -253,7 +255,7 @@ abstract mixin class _$SecurityStateCopyWith<$Res> implements $SecurityStateCopy
   factory _$SecurityStateCopyWith(_SecurityState value, $Res Function(_SecurityState) _then) = __$SecurityStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool hasLocalLock, bool isPinConfigured, bool isBiometricEnabled, bool canUseBiometrics, bool isSetupCompleted, bool initialized
+ bool hasLocalLock, bool isPinConfigured, bool isBiometricEnabled, bool canUseBiometrics, bool isSetupCompleted, bool initialized, LocalSecurityMethod localSecurityMethod
 });
 
 
@@ -270,7 +272,7 @@ class __$SecurityStateCopyWithImpl<$Res>
 
 /// Create a copy of SecurityState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? hasLocalLock = null,Object? isPinConfigured = null,Object? isBiometricEnabled = null,Object? canUseBiometrics = null,Object? isSetupCompleted = null,Object? initialized = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? hasLocalLock = null,Object? isPinConfigured = null,Object? isBiometricEnabled = null,Object? canUseBiometrics = null,Object? isSetupCompleted = null,Object? initialized = null,Object? localSecurityMethod = null,}) {
   return _then(_SecurityState(
 hasLocalLock: null == hasLocalLock ? _self.hasLocalLock : hasLocalLock // ignore: cast_nullable_to_non_nullable
 as bool,isPinConfigured: null == isPinConfigured ? _self.isPinConfigured : isPinConfigured // ignore: cast_nullable_to_non_nullable
@@ -278,7 +280,8 @@ as bool,isBiometricEnabled: null == isBiometricEnabled ? _self.isBiometricEnable
 as bool,canUseBiometrics: null == canUseBiometrics ? _self.canUseBiometrics : canUseBiometrics // ignore: cast_nullable_to_non_nullable
 as bool,isSetupCompleted: null == isSetupCompleted ? _self.isSetupCompleted : isSetupCompleted // ignore: cast_nullable_to_non_nullable
 as bool,initialized: null == initialized ? _self.initialized : initialized // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,localSecurityMethod: null == localSecurityMethod ? _self.localSecurityMethod : localSecurityMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,
   ));
 }
 

@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 
 // Wymagane do generowania kodu:
 part 'security_state.freezed.dart';
@@ -19,6 +20,8 @@ sealed class SecurityState with _$SecurityState {
     required bool canUseBiometrics, // Czy urządzenie obsługuje biometrię?
     required bool isSetupCompleted, // Czy zakończył wizard powitalny?
     required bool initialized, // Czy serwis skończył się ładować?
+    @Default(LocalSecurityMethod.none)
+    LocalSecurityMethod localSecurityMethod,
   }) = _SecurityState;
 
   /// Stan początkowy - SAFE DEFAULT
@@ -29,14 +32,21 @@ sealed class SecurityState with _$SecurityState {
     canUseBiometrics: false,
     isSetupCompleted: false,
     initialized: false,
+    localSecurityMethod: LocalSecurityMethod.none,
   );
 
   /// Getter pomocniczy dla Routera
   /// Pokazujemy blokadę tylko gdy:
   /// 1. Serwis jest gotowy (initialized)
   /// 2. Setup jest zrobiony
-  /// 3. PIN jest ustawiony
+  /// 3. Została wybrana poprawna metoda lokalna
   /// 4. Flaga blokady jest aktywna
   bool get shouldShowLock =>
-      initialized && isSetupCompleted && isPinConfigured && hasLocalLock;
+      initialized &&
+      isSetupCompleted &&
+      localSecurityMethod != LocalSecurityMethod.none &&
+      hasLocalLock;
+
+  bool get hasConfiguredLocalMethod =>
+      localSecurityMethod != LocalSecurityMethod.none;
 }
