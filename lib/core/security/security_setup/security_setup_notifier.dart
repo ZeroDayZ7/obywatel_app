@@ -268,12 +268,11 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
         '[SecuritySetupNotifier] Current AuthState before register: $authState',
       );
 
-      state = AsyncValue.data(
-        current.copyWith(
-          setupStage: SecuritySetupStage.awaitingBackendConfirmation,
-          secretConfigured: true,
-        ),
-      );
+      // Keep the setup screen in a single loading state for the whole finalization
+      // sequence. Returning to a data-state before the backend registration and
+      // security setup are finished causes the form to reappear briefly and the
+      // redirect loop to security setup while finalization is still running.
+      state = const AsyncValue.loading();
 
       await ref.read(authControllerProvider.notifier).registerTrustedDevice();
       logger.d(
