@@ -33,7 +33,7 @@ final class ConversationsProvider
   Conversations create() => Conversations();
 }
 
-String _$conversationsHash() => r'61e171093ffdd915572a5caec1be99065546493a';
+String _$conversationsHash() => r'de77c0b406c352ab2498146dd922ac2ec4eb1052';
 
 abstract class _$Conversations extends $AsyncNotifier<List<Conversation>> {
   FutureOr<List<Conversation>> build();
