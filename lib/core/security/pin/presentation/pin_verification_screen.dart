@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/app_loader.dart';
+import 'package:obywatel_plus/core/notifications/feedback_service.dart';
+import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_limiter.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_notifier.dart';
@@ -57,7 +58,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
       final isError = next.maybeMap(error: (_) => true, orElse: () => false);
 
       if (isError) {
-        HapticFeedback.vibrate();
+        ref.read(feedbackServiceProvider).trigger(FeedbackType.error);
         _errorController.add(ErrorAnimationType.shake);
         setState(() => _resetToken++);
       }

@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
-import 'package:obywatel_plus/core/notifications/notification_settings.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_attachment_preview.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_toolbar.dart';
@@ -321,15 +320,9 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
     }
 
     if (wasSent) {
-      ref.read(feedbackServiceProvider).trigger(
-        FeedbackType.success,
-        moduleId: NotificationModuleId.communication,
-      );
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.success);
     } else {
-      ref.read(feedbackServiceProvider).trigger(
-        FeedbackType.error,
-        moduleId: NotificationModuleId.communication,
-      );
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.error);
     }
 
     if (wasSent) {

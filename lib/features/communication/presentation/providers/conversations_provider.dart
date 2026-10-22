@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
-import 'package:obywatel_plus/core/notifications/notification_settings.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
@@ -200,10 +199,7 @@ class Conversations extends _$Conversations {
     state = AsyncValue.data(newList);
 
     if (!message.isMine) {
-      ref.read(feedbackServiceProvider).trigger(
-        FeedbackType.info,
-        moduleId: NotificationModuleId.communication,
-      );
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.info);
     }
   }
 }

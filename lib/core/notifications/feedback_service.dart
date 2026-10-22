@@ -44,36 +44,38 @@ class FlutterFeedbackPlatform implements FeedbackPlatform {
 }
 
 class FeedbackService {
-  final Ref _ref;
+  final Ref? _ref;
+  final ProviderContainer? _container;
   final FeedbackPlatform _platform;
 
-  FeedbackService(this._ref, {FeedbackPlatform? platform})
-      : _platform = platform ?? const FlutterFeedbackPlatform();
+  FeedbackService(Object source, {FeedbackPlatform? platform})
+      : _ref = source is Ref ? source : null,
+        _container = source is ProviderContainer ? source : null,
+        _platform = platform ?? const FlutterFeedbackPlatform() {
+    if (_ref == null && _container == null) {
+      throw ArgumentError.value(
+        source,
+        'source',
+        'FeedbackService requires a Riverpod Ref or ProviderContainer.',
+      );
+    }
+  }
 
-  Future<void> trigger(
-    FeedbackType type, {
-    NotificationModuleId moduleId = NotificationModuleId.general,
-  }) async {
-    final settings = _ref.read(appNotificationSettingsProvider);
-    final modulePolicy = _ref
-            .read(moduleNotificationSettingsProvider)[moduleId] ??
-        ModuleFeedbackPolicy(moduleId: moduleId);
+  Future<void> trigger(FeedbackType type) async {
+    final settings = _container != null
+        ? _container.read(appNotificationSettingsProvider)
+        : _ref!.read(appNotificationSettingsProvider);
 
-    final canSound = settings.appNotifications &&
-        modulePolicy.isSoundEnabled(globalEnabled: settings.sound);
-    final canVibrate = settings.appNotifications &&
-        modulePolicy.isVibrationEnabled(globalEnabled: settings.vibration);
-
-    if (!settings.appNotifications || (!canSound && !canVibrate)) {
+    if (!settings.appNotifications) {
       return;
     }
 
     final tasks = <Future<void>>[];
-    if (canVibrate) {
-      tasks.add(_vibrate(type));
-    }
-    if (canSound) {
+    if (settings.sound) {
       tasks.add(_playSound(type));
+    }
+    if (settings.vibration) {
+      tasks.add(_vibrate(type));
     }
 
     if (tasks.isNotEmpty) {
@@ -90,45 +92,70 @@ class FeedbackService {
 
       switch (type) {
         case FeedbackType.securityAlert:
-          await _platform.vibrate(
-            pattern: [0, 200, 100, 200, 100, 500],
-            intensities: [0, 255, 0, 255, 0, 255],
-          );
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
+          try {
+            await _platform.vibrate(
+              pattern: [0, 200, 100, 200, 100, 500],
+              intensities: [0, 255, 0, 255, 0, 255],
+            );
+          } catch (_) {}
           break;
 
         case FeedbackType.error:
-          await HapticFeedback.heavyImpact();
-          await _platform.vibrate(duration: 400);
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
+          try {
+            await _platform.vibrate(duration: 400);
+          } catch (_) {}
           break;
 
         case FeedbackType.success:
-          await HapticFeedback.mediumImpact();
+          try {
+            await HapticFeedback.mediumImpact();
+          } catch (_) {}
           break;
 
         case FeedbackType.warning:
-          await HapticFeedback.lightImpact();
-          await Future.delayed(const Duration(milliseconds: 50));
-          await HapticFeedback.lightImpact();
+          try {
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
+          try {
+            await Future.delayed(const Duration(milliseconds: 50));
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
           break;
 
         case FeedbackType.info:
-          await HapticFeedback.selectionClick();
+          try {
+            await HapticFeedback.selectionClick();
+          } catch (_) {}
           break;
 
         case FeedbackType.light:
-          await HapticFeedback.lightImpact();
+          try {
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
           break;
 
         case FeedbackType.medium:
-          await HapticFeedback.mediumImpact();
+          try {
+            await HapticFeedback.mediumImpact();
+          } catch (_) {}
           break;
 
         case FeedbackType.heavy:
-          await HapticFeedback.heavyImpact();
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
           break;
 
         case FeedbackType.selection:
-          await HapticFeedback.selectionClick();
+          try {
+            await HapticFeedback.selectionClick();
+          } catch (_) {}
           break;
       }
     } catch (_) {
