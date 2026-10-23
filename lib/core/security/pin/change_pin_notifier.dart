@@ -16,7 +16,7 @@ final changePinProvider =
 class ChangePinNotifier extends Notifier<ChangePinState> {
   List<int>? _newSecret;
   List<int>? _currentSecret;
-  LocalSecurityMethod _currentMethod = LocalSecurityMethod.pin;
+  LocalSecurityMethod _currentMethod = LocalSecurityMethod.none;
   LocalSecurityMethod _targetMethod = LocalSecurityMethod.pin;
 
   @override
@@ -27,7 +27,7 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     List<int> secret, {
     required LocalSecurityMethod targetMethod,
   }) async {
-    state = const ChangePinState.loading();
+    // state = const ChangePinState.loading();
 
     final validationError = targetMethod == LocalSecurityMethod.pin
         ? Validators.validatePinDigits(secret)
@@ -71,14 +71,13 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       return;
     }
 
-    if (_currentMethod == _targetMethod) {
-      state = const ChangePinState.error('errors.pin_not_identical');
-      return;
-    }
-
     state = const ChangePinState.loading();
     _currentSecret = List<int>.from(secret);
-    _currentMethod = currentMethod;
+    if (_currentMethod == LocalSecurityMethod.none) {
+      _currentMethod = currentMethod;
+    } else {
+      _currentMethod = currentMethod;
+    }
 
     final isValid = await ref
         .read(pinServiceProvider)

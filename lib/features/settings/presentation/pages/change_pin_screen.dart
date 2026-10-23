@@ -163,7 +163,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _goTo(1);
+      _goTo(0);
     });
   }
 
@@ -175,9 +175,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
 
     ref.listen<ChangePinState>(changePinProvider, (prev, next) {
       next.maybeWhen(
-        enterOld: () => _goTo(_isMethodSwitchMode ? 2 : 0),
-        enterNew: () => _goTo(1),
-        confirmNew: () => _goTo(_isMethodSwitchMode ? 1 : 2),
+        enterOld: () => _goTo(2),
+        enterNew: () => _goTo(0),
+        confirmNew: () => _goTo(1),
         success: () {
           ref
               .read(globalNotificationProvider.notifier)
@@ -259,8 +259,8 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                     ),
                     _buildStep(
                       title: method == LocalSecurityMethod.password
-                          ? 'Podaj aktualny PIN'
-                          : 'Podaj aktualne hasło lokalne',
+                          ? 'Podaj aktualne hasło lokalne'
+                          : 'Podaj aktualny PIN',
                       controller: _oldPinController,
                       focusNode: _oldPinFocus,
                       isLoading: isLoading,
@@ -278,22 +278,6 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                   ]
           )
         : <Widget>[
-            _buildStep(
-              title: isPasswordMode
-                  ? 'Podaj obecne hasło lokalne'
-                  : LocaleKeys.pin_dialog_enter_old_pin.tr(),
-              controller: _oldPinController,
-              focusNode: _oldPinFocus,
-              isLoading: isLoading,
-              isPasswordMode: isPasswordMode,
-              submitLabel: 'Dalej',
-              onCompleted: (pin) {
-                ref.read(changePinProvider.notifier).verifyOldPin(
-                  _secretBytesFrom(pin, method),
-                  method: method,
-                );
-              },
-            ),
             _buildStep(
               title: isPasswordMode
                   ? 'Ustaw nowe hasło lokalne'
@@ -318,14 +302,28 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
               focusNode: _confirmPinFocus,
               isLoading: isLoading,
               isPasswordMode: isPasswordMode,
+              submitLabel: 'Dalej',
+              onCompleted: (pin) {
+                ref.read(changePinProvider.notifier).confirmNewSecret(
+                  _secretBytesFrom(pin, method),
+                  targetMethod: method,
+                );
+              },
+            ),
+            _buildStep(
+              title: isPasswordMode
+                  ? 'Podaj aktualne hasło lokalne'
+                  : 'Podaj aktualny PIN',
+              controller: _oldPinController,
+              focusNode: _oldPinFocus,
+              isLoading: isLoading,
+              isPasswordMode: isPasswordMode,
               submitLabel: 'Zapisz',
               onCompleted: (pin) {
-                Future.microtask(() async {
-                  await ref.read(changePinProvider.notifier).confirmAndSave(
-                    _secretBytesFrom(pin, method),
-                    method: method,
-                  );
-                });
+                ref.read(changePinProvider.notifier).verifyCurrentSecretAndSave(
+                  _secretBytesFrom(pin, method),
+                  currentMethod: method,
+                );
               },
             ),
           ];
