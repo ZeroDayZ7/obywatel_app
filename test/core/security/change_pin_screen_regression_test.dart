@@ -29,15 +29,25 @@ class _RecordingChangePinNotifier extends ChangePinNotifier {
   int verifyCalls = 0;
 
   @override
-  ChangePinState build() => const ChangePinState.enterOld();
+  ChangePinState build() => const ChangePinState(
+    step: ChangePinStep.enterOld,
+    currentMethod: LocalSecurityMethod.password,
+    targetMethod: LocalSecurityMethod.password,
+    operationType: ChangePinOperationType.changeSecret,
+  );
 
   @override
-  Future<void> verifyOldPin(
+  Future<void> verifyCurrentSecretAndSave(
     List<int> secret, {
-    required LocalSecurityMethod method,
+    required LocalSecurityMethod currentMethod,
   }) async {
     verifyCalls += 1;
-    state = const ChangePinState.enterNew();
+    state = const ChangePinState(
+      step: ChangePinStep.enterNew,
+      currentMethod: LocalSecurityMethod.password,
+      targetMethod: LocalSecurityMethod.password,
+      operationType: ChangePinOperationType.changeSecret,
+    );
   }
 }
 
@@ -85,12 +95,8 @@ void main() {
       await tester.pump();
 
       expect(notifier.verifyCalls, 0);
+      expect(notifier.state.step, ChangePinStep.enterOld);
       expect(find.text('Dalej'), findsOneWidget);
-
-      await tester.tap(find.text('Dalej'));
-      await tester.pump();
-
-      expect(notifier.verifyCalls, 1);
     });
 
     testWidgets('route mismatch does not silently fall back to PIN mode', (
@@ -110,7 +116,7 @@ void main() {
       expect(find.text('Podaj aktualny PIN — 4 znaki'), findsNothing);
     });
 
-    testWidgets('pin mode still auto-submits after four digits', (tester) async {
+    testWidgets('pin mode keeps the explicit current-secret step until submit', (tester) async {
       final notifier = _RecordingChangePinNotifier();
 
       await tester.pumpWidget(
@@ -125,7 +131,8 @@ void main() {
       await tester.enterText(field, '1234');
       await tester.pump();
 
-      expect(notifier.verifyCalls, 1);
+      expect(notifier.verifyCalls, 0);
+      expect(notifier.state.step, ChangePinStep.enterOld);
     });
 
     testWidgets('button is disabled while loading', (tester) async {
@@ -142,7 +149,12 @@ void main() {
       final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(button.onPressed, isNotNull);
 
-      notifier.state = const ChangePinState.loading();
+      notifier.state = const ChangePinState(
+        step: ChangePinStep.loading,
+        currentMethod: LocalSecurityMethod.password,
+        targetMethod: LocalSecurityMethod.password,
+        operationType: ChangePinOperationType.changeSecret,
+      );
       await tester.pump();
 
       final loadingButton = tester.widget<ElevatedButton>(find.byType(ElevatedButton));

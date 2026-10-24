@@ -85,9 +85,9 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       );
 
       if (!authenticated) {
-        _log.w(
-          '[PIN-VERIFICATION] Biometria odrzucona lub nie została potwierdzona. Ekran blokady pozostaje aktywny.',
-        );
+        // _log.w(
+        //   '[PIN-VERIFICATION] Biometria odrzucona lub nie została potwierdzona. Ekran blokady pozostaje aktywny.',
+        // );
         state = const PinVerificationState.error();
         return;
       }
@@ -97,34 +97,34 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
           .unlockWithPinAndValidateSession();
 
       if (!sessionValid) {
-        _log.w(
-          '[PIN-VERIFICATION] Biometria potwierdziła tożsamość, ale sesja nie została odblokowana. Ekran blokady pozostaje aktywny.',
-        );
+        // _log.w(
+        //   '[PIN-VERIFICATION] Biometria potwierdziła tożsamość, ale sesja nie została odblokowana. Ekran blokady pozostaje aktywny.',
+        // );
         state = const PinVerificationState.error();
         return;
       }
 
       await ref.read(securityServiceProvider.notifier).unlockApp();
       state = const PinVerificationState.success();
-      _log.i('[PIN-VERIFICATION] Biometria zakończona sukcesem. Ekran blokady został zamknięty.');
+      // _log.i('[PIN-VERIFICATION] Biometria zakończona sukcesem. Ekran blokady został zamknięty.');
     } on PlatformException catch (e) {
       final code = e.code;
       if (code == 'userCanceled' || code == 'UserCanceled') {
-        _log.i('[PIN-VERIFICATION] Anulowanie biometrii przez użytkownika. Zostawiam ekran blokady.');
+        // _log.i('[PIN-VERIFICATION] Anulowanie biometrii przez użytkownika. Zostawiam ekran blokady.');
         state = const PinVerificationState.error();
         return;
       }
-      _log.w(
-        '[PIN-VERIFICATION] PlatformException podczas biometrii: ${e.code}',
-        error: e,
-      );
+      // _log.w(
+      //   '[PIN-VERIFICATION] PlatformException podczas biometrii: ${e.code}',
+      //   error: e,
+      // );
       state = const PinVerificationState.error();
     } on LocalAuthException catch (e) {
       final isCanceled = e.code == LocalAuthExceptionCode.userCanceled ||
           e.code == LocalAuthExceptionCode.systemCanceled;
 
       if (isCanceled) {
-        _log.i('[PIN-VERIFICATION] LocalAuthException userCanceled. Ekran blokady pozostaje aktywny.');
+        // _log.i('[PIN-VERIFICATION] LocalAuthException userCanceled. Ekran blokady pozostaje aktywny.');
         state = const PinVerificationState.error();
         return;
       }
@@ -163,7 +163,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
 
     if (saltBase64 == null || saltBase64.isEmpty) {
-      _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
+      // _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
       state = const PinVerificationState.error();
       return;
     }

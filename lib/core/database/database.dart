@@ -149,7 +149,7 @@ QueryExecutor openConnection(String encryptionKey) {
           }
         }
 
-        debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
+        // debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
       },
     );
   });

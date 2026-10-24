@@ -120,6 +120,24 @@ void main() {
     },
   );
 
+  test('method switch flow begins with an explicit select method step', () async {
+    final container = ProviderContainer();
+    final notifier = container.read(changePinProvider.notifier);
+
+    notifier.initialize(
+      currentMethod: LocalSecurityMethod.password,
+      operationType: ChangePinOperationType.changeMethod,
+    );
+
+    expect(container.read(changePinProvider).step, ChangePinStep.selectMethod);
+    expect(container.read(changePinProvider).operationType, ChangePinOperationType.changeMethod);
+
+    notifier.beginMethodSwitch(LocalSecurityMethod.pin);
+
+    expect(container.read(changePinProvider).step, ChangePinStep.enterNew);
+    expect(container.read(changePinProvider).targetMethod, LocalSecurityMethod.pin);
+  });
+
   test('password -> PIN flow validates current password only after the new PIN is confirmed', () async {
     final fakeService = _FakePinService();
     final container = ProviderContainer(
@@ -130,8 +148,8 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    await notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
-    await notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [9, 9, 9, 9],
       currentMethod: LocalSecurityMethod.password,
@@ -141,7 +159,11 @@ void main() {
     expect(fakeService.lastCurrentMethod, LocalSecurityMethod.password);
     expect(fakeService.lastTargetMethod, LocalSecurityMethod.pin);
     expect(fakeService.lastNewSecret, [4, 2, 8, 7]);
-    expect(container.read(changePinProvider), const ChangePinState.success());
+
+    final successState = container.read(changePinProvider);
+    expect(successState.step, ChangePinStep.success);
+    expect(successState.currentMethod, LocalSecurityMethod.password);
+    expect(successState.targetMethod, LocalSecurityMethod.pin);
   });
 
   test('bad current secret blocks the change', () async {
@@ -154,18 +176,20 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    await notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
-    await notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [0, 0, 0, 0],
       currentMethod: LocalSecurityMethod.password,
     );
 
     expect(fakeService.updateCalled, isFalse);
-    expect(
-      container.read(changePinProvider),
-      const ChangePinState.error('pin_dialog.invalid_pin'),
-    );
+
+    final invalidState = container.read(changePinProvider);
+    expect(invalidState.step, ChangePinStep.error);
+    expect(invalidState.errorMessageKey, 'pin_dialog.invalid_pin');
+    expect(invalidState.currentMethod, LocalSecurityMethod.password);
+    expect(invalidState.targetMethod, LocalSecurityMethod.pin);
   });
 
   test('bad confirmation blocks the change', () async {
@@ -178,14 +202,15 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    await notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
-    await notifier.confirmNewSecret([9, 9, 9, 9], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.confirmNewSecret([9, 9, 9, 9], targetMethod: LocalSecurityMethod.pin);
 
     expect(fakeService.updateCalled, isFalse);
-    expect(
-      container.read(changePinProvider),
-      const ChangePinState.error('errors.pin_not_identical'),
-    );
+
+    final mismatchState = container.read(changePinProvider);
+    expect(mismatchState.step, ChangePinStep.error);
+    expect(mismatchState.errorMessageKey, 'errors.pin_not_identical');
+    expect(mismatchState.targetMethod, LocalSecurityMethod.pin);
   });
 
   test('save failure leaves state without success and without stale change', () async {
@@ -198,8 +223,8 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    await notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
-    await notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [9, 9, 9, 9],
       currentMethod: LocalSecurityMethod.password,
@@ -207,9 +232,9 @@ void main() {
 
     expect(fakeService.updateCalled, isTrue);
     final state = container.read(changePinProvider);
-    state.maybeWhen(
-      error: (message) => expect(message, contains('save failed')),
-      orElse: () => fail('Expected error state after save failure'),
-    );
+    final message = state.errorMessageKey;
+
+    expect(message, isNotNull);
+    expect(message, 'errors.crypto_operation_failed');
   });
 }

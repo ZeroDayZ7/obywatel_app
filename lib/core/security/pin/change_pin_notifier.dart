@@ -1,114 +1,176 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart'; // listEquals
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
-/// Provider flow zmiany PIN-u
-final changePinProvider =
-    NotifierProvider.autoDispose<ChangePinNotifier, ChangePinState>(
-      ChangePinNotifier.new,
-    );
+/// Provider flow zmiany PIN-u / hasła lokalnego.
+final changePinProvider = NotifierProvider<ChangePinNotifier, ChangePinState>(
+  ChangePinNotifier.new,
+);
 
 class ChangePinNotifier extends Notifier<ChangePinState> {
   List<int>? _newSecret;
   List<int>? _currentSecret;
-  LocalSecurityMethod _currentMethod = LocalSecurityMethod.none;
-  LocalSecurityMethod _targetMethod = LocalSecurityMethod.pin;
 
   @override
-  ChangePinState build() => const ChangePinState.enterOld();
+  ChangePinState build() => const ChangePinState(
+    currentMethod: LocalSecurityMethod.none,
+    targetMethod: LocalSecurityMethod.none,
+    operationType: ChangePinOperationType.changeSecret,
+    step: ChangePinStep.selectMethod,
+  );
 
-  /// Walidacja nowego PIN-u / hasła lokalnego.
-  Future<void> setNewPin(
+  void _logTransition(String event) {
+    final logger = ref.read(appLoggerProvider);
+    logger.d(
+      '[LOCAL-UNLOCK-01][$event] step=${state.step.name} operation=${state.operationType.name} current=${state.currentMethod.name} target=${state.targetMethod.name}',
+      module: 'LocalUnlock',
+    );
+  }
+
+  void initialize({
+    required LocalSecurityMethod currentMethod,
+    ChangePinOperationType operationType = ChangePinOperationType.changeSecret,
+    LocalSecurityMethod? targetMethod,
+  }) {
+    if (currentMethod == LocalSecurityMethod.none) {
+      return;
+    }
+
+    final resolvedTarget = switch (operationType) {
+      ChangePinOperationType.changeMethod => targetMethod ?? LocalSecurityMethod.none,
+      ChangePinOperationType.changeSecret => targetMethod ?? currentMethod,
+    };
+
+    final initialStep = switch (operationType) {
+      ChangePinOperationType.changeMethod => ChangePinStep.selectMethod,
+      ChangePinOperationType.changeSecret => ChangePinStep.enterOld,
+    };
+
+    state = state.copyWith(
+      currentMethod: currentMethod,
+      targetMethod: resolvedTarget,
+      operationType: operationType,
+      step: initialStep,
+      errorMessageKey: null,
+      isSubmitting: false,
+    );
+    _logTransition('INIT');
+  }
+
+  void beginMethodSwitch(LocalSecurityMethod targetMethod) {
+    if (targetMethod == LocalSecurityMethod.none) {
+      return;
+    }
+
+    if (targetMethod == state.currentMethod) {
+      return;
+    }
+
+    state = state.copyWith(
+      targetMethod: targetMethod,
+      operationType: ChangePinOperationType.changeMethod,
+      step: ChangePinStep.enterNew,
+      errorMessageKey: null,
+      isSubmitting: false,
+    );
+    _logTransition('METHOD_SWITCH');
+  }
+
+  void beginSecretChange() {
+    state = state.copyWith(
+      targetMethod: state.currentMethod,
+      operationType: ChangePinOperationType.changeSecret,
+      step: ChangePinStep.enterNew,
+      errorMessageKey: null,
+      isSubmitting: false,
+    );
+  }
+
+  void _clearSecrets() {
+    _newSecret?.fillRange(0, _newSecret!.length, 0);
+    _currentSecret?.fillRange(0, _currentSecret!.length, 0);
+    _newSecret = null;
+    _currentSecret = null;
+  }
+
+  String? _validateSecret(List<int> secret, LocalSecurityMethod targetMethod) {
+    if (targetMethod == LocalSecurityMethod.pin) {
+      return Validators.validatePinDigits(secret);
+    }
+
+    return Validators.validatePassword(utf8.decode(secret));
+  }
+
+  void setNewSecret(
     List<int> secret, {
-    required LocalSecurityMethod targetMethod,
-  }) async {
-    // state = const ChangePinState.loading();
-
-    final validationError = targetMethod == LocalSecurityMethod.pin
-        ? Validators.validatePinDigits(secret)
-        : Validators.validatePassword(utf8.decode(secret));
-
+      required LocalSecurityMethod targetMethod,
+    }) {
+    final validationError = _validateSecret(secret, targetMethod);
     if (validationError != null) {
-      state = ChangePinState.error(validationError);
+      state = state.copyWith(
+        step: ChangePinStep.error,
+        errorMessageKey: validationError,
+        isSubmitting: false,
+      );
+      _logTransition('ERROR_INVALID_NEW_SECRET');
       return;
     }
 
     _newSecret = List<int>.from(secret);
-    _targetMethod = targetMethod;
-    state = const ChangePinState.confirmNew();
+    state = state.copyWith(
+      targetMethod: targetMethod,
+      step: ChangePinStep.confirmNew,
+      errorMessageKey: null,
+    );
+    _logTransition('NEW_SECRET_SET');
   }
 
-  Future<void> confirmNewSecret(
+  @Deprecated('Use setNewSecret instead.')
+  void setNewPin(
+    List<int> secret, {
+    required LocalSecurityMethod targetMethod,
+  }) {
+    setNewSecret(secret, targetMethod: targetMethod);
+  }
+
+  void confirmNewSecret(
     List<int> confirmSecret, {
     required LocalSecurityMethod targetMethod,
-  }) async {
+  }) {
     if (_newSecret == null) {
-      state = const ChangePinState.error('pin_dialog.invalid_pin');
+      state = state.copyWith(
+        step: ChangePinStep.error,
+        errorMessageKey: 'pin_dialog.invalid_pin',
+        isSubmitting: false,
+      );
       return;
     }
 
     if (!listEquals(confirmSecret, _newSecret)) {
-      state = const ChangePinState.error('errors.pin_not_identical');
+      state = state.copyWith(
+        step: ChangePinStep.error,
+        errorMessageKey: 'errors.pin_not_identical',
+        isSubmitting: false,
+      );
+      _logTransition('ERROR_CONFIRMATION_MISMATCH');
       return;
     }
 
-    _targetMethod = targetMethod;
-    state = const ChangePinState.enterOld();
+    state = state.copyWith(
+      targetMethod: targetMethod,
+      step: ChangePinStep.enterOld,
+      errorMessageKey: null,
+    );
+    _logTransition('SECRET_CONFIRMED');
   }
 
-  /// Weryfikacja obecnego PIN-u / hasła lokalnego po ustaleniu nowego sekretu.
-  Future<void> verifyCurrentSecretAndSave(
-    List<int> secret, {
-    required LocalSecurityMethod currentMethod,
-  }) async {
-    if (_newSecret == null || _targetMethod == LocalSecurityMethod.none) {
-      state = const ChangePinState.error('pin_dialog.invalid_pin');
-      return;
-    }
-
-    state = const ChangePinState.loading();
-    _currentSecret = List<int>.from(secret);
-    if (_currentMethod == LocalSecurityMethod.none) {
-      _currentMethod = currentMethod;
-    } else {
-      _currentMethod = currentMethod;
-    }
-
-    final isValid = await ref
-        .read(pinServiceProvider)
-        .verifyLocalSecret(method: currentMethod, secretBytes: secret);
-
-    if (!isValid) {
-      state = const ChangePinState.error('pin_dialog.invalid_pin');
-      return;
-    }
-
-    try {
-      await ref
-          .read(pinServiceProvider)
-          .updateLocalSecret(
-            currentMethod: currentMethod,
-            targetMethod: _targetMethod,
-            currentSecret: _currentSecret!,
-            newSecret: _newSecret!,
-          );
-
-      state = const ChangePinState.success();
-      _currentMethod = _targetMethod;
-      _newSecret = null;
-      _currentSecret = null;
-      _targetMethod = LocalSecurityMethod.none;
-    } catch (error) {
-      state = ChangePinState.error(error.toString());
-    }
-  }
-
-  /// Backward compatibility for older callers in current screen flow.
+  @Deprecated('Use verifyCurrentSecretAndSave instead.')
   Future<void> verifyOldPin(
     List<int> secret, {
     required LocalSecurityMethod method,
@@ -116,11 +178,76 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     await verifyCurrentSecretAndSave(secret, currentMethod: method);
   }
 
-  /// Backward compatibility for older callers in current screen flow.
-  Future<void> confirmAndSave(
-    List<int> confirmSecret, {
-    required LocalSecurityMethod method,
+  Future<void> verifyCurrentSecretAndSave(
+    List<int> secret, {
+    required LocalSecurityMethod currentMethod,
   }) async {
-    await confirmNewSecret(confirmSecret, targetMethod: method);
+    if (_newSecret == null) {
+      state = state.copyWith(
+        step: ChangePinStep.error,
+        errorMessageKey: 'pin_dialog.invalid_pin',
+        isSubmitting: false,
+      );
+      _logTransition('ERROR_MISSING_NEW_SECRET');
+      return;
+    }
+
+    final resolvedTargetMethod = state.targetMethod == LocalSecurityMethod.none
+        ? currentMethod
+        : state.targetMethod;
+
+    state = state.copyWith(
+      currentMethod: currentMethod,
+      targetMethod: resolvedTargetMethod,
+      step: ChangePinStep.loading,
+      isSubmitting: true,
+      errorMessageKey: null,
+    );
+    _currentSecret = List<int>.from(secret);
+
+    try {
+      final pinService = ref.read(pinServiceProvider);
+
+      final isValid = await pinService.verifyLocalSecret(
+        method: currentMethod,
+        secretBytes: secret,
+      );
+
+      if (!isValid) {
+        state = state.copyWith(
+          step: ChangePinStep.error,
+          errorMessageKey: 'pin_dialog.invalid_pin',
+          isSubmitting: false,
+        );
+        _logTransition('ERROR_INVALID_CURRENT');
+        return;
+      }
+
+      await pinService.updateLocalSecret(
+        currentMethod: currentMethod,
+        targetMethod: resolvedTargetMethod,
+        currentSecret: _currentSecret!,
+        newSecret: _newSecret!,
+      );
+
+      state = state.copyWith(
+        step: ChangePinStep.success,
+        errorMessageKey: null,
+        isSubmitting: false,
+      );
+      _logTransition('SUCCESS');
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[ChangePinNotifier] Błąd operacji kryptograficznej: $error\n$stackTrace',
+      );
+      state = state.copyWith(
+        step: ChangePinStep.error,
+        errorMessageKey: 'errors.crypto_operation_failed',
+        isSubmitting: false,
+      );
+      _logTransition('ERROR_CRYPTO_FAIL');
+    } finally {
+      _clearSecrets();
+    }
   }
 }

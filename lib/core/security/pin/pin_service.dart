@@ -80,11 +80,11 @@ class PinService {
   // ---------------------------------------------------------------------------
 
   Future<void> initializeSecurity(List<int> pinBytes) async {
-    _logger.i('[PIN-SERVICE] Inicjalizacja zabezpieczeń PIN...');
+    // _logger.i('[PIN-SERVICE] Inicjalizacja zabezpieczeń PIN...');
     final localCopy = List<int>.from(pinBytes);
     try {
       await setPin(localCopy);
-      _logger.i('[PIN-SERVICE] PIN ustawiony poprawnie.');
+      // _logger.i('[PIN-SERVICE] PIN ustawiony poprawnie.');
     } finally {
       _wipe(localCopy);
     }
@@ -121,7 +121,7 @@ class PinService {
         key: StorageKeys.localSecurityMethod,
         value: method.name,
       );
-      _logger.i('[PIN-SERVICE] Hash lokalnego sekretu pomyślnie zapisany.');
+      // _logger.i('[PIN-SERVICE] Hash lokalnego sekretu pomyślnie zapisany.');
     } finally {
       buffer.dispose();
       _wipe(localCopy);
@@ -205,9 +205,9 @@ class PinService {
         value: targetMethod.name,
       );
 
-      _logger.i(
-        '[PIN-SERVICE] Lokalny sekret został zaktualizowany i klucz został przeopakowany zgodnie z nową metodą $targetMethod.',
-      );
+      // _logger.i(
+      //   '[PIN-SERVICE] Lokalny sekret został zaktualizowany i klucz został przeopakowany zgodnie z nową metodą $targetMethod.',
+      // );
     } catch (error, stackTrace) {
       _logger.e(
         '[PIN-SERVICE] Błąd podczas rotacji lokalnego sekretu. Przywracam poprzedni stan zabezpieczeń.',
@@ -267,9 +267,9 @@ class PinService {
       // Backward compatibility: older installs without the persisted method are
       // treated as PIN-based if the caller explicitly validates PIN.
       if (method != LocalSecurityMethod.pin) {
-        _logger.w(
-          '[PIN-SERVICE] Brak zapisanego LocalSecurityMethod dla hasła lokalnego.',
-        );
+        // _logger.w(
+        //   '[PIN-SERVICE] Brak zapisanego LocalSecurityMethod dla hasła lokalnego.',
+        // );
         return false;
       }
     } else if (storedMethod != method) {
@@ -324,7 +324,7 @@ class PinService {
         encryptedMasterKey: encryptedMasterKey,
       );
 
-      _logger.i('✅ [PIN-SERVICE] Lokalny sekret poprawny, sesja odblokowana.');
+      // _logger.i('✅ [PIN-SERVICE] Lokalny sekret poprawny, sesja odblokowana.');
       return true;
     } catch (e, st) {
       _logger.e(

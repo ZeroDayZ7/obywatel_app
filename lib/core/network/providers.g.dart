@@ -102,7 +102,7 @@ final class GlobalWebSocketLifecycleProvider
 }
 
 String _$globalWebSocketLifecycleHash() =>
-    r'd1d37899c596ad8cca3d4e60f6dec45bf9cb774b';
+    r'5d87aef7d707d8cc7ba7aea8a8a22e374425978e';
 
 @ProviderFor(authFresh)
 final authFreshProvider = AuthFreshProvider._();

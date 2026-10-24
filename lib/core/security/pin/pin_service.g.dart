@@ -48,4 +48,4 @@ final class PinServiceProvider
   }
 }
 
-String _$pinServiceHash() => r'430f3fe5bf5a0d3e38aee61c8c76cec52952fd8b';
+String _$pinServiceHash() => r'8c034ca1c9f71fc1bdf74533a45dff88e4deb49a';
