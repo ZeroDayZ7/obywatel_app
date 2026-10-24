@@ -27,6 +27,7 @@ class _FakeSecurityService extends SecurityService {
 
 class _RecordingChangePinNotifier extends ChangePinNotifier {
   int verifyCalls = 0;
+  bool initializeCalled = false;
 
   @override
   ChangePinState build() => const ChangePinState(
@@ -35,6 +36,20 @@ class _RecordingChangePinNotifier extends ChangePinNotifier {
     targetMethod: LocalSecurityMethod.password,
     operationType: ChangePinOperationType.changeSecret,
   );
+
+  @override
+  void initialize({
+    required LocalSecurityMethod currentMethod,
+    ChangePinOperationType operationType = ChangePinOperationType.changeSecret,
+    LocalSecurityMethod? targetMethod,
+  }) {
+    initializeCalled = true;
+    super.initialize(
+      currentMethod: currentMethod,
+      operationType: operationType,
+      targetMethod: targetMethod,
+    );
+  }
 
   @override
   Future<void> verifyCurrentSecretAndSave(
@@ -51,9 +66,36 @@ class _RecordingChangePinNotifier extends ChangePinNotifier {
   }
 }
 
+class _AlignedErrorPinNotifier extends ChangePinNotifier {
+  bool initializeCalled = false;
+
+  @override
+  ChangePinState build() => const ChangePinState(
+    step: ChangePinStep.error,
+    currentMethod: LocalSecurityMethod.pin,
+    targetMethod: LocalSecurityMethod.pin,
+    operationType: ChangePinOperationType.changeSecret,
+    errorMessageKey: 'pin_dialog.invalid_pin',
+  );
+
+  @override
+  void initialize({
+    required LocalSecurityMethod currentMethod,
+    ChangePinOperationType operationType = ChangePinOperationType.changeSecret,
+    LocalSecurityMethod? targetMethod,
+  }) {
+    initializeCalled = true;
+    super.initialize(
+      currentMethod: currentMethod,
+      operationType: operationType,
+      targetMethod: targetMethod,
+    );
+  }
+}
+
 Widget _buildScreen({
   required LocalSecurityMethod method,
-  required _RecordingChangePinNotifier notifier,
+  required ChangePinNotifier notifier,
   String? route,
 }) {
   final router = GoRouter(
@@ -159,6 +201,21 @@ void main() {
 
       final loadingButton = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(loadingButton.onPressed, isNull);
+    });
+
+    testWidgets('missing route method does not reset an active error flow', (tester) async {
+      final notifier = _AlignedErrorPinNotifier();
+
+      await tester.pumpWidget(
+        _buildScreen(
+          method: LocalSecurityMethod.pin,
+          notifier: notifier,
+          route: '/?mode=change_secret',
+        ),
+      );
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(notifier.initializeCalled, isFalse);
     });
   });
 }

@@ -75,12 +75,13 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final securityState = ref.read(securityServiceProvider);
     final currentState = ref.read(changePinProvider);
     final routeOperation = _resolveRouteOperation();
-    final routeMethod = _parseRouteMethod(
+    final explicitRouteMethod = _parseRouteMethod(
       GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
     );
+    final effectiveRouteMethod = explicitRouteMethod ?? securityState.localSecurityMethod;
 
     final message =
-        '[ChangePinScreen._syncInitializationIfNeeded 1] routeOperation=${routeOperation.name} routeMethod=${routeMethod?.name ?? 'none'} activeMethod=${securityState.localSecurityMethod.name} initialized=${securityState.initialized}';
+        '[ChangePinScreen._syncInitializationIfNeeded 1] routeOperation=${routeOperation.name} routeMethod=${explicitRouteMethod?.name ?? 'none'} effectiveMethod=${effectiveRouteMethod.name} activeMethod=${securityState.localSecurityMethod.name} initialized=${securityState.initialized}';
     debugPrint(message);
     ref.read(appLoggerProvider).d(message, module: 'LocalUnlock');
 
@@ -90,23 +91,33 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       return;
     }
 
-    if (routeMethod != null && routeMethod != securityState.localSecurityMethod) {
+    final hasExplicitMismatch = explicitRouteMethod != null &&
+        explicitRouteMethod != securityState.localSecurityMethod;
+    if (hasExplicitMismatch) {
       debugPrint(
-        '[ChangePinScreen._syncInitializationIfNeeded 3] route mismatch: routeMethod=${routeMethod.name} activeMethod=${securityState.localSecurityMethod.name}; skipping init',
+        '[ChangePinScreen._syncInitializationIfNeeded 3] route mismatch: routeMethod=${explicitRouteMethod.name} activeMethod=${securityState.localSecurityMethod.name}; skipping init',
       );
       return;
     }
 
-    final routeSignature = '${routeOperation.name}|${routeMethod?.name ?? 'none'}|${securityState.localSecurityMethod.name}';
+    final isProviderAlreadyAligned = currentState.currentMethod == securityState.localSecurityMethod &&
+        currentState.operationType == routeOperation &&
+        (explicitRouteMethod != null || currentState.targetMethod == securityState.localSecurityMethod);
+    if (isProviderAlreadyAligned) {
+      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 4] provider already aligned with active method; skipping re-init');
+      return;
+    }
+
+    final routeSignature = '${routeOperation.name}|${effectiveRouteMethod.name}|${securityState.localSecurityMethod.name}';
     if (_lastRouteSignature == routeSignature &&
         currentState.currentMethod == securityState.localSecurityMethod) {
-      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 4] already initialized for same signature');
+      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 5] already initialized for same signature');
       return;
     }
 
     _lastRouteSignature = routeSignature;
     debugPrint(
-      '[ChangePinScreen._syncInitializationIfNeeded 5] initializing provider state signature=$routeSignature',
+      '[ChangePinScreen._syncInitializationIfNeeded 6] initializing provider state signature=$routeSignature',
     );
     ref.read(changePinProvider.notifier).initialize(
       currentMethod: securityState.localSecurityMethod,
