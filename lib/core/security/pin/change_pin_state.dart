@@ -41,4 +41,11 @@ abstract class ChangePinState with _$ChangePinState {
 
   bool get isTargetPassword =>
       targetMethod == LocalSecurityMethod.password;
+
+  bool get requiresTargetSelection =>
+      operationType == ChangePinOperationType.changeMethod &&
+      step == ChangePinStep.selectMethod;
+
+  String logSummary() =>
+      'step=${step.name} operation=${operationType.name} current=${currentMethod.name} target=${targetMethod.name} submitting=$isSubmitting error=${errorMessageKey ?? 'none'}';
 }

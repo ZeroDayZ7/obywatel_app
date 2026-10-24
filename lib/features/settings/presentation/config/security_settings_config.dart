@@ -12,20 +12,31 @@ import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 import 'package:obywatel_plus/features/settings/presentation/widgets/emergency_lock_dialog.dart';
 
 class SecuritySettingsConfig {
-  static String buildChangeMethodPath(LocalSecurityMethod method) =>
-      '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_method&method=${method.name}';
+  static String buildChangeMethodPath(LocalSecurityMethod method) {
+    final path =
+        '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_method&method=${method.name}';
+    debugPrint('[SecuritySettingsConfig.buildChangeMethodPath 1] path=$path');
+    return path;
+  }
 
-  static String buildChangeSecretPath(LocalSecurityMethod method) =>
-      '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_secret&method=${method.name}';
+  static String buildChangeSecretPath(LocalSecurityMethod method) {
+    final path =
+        '${AppRoutes.settings}/${AppRoutes.settingsChangePin}?mode=change_secret&method=${method.name}';
+    debugPrint('[SecuritySettingsConfig.buildChangeSecretPath 1] path=$path');
+    return path;
+  }
 
   static List<SettingsSection> getSections(
     BuildContext context,
     WidgetRef ref, {
-    required SecurityState state,
-    required SecurityService notifier,
-  }) {
-    final activeLocalMethod =
-        state.localSecurityMethod == LocalSecurityMethod.pin
+      required SecurityState state,
+      required SecurityService notifier,
+    }) {
+    debugPrint(
+      '[SecuritySettingsConfig.getSections 1] activeMethod=${state.localSecurityMethod.name} initialized=${state.initialized} hasLocalLock=${state.hasLocalLock}',
+    );
+
+    final activeLocalMethod = state.localSecurityMethod == LocalSecurityMethod.pin
         ? 'PIN'
         : state.localSecurityMethod == LocalSecurityMethod.password
         ? 'Hasło lokalne'

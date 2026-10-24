@@ -1,11 +1,9 @@
 import 'dart:convert';
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
@@ -34,72 +32,16 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   final _newPinFocus = FocusNode();
   final _confirmPinFocus = FocusNode();
 
-  bool _didSyncInitialization = false;
-
-  void _syncInitializationIfNeeded() {
-    if (_didSyncInitialization) return;
-
-    final securityState = ref.read(securityServiceProvider);
-    final processState = ref.read(changePinProvider);
-    final routeOperation = _resolveRouteOperation();
-    final routeMethod = _parseRouteMethod(
-      GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
-    );
-
-    final shouldInitialize = securityState.initialized &&
-        securityState.localSecurityMethod != LocalSecurityMethod.none &&
-        processState.currentMethod == LocalSecurityMethod.none &&
-        (routeMethod == null || routeMethod == securityState.localSecurityMethod);
-
-    if (!shouldInitialize) {
-      return;
-    }
-
-    _didSyncInitialization = true;
-    ref.read(changePinProvider.notifier).initialize(
-      currentMethod: securityState.localSecurityMethod,
-      operationType: routeOperation,
-      targetMethod: routeOperation == ChangePinOperationType.changeMethod
-          ? null
-          : securityState.localSecurityMethod,
-    );
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final processState = ref.read(changePinProvider);
-      if (processState.step == ChangePinStep.enterOld &&
-          processState.operationType != ChangePinOperationType.changeMethod) {
-        _oldPinFocus.requestFocus();
-      }
-      _syncInitializationIfNeeded();
-    });
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    _oldPinController.dispose();
-    _newPinController.dispose();
-    _confirmPinController.dispose();
-    _oldPinFocus.dispose();
-    _newPinFocus.dispose();
-    _confirmPinFocus.dispose();
-    super.dispose();
-  }
+  String? _lastRouteSignature;
 
   ChangePinOperationType _resolveRouteOperation() {
     final query = GoRouter.of(
       context,
     ).routeInformationProvider.value.uri.queryParameters;
     final rawMode = query['mode']?.trim().toLowerCase();
-
     if (rawMode == 'change_method') {
       return ChangePinOperationType.changeMethod;
     }
-
     return ChangePinOperationType.changeSecret;
   }
 
@@ -117,39 +59,101 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     return null;
   }
 
+  void _logScreenEntry() {
+    final route = GoRouter.of(context).routeInformationProvider.value.uri;
+    final query = route.queryParameters;
+    final securityState = ref.read(securityServiceProvider);
+    final logger = ref.read(appLoggerProvider);
+
+    final message =
+        '[ChangePinScreen._logScreenEntry 1] routeMode=${query['mode']} routeMethod=${query['method']} localSecurityMethod=${securityState.localSecurityMethod.name} isInitialized=${securityState.initialized}';
+    logger.d(message, module: 'LocalUnlock');
+    debugPrint(message);
+  }
+
+  void _syncInitializationIfNeeded() {
+    final securityState = ref.read(securityServiceProvider);
+    final currentState = ref.read(changePinProvider);
+    final routeOperation = _resolveRouteOperation();
+    final routeMethod = _parseRouteMethod(
+      GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
+    );
+
+    final message =
+        '[ChangePinScreen._syncInitializationIfNeeded 1] routeOperation=${routeOperation.name} routeMethod=${routeMethod?.name ?? 'none'} activeMethod=${securityState.localSecurityMethod.name} initialized=${securityState.initialized}';
+    debugPrint(message);
+    ref.read(appLoggerProvider).d(message, module: 'LocalUnlock');
+
+    if (!securityState.initialized ||
+        securityState.localSecurityMethod == LocalSecurityMethod.none) {
+      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 2] skip because security not initialized or method is none');
+      return;
+    }
+
+    if (routeMethod != null && routeMethod != securityState.localSecurityMethod) {
+      debugPrint(
+        '[ChangePinScreen._syncInitializationIfNeeded 3] route mismatch: routeMethod=${routeMethod.name} activeMethod=${securityState.localSecurityMethod.name}; skipping init',
+      );
+      return;
+    }
+
+    final routeSignature = '${routeOperation.name}|${routeMethod?.name ?? 'none'}|${securityState.localSecurityMethod.name}';
+    if (_lastRouteSignature == routeSignature &&
+        currentState.currentMethod == securityState.localSecurityMethod) {
+      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 4] already initialized for same signature');
+      return;
+    }
+
+    _lastRouteSignature = routeSignature;
+    debugPrint(
+      '[ChangePinScreen._syncInitializationIfNeeded 5] initializing provider state signature=$routeSignature',
+    );
+    ref.read(changePinProvider.notifier).initialize(
+      currentMethod: securityState.localSecurityMethod,
+      operationType: routeOperation,
+      targetMethod: routeOperation == ChangePinOperationType.changeMethod
+          ? null
+          : securityState.localSecurityMethod,
+    );
+  }
+
   List<int> _secretBytesFrom(String value, LocalSecurityMethod method) {
-    return method == LocalSecurityMethod.password
+    final logger = ref.read(appLoggerProvider);
+    final startMessage =
+        '[ChangePinScreen._secretBytesFrom 1] method=${method.name} inputLength=${value.length}';
+    logger.d(startMessage, module: 'LocalUnlock');
+    debugPrint(startMessage);
+
+    final bytes = method == LocalSecurityMethod.password
         ? utf8.encode(value)
-        : value.codeUnits.toList();
+        : value.split('').where((char) => char.isNotEmpty).toList().map((digit) => int.parse(digit)).toList();
+
+    final finalMessage =
+        '[ChangePinScreen._secretBytesFrom 2] method=${method.name} byteCount=${bytes.length}';
+    logger.d(finalMessage, module: 'LocalUnlock');
+    debugPrint(finalMessage);
+
+    return bytes;
   }
 
   void _showError(String messageKey) {
-    ref
-        .read(globalNotificationProvider.notifier)
-        .show(
-          AppNotification(messageKey: messageKey, type: NotificationType.error),
-        );
+    ref.read(globalNotificationProvider.notifier).show(
+      AppNotification(messageKey: messageKey, type: NotificationType.error),
+    );
   }
 
-  void _goTo(int page) {
+  void _goToPage(int page) {
     if (!_pageController.hasClients) return;
 
+    final currentPage = _pageController.page?.round();
+    if (currentPage == page) return;
+
     FocusManager.instance.primaryFocus?.unfocus();
-
-    _pageController
-        .animateToPage(
-          page,
-          duration: const Duration(milliseconds: 450),
-          curve: Curves.easeInOutCubic,
-        )
-        .then((_) {
-          if (!mounted) return;
-
-          final nodes = <FocusNode>[_newPinFocus, _confirmPinFocus, _oldPinFocus];
-          if (page >= 0 && page < nodes.length) {
-            nodes[page].requestFocus();
-          }
-        });
+    _pageController.animateToPage(
+      page,
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOutCubic,
+    );
   }
 
   int _pageIndexForStep(ChangePinStep step) {
@@ -172,13 +176,39 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
 
   void _handleMethodSelection(LocalSecurityMethod target) {
     final current = ref.read(securityServiceProvider).localSecurityMethod;
-
+    debugPrint(
+      '[ChangePinScreen._handleMethodSelection 1] selectedTarget=${target.name} current=${current.name}',
+    );
     if (target == current) {
+      debugPrint('[ChangePinScreen._handleMethodSelection 2] target equals current, no-op');
       return;
     }
 
     ref.read(changePinProvider.notifier).beginMethodSwitch(target);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _goTo(0));
+    debugPrint(
+      '[ChangePinScreen._handleMethodSelection 3] delegated method switch to notifier for target=${target.name}',
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _logScreenEntry();
+      _syncInitializationIfNeeded();
+    });
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _oldPinController.dispose();
+    _newPinController.dispose();
+    _confirmPinController.dispose();
+    _oldPinFocus.dispose();
+    _newPinFocus.dispose();
+    _confirmPinFocus.dispose();
+    super.dispose();
   }
 
   @override
@@ -188,61 +218,54 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final routeMethod = _parseRouteMethod(
       GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
     );
+    final hasRouteMismatch = routeMethod != null &&
+        routeMethod != securityState.localSecurityMethod;
+
+    debugPrint(
+      '[ChangePinScreen.build 1] securityInitialized=${securityState.initialized} localMethod=${securityState.localSecurityMethod.name} routeMethod=${routeMethod?.name ?? 'none'} hasRouteMismatch=$hasRouteMismatch step=${changePinState.step.name} operation=${changePinState.operationType.name}',
+    );
 
     ref.listen<ChangePinState>(changePinProvider, (previous, next) {
-      ref.read(appLoggerProvider).d(
-        '[LOCAL-UNLOCK-02][STEP] step=${next.step.name} operation=${next.operationType.name} current=${next.currentMethod.name} target=${next.targetMethod.name}',
-        module: 'LocalUnlock',
-      );
+      if (previous == next) return;
 
-      if (next.step == ChangePinStep.selectMethod) {
-        _goTo(0);
-      } else if (next.step == ChangePinStep.enterNew) {
-        _goTo(0);
-      } else if (next.step == ChangePinStep.confirmNew) {
-        _goTo(1);
-      } else if (next.step == ChangePinStep.enterOld) {
-        _goTo(2);
-      } else if (next.step == ChangePinStep.success) {
+      final stateMessage =
+          '[ChangePinScreen.build 2] previousStep=${previous?.step.name ?? 'none'} nextStep=${next.step.name} operation=${next.operationType.name} current=${next.currentMethod.name} target=${next.targetMethod.name}';
+      debugPrint(stateMessage);
+      ref.read(appLoggerProvider).d(stateMessage, module: 'LocalUnlock');
+
+      if (next.step == ChangePinStep.success) {
         ref.read(globalNotificationProvider.notifier).show(
           AppNotification(
-            messageKey: LocaleKeys.pin_dialog_changed_success,
+            messageKey: 'Zmiana metody odblokowania została zapisana.',
             type: NotificationType.success,
           ),
         );
-        Navigator.pop(context);
-      } else if (next.step == ChangePinStep.error &&
-          next.errorMessageKey != null) {
+        Navigator.maybePop(context);
+        return;
+      }
+
+      if (next.step == ChangePinStep.error && next.errorMessageKey != null) {
         _showError(next.errorMessageKey!);
       }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_pageController.hasClients) {
+          final targetPage = _pageIndexForStep(next.step);
+          if ((_pageController.page?.round() ?? 0) != targetPage) {
+            _goToPage(targetPage);
+          }
+        }
+      });
     });
 
-    if (routeMethod != null && routeMethod != securityState.localSecurityMethod) {
-      return AppScaffold(
-        size: ContainerSize.compact,
-        alignment: Alignment.center,
-        appBar: AppBar(
-          title: const Text('Zmień lokalne odblokowanie'),
-          centerTitle: true,
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     if (!securityState.initialized ||
-        securityState.localSecurityMethod == LocalSecurityMethod.none) {
+        securityState.localSecurityMethod == LocalSecurityMethod.none ||
+        hasRouteMismatch) {
       return AppScaffold(
         size: ContainerSize.compact,
         alignment: Alignment.center,
-        appBar: AppBar(
-          title: const Text('Zmień lokalne odblokowanie'),
-          centerTitle: true,
-        ),
-        child: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        appBar: AppBar(title: const Text('Zmień lokalne odblokowanie')),
+        child: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -258,7 +281,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final isLoading = changePinState.isSubmitting ||
         changePinState.step == ChangePinStep.loading;
 
-    final pages = isMethodSwitchMode && changePinState.step == ChangePinStep.selectMethod
+    final pages = changePinState.requiresTargetSelection
         ? <Widget>[
             _buildMethodSelectionStep(activeMethod: currentMethod),
           ]
@@ -266,15 +289,15 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             _buildStep(
               title: targetIsPassword
                   ? 'Ustaw nowe hasło lokalne'
-                  : LocaleKeys.pin_dialog_set_pin_title.tr(),
+                  : 'Ustaw nowy PIN',
               controller: _newPinController,
               focusNode: _newPinFocus,
               isLoading: isLoading,
               isPasswordMode: targetIsPassword,
               submitLabel: 'Dalej',
-              onCompleted: (pin) {
+              onCompleted: (value) {
                 ref.read(changePinProvider.notifier).setNewSecret(
-                  _secretBytesFrom(pin, effectiveTargetMethod),
+                  _secretBytesFrom(value, effectiveTargetMethod),
                   targetMethod: effectiveTargetMethod,
                 );
               },
@@ -282,15 +305,15 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             _buildStep(
               title: targetIsPassword
                   ? 'Powtórz nowe hasło lokalne'
-                  : LocaleKeys.pin_dialog_repeat_pin_title.tr(),
+                  : 'Powtórz nowy PIN',
               controller: _confirmPinController,
               focusNode: _confirmPinFocus,
               isLoading: isLoading,
               isPasswordMode: targetIsPassword,
               submitLabel: 'Dalej',
-              onCompleted: (pin) {
+              onCompleted: (value) {
                 ref.read(changePinProvider.notifier).confirmNewSecret(
-                  _secretBytesFrom(pin, effectiveTargetMethod),
+                  _secretBytesFrom(value, effectiveTargetMethod),
                   targetMethod: effectiveTargetMethod,
                 );
               },
@@ -304,54 +327,33 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
               isLoading: isLoading,
               isPasswordMode: currentMethod == LocalSecurityMethod.password,
               submitLabel: 'Zapisz',
-              onCompleted: (pin) {
+              onCompleted: (value) {
                 ref.read(changePinProvider.notifier).verifyCurrentSecretAndSave(
-                  _secretBytesFrom(pin, currentMethod),
+                  _secretBytesFrom(value, currentMethod),
                   currentMethod: currentMethod,
                 );
               },
             ),
           ];
 
-    if (changePinState.step != ChangePinStep.idle &&
-        changePinState.step != ChangePinStep.error) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
-          final targetPage = _pageIndexForStep(changePinState.step);
-          if (_pageController.page?.round() != targetPage) {
-            _goTo(targetPage);
-          }
-        }
-      });
-    }
-
     return AppScaffold(
       size: ContainerSize.compact,
       alignment: Alignment.center,
       appBar: AppBar(
         title: Text(
-          isMethodSwitchMode
-              ? 'Aktywna metoda'
-              : (isPasswordMode
-                    ? 'Hasło lokalne'
-                    : LocaleKeys.settings_common_change_pin.tr()),
+          isMethodSwitchMode ? 'Aktywna metoda' : (isPasswordMode ? 'Hasło lokalne' : 'Zmiana PIN'),
         ),
         centerTitle: true,
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: Spacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 520),
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: pages,
-              ),
-            ),
-          ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 520),
+          child: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: pages,
+          ),
         ),
       ),
     );
@@ -483,9 +485,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
           controller: controller,
           focusNode: focusNode,
           autofocus: false,
-          labelText: isPasswordMode
-              ? 'Hasło lokalne'
-              : LocaleKeys.pin_dialog_enter_4_digits.tr(),
+          labelText: isPasswordMode ? 'Hasło lokalne' : '4 cyfry PIN',
           obscureText: true,
           enabled: !isLoading,
           keyboardType: isPasswordMode
@@ -497,9 +497,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
-          onChanged: (val) {
-            if (!isPasswordMode && !isLoading && val.length == 4) {
-              onCompleted(val);
+          onChanged: (value) {
+            if (!isPasswordMode && !isLoading && value.length == 4) {
+              onCompleted(value);
             }
           },
         ),

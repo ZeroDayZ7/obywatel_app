@@ -17,6 +17,7 @@ import 'package:obywatel_plus/core/security/security/security_state.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/settings/presentation/pages/change_pin_screen.dart';
 
 class _FixedSecurityService extends SecurityService {
@@ -119,6 +120,11 @@ void main() {
       expect(find.text('Ustaw nowe hasło lokalne'), findsNothing);
     },
   );
+
+  test('PIN values must be numeric digits, not ASCII code units', () {
+    expect(Validators.validatePinDigits([49, 50, 51, 52]), isNotNull);
+    expect(Validators.validatePinDigits([1, 2, 3, 8]), isNull);
+  });
 
   test('method switch flow begins with an explicit select method step', () async {
     final container = ProviderContainer();

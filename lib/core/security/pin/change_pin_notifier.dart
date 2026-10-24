@@ -25,6 +25,13 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     step: ChangePinStep.selectMethod,
   );
 
+  void _flowLog(String functionName, int index, String details) {
+    final logger = ref.read(appLoggerProvider);
+    final msg = '[$functionName $index] $details';
+    logger.d(msg, module: 'LocalUnlock');
+    debugPrint(msg);
+  }
+
   void _logTransition(String event) {
     final logger = ref.read(appLoggerProvider);
     logger.d(
@@ -38,7 +45,12 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     ChangePinOperationType operationType = ChangePinOperationType.changeSecret,
     LocalSecurityMethod? targetMethod,
   }) {
+    _flowLog('ChangePinNotifier.initialize', 1,
+        'start current=${currentMethod.name} operation=${operationType.name} requestedTarget=${targetMethod?.name ?? 'none'}');
+
     if (currentMethod == LocalSecurityMethod.none) {
+      _flowLog('ChangePinNotifier.initialize', 2,
+          'skip because current method is none');
       return;
     }
 
@@ -60,15 +72,24 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       errorMessageKey: null,
       isSubmitting: false,
     );
+    _flowLog('ChangePinNotifier.initialize', 3,
+        'state=${state.logSummary()}');
     _logTransition('INIT');
   }
 
   void beginMethodSwitch(LocalSecurityMethod targetMethod) {
+    _flowLog('ChangePinNotifier.beginMethodSwitch', 1,
+        'request target=${targetMethod.name} current=${state.currentMethod.name}');
+
     if (targetMethod == LocalSecurityMethod.none) {
+      _flowLog('ChangePinNotifier.beginMethodSwitch', 2,
+          'skip because target is none');
       return;
     }
 
     if (targetMethod == state.currentMethod) {
+      _flowLog('ChangePinNotifier.beginMethodSwitch', 3,
+          'skip because target equals current method');
       return;
     }
 
@@ -79,10 +100,14 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       errorMessageKey: null,
       isSubmitting: false,
     );
+    _flowLog('ChangePinNotifier.beginMethodSwitch', 4,
+        'state=${state.logSummary()}');
     _logTransition('METHOD_SWITCH');
   }
 
   void beginSecretChange() {
+    _flowLog('ChangePinNotifier.beginSecretChange', 1,
+        'start current=${state.currentMethod.name}');
     state = state.copyWith(
       targetMethod: state.currentMethod,
       operationType: ChangePinOperationType.changeSecret,
@@ -90,34 +115,53 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       errorMessageKey: null,
       isSubmitting: false,
     );
+    _flowLog('ChangePinNotifier.beginSecretChange', 2,
+        'state=${state.logSummary()}');
   }
 
   void _clearSecrets() {
+    _flowLog('ChangePinNotifier._clearSecrets', 1,
+        'beforeClear newLength=${_newSecret?.length ?? 0} currentLength=${_currentSecret?.length ?? 0}');
     _newSecret?.fillRange(0, _newSecret!.length, 0);
     _currentSecret?.fillRange(0, _currentSecret!.length, 0);
     _newSecret = null;
     _currentSecret = null;
+    _flowLog('ChangePinNotifier._clearSecrets', 2,
+        'cleared');
   }
 
   String? _validateSecret(List<int> secret, LocalSecurityMethod targetMethod) {
+    _flowLog('ChangePinNotifier._validateSecret', 1,
+        'method=${targetMethod.name} bytes=${secret.length}');
     if (targetMethod == LocalSecurityMethod.pin) {
-      return Validators.validatePinDigits(secret);
+      final result = Validators.validatePinDigits(secret);
+      _flowLog('ChangePinNotifier._validateSecret', 2,
+          'pinValidation=${result ?? 'ok'}');
+      return result;
     }
 
-    return Validators.validatePassword(utf8.decode(secret));
+    final result = Validators.validatePassword(utf8.decode(secret));
+    _flowLog('ChangePinNotifier._validateSecret', 3,
+        'passwordValidation=${result ?? 'ok'}');
+    return result;
   }
 
   void setNewSecret(
     List<int> secret, {
       required LocalSecurityMethod targetMethod,
     }) {
+    _flowLog('ChangePinNotifier.setNewSecret', 1,
+        'target=${targetMethod.name} bytes=${secret.length}');
     final validationError = _validateSecret(secret, targetMethod);
     if (validationError != null) {
+      final stateSummary = state.logSummary();
       state = state.copyWith(
         step: ChangePinStep.error,
         errorMessageKey: validationError,
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.setNewSecret', 2,
+          'invalidSecret error=$validationError state=$stateSummary');
       _logTransition('ERROR_INVALID_NEW_SECRET');
       return;
     }
@@ -128,6 +172,8 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       step: ChangePinStep.confirmNew,
       errorMessageKey: null,
     );
+    _flowLog('ChangePinNotifier.setNewSecret', 3,
+        'newSecretStored bytes=${_newSecret!.length} state=${state.logSummary()}');
     _logTransition('NEW_SECRET_SET');
   }
 
@@ -143,12 +189,17 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     List<int> confirmSecret, {
     required LocalSecurityMethod targetMethod,
   }) {
+    _flowLog('ChangePinNotifier.confirmNewSecret', 1,
+        'target=${targetMethod.name} confirmBytes=${confirmSecret.length} newSecretBytes=${_newSecret?.length ?? 0}');
+
     if (_newSecret == null) {
       state = state.copyWith(
         step: ChangePinStep.error,
         errorMessageKey: 'pin_dialog.invalid_pin',
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.confirmNewSecret', 2,
+          'missingNewSecret state=${state.logSummary()}');
       return;
     }
 
@@ -158,6 +209,8 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
         errorMessageKey: 'errors.pin_not_identical',
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.confirmNewSecret', 3,
+          'confirmationMismatch expected=${_newSecret!.length} actual=${confirmSecret.length} state=${state.logSummary()}');
       _logTransition('ERROR_CONFIRMATION_MISMATCH');
       return;
     }
@@ -167,6 +220,8 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       step: ChangePinStep.enterOld,
       errorMessageKey: null,
     );
+    _flowLog('ChangePinNotifier.confirmNewSecret', 4,
+        'confirmationPassed state=${state.logSummary()}');
     _logTransition('SECRET_CONFIRMED');
   }
 
@@ -180,14 +235,19 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
 
   Future<void> verifyCurrentSecretAndSave(
     List<int> secret, {
-    required LocalSecurityMethod currentMethod,
+      required LocalSecurityMethod currentMethod,
   }) async {
+    _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 1,
+        'current=${currentMethod.name} currentSecretBytes=${secret.length} newSecretBytes=${_newSecret?.length ?? 0} target=${state.targetMethod.name}');
+
     if (_newSecret == null) {
       state = state.copyWith(
         step: ChangePinStep.error,
         errorMessageKey: 'pin_dialog.invalid_pin',
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 2,
+          'missingNewSecret state=${state.logSummary()}');
       _logTransition('ERROR_MISSING_NEW_SECRET');
       return;
     }
@@ -204,6 +264,8 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
       errorMessageKey: null,
     );
     _currentSecret = List<int>.from(secret);
+    _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 3,
+        'loading state=${state.logSummary()} target=${resolvedTargetMethod.name}');
 
     try {
       final pinService = ref.read(pinServiceProvider);
@@ -213,12 +275,17 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
         secretBytes: secret,
       );
 
+      _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 4,
+          'verificationResult isValid=$isValid currentMethod=${currentMethod.name}');
+
       if (!isValid) {
         state = state.copyWith(
           step: ChangePinStep.error,
           errorMessageKey: 'pin_dialog.invalid_pin',
           isSubmitting: false,
         );
+        _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 5,
+            'currentSecretRejected state=${state.logSummary()}');
         _logTransition('ERROR_INVALID_CURRENT');
         return;
       }
@@ -235,18 +302,25 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
         errorMessageKey: null,
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 6,
+          'saveSucceeded state=${state.logSummary()}');
       _logTransition('SUCCESS');
     } catch (error, stackTrace) {
-      debugPrint(
-        '[ChangePinNotifier] Błąd operacji kryptograficznej: $error\n$stackTrace',
-      );
+      final msg =
+          '[ChangePinNotifier.verifyCurrentSecretAndSave 7] cryptoFailed error=$error stackTrace=$stackTrace';
+      debugPrint(msg);
+      ref.read(appLoggerProvider).e(msg, module: 'LocalUnlock', error: error, stackTrace: stackTrace);
       state = state.copyWith(
         step: ChangePinStep.error,
         errorMessageKey: 'errors.crypto_operation_failed',
         isSubmitting: false,
       );
+      _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 8,
+          'cryptoFailure state=${state.logSummary()}');
       _logTransition('ERROR_CRYPTO_FAIL');
     } finally {
+      _flowLog('ChangePinNotifier.verifyCurrentSecretAndSave', 9,
+          'cleanup started');
       _clearSecrets();
     }
   }
