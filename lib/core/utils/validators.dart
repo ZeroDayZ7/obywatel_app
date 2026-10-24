@@ -49,25 +49,25 @@ class Validators {
       );
     }
 
-    // sprawdzenie litery
-    final letterRegex = RegExp(r'[A-Za-z]');
-    if (!letterRegex.hasMatch(value)) {
+    final hasLetter = RegExp(r'[A-Za-z]').hasMatch(value);
+    final hasUpper = RegExp(r'[A-Z]').hasMatch(value);
+    final hasLower = RegExp(r'[a-z]').hasMatch(value);
+    final hasDigit = RegExp(r'\d').hasMatch(value);
+    final hasSpecial = RegExp(r'[!@#\$&*~]').hasMatch(value);
+
+    if (!hasLetter || !hasUpper || !hasLower) {
       return LocaleKeys.validators_password_letter.tr();
     }
 
-    // sprawdzenie cyfry
-    final digitRegex = RegExp(r'\d');
-    if (!digitRegex.hasMatch(value)) {
+    if (!hasDigit) {
       return LocaleKeys.validators_password_digit.tr();
     }
 
-    // sprawdzenie znaku specjalnego
-    final specialCharRegex = RegExp(r'[!@#\$&*~]');
-    if (!specialCharRegex.hasMatch(value)) {
+    if (!hasSpecial) {
       return LocaleKeys.validators_password_special_char.tr();
     }
 
-    return null; // wszystko OK
+    return null;
   }
 
   /// Walidacja PIN

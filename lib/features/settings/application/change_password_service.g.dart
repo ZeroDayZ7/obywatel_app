@@ -55,4 +55,4 @@ final class ChangePasswordServiceProvider
 }
 
 String _$changePasswordServiceHash() =>
-    r'977bcac98f153a9cf1832e07ec87d27b8c8a575c';
+    r'fa64cbd57b78099b80c97690739011f7ce8957f0';

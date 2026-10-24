@@ -15,6 +15,7 @@ abstract class ApiEndpoints {
   static String get reset => '/auth/reset/send';
   static String get verifyResetCode => '/auth/reset/verify';
   static String get resetFinal => '/auth/reset/final';
+  static String get changePassword => '/auth/change-password';
   static String get createTemporarySession => '/auth/temporary-session';
 
   // --- 2FA ---
