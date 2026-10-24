@@ -48,6 +48,7 @@ abstract final class AppRoutes {
   static const notificationsTrash = 'trash';
 
   static const settings = '/settings';
+  static const settingsAccount = 'account';
   static const settingsSecurity = 'security';
   static const settingsNotifications = 'notifications';
   static const settingsActiveSession = 'active-session';

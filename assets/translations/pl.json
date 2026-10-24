@@ -207,6 +207,18 @@
     "title": "Ustawienia",
     "general": "Ustawienia ogólne",
     "general_subtitle": "Podstawowe ustawienia aplikacji",
+    "account": {
+      "title": "Ustawienia konta",
+      "subtitle": "Zarządzaj danymi i bezpieczeństwem konta",
+      "change_password": "Zmień hasło do konta",
+      "change_password_subtitle": "Zaktualizuj hasło do swojego konta",
+      "change_email": "Zmień adres e-mail",
+      "two_factor": "Uwierzytelnianie dwuskładnikowe (2FA)",
+      "active_sessions": "Aktywne sesje i urządzenia",
+      "active_sessions_subtitle": "Przeglądaj i zarządzaj aktywnymi sesjami",
+      "recovery": "Odzyskiwanie konta",
+      "future_feature": "Ta funkcja będzie dostępna w przyszłej wersji."
+    },
     "security": {
       "title": "Bezpieczeństwo",
       "subtitle": "Zarządzaj bezpieczeństwem",

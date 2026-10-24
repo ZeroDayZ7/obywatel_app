@@ -88,31 +88,8 @@ class SecuritySettingsConfig {
         ],
       ),
       SettingsSection(
-        title: 'Bezpieczeństwo konta',
-        items: [
-          ActionItem(
-            icon: Icons.lock_reset_rounded,
-            title: LocaleKeys.settings_security_change_password.tr(),
-            subtitle:
-                'Zmiana hasła do konta.',
-            type: ActionType.navigation,
-            onTap: () => context.push(
-              '${AppRoutes.settings}/${AppRoutes.settingsChangePassword}',
-            ),
-          ),
-        ],
-      ),
-      SettingsSection(
         title: LocaleKeys.settings_security_access_section.tr(),
         items: [
-          ActionItem(
-            icon: Icons.devices,
-            title: LocaleKeys.settings_security_active_sessions.tr(),
-            type: ActionType.navigation,
-            onTap: () => context.push(
-              '${AppRoutes.settings}/${AppRoutes.settingsActiveSession}',
-            ),
-          ),
           ActionItem(
             icon: Icons.lock_reset,
             title: LocaleKeys.settings_security_emergency_lock.tr(),

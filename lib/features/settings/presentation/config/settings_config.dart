@@ -44,6 +44,20 @@ class SettingsConfig {
         ],
       ),
       SettingsSection(
+        title: LocaleKeys.settings_account_title.tr(),
+        items: [
+          ActionItem(
+            icon: Icons.manage_accounts_rounded,
+            title: LocaleKeys.settings_account_title.tr(),
+            subtitle: LocaleKeys.settings_account_subtitle.tr(),
+            type: ActionType.navigation,
+            onTap: () => context.push(
+              '${AppRoutes.settings}/${AppRoutes.settingsAccount}',
+            ),
+          ),
+        ],
+      ),
+      SettingsSection(
         title: LocaleKeys.settings_security_title.tr(),
         items: [
           ActionItem(

@@ -207,6 +207,18 @@
     "title": "Settings",
     "general": "General Settings",
     "general_subtitle": "Basic app settings",
+    "account": {
+      "title": "Account settings",
+      "subtitle": "Manage your account data and security",
+      "change_password": "Change account password",
+      "change_password_subtitle": "Update your account password",
+      "change_email": "Change email address",
+      "two_factor": "Two-factor authentication (2FA)",
+      "active_sessions": "Active sessions and devices",
+      "active_sessions_subtitle": "Review and manage active sessions",
+      "recovery": "Account recovery",
+      "future_feature": "This feature will be available in a future version."
+    },
     "security": {
       "title": "Security",
       "subtitle": "Manage security settings",
