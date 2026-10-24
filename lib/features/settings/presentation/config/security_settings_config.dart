@@ -80,8 +80,10 @@ class SecuritySettingsConfig {
                 : LocaleKeys.settings_notifications_settings_not_available.tr(),
             type: ActionType.toggle,
             initialValue: state.isBiometricEnabled,
-            onToggle: state.canUseBiometrics ? notifier.toggleBiometrics : null,
-            isEnabled: state.canUseBiometrics,
+            onToggle: state.canUseBiometrics || state.isBiometricEnabled
+                ? notifier.toggleBiometrics
+                : null,
+            isEnabled: state.canUseBiometrics || state.isBiometricEnabled,
           ),
         ],
       ),

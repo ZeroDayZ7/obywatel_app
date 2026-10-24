@@ -62,7 +62,7 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
 
     final initialStep = switch (operationType) {
       ChangePinOperationType.changeMethod => ChangePinStep.selectMethod,
-      ChangePinOperationType.changeSecret => ChangePinStep.enterOld,
+      ChangePinOperationType.changeSecret => ChangePinStep.enterNew,
     };
 
     state = state.copyWith(

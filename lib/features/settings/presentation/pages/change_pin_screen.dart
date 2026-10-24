@@ -177,8 +177,11 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         return 1;
       case ChangePinStep.enterOld:
       case ChangePinStep.loading:
-      case ChangePinStep.error:
         return 2;
+      case ChangePinStep.error:
+        return _pageController.hasClients
+            ? (_pageController.page?.round() ?? 0)
+            : 0;
       case ChangePinStep.success:
       case ChangePinStep.idle:
         return 0;
@@ -226,6 +229,15 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   Widget build(BuildContext context) {
     final securityState = ref.watch(securityServiceProvider);
     final changePinState = ref.watch(changePinProvider);
+
+    ref.listen(securityServiceProvider, (previous, next) {
+      if (!next.initialized || previous?.initialized == true) return;
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _syncInitializationIfNeeded();
+      });
+    });
+
     final routeMethod = _parseRouteMethod(
       GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
     );
@@ -247,7 +259,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       if (next.step == ChangePinStep.success) {
         ref.read(globalNotificationProvider.notifier).show(
           AppNotification(
-            messageKey: 'Zmiana metody odblokowania została zapisana.',
+            messageKey: next.operationType == ChangePinOperationType.changeMethod
+                ? 'Metoda odblokowania została zmieniona.'
+                : 'Sekret lokalnego odblokowania został zmieniony.',
             type: NotificationType.success,
           ),
         );

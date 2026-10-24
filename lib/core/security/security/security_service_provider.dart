@@ -114,9 +114,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
     final storedMethod = await _pinService.readStoredLocalSecurityMethod();
 
-    if (!isBiometricEnabled) {
-      await _checkBiometricsAvailability();
-    }
+    final canUseBiometrics = await _checkBiometricsAvailability();
 
     final isMethodConfigured = storedMethod != LocalSecurityMethod.none;
 
@@ -125,7 +123,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
         hasLocalLock: false,
         isPinConfigured: false,
         isBiometricEnabled: isBiometricEnabled,
-        canUseBiometrics: isBiometricEnabled,
+        canUseBiometrics: canUseBiometrics,
         isSetupCompleted: setupCompleted && isMethodConfigured,
         initialized: true,
         localSecurityMethod: storedMethod,
@@ -138,7 +136,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       hasLocalLock: isLocalLockEnabled,
       isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: isBiometricEnabled,
-      canUseBiometrics: isBiometricEnabled,
+      canUseBiometrics: canUseBiometrics,
       isSetupCompleted: true,
       initialized: true,
       localSecurityMethod: storedMethod,
@@ -152,9 +150,13 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   @override
   Future<void> markSecurityAsInitialized() async {
     final storedMethod = await _pinService.readStoredLocalSecurityMethod();
-    final isBiometricEnabled = await _secureStorage.readBool(
-      key: StorageKeys.isBiometricConfigured,
-    );
+    final [
+      bool isBiometricEnabled,
+      bool canUseBiometrics,
+    ] = await Future.wait([
+      _secureStorage.readBool(key: StorageKeys.isBiometricConfigured),
+      _checkBiometricsAvailability(),
+    ]);
     final isMethodConfigured = storedMethod != LocalSecurityMethod.none;
 
     state = state.copyWith(
@@ -162,6 +164,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       isSetupCompleted: isMethodConfigured,
       isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: isBiometricEnabled,
+      canUseBiometrics: canUseBiometrics,
       hasLocalLock: false,
       localSecurityMethod: storedMethod,
     );
@@ -218,6 +221,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       hasLocalLock: false,
       isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: enableBiometric,
+      canUseBiometrics: state.canUseBiometrics || enableBiometric,
       isSetupCompleted: storedMethod != LocalSecurityMethod.none,
       localSecurityMethod: storedMethod,
     );
@@ -228,6 +232,10 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   Future<bool> _checkBiometricsAvailability() async {
     try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!canCheck || !isSupported) return false;
+
       final available = await _localAuth.getAvailableBiometrics();
       return available.isNotEmpty;
     } catch (_) {
@@ -288,7 +296,6 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
         state = state.copyWith(
           isBiometricEnabled: false,
-          canUseBiometrics: true,
         );
         _logger.i(
           '🚫 Biometrics disabled and cleared from SecureStorage',
