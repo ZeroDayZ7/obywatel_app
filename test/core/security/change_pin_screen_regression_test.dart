@@ -103,6 +103,16 @@ class _StaleSecretFlowNotifier extends ChangePinNotifier {
   );
 }
 
+class _SuccessMismatchNotifier extends ChangePinNotifier {
+  @override
+  ChangePinState build() => const ChangePinState(
+    step: ChangePinStep.success,
+    currentMethod: LocalSecurityMethod.pin,
+    targetMethod: LocalSecurityMethod.password,
+    operationType: ChangePinOperationType.changeMethod,
+  );
+}
+
 Widget _buildScreen({
   required LocalSecurityMethod method,
   required ChangePinNotifier notifier,
@@ -241,6 +251,23 @@ void main() {
 
       expect(find.text('Wybierz aktywną metodę lokalnego odblokowania'), findsOneWidget);
       expect(find.text('Ustaw nowe hasło lokalne'), findsNothing);
+    });
+
+    testWidgets('successful method switch does not get stuck on stale route mismatch', (
+      tester,
+    ) async {
+      final notifier = _SuccessMismatchNotifier();
+
+      await tester.pumpWidget(
+        _buildScreen(
+          method: LocalSecurityMethod.password,
+          notifier: notifier,
+          route: '/?mode=change_method&method=pin',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
   });
 }

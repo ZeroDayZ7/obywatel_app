@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
@@ -299,7 +300,15 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             type: NotificationType.success,
           ),
         );
-        Navigator.maybePop(context);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('${AppRoutes.settings}/${AppRoutes.settingsSecurity}');
+          }
+        });
         return;
       }
 
@@ -317,9 +326,12 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       });
     });
 
+    final blockedByRouteMismatch = hasRouteMismatch &&
+        changePinState.step != ChangePinStep.success;
+
     if (!securityState.initialized ||
         securityState.localSecurityMethod == LocalSecurityMethod.none ||
-        hasRouteMismatch) {
+        blockedByRouteMismatch) {
       return AppScaffold(
         size: ContainerSize.compact,
         alignment: Alignment.center,

@@ -17,7 +17,7 @@ abstract class EmergencyLockDialog {
         final colorScheme = theme.colorScheme;
 
         return AlertDialog(
-          scrollable: true,
+          // scrollable: true,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
