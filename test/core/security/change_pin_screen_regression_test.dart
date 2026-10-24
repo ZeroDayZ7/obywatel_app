@@ -93,6 +93,16 @@ class _AlignedErrorPinNotifier extends ChangePinNotifier {
   }
 }
 
+class _StaleSecretFlowNotifier extends ChangePinNotifier {
+  @override
+  ChangePinState build() => const ChangePinState(
+    step: ChangePinStep.enterNew,
+    currentMethod: LocalSecurityMethod.pin,
+    targetMethod: LocalSecurityMethod.pin,
+    operationType: ChangePinOperationType.changeSecret,
+  );
+}
+
 Widget _buildScreen({
   required LocalSecurityMethod method,
   required ChangePinNotifier notifier,
@@ -213,6 +223,24 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsNothing);
       expect(notifier.initializeCalled, isFalse);
+    });
+
+    testWidgets('change_method route wins over stale secret-change provider state', (
+      tester,
+    ) async {
+      final notifier = _StaleSecretFlowNotifier();
+
+      await tester.pumpWidget(
+        _buildScreen(
+          method: LocalSecurityMethod.pin,
+          notifier: notifier,
+          route: '/?mode=change_method&method=pin',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Wybierz aktywną metodę lokalnego odblokowania'), findsOneWidget);
+      expect(find.text('Ustaw nowe hasło lokalne'), findsNothing);
     });
   });
 }

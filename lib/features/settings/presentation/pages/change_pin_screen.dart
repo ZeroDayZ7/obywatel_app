@@ -17,7 +17,36 @@ import 'package:obywatel_plus/core/security/security/security_service_provider.d
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 
 class ChangePinScreen extends ConsumerStatefulWidget {
-  const ChangePinScreen({super.key});
+  const ChangePinScreen({
+    super.key,
+    this.initialMode,
+    this.initialMethod,
+  });
+
+  final String? initialMode;
+  final LocalSecurityMethod? initialMethod;
+
+  static ChangePinOperationType resolveRouteOperation(String? rawMode) {
+    final normalized = rawMode?.trim().toLowerCase();
+    if (normalized == 'change_method') {
+      return ChangePinOperationType.changeMethod;
+    }
+    return ChangePinOperationType.changeSecret;
+  }
+
+  static LocalSecurityMethod? parseRouteMethod(String? rawMethod) {
+    if (rawMethod == null || rawMethod.isEmpty) {
+      return null;
+    }
+
+    for (final method in LocalSecurityMethod.values) {
+      if (method.name == rawMethod) {
+        return method;
+      }
+    }
+
+    return null;
+  }
 
   @override
   ConsumerState<ChangePinScreen> createState() => _ChangePinScreenState();
@@ -38,25 +67,13 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final query = GoRouter.of(
       context,
     ).routeInformationProvider.value.uri.queryParameters;
-    final rawMode = query['mode']?.trim().toLowerCase();
-    if (rawMode == 'change_method') {
-      return ChangePinOperationType.changeMethod;
-    }
-    return ChangePinOperationType.changeSecret;
+    return ChangePinScreen.resolveRouteOperation(
+      widget.initialMode ?? query['mode'],
+    );
   }
 
   LocalSecurityMethod? _parseRouteMethod(String? rawMethod) {
-    if (rawMethod == null || rawMethod.isEmpty) {
-      return null;
-    }
-
-    for (final method in LocalSecurityMethod.values) {
-      if (method.name == rawMethod) {
-        return method;
-      }
-    }
-
-    return null;
+    return widget.initialMethod ?? ChangePinScreen.parseRouteMethod(rawMethod);
   }
 
   void _logScreenEntry() {
@@ -65,8 +82,11 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final securityState = ref.read(securityServiceProvider);
     final logger = ref.read(appLoggerProvider);
 
+    final effectiveMode = widget.initialMode ?? query['mode'];
+    final effectiveMethod = widget.initialMethod?.name ?? query['method'];
+
     final message =
-        '[ChangePinScreen._logScreenEntry 1] routeMode=${query['mode']} routeMethod=${query['method']} localSecurityMethod=${securityState.localSecurityMethod.name} isInitialized=${securityState.initialized}';
+        '[ChangePinScreen._logScreenEntry 1] routeMode=$effectiveMode routeMethod=$effectiveMethod localSecurityMethod=${securityState.localSecurityMethod.name} isInitialized=${securityState.initialized}';
     logger.d(message, module: 'LocalUnlock');
     debugPrint(message);
   }
@@ -76,7 +96,8 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     final currentState = ref.read(changePinProvider);
     final routeOperation = _resolveRouteOperation();
     final explicitRouteMethod = _parseRouteMethod(
-      GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
+      widget.initialMethod?.name ??
+          GoRouter.of(context).routeInformationProvider.value.uri.queryParameters['method'],
     );
     final effectiveRouteMethod = explicitRouteMethod ?? securityState.localSecurityMethod;
 

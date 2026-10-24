@@ -15,7 +15,16 @@ final settingsRoutes = [
       AppRoutes.settingsSecurity.go(const SecuritySettingsScreen()),
       AppRoutes.settingsNotifications.go(const NotificationsSettingsScreen()),
       AppRoutes.settingsActiveSession.go(const ActiveSessionsScreen()),
-      AppRoutes.settingsChangePin.go(const ChangePinScreen()),
+      AppRoutes.settingsChangePin.goWithState((state) {
+        final query = state.uri.queryParameters;
+        final rawMode = query['mode'];
+        final rawMethod = query['method'];
+
+        return ChangePinScreen(
+          initialMode: rawMode,
+          initialMethod: ChangePinScreen.parseRouteMethod(rawMethod),
+        );
+      }),
       AppRoutes.settingsChangePassword.go(const ChangePasswordScreen()),
     ],
   ),
