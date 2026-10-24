@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
+import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
@@ -295,6 +296,10 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
         targetMethod: resolvedTargetMethod,
         currentSecret: _currentSecret!,
         newSecret: _newSecret!,
+      );
+
+      await ref.read(securityServiceProvider.notifier).syncLocalSecurityMethod(
+        resolvedTargetMethod,
       );
 
       state = state.copyWith(

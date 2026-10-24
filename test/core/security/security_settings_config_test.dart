@@ -243,4 +243,25 @@ void main() {
     expect(message, isNotNull);
     expect(message, 'errors.crypto_operation_failed');
   });
+
+  test('successful secret change updates the active security method immediately', () async {
+    final fakeService = _FakePinService();
+    final container = ProviderContainer(
+      overrides: [
+        pinServiceProvider.overrideWith((ref) => fakeService),
+        securityServiceProvider.overrideWith(() => _FixedSecurityService()),
+      ],
+    );
+
+    final notifier = container.read(changePinProvider.notifier);
+    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    await notifier.verifyCurrentSecretAndSave(
+      [9, 9, 9, 9],
+      currentMethod: LocalSecurityMethod.password,
+    );
+
+    expect(container.read(securityServiceProvider).localSecurityMethod, LocalSecurityMethod.pin);
+    expect(container.read(changePinProvider).step, ChangePinStep.success);
+  });
 }

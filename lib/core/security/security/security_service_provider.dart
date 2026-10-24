@@ -21,6 +21,7 @@ abstract interface class ISecurityService {
   Future<void> unlockApp();
   Future<void> unlockManually();
   Future<void> markSecurityAsInitialized();
+  Future<void> syncLocalSecurityMethod(LocalSecurityMethod method);
 }
 
 @Riverpod(keepAlive: true)
@@ -167,6 +168,23 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
     _logger.i('✅ Security state marked as initialized and unlocked');
     debugSecurityState();
+  }
+
+  @override
+  Future<void> syncLocalSecurityMethod(LocalSecurityMethod method) async {
+    if (method == LocalSecurityMethod.none) {
+      return;
+    }
+
+    state = state.copyWith(
+      localSecurityMethod: method,
+      isPinConfigured: method == LocalSecurityMethod.pin,
+      isSetupCompleted: true,
+      initialized: true,
+      hasLocalLock: false,
+    );
+
+    _logger.i('✅ Security method synchronized to $method', module: 'Security');
   }
 
   Future<void> setPin(List<int> pinCodes) async {
