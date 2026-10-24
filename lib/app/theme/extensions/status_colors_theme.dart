@@ -24,13 +24,13 @@ class StatusColorsTheme extends ThemeExtension<StatusColorsTheme> {
     final isDark = colorScheme.brightness == Brightness.dark;
 
     return StatusColorsTheme(
-      success: isDark ? const Color(0xFF81C784) : AppColors.success,
-      onSuccess: AppColors.onSuccess,
-      warning: isDark ? const Color(0xFFFFD54F) : AppColors.warning,
+      success: isDark ? AppColors.darkSuccess : AppColors.success,
+      onSuccess: isDark ? AppColors.darkOnSuccess : AppColors.onSuccess,
+      warning: isDark ? AppColors.darkWarning : AppColors.warning,
       onWarning: AppColors.onWarning,
-      info: isDark ? const Color(0xFF64B5F6) : AppColors.info,
-      onInfo: AppColors.onInfo,
-      pending: isDark ? const Color(0xFFFFB74D) : AppColors.warning,
+      info: isDark ? AppColors.darkInfo : AppColors.info,
+      onInfo: isDark ? colorScheme.onPrimary : AppColors.onInfo,
+      pending: isDark ? AppColors.darkPending : AppColors.warning,
     );
   }
 

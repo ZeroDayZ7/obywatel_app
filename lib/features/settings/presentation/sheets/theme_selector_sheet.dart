@@ -13,49 +13,59 @@ class ThemeSelectorSheet extends ConsumerWidget {
     final currentTheme = ref.watch(themeProvider);
 
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(
-                LocaleKeys.settings_theme.tr(),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(height: 16),
-            RadioGroup<AppThemeType>(
-              groupValue: currentTheme,
-              onChanged: (AppThemeType? selectedType) async {
-                if (selectedType == null) return;
-                await ref.read(themeProvider.notifier).setTheme(selectedType);
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Text(
+                    LocaleKeys.settings_theme.tr(),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                RadioGroup<AppThemeType>(
+                  groupValue: currentTheme,
+                  onChanged: (AppThemeType? selectedType) async {
+                    if (selectedType == null) return;
+                    await ref
+                        .read(themeProvider.notifier)
+                        .setTheme(selectedType);
 
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: AppThemeType.values
-                    .map(
-                      (type) => RadioListTile<AppThemeType>(
-                        value: type,
-                        title: Text(_getThemeLabel(type)),
-                        subtitle: type == AppThemeType.matrix
-                            ? const Text('Neon Green / Hacker Style')
-                            : null,
-                        contentPadding: EdgeInsets.zero,
-                      ),
-                    )
-                    .toList(),
-              ),
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: AppThemeType.values
+                        .map(
+                          (type) => RadioListTile<AppThemeType>(
+                            value: type,
+                            title: Text(_getThemeLabel(type)),
+                            subtitle: type == AppThemeType.matrix
+                                ? const Text('Neon Green / Hacker Style')
+                                : null,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

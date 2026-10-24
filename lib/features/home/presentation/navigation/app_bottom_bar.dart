@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/features/home/presentation/navigation/navigation_items.dart';
@@ -20,21 +21,25 @@ class AppBottomBar extends StatelessWidget {
       (item) => currentPath.startsWith(item.route),
     );
 
-    return Container(
-      height: 68,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        border: Border(
-          top: BorderSide(
-            color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+    return SafeArea(
+      top: false,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 68),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.08),
+            ),
           ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: List.generate(items.length, (index) {
-          return _buildNavItem(context, items[index], index, currentIndex);
-        }),
+        child: Row(
+          children: List.generate(items.length, (index) {
+            return Expanded(
+              child: _buildNavItem(context, items[index], index, currentIndex),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -95,7 +100,10 @@ class AppBottomBar extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              item.label,
+              item.label.tr(),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

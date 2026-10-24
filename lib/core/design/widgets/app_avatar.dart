@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 
 class AppAvatar extends StatelessWidget {
   final String? username;
@@ -41,11 +42,11 @@ class AppAvatar extends StatelessWidget {
               width: size * 0.28,
               height: size * 0.28,
               decoration: BoxDecoration(
-                color: const Color(0xFF00FF88),
+                color: context.statusColors.success,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF00FF88).withValues(alpha: 0.4),
+                    color: context.statusColors.success.withValues(alpha: 0.4),
                     blurRadius: 4,
                   ),
                 ],

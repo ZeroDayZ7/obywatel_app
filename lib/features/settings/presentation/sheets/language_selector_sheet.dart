@@ -18,33 +18,45 @@ class LanguageSelectorSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentCode = context.locale.languageCode;
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            LocaleKeys.settings_language.tr(),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          RadioGroup<String>(
-            groupValue: currentCode,
-            onChanged: (value) => _changeLanguage(context, value!),
+    return SafeArea(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.sizeOf(context).height * 0.85,
+        ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
-              children: AppLanguages.supported.map((lang) {
-                return RadioListTile<String>(
-                  value: lang.code,
-                  title: Text(lang.name),
-                  contentPadding: EdgeInsets.zero,
-                );
-              }).toList(),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  LocaleKeys.settings_language.tr(),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+                RadioGroup<String>(
+                  groupValue: currentCode,
+                  onChanged: (value) => _changeLanguage(context, value!),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: AppLanguages.supported.map((lang) {
+                      return RadioListTile<String>(
+                        value: lang.code,
+                        title: Text(lang.name),
+                        contentPadding: EdgeInsets.zero,
+                      );
+                    }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-        ],
+        ),
       ),
     );
   }

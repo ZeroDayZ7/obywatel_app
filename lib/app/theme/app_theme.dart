@@ -6,6 +6,7 @@ import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/app/theme/app_text_theme.dart';
 import 'package:obywatel_plus/app/theme/extensions/shadow_theme.dart';
 import 'package:obywatel_plus/app/theme/extensions/status_colors_theme.dart';
+import 'package:obywatel_plus/app/theme/extensions/switch_theme.dart';
 import 'package:obywatel_plus/app/theme/extensions/toast_theme.dart';
 import 'package:obywatel_plus/app/theme/input_decoration_theme.dart';
 
@@ -34,6 +35,7 @@ abstract final class AppTheme {
       scaffoldBackgroundColor: colorScheme.surface,
       appBarTheme: buildAppBarTheme(colorScheme),
       inputDecorationTheme: buildInputDecorationTheme(colorScheme),
+      switchTheme: buildSwitchTheme(isDark, colorScheme),
       textTheme: AppTextTheme.buildTextTheme(colorScheme),
 
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
@@ -60,52 +62,52 @@ abstract final class AppTheme {
           onPrimary: Colors.black,
           primaryContainer: AppColors.matrixContainer,
           onPrimaryContainer: AppColors.matrixGreen,
-          secondary: Color(0xFF00CC55),
+          secondary: AppColors.matrixSecondary,
           onSecondary: Colors.black,
-          tertiary: Color(0xFF00FFAA),
+          tertiary: AppColors.matrixTertiary,
           onTertiary: Colors.black,
           surface: AppColors.matrixDarkSurface,
-          onSurface: AppColors.matrixGreen,
+          onSurface: AppColors.matrixOnSurface,
           surfaceContainerHigh: AppColors.matrixContainer,
           outline: AppColors.matrixGreen,
-          outlineVariant: Color(0xFF005522),
-          error: AppColors.error,
-          onError: AppColors.onError,
+          outlineVariant: AppColors.matrixOutlineVariant,
+          error: AppColors.darkError,
+          onError: AppColors.darkOnError,
         );
       case AppThemeType.dark:
         return const ColorScheme.dark(
           primary: AppColors.cyanPrimary,
           onPrimary: Colors.black,
-          primaryContainer: Color(0xFF004D40),
-          onPrimaryContainer: Color(0xFF80DEEA),
+          primaryContainer: AppColors.darkPrimaryContainer,
+          onPrimaryContainer: AppColors.darkOnPrimaryContainer,
           secondary: AppColors.cyanSecondary,
           onSecondary: Colors.black,
-          tertiary: Color(0xFFFFB74D),
+          tertiary: AppColors.darkTertiary,
           onTertiary: Colors.black,
           surface: AppColors.darkBackground,
-          onSurface: Color(0xFFE6E8EC),
+          onSurface: AppColors.darkOnSurface,
           surfaceContainerHigh: AppColors.darkSurfaceContainer,
-          outline: Color(0xFF8E918F),
-          outlineVariant: Color(0xFF3D4046),
-          error: AppColors.error,
-          onError: AppColors.onError,
+          outline: AppColors.darkOutline,
+          outlineVariant: AppColors.darkOutlineVariant,
+          error: AppColors.darkError,
+          onError: AppColors.darkOnError,
         );
       case AppThemeType.light:
       case AppThemeType.system:
         return const ColorScheme.light(
-          primary: AppColors.cyanPrimary,
+          primary: AppColors.lightPrimary,
           onPrimary: Colors.white,
-          primaryContainer: Color(0xFFE0F7FA),
-          onPrimaryContainer: Color(0xFF006064),
-          secondary: AppColors.cyanSecondary,
+          primaryContainer: AppColors.lightPrimaryContainer,
+          onPrimaryContainer: AppColors.lightOnPrimaryContainer,
+          secondary: AppColors.lightSecondary,
           onSecondary: Colors.white,
-          tertiary: Color(0xFFF57C00),
+          tertiary: AppColors.lightTertiary,
           onTertiary: Colors.white,
           surface: AppColors.lightBackground,
-          onSurface: Color(0xFF1A1C1E),
+          onSurface: AppColors.lightOnSurface,
           surfaceContainerHigh: AppColors.lightSurfaceContainer,
-          outline: Color(0xFF74777F),
-          outlineVariant: Color(0xFFE0E2E8),
+          outline: AppColors.lightOutline,
+          outlineVariant: AppColors.lightOutlineVariant,
           error: AppColors.error,
           onError: AppColors.onError,
         );

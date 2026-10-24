@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/app_colors.dart';
 import 'package:obywatel_plus/features/documents/domain/models/document_model.dart';
 
 extension DocumentModelUiX on DocumentModel {
@@ -31,17 +32,17 @@ extension DocumentModelUiX on DocumentModel {
   Color get color {
     switch (type.toUpperCase()) {
       case 'ID_CARD':
-        return const Color(0xFF2196F3);
+        return AppColors.documentIdentity;
       case 'DRIVERS_LICENSE':
-        return const Color(0xFF4CAF50);
+        return AppColors.documentLicense;
       case 'PASSPORT':
-        return const Color(0xFF1E88E5);
+        return AppColors.documentPassport;
       case 'VEHICLE_REGISTRATION':
-        return const Color(0xFFFB8C00);
+        return AppColors.documentVehicle;
       case 'LARGE_FAMILY_CARD':
-        return const Color(0xFF43A047);
+        return AppColors.documentFamily;
       default:
-        return const Color(0xFF607D8B);
+        return AppColors.documentDefault;
     }
   }
 

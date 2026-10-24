@@ -5,22 +5,20 @@ SwitchThemeData buildSwitchTheme(bool isDark, ColorScheme colorScheme) {
     // 🔘 Thumb
     thumbColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.selected)) {
-        return colorScheme.primary;
+        return colorScheme.onPrimary;
       }
       return isDark
           ? colorScheme.onSurface.withValues(alpha: 0.7)
           : colorScheme.onSurface.withValues(alpha: 0.6);
     }),
 
-    // 🟩 Track = TŁO
     trackColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.selected)) {
-        return colorScheme.secondary;
+        return colorScheme.primary;
       }
-      return isDark ? colorScheme.surface : colorScheme.primary;
+      return colorScheme.surfaceContainerHighest;
     }),
 
-    // ▢ Obramowanie (OFF)
     trackOutlineColor: WidgetStateProperty.resolveWith((states) {
       if (states.contains(WidgetState.selected)) {
         return Colors.transparent;

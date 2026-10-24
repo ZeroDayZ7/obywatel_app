@@ -244,7 +244,7 @@ class _PasswordRequirementsList extends StatelessWidget {
           Text(
             text,
             style: TextStyle(
-              color: isMet ? Colors.green : hintColor,
+              color: isMet ? context.statusColors.success : hintColor,
               fontSize: 12,
             ),
           ),

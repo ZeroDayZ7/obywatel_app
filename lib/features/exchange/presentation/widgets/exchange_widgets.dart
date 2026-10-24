@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:obywatel_plus/app/theme/app_colors.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/border_radius.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/notifications/feedback_service.dart';
@@ -76,6 +76,7 @@ class MarketChartCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final statusColors = context.statusColors;
     const ranges = ['1D', '1W', '1M', '1Y'];
 
     return Container(
@@ -155,7 +156,7 @@ class MarketChartCard extends StatelessWidget {
               Text(
                 '+${stats.liquidityRate.toStringAsFixed(1)}% płynności',
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.success,
+                  color: statusColors.success,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -183,6 +184,7 @@ class DelegationOfferTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final statusColors = context.statusColors;
 
     return Card(
       margin: EdgeInsets.zero,
@@ -241,7 +243,10 @@ class DelegationOfferTile extends StatelessWidget {
                           children: [
                             _Badge(label: offer.category, color: colorScheme.primary.withValues(alpha: 0.12)),
                             _Badge(label: offer.badge, color: colorScheme.secondary.withValues(alpha: 0.12)),
-                            _Badge(label: offer.liquidityStatus, color: AppColors.success.withValues(alpha: 0.12)),
+                            _Badge(
+                              label: offer.liquidityStatus,
+                              color: statusColors.success.withValues(alpha: 0.12),
+                            ),
                           ],
                         ),
                       ],
@@ -264,7 +269,7 @@ class DelegationOfferTile extends StatelessWidget {
                     child: _StatPill(
                       label: 'Zaufanie',
                       value: '${offer.reputation.toStringAsFixed(0)}%',
-                      color: AppColors.success,
+                      color: statusColors.success,
                     ),
                   ),
                 ],
@@ -279,12 +284,16 @@ class DelegationOfferTile extends StatelessWidget {
               const SizedBox(height: Spacing.md),
               Row(
                 children: [
-                  Icon(Icons.trending_up_rounded, size: 16, color: AppColors.success),
+                  Icon(
+                    Icons.trending_up_rounded,
+                    size: 16,
+                    color: statusColors.success,
+                  ),
                   const SizedBox(width: Spacing.xs),
                   Text(
                     'Historie +${offer.historicalYield.toStringAsFixed(1)}%',
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.success,
+                      color: statusColors.success,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

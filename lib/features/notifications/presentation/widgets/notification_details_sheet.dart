@@ -24,25 +24,33 @@ class NotificationDetailsSheet {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHandle(theme),
-            _buildHeader(theme, item),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20),
-              child: Divider(),
+      builder: (context) => SafeArea(
+        top: false,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHandle(theme),
+                _buildHeader(theme, item),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Divider(),
+                ),
+                Text(
+                  item.content,
+                  style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
+                ),
+                const SizedBox(height: 32),
+                _buildQuickDeleteButton(context, ref, theme, item.id),
+              ],
             ),
-            Text(
-              item.content,
-              style: theme.textTheme.bodyLarge?.copyWith(height: 1.5),
-            ),
-            const SizedBox(height: 32),
-            _buildQuickDeleteButton(context, ref, theme, item.id),
-          ],
+          ),
         ),
       ),
     );

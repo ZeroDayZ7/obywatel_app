@@ -18,21 +18,21 @@ class ToastTheme extends ThemeExtension<ToastTheme> {
     required this.borderRadius,
   });
 
-factory ToastTheme.fromColorScheme(ColorScheme colorScheme) {
-  final isDark = colorScheme.brightness == Brightness.dark;
+  factory ToastTheme.fromColorScheme(ColorScheme colorScheme) {
+    final isDark = colorScheme.brightness == Brightness.dark;
 
-  return ToastTheme(
-    successColor: isDark ? const Color(0xFF81C784) : AppColors.success,
-    errorColor: colorScheme.error,
-    infoColor: colorScheme.primary,
-    textStyle: TextStyle(
-      color: colorScheme.onSurface,
-      fontSize: 14,
-      fontWeight: FontWeight.w500,
-    ),
-    borderRadius: const BorderRadius.all(Radius.circular(12)),
-  );
-}
+    return ToastTheme(
+      successColor: isDark ? AppColors.darkSuccess : AppColors.success,
+      errorColor: colorScheme.error,
+      infoColor: colorScheme.primary,
+      textStyle: TextStyle(
+        color: colorScheme.onSurface,
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+      ),
+      borderRadius: const BorderRadius.all(Radius.circular(12)),
+    );
+  }
 
   @override
   ToastTheme copyWith({

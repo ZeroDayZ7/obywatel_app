@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
 import 'package:obywatel_plus/features/evoting/domain/models/voting_models.dart';
 
@@ -104,7 +105,7 @@ class VotingCard extends StatelessWidget {
                     if (voting.userHasVoted)
                       StatusPill(
                         label: 'Zagłosowano',
-                        color: Colors.green,
+                        color: context.statusColors.success,
                       ),
                   ],
                 ),

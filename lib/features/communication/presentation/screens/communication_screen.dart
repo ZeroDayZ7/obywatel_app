@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -186,9 +187,10 @@ class _CommunicationScreenState extends ConsumerState<CommunicationScreen> {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: switch (wsStatus) {
-                            WsConnectionStatus.connected => Colors.green,
-                            WsConnectionStatus.connecting => Colors.orange,
-                            WsConnectionStatus.disconnected => Colors.red,
+                            WsConnectionStatus.connected =>
+                              context.statusColors.success,
+                            WsConnectionStatus.connecting => colorScheme.tertiary,
+                            WsConnectionStatus.disconnected => colorScheme.error,
                           },
                         ),
                       ),
