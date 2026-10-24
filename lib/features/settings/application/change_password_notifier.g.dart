@@ -42,7 +42,7 @@ final class ChangePasswordNotifierProvider
 }
 
 String _$changePasswordNotifierHash() =>
-    r'9c53dde481fc1bc136f8366b9be3b2dba384da51';
+    r'23dc1e75df1acb07012aaeaafc4428d42abf6e42';
 
 abstract class _$ChangePasswordNotifier extends $Notifier<ChangePasswordState> {
   ChangePasswordState build();

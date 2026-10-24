@@ -48,7 +48,7 @@ abstract class _$QuickAccessNotifier extends $Notifier<List<QuickAccessItem>> {
   List<QuickAccessItem> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<List<QuickAccessItem>, List<QuickAccessItem>>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$QuickAccessNotifier extends $Notifier<List<QuickAccessItem>> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

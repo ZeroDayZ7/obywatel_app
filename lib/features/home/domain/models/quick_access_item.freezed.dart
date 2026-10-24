@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'quick_access_item.dart';
@@ -9,6 +9,7 @@ part of 'quick_access_item.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $QuickAccessItemCopyWith<QuickAccessItem> get copyWith => _$QuickAccessItemCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAccessItem&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.iconName, iconName) || other.iconName == iconName)&&(identical(other.accent, accent) || other.accent == accent)&&(identical(other.route, route) || other.route == route)&&(identical(other.isEnabled, isEnabled) || other.isEnabled == isEnabled)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.visualOffsetX, visualOffsetX) || other.visualOffsetX == visualOffsetX)&&(identical(other.visualOffsetY, visualOffsetY) || other.visualOffsetY == visualOffsetY)&&(identical(other.widthScale, widthScale) || other.widthScale == widthScale));
+  final _this = this as QuickAccessItem;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAccessItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.iconName, _this.iconName) || other.iconName == _this.iconName)&&(identical(other.accent, _this.accent) || other.accent == _this.accent)&&(identical(other.route, _this.route) || other.route == _this.route)&&(identical(other.isEnabled, _this.isEnabled) || other.isEnabled == _this.isEnabled)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&(identical(other.isHidden, _this.isHidden) || other.isHidden == _this.isHidden)&&(identical(other.visualOffsetX, _this.visualOffsetX) || other.visualOffsetX == _this.visualOffsetX)&&(identical(other.visualOffsetY, _this.visualOffsetY) || other.visualOffsetY == _this.visualOffsetY)&&(identical(other.widthScale, _this.widthScale) || other.widthScale == _this.widthScale));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,subtitle,iconName,accent,route,isEnabled,sortOrder,isHidden,visualOffsetX,visualOffsetY,widthScale);
+int get hashCode {
+  final _this = this as QuickAccessItem;
+  return Object.hash(runtimeType,_this.id,_this.title,_this.subtitle,_this.iconName,_this.accent,_this.route,_this.isEnabled,_this.sortOrder,_this.isHidden,_this.visualOffsetX,_this.visualOffsetY,_this.widthScale);
+}
 
 @override
 String toString() {
-  return 'QuickAccessItem(id: $id, title: $title, subtitle: $subtitle, iconName: $iconName, accent: $accent, route: $route, isEnabled: $isEnabled, sortOrder: $sortOrder, isHidden: $isHidden, visualOffsetX: $visualOffsetX, visualOffsetY: $visualOffsetY, widthScale: $widthScale)';
+  final _this = this as QuickAccessItem;
+  return 'QuickAccessItem(id: ${_this.id}, title: ${_this.title}, subtitle: ${_this.subtitle}, iconName: ${_this.iconName}, accent: ${_this.accent}, route: ${_this.route}, isEnabled: ${_this.isEnabled}, sortOrder: ${_this.sortOrder}, isHidden: ${_this.isHidden}, visualOffsetX: ${_this.visualOffsetX}, visualOffsetY: ${_this.visualOffsetY}, widthScale: ${_this.widthScale})';
 }
 
 
@@ -63,7 +69,7 @@ class _$QuickAccessItemCopyWithImpl<$Res>
 /// Create a copy of QuickAccessItem
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? subtitle = null,Object? iconName = null,Object? accent = null,Object? route = null,Object? isEnabled = null,Object? sortOrder = null,Object? isHidden = null,Object? visualOffsetX = null,Object? visualOffsetY = null,Object? widthScale = null,}) {
-  return _then(_self.copyWith(
+  return _then(QuickAccessItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
 as String,subtitle: null == subtitle ? _self.subtitle : subtitle // ignore: cast_nullable_to_non_nullable
@@ -237,16 +243,18 @@ _$QuickAccessItemCopyWith<_QuickAccessItem> get copyWith => __$QuickAccessItemCo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAccessItem&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.iconName, iconName) || other.iconName == iconName)&&(identical(other.accent, accent) || other.accent == accent)&&(identical(other.route, route) || other.route == route)&&(identical(other.isEnabled, isEnabled) || other.isEnabled == isEnabled)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.visualOffsetX, visualOffsetX) || other.visualOffsetX == visualOffsetX)&&(identical(other.visualOffsetY, visualOffsetY) || other.visualOffsetY == visualOffsetY)&&(identical(other.widthScale, widthScale) || other.widthScale == widthScale));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAccessItem&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.iconName, iconName) || other.iconName == iconName)&&(identical(other.accent, accent) || other.accent == accent)&&(identical(other.route, route) || other.route == route)&&(identical(other.isEnabled, isEnabled) || other.isEnabled == isEnabled)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.visualOffsetX, visualOffsetX) || other.visualOffsetX == visualOffsetX)&&(identical(other.visualOffsetY, visualOffsetY) || other.visualOffsetY == visualOffsetY)&&(identical(other.widthScale, widthScale) || other.widthScale == widthScale));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id,title,subtitle,iconName,accent,route,isEnabled,sortOrder,isHidden,visualOffsetX,visualOffsetY,widthScale);
+int get hashCode {
+    return Object.hash(runtimeType,id,title,subtitle,iconName,accent,route,isEnabled,sortOrder,isHidden,visualOffsetX,visualOffsetY,widthScale);
+}
 
 @override
 String toString() {
-  return 'QuickAccessItem(id: $id, title: $title, subtitle: $subtitle, iconName: $iconName, accent: $accent, route: $route, isEnabled: $isEnabled, sortOrder: $sortOrder, isHidden: $isHidden, visualOffsetX: $visualOffsetX, visualOffsetY: $visualOffsetY, widthScale: $widthScale)';
+    return 'QuickAccessItem(id: $id, title: $title, subtitle: $subtitle, iconName: $iconName, accent: $accent, route: $route, isEnabled: $isEnabled, sortOrder: $sortOrder, isHidden: $isHidden, visualOffsetX: $visualOffsetX, visualOffsetY: $visualOffsetY, widthScale: $widthScale)';
 }
 
 

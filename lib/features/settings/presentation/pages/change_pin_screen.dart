@@ -100,11 +100,24 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       return;
     }
 
+    final isActiveSameOperationFlow = currentState.operationType == routeOperation &&
+        currentState.currentMethod == securityState.localSecurityMethod &&
+        currentState.step != ChangePinStep.idle &&
+        currentState.step != ChangePinStep.success &&
+        currentState.step != ChangePinStep.error &&
+        currentState.step != ChangePinStep.selectMethod;
+    if (isActiveSameOperationFlow) {
+      debugPrint(
+        '[ChangePinScreen._syncInitializationIfNeeded 4] active same operation flow already in progress; preserving current step=${currentState.step.name}',
+      );
+      return;
+    }
+
     final isProviderAlreadyAligned = currentState.currentMethod == securityState.localSecurityMethod &&
         currentState.operationType == routeOperation &&
         (explicitRouteMethod != null || currentState.targetMethod == securityState.localSecurityMethod);
     if (isProviderAlreadyAligned) {
-      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 4] provider already aligned with active method; skipping re-init');
+      debugPrint('[ChangePinScreen._syncInitializationIfNeeded 4b] provider already aligned with active method; skipping re-init');
       return;
     }
 
@@ -522,11 +535,6 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
-          onChanged: (value) {
-            if (!isPasswordMode && !isLoading && value.length == 4) {
-              onCompleted(value);
-            }
-          },
         ),
         const SizedBox(height: Spacing.xl),
         SizedBox(

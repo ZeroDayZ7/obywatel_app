@@ -1,4 +1,3 @@
-// lib/features/home/presentation/pages/quick_access_screen.dart
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,38 +12,17 @@ import 'package:obywatel_plus/features/home/presentation/widgets/main_drawer.dar
 class QuickAccessScreen extends ConsumerStatefulWidget {
   const QuickAccessScreen({super.key});
 
-  static const _communicationItem = QuickAccessItem(
-    title: 'quick_access.communication',
-    subtitle: 'quick_access.communication_subtitle',
-    icon: Icons.forum_outlined,
-    accent: QuickAccessAccent.primary,
-    route: AppRoutes.communication,
-  );
+  @override
+  ConsumerState<QuickAccessScreen> createState() => _QuickAccessScreenState();
+}
 
-  static const _liquidDemocracyItem = QuickAccessItem(
-    title: 'quick_access.liquid_democracy',
-    subtitle: 'quick_access.liquid_democracy_subtitle',
-    icon: Icons.how_to_vote_rounded,
-    accent: QuickAccessAccent.primary,
-    route: AppRoutes.eVoting,
-  );
-
-  static final _marketItem = QuickAccessItem(
-    title: 'quick_access.trust_exchange',
-    subtitle: 'quick_access.trust_exchange_subtitle',
-    icon: Icons.trending_up_rounded,
-    accent: QuickAccessAccent.tertiary,
-    route: AppRoutes.eVotingExchangePath(),
-  );
-
+class _QuickAccessScreenState extends ConsumerState<QuickAccessScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final items = ref.watch(quickAccessProvider);
-    final visibleItems = _editMode
-        ? items
-        : items.where((item) => item.isEnabled).toList();
+    final visibleItems = items.where((item) => item.isEnabled).toList();
 
     return AppScaffold(
       appBar: const HomeAppBar(),
@@ -79,71 +57,45 @@ class QuickAccessScreen extends ConsumerStatefulWidget {
               ],
             ),
             const SizedBox(height: 20),
-            Row(
-              children: const [
-                Expanded(child: _QuickAccessCard(item: _communicationItem)),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(child: _QuickAccessCard(item: _liquidDemocracyItem)),
-                const SizedBox(width: 10),
-                Expanded(child: _QuickAccessCard(item: _marketItem)),
-              ],
-            ),
+            if (visibleItems.isEmpty)
+              SizedBox(
+                width: double.infinity,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Text(
+                      'quick_access.empty'.tr(),
+                      style: theme.textTheme.bodyLarge,
+                    ),
+                  ),
+                ),
+              )
+            else
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visibleItems.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
+                  childAspectRatio: 1.4,
+                ),
+                itemBuilder: (context, index) {
+                  return _QuickAccessCard(item: visibleItems[index]);
+                },
+              ),
           ],
         ),
       ),
     );
   }
-
-  Future<void> _showRenameDialog(BuildContext context, QuickAccessItem item) async {
-    final controller = TextEditingController(text: item.title);
-
-    final result = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Zmień nazwę modułu'),
-          content: TextField(
-            controller: controller,
-            autofocus: true,
-            maxLength: 28,
-            decoration: const InputDecoration(hintText: 'Nazwa modułu'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Anuluj'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(dialogContext).pop(controller.text.trim()),
-              child: const Text('Zapisz'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result == null || result.isEmpty) return;
-
-    await ref.read(quickAccessProvider.notifier).updateItem(
-      item.id,
-      title: result,
-    );
-  }
 }
 
 class _QuickAccessCard extends StatelessWidget {
-  final QuickAccessItem item;
-  final bool editMode;
-  final VoidCallback onToggleEnabled;
-  final VoidCallback onMoveUp;
-  final VoidCallback onMoveDown;
-  final VoidCallback onRename;
-
   const _QuickAccessCard({required this.item});
+
+  final QuickAccessItem item;
 
   Color _resolveAccentColor(ColorScheme colorScheme) {
     return switch (item.accent) {
@@ -159,7 +111,6 @@ class _QuickAccessCard extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final accentColor = _resolveAccentColor(colorScheme);
-    final enabled = item.isEnabled;
 
     return Container(
       constraints: const BoxConstraints(minHeight: 100),
@@ -208,7 +159,7 @@ class _QuickAccessCard extends StatelessWidget {
                             width: 1,
                           ),
                         ),
-                        child: Icon(item.icon, color: accentColor, size: 20),
+                        child: Icon(item.iconData, color: accentColor, size: 20),
                       ),
                       Icon(
                         Icons.arrow_forward_rounded,
@@ -230,10 +181,10 @@ class _QuickAccessCard extends StatelessWidget {
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      if (item.subtitle case final subtitle?) ...[
+                      if (item.subtitle.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
-                          subtitle.tr(),
+                          item.subtitle.tr(),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),

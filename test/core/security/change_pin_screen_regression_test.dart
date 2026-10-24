@@ -158,7 +158,7 @@ void main() {
       expect(find.text('Podaj aktualny PIN — 4 znaki'), findsNothing);
     });
 
-    testWidgets('pin mode keeps the explicit current-secret step until submit', (tester) async {
+    testWidgets('stale provider state is re-synced to the persisted active method', (tester) async {
       final notifier = _RecordingChangePinNotifier();
 
       await tester.pumpWidget(
@@ -169,12 +169,9 @@ void main() {
         ),
       );
 
-      final field = find.byType(TextFormField).first;
-      await tester.enterText(field, '1234');
-      await tester.pump();
-
-      expect(notifier.verifyCalls, 0);
-      expect(notifier.state.step, ChangePinStep.enterOld);
+      expect(notifier.initializeCalled, isTrue);
+      expect(notifier.state.currentMethod, LocalSecurityMethod.pin);
+      expect(notifier.state.step, ChangePinStep.enterNew);
     });
 
     testWidgets('button is disabled while loading', (tester) async {
