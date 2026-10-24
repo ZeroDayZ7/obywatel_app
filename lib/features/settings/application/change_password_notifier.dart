@@ -1,4 +1,5 @@
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
+import 'package:obywatel_plus/core/errors/failures/exception_failure_mapper.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/settings/application/change_password_service.dart';
 import 'package:obywatel_plus/features/settings/domain/change_password_state.dart';
@@ -69,9 +70,10 @@ class ChangePasswordNotifier extends _$ChangePasswordNotifier {
         messageKey: LocaleKeys.settings_change_password_backend_pending,
       );
     } catch (error) {
+      final failure = mapExceptionToFailure(error);
       state = ChangePasswordState(
         status: ChangePasswordStatus.error,
-        messageKey: error.toString(),
+        messageKey: failure.messageKey,
       );
     }
   }
