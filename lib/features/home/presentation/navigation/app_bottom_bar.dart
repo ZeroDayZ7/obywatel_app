@@ -101,7 +101,7 @@ class AppBottomBar extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               item.label.tr(),
-              maxLines: 2,
+              maxLines: 1,
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
