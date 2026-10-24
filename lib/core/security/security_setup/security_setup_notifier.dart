@@ -10,6 +10,7 @@ import 'package:obywatel_plus/core/security/security/security_service_provider.d
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
+import 'package:obywatel_plus/core/utils/validators.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 
 final securitySetupProvider =
@@ -18,7 +19,7 @@ final securitySetupProvider =
     );
 
 class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
-  List<int>? _tempPinBytes;
+  List<int>? _tempSecretBytes;
 
   @override
   Future<SecuritySetupState> build() async {
@@ -47,29 +48,96 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     );
   }
 
-  Future<void> setPin(String pin) async {
+  Future<void> selectLocalSecurityMethod(LocalSecurityMethod method) async {
+    final current = state.value ?? SecuritySetupState.initial();
     final logger = ref.read(appLoggerProvider);
-    logger.d('[SecuritySetupNotifier] setPin called (length: ${pin.length})');
+    logger.d(
+      '[SecuritySetupNotifier] selectLocalSecurityMethod: $method',
+    );
 
-    final current = state.value;
-    if (current == null) {
-      logger.w('[SecuritySetupNotifier] setPin aborted: current state is null');
-      return;
-    }
+    _tempSecretBytes = null;
+    state = AsyncValue.data(
+      current.copyWith(
+        localSecurityMethod: method,
+        secretConfigured: false,
+        setupStage: SecuritySetupStage.notStarted,
+      ),
+    );
+  }
+
+  Future<void> setLocalSecret({
+    required LocalSecurityMethod method,
+    required String value,
+    required String confirmation,
+  }) async {
+    final logger = ref.read(appLoggerProvider);
+    final current = state.value ?? SecuritySetupState.initial();
+
     state = const AsyncValue.loading();
 
     try {
-      _tempPinBytes = pin.split('').map(int.parse).toList();
-      logger.d('[SecuritySetupNotifier] _tempPinBytes set successfully');
-      state = AsyncValue.data(current.copyWith(pinSet: true));
+      final validationError = _validateSecret(method, value, confirmation);
+      if (validationError != null) {
+        throw Exception(validationError);
+      }
+
+      final secretBytes = method == LocalSecurityMethod.pin
+          ? value.split('').map((char) => int.parse(char)).toList()
+          : utf8.encode(value);
+
+      _tempSecretBytes = List<int>.from(secretBytes);
+
+      state = AsyncValue.data(
+        current.copyWith(
+          localSecurityMethod: method,
+          secretConfigured: true,
+          setupStage: SecuritySetupStage.preparing,
+          pinSet: method == LocalSecurityMethod.pin,
+        ),
+      );
+
+      logger.d(
+        '[SecuritySetupNotifier] secret validated and stored in memory for ${method.name}',
+      );
     } catch (e, st) {
       logger.e(
-        '[SecuritySetupNotifier] setPin error',
+        '[SecuritySetupNotifier] setLocalSecret error',
         error: e,
         stackTrace: st,
       );
       state = AsyncValue.error(e, st);
     }
+  }
+
+  String? _validateSecret(
+    LocalSecurityMethod method,
+    String value,
+    String confirmation,
+  ) {
+    if (value.trim().isEmpty) {
+      return method == LocalSecurityMethod.pin
+          ? 'errors.pin_invalid_length'
+          : 'errors.required_password';
+    }
+
+    if (method == LocalSecurityMethod.pin) {
+      if (value != confirmation) {
+        return 'pin_dialog.pin_not_identical';
+      }
+
+      final digits = value.split('').map(int.parse).toList();
+      final error = Validators.validatePinDigits(digits);
+      if (error != null) {
+        return error;
+      }
+      return null;
+    }
+
+    if (value != confirmation) {
+      return 'validators_passwords_not_match';
+    }
+
+    return Validators.validatePassword(value);
   }
 
   Future<void> enableBiometric() async {
@@ -148,23 +216,29 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
     final logger = ref.read(appLoggerProvider);
     logger.d('[SecuritySetupNotifier] === START completeSetup ===');
 
-    if (_tempPinBytes == null) {
+    if (_tempSecretBytes == null || _tempSecretBytes!.isEmpty) {
       logger.e(
-        '[SecuritySetupNotifier] PIN not set in memory before completeSetup',
+        '[SecuritySetupNotifier] Local secret not set in memory before completeSetup',
       );
-      throw Exception('PIN not set');
+      throw Exception('local secret not set');
     }
     final current = state.requireValue;
 
     state = const AsyncValue.loading();
 
     try {
-      logger.d('[SecuritySetupNotifier] 1/6 Copying PIN bytes...');
-      final pinForHash = List<int>.from(_tempPinBytes!);
-      final pinForPersist = List<int>.from(_tempPinBytes!);
+      final securityMethod = current.localSecurityMethod;
+      logger.d(
+        '[SecuritySetupNotifier] 1/6 Preparing local secret for method: ${securityMethod.name}',
+      );
+      final secretForHash = List<int>.from(_tempSecretBytes!);
+      final secretForPersist = List<int>.from(_tempSecretBytes!);
 
-      logger.d('[SecuritySetupNotifier] 2/6 Setting PIN hash...');
-      await ref.read(pinServiceProvider).setPin(pinForHash);
+      logger.d('[SecuritySetupNotifier] 2/6 Persisting local secret hash...');
+      await ref.read(pinServiceProvider).setLocalSecret(
+        method: securityMethod,
+        secretBytes: secretForHash,
+      );
 
       logger.d(
         '[SecuritySetupNotifier] 3/6 Generating KDF salt & persisting...',
@@ -173,13 +247,17 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       final salt = kdf.generateSalt();
       final storage = ref.read(secureStorageProvider);
       await storage.write(key: StorageKeys.kekSalt, value: base64Encode(salt));
+      await storage.write(
+        key: StorageKeys.localSecurityMethod,
+        value: securityMethod.name,
+      );
 
       logger.d(
         '[SecuritySetupNotifier] 4/6 Generating & persisting device keypairs...',
       );
       final crypto = ref.read(cryptoServiceProvider.notifier);
       await crypto.generateAndHoldKeyPair();
-      await crypto.finalizeAndPersist(pinForPersist, salt);
+      await crypto.finalizeAndPersist(secretForPersist, salt);
       logger.d('[SecuritySetupNotifier] Crypto keys finalized.');
 
       logger.d(
@@ -189,6 +267,12 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       logger.d(
         '[SecuritySetupNotifier] Current AuthState before register: $authState',
       );
+
+      // Keep the setup screen in a single loading state for the whole finalization
+      // sequence. Returning to a data-state before the backend registration and
+      // security setup are finished causes the form to reappear briefly and the
+      // redirect loop to security setup while finalization is still running.
+      state = const AsyncValue.loading();
 
       await ref.read(authControllerProvider.notifier).registerTrustedDevice();
       logger.d(
@@ -202,7 +286,13 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
           .read(securityServiceProvider.notifier)
           .completeSetup(enableBiometric: current.biometricSet);
 
-      state = AsyncValue.data(current.copyWith(pinSet: true));
+      state = AsyncValue.data(
+        current.copyWith(
+          pinSet: securityMethod == LocalSecurityMethod.pin,
+          secretConfigured: true,
+          setupStage: SecuritySetupStage.completed,
+        ),
+      );
       logger.d(
         '[SecuritySetupNotifier] === COMPLETE setup finished successfully ===',
       );
@@ -215,12 +305,12 @@ class SecuritySetupNotifier extends AsyncNotifier<SecuritySetupState> {
       state = AsyncValue.error(e, st);
       rethrow;
     } finally {
-      logger.d('[SecuritySetupNotifier] Cleaning up PIN bytes from RAM...');
-      if (_tempPinBytes != null) {
-        for (int i = 0; i < _tempPinBytes!.length; i++) {
-          _tempPinBytes![i] = 0;
+      logger.d('[SecuritySetupNotifier] Cleaning up local secret bytes from RAM...');
+      if (_tempSecretBytes != null) {
+        for (int i = 0; i < _tempSecretBytes!.length; i++) {
+          _tempSecretBytes![i] = 0;
         }
-        _tempPinBytes = null;
+        _tempSecretBytes = null;
       }
       logger.d('[SecuritySetupNotifier] RAM cleanup completed.');
     }

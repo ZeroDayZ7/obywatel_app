@@ -1,37 +1,82 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/notifications/feedback_type.dart';
-// Musisz zaimportować swój notifier z features!
-// Podaj poprawną ścieżkę do Twojego pliku
-import 'package:obywatel_plus/features/settings/domain/notification_settings_notifier.dart';
+import 'package:obywatel_plus/core/notifications/notification_settings.dart';
 import 'package:vibration/vibration.dart';
 
-class FeedbackService {
-  // Ref pozwala nam czytać inne providery wewnątrz klasy
-  final Ref _ref;
+abstract interface class FeedbackPlatform {
+  Future<bool> hasVibrator();
 
-  FeedbackService(this._ref);
+  Future<void> vibrate({
+    List<int>? pattern,
+    int? duration,
+    List<int>? intensities,
+  });
+
+  Future<void> playSound(SystemSoundType sound);
+}
+
+class FlutterFeedbackPlatform implements FeedbackPlatform {
+  const FlutterFeedbackPlatform();
+
+  @override
+  Future<bool> hasVibrator() => Vibration.hasVibrator();
+
+  @override
+  Future<void> vibrate({
+    List<int>? pattern,
+    int? duration,
+    List<int>? intensities,
+  }) async {
+    if (pattern != null || intensities != null) {
+      await Vibration.vibrate(
+        pattern: pattern ?? const [0, 200],
+        intensities: intensities ?? const [0, 255],
+      );
+      return;
+    }
+    await Vibration.vibrate(duration: duration ?? 200);
+  }
+
+  @override
+  Future<void> playSound(SystemSoundType sound) => SystemSound.play(sound);
+}
+
+class FeedbackService {
+  final Ref? _ref;
+  final ProviderContainer? _container;
+  final FeedbackPlatform _platform;
+
+  FeedbackService(Object source, {FeedbackPlatform? platform})
+      : _ref = source is Ref ? source : null,
+        _container = source is ProviderContainer ? source : null,
+        _platform = platform ?? const FlutterFeedbackPlatform() {
+    if (_ref == null && _container == null) {
+      throw ArgumentError.value(
+        source,
+        'source',
+        'FeedbackService requires a Riverpod Ref or ProviderContainer.',
+      );
+    }
+  }
 
   Future<void> trigger(FeedbackType type) async {
-    bool canVibrate = false;
-    bool canSound = false;
-    bool canShowAppNotifications = true;
+    final settings = _container != null
+        ? _container.read(appNotificationSettingsProvider)
+        : _ref!.read(appNotificationSettingsProvider);
 
-    try {
-      final settings = _ref.read(notificationSettingsProvider);
-      canVibrate = settings.vibration;
-      canSound = settings.sound;
-      canShowAppNotifications = settings.appNotifications;
-    } catch (_) {
-      // Jeśli rzuci błąd (bo provider usunięty), canVibrate zostaje false.
-      // To zapobiega "żarciu" powiadomień i błędom w logach.
+    if (!settings.appNotifications) {
+      return;
     }
 
-    if (!canShowAppNotifications) return;
-
-    final List<Future<void>> tasks = [];
-    if (canVibrate) tasks.add(_vibrate(type));
-    if (canSound) tasks.add(_playSound(type));
+    final tasks = <Future<void>>[];
+    if (settings.sound) {
+      tasks.add(_playSound(type));
+    }
+    if (settings.vibration) {
+      tasks.add(_vibrate(type));
+    }
 
     if (tasks.isNotEmpty) {
       await Future.wait(tasks);
@@ -39,73 +84,100 @@ class FeedbackService {
   }
 
   Future<void> _vibrate(FeedbackType type) async {
-    final hasVibrator = await Vibration.hasVibrator();
-    if (!hasVibrator) return;
+    try {
+      final hasVibrator = await _platform.hasVibrator();
+      if (!hasVibrator) {
+        return;
+      }
 
-    switch (type) {
-      // --- CUSTOM PATTERNS ---
-      case FeedbackType.securityAlert:
-        await Vibration.vibrate(
-          pattern: [0, 200, 100, 200, 100, 500],
-          intensities: [0, 255, 0, 255, 0, 255],
-        );
-        break;
+      switch (type) {
+        case FeedbackType.securityAlert:
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
+          try {
+            await _platform.vibrate(
+              pattern: [0, 200, 100, 200, 100, 500],
+              intensities: [0, 255, 0, 255, 0, 255],
+            );
+          } catch (_) {}
+          break;
 
-      case FeedbackType.error:
-        await HapticFeedback.heavyImpact();
-        await Vibration.vibrate(duration: 400);
-        break;
+        case FeedbackType.error:
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
+          try {
+            await _platform.vibrate(duration: 400);
+          } catch (_) {}
+          break;
 
-      case FeedbackType.success:
-        await HapticFeedback.mediumImpact();
-        break;
+        case FeedbackType.success:
+          try {
+            await HapticFeedback.mediumImpact();
+          } catch (_) {}
+          break;
 
-      case FeedbackType.warning:
-        await HapticFeedback.lightImpact();
-        await Future.delayed(const Duration(milliseconds: 50));
-        await HapticFeedback.lightImpact();
-        break;
+        case FeedbackType.warning:
+          try {
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
+          try {
+            await Future.delayed(const Duration(milliseconds: 50));
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
+          break;
 
-      case FeedbackType.info:
-        await HapticFeedback.selectionClick();
-        break;
+        case FeedbackType.info:
+          try {
+            await HapticFeedback.selectionClick();
+          } catch (_) {}
+          break;
 
-      // --- NEW RAW HAPTIC TYPES ---
-      case FeedbackType.light:
-        await HapticFeedback.lightImpact();
-        break;
+        case FeedbackType.light:
+          try {
+            await HapticFeedback.lightImpact();
+          } catch (_) {}
+          break;
 
-      case FeedbackType.medium:
-        await HapticFeedback.mediumImpact();
-        break;
+        case FeedbackType.medium:
+          try {
+            await HapticFeedback.mediumImpact();
+          } catch (_) {}
+          break;
 
-      case FeedbackType.heavy:
-        await HapticFeedback.heavyImpact();
-        break;
+        case FeedbackType.heavy:
+          try {
+            await HapticFeedback.heavyImpact();
+          } catch (_) {}
+          break;
 
-      case FeedbackType.selection:
-        await HapticFeedback.selectionClick();
-        break;
+        case FeedbackType.selection:
+          try {
+            await HapticFeedback.selectionClick();
+          } catch (_) {}
+          break;
+      }
+    } catch (_) {
+      // Nie przerywamy UI, gdy urządzenie nie obsługuje efektu.
     }
   }
 
   Future<void> _playSound(FeedbackType type) async {
-    SystemSoundType sound;
+    try {
+      final sound = switch (type) {
+        FeedbackType.error || FeedbackType.securityAlert => SystemSoundType.alert,
+        _ => SystemSoundType.click,
+      };
 
-    switch (type) {
-      case FeedbackType.error:
-      case FeedbackType.securityAlert:
-        sound = SystemSoundType.alert;
-        break;
-      default:
-        sound = SystemSoundType.click;
+      await _platform.playSound(sound);
+    } catch (e) {
+      debugPrint('Error playing sound: $e');
+      // Jest to tylko lokalny efekt aplikacji; nie wolno wywoływać awarii UI.
     }
-
-    await SystemSound.play(sound);
   }
 }
 
-// Definicja providera
 final feedbackServiceProvider = Provider<FeedbackService>((ref) {
   return FeedbackService(ref);
 });

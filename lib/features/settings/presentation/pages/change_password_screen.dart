@@ -74,6 +74,16 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       previous,
       next,
     ) {
+      if (next.status == ChangePasswordStatus.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hasło do konta zostało zmienione.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
       if (next.status == ChangePasswordStatus.error && next.messageKey != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

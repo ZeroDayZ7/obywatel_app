@@ -41,7 +41,7 @@ final class CryptoServiceProvider
   }
 }
 
-String _$cryptoServiceHash() => r'69d12f83248c43bb42de06ce519c3ec4ead9181a';
+String _$cryptoServiceHash() => r'05bb5bb844e35e371709b5fbe12a68d34cee0c7b';
 
 abstract class _$CryptoService extends $Notifier<void> {
   void build();

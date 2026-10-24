@@ -2,16 +2,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:obywatel_plus/app/lang/locale_keys.g.dart';
 import 'package:obywatel_plus/core/design/models/action_item.dart';
+import 'package:obywatel_plus/core/notifications/notification_settings.dart';
 import 'package:obywatel_plus/core/utils/device_capabilities_state.dart';
-import 'package:obywatel_plus/features/settings/domain/notification_settings_notifier.dart';
-import 'package:obywatel_plus/features/settings/domain/notification_settings_state.dart';
 import 'package:obywatel_plus/features/settings/domain/settings_section.dart';
 
 class NotificationsSettingsConfig {
   static List<SettingsSection> getSections({
     required DeviceCapabilitiesState caps,
     required NotificationSettings settings,
-    required NotificationSettingsNotifier notifier,
+    required AppNotificationSettings notifier,
   }) {
     return [
       SettingsSection(

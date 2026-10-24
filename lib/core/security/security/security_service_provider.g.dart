@@ -41,7 +41,7 @@ final class SecurityServiceProvider
   }
 }
 
-String _$securityServiceHash() => r'286d44faf99e8d9069756b4fa8fa8b6b88a73f13';
+String _$securityServiceHash() => r'712a72b955e2c04de16edcfb112e5e6384a5326d';
 
 abstract class _$SecurityService extends $Notifier<SecurityState> {
   SecurityState build();

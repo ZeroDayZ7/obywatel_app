@@ -25,10 +25,24 @@
     "copied_to_clipboard": "Skopiowano do schowka"
   },
   "navigation": {
+    "start": "Home",
     "apps": "Applications",
+    "documents": "Documents",
+    "notifications": "Notifications",
+    "profile": "Profile",
+    "settings": "Settings",
     "civic_cases": "Civic Cases",
     "home_title": "Dashboard",
     "my_account": "My Account"
+  },
+  "quick_access": {
+    "title": "Quick access",
+    "communication": "Communication",
+    "communication_subtitle": "Messages and contacts",
+    "liquid_democracy": "Liquid Democracy",
+    "liquid_democracy_subtitle": "Voting and delegations",
+    "trust_exchange": "Trust Exchange",
+    "trust_exchange_subtitle": "Reputation market"
   },
   "maintenance": {
     "title": "SYSTEM MAINTENANCE",

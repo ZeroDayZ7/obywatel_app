@@ -722,60 +722,123 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    final signalDeviceId = resolveInboundSignalDeviceId(
-      senderUserId: senderUserId,
-      senderDeviceId: senderDeviceId,
-      mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
-    );
-    final address = SignalProtocolAddress(senderUserId, signalDeviceId);
 
-    if (!await _signalStore.containsSession(address)) {
-      throw SignalSessionNotFoundException(
-        'No local Signal session exists for sender $senderUserId on device $signalDeviceId. Refusing to use a different session as fallback.',
+    Future<String> attemptDecrypt() async {
+      final signalDeviceId = resolveInboundSignalDeviceId(
+        senderUserId: senderUserId,
+        senderDeviceId: senderDeviceId,
+        mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
       );
-    }
+      final address = SignalProtocolAddress(senderUserId, signalDeviceId);
 
-    try {
-      final ciphertextBytes = base64Decode(ciphertextBase64);
-      final sessionCipher = SessionCipher.fromStore(_signalStore, address);
-
-      final Uint8List plaintext;
-      if (type == CiphertextMessage.prekeyType) {
-        plaintext = await sessionCipher.decrypt(
-          PreKeySignalMessage(ciphertextBytes),
-        );
-      } else {
-        plaintext = await sessionCipher.decryptFromSignal(
-          SignalMessage.fromSerialized(ciphertextBytes),
+      if (!await _signalStore.containsSession(address)) {
+        throw SignalSessionNotFoundException(
+          'No local Signal session exists for sender $senderUserId on device $signalDeviceId. Refusing to use a different session as fallback.',
         );
       }
 
       try {
-        await persistSignalDeviceMapping(
-          senderUserId: senderUserId,
-          appDeviceId: senderDeviceId,
-          signalDeviceId: signalDeviceId,
-        );
-      } catch (persistError, persistStackTrace) {
+        final ciphertextBytes = base64Decode(ciphertextBase64);
+        final sessionCipher = SessionCipher.fromStore(_signalStore, address);
+
+        final Uint8List plaintext;
+        if (type == CiphertextMessage.prekeyType) {
+          plaintext = await sessionCipher.decrypt(
+            PreKeySignalMessage(ciphertextBytes),
+          );
+        } else {
+          plaintext = await sessionCipher.decryptFromSignal(
+            SignalMessage.fromSerialized(ciphertextBytes),
+          );
+        }
+
+        try {
+          await persistSignalDeviceMapping(
+            senderUserId: senderUserId,
+            appDeviceId: senderDeviceId,
+            signalDeviceId: signalDeviceId,
+          );
+        } catch (persistError, persistStackTrace) {
+          _logger.w(
+            '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_mapping_persist_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId signal_device_id=$signalDeviceId error_type=${persistError.runtimeType}',
+            error: persistError,
+            stackTrace: persistStackTrace,
+            module: 'E2eeCrypto',
+          );
+        }
+
+        return utf8.decode(plaintext);
+      } catch (e, st) {
         _logger.w(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_mapping_persist_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId signal_device_id=$signalDeviceId error_type=${persistError.runtimeType}',
-          error: persistError,
-          stackTrace: persistStackTrace,
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_session_failed event=warning sender_user_id=$senderUserId signal_device_id=${resolveInboundSignalDeviceId(
+            senderUserId: senderUserId,
+            senderDeviceId: senderDeviceId,
+            mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
+          )} signal_type=$type error_type=${e.runtimeType}',
+          error: e,
+          stackTrace: st,
           module: 'E2eeCrypto',
         );
+        throw EncryptionFailureException(
+          'Nie można odszyfrować wiadomości od użytkownika $senderUserId dla urządzenia ${resolveInboundSignalDeviceId(
+            senderUserId: senderUserId,
+            senderDeviceId: senderDeviceId,
+            mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
+          )}. Nie wolno przełączać się na inną sesję Signal.',
+        );
       }
+    }
 
-      return utf8.decode(plaintext);
-    } catch (e, st) {
+    try {
+      return await attemptDecrypt();
+    } on SignalDeviceMappingException catch (mappingError, mappingStackTrace) {
       _logger.w(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_session_failed event=warning sender_user_id=$senderUserId signal_device_id=$signalDeviceId signal_type=$type error_type=${e.runtimeType}',
-        error: e,
-        stackTrace: st,
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_mapping_missing_retry event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${mappingError.runtimeType}',
+        error: mappingError,
+        stackTrace: mappingStackTrace,
         module: 'E2eeCrypto',
       );
-      throw EncryptionFailureException(
-        'Nie można odszyfrować wiadomości od użytkownika $senderUserId dla urządzenia $signalDeviceId. Nie wolno przełączać się na inną sesję Signal.',
+
+      try {
+        await registerDeviceIdentityWithOperation(effectiveOperationId);
+        await ensureSessionForPeer(
+          senderUserId,
+          operationId: effectiveOperationId,
+        );
+        return await attemptDecrypt();
+      } catch (bootstrapError, bootstrapStackTrace) {
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_mapping_bootstrap_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${bootstrapError.runtimeType}',
+          error: bootstrapError,
+          stackTrace: bootstrapStackTrace,
+          module: 'E2eeCrypto',
+        );
+        rethrow;
+      }
+    } on SignalSessionNotFoundException catch (sessionError, sessionStackTrace) {
+      _logger.w(
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_session_missing_retry event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${sessionError.runtimeType}',
+        error: sessionError,
+        stackTrace: sessionStackTrace,
+        module: 'E2eeCrypto',
       );
+
+      try {
+        await registerDeviceIdentityWithOperation(effectiveOperationId);
+        await ensureSessionForPeer(
+          senderUserId,
+          operationId: effectiveOperationId,
+        );
+        return await attemptDecrypt();
+      } catch (bootstrapError, bootstrapStackTrace) {
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_session_bootstrap_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${bootstrapError.runtimeType}',
+          error: bootstrapError,
+          stackTrace: bootstrapStackTrace,
+          module: 'E2eeCrypto',
+        );
+        rethrow;
+      }
     }
   }
 

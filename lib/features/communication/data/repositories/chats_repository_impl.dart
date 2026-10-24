@@ -50,6 +50,7 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return OutboxEvent(
       id: row.id,
       payload: row.payload,
+      eventType: row.eventType,
       conversationId: row.conversationId,
       retryCount: row.retryCount,
       nextAttemptAt: row.nextAttemptAt,
@@ -204,29 +205,53 @@ class ChatsRepositoryImpl implements ChatsRepository {
     );
   }
 
-  MessageEntity? _selectPreferredAttachmentRow(
+  static String attachmentPlaceholderRowId(String attachmentId) {
+    final normalized = attachmentId.trim();
+    return normalized.isEmpty ? 'attachment:' : 'attachment:$normalized';
+  }
+
+  static MessageEntity? selectPreferredAttachmentRow(
     Iterable<MessageEntity> rows, {
     String? messageId,
+    String? attachmentId,
   }) {
+    MessageEntity? selectedRow;
     MessageEntity? nonPlaceholderRow;
+    final normalizedMessageId = messageId?.trim();
+    final normalizedAttachmentId = attachmentId?.trim();
+
     for (final row in rows) {
-      if (messageId != null &&
-          messageId.trim().isNotEmpty &&
-          row.id == messageId.trim()) {
+      if (normalizedMessageId != null &&
+          normalizedMessageId.isNotEmpty &&
+          row.id == normalizedMessageId) {
         return row;
       }
       if (!row.id.startsWith('attachment:')) {
         nonPlaceholderRow ??= row;
       }
+      if (normalizedAttachmentId != null &&
+          normalizedAttachmentId.isNotEmpty &&
+          row.id == attachmentPlaceholderRowId(normalizedAttachmentId)) {
+        selectedRow = row;
+      }
     }
+
     if (nonPlaceholderRow != null) {
       return nonPlaceholderRow;
     }
-    for (final row in rows) {
-      return row;
+    if (selectedRow != null) {
+      return selectedRow;
     }
-    return null;
+    if (rows.isEmpty) {
+      return null;
+    }
+    return rows.first;
   }
+
+  MessageEntity? _selectPreferredAttachmentRow(
+    Iterable<MessageEntity> rows, {
+    String? messageId,
+  }) => selectPreferredAttachmentRow(rows, messageId: messageId);
 
   Future<MessageEntity?> _findMessageRowWithAttachmentMetadata(
     String attachmentId,
@@ -343,7 +368,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       return null;
     }
 
-    final secretKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final secretKey = SecretKey(
+      DatabaseKeyCodec.decodeHexKey(wrappingKeyValue),
+    );
     final unwrapped = await _symmetricCrypto.unwrapKey(
       wrappedKeyBase64: wrappedKey,
       wrappingKey: secretKey,
@@ -372,7 +399,9 @@ class ChatsRepositoryImpl implements ChatsRepository {
       );
     }
 
-    final wrappingKey = SecretKey(base64Url.decode(wrappingKeyValue));
+    final wrappingKey = SecretKey(
+      DatabaseKeyCodec.decodeHexKey(wrappingKeyValue),
+    );
     final wrapped = await _symmetricCrypto.wrapKey(
       keyToWrap: SecretKey(base64Decode(normalizedKey)),
       wrappingKey: wrappingKey,
@@ -460,7 +489,11 @@ class ChatsRepositoryImpl implements ChatsRepository {
     )..where((tbl) => tbl.attachmentId.equals(normalizedAttachmentId))).get();
     final byAttachment = byAttachmentRows.isEmpty
         ? null
-        : _selectPreferredAttachmentRow(byAttachmentRows, messageId: messageId);
+        : selectPreferredAttachmentRow(
+            byAttachmentRows,
+            messageId: messageId,
+            attachmentId: normalizedAttachmentId,
+          );
 
     Map<String, dynamic>? persistedMetadata;
     for (final row in byAttachmentRows) {
@@ -1602,6 +1635,36 @@ class ChatsRepositoryImpl implements ChatsRepository {
     return normalized.isEmpty ? null : normalized;
   }
 
+  static bool shouldProcessSignalMessageEvent(dynamic event) {
+    final payload = switch (event) {
+      OutboxEvent row => row.payload,
+      OutboxEventEntity row => row.payload,
+      _ => '',
+    };
+
+    final directType = switch (event) {
+      OutboxEvent row => row.eventType,
+      OutboxEventEntity row => row.eventType,
+      _ => null,
+    }?.trim();
+
+    if (directType != null && directType.isNotEmpty) {
+      return directType == 'SEND_MESSAGE';
+    }
+
+    try {
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map) {
+        return false;
+      }
+
+      final payloadType = decoded['eventType']?.toString().trim();
+      return payloadType == 'SEND_MESSAGE';
+    } catch (_) {
+      return false;
+    }
+  }
+
   Map<String, dynamic>? _decodeOutboxPayload(String rawPayload) {
     if (rawPayload.trim().isEmpty) {
       return null;
@@ -1669,6 +1732,10 @@ class ChatsRepositoryImpl implements ChatsRepository {
 
     final messages = <Message>[];
     for (final event in events) {
+      if (!ChatsRepositoryImpl.shouldProcessSignalMessageEvent(event)) {
+        continue;
+      }
+
       final payload = _decodeOutboxPayload(event.payload);
       if (payload == null) {
         continue;

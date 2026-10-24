@@ -6,6 +6,7 @@ import 'package:obywatel_plus/core/security/device_integrity/device_integrity_fa
 import 'package:obywatel_plus/core/security/local_auth_provider.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_state.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -20,6 +21,7 @@ abstract interface class ISecurityService {
   Future<void> unlockApp();
   Future<void> unlockManually();
   Future<void> markSecurityAsInitialized();
+  Future<void> syncLocalSecurityMethod(LocalSecurityMethod method);
 }
 
 @Riverpod(keepAlive: true)
@@ -101,33 +103,43 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     if (state.initialized) return;
 
     final [
-      bool isPinConfigured,
       bool setupCompleted,
       bool isLocalLockEnabled,
       bool isBiometricEnabled,
     ] = await Future.wait([
-      _pinService.hasPin(),
       _secureStorage.readBool(key: StorageKeys.setupCompleted),
       _secureStorage.readBool(key: StorageKeys.localLockEnabled),
       _secureStorage.readBool(key: StorageKeys.isBiometricConfigured),
     ]);
 
-    if (!isBiometricEnabled) {
-      await _checkBiometricsAvailability();
-    }
+    final storedMethod = await _pinService.readStoredLocalSecurityMethod();
 
-    if (!setupCompleted) {
-      state = state.copyWith(isSetupCompleted: false, initialized: true);
+    final canUseBiometrics = await _checkBiometricsAvailability();
+
+    final isMethodConfigured = storedMethod != LocalSecurityMethod.none;
+
+    if (!setupCompleted || !isMethodConfigured) {
+      state = state.copyWith(
+        hasLocalLock: false,
+        isPinConfigured: false,
+        isBiometricEnabled: isBiometricEnabled,
+        canUseBiometrics: canUseBiometrics,
+        isSetupCompleted: setupCompleted && isMethodConfigured,
+        initialized: true,
+        localSecurityMethod: storedMethod,
+      );
+      debugSecurityState();
       return;
     }
 
     state = state.copyWith(
-      hasLocalLock: isLocalLockEnabled && isPinConfigured,
-      isPinConfigured: isPinConfigured,
+      hasLocalLock: isLocalLockEnabled,
+      isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: isBiometricEnabled,
-      canUseBiometrics: isBiometricEnabled,
-      isSetupCompleted: setupCompleted,
+      canUseBiometrics: canUseBiometrics,
+      isSetupCompleted: true,
       initialized: true,
+      localSecurityMethod: storedMethod,
     );
 
     debugSecurityState();
@@ -137,21 +149,45 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   /// Oznacza stan bezpieczeństwa jako w pełni zainicjalizowany i gotowy po pomyślnej weryfikacji
   @override
   Future<void> markSecurityAsInitialized() async {
-    final isPinConfigured = await _pinService.hasPin();
-    final isBiometricEnabled = await _secureStorage.readBool(
-      key: StorageKeys.isBiometricConfigured,
-    );
+    final storedMethod = await _pinService.readStoredLocalSecurityMethod();
+    final [
+      bool isBiometricEnabled,
+      bool canUseBiometrics,
+    ] = await Future.wait([
+      _secureStorage.readBool(key: StorageKeys.isBiometricConfigured),
+      _checkBiometricsAvailability(),
+    ]);
+    final isMethodConfigured = storedMethod != LocalSecurityMethod.none;
 
     state = state.copyWith(
       initialized: true,
-      isSetupCompleted: true,
-      isPinConfigured: isPinConfigured,
+      isSetupCompleted: isMethodConfigured,
+      isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: isBiometricEnabled,
+      canUseBiometrics: canUseBiometrics,
       hasLocalLock: false,
+      localSecurityMethod: storedMethod,
     );
 
     _logger.i('✅ Security state marked as initialized and unlocked');
     debugSecurityState();
+  }
+
+  @override
+  Future<void> syncLocalSecurityMethod(LocalSecurityMethod method) async {
+    if (method == LocalSecurityMethod.none) {
+      return;
+    }
+
+    state = state.copyWith(
+      localSecurityMethod: method,
+      isPinConfigured: method == LocalSecurityMethod.pin,
+      isSetupCompleted: true,
+      initialized: true,
+      hasLocalLock: false,
+    );
+
+    _logger.i('✅ Security method synchronized to $method', module: 'Security');
   }
 
   Future<void> setPin(List<int> pinCodes) async {
@@ -163,6 +199,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
   }
 
   Future<void> completeSetup({bool enableBiometric = false}) async {
+    final storedMethod = await _pinService.readStoredLocalSecurityMethod();
     await _secureStorage.writeBool(
       key: StorageKeys.setupCompleted,
       value: true,
@@ -173,7 +210,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
     );
     await _secureStorage.writeBool(
       key: StorageKeys.isPinConfigured,
-      value: true,
+      value: storedMethod == LocalSecurityMethod.pin,
     );
     await _secureStorage.writeBool(
       key: StorageKeys.isBiometricConfigured,
@@ -182,9 +219,11 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
     state = state.copyWith(
       hasLocalLock: false,
-      isPinConfigured: true,
+      isPinConfigured: storedMethod == LocalSecurityMethod.pin,
       isBiometricEnabled: enableBiometric,
-      isSetupCompleted: true,
+      canUseBiometrics: state.canUseBiometrics || enableBiometric,
+      isSetupCompleted: storedMethod != LocalSecurityMethod.none,
+      localSecurityMethod: storedMethod,
     );
 
     _logger.i('✅ Security Setup Completed');
@@ -193,6 +232,10 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   Future<bool> _checkBiometricsAvailability() async {
     try {
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final isSupported = await _localAuth.isDeviceSupported();
+      if (!canCheck || !isSupported) return false;
+
       final available = await _localAuth.getAvailableBiometrics();
       return available.isNotEmpty;
     } catch (_) {
@@ -253,7 +296,6 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
         state = state.copyWith(
           isBiometricEnabled: false,
-          canUseBiometrics: false,
         );
         _logger.i(
           '🚫 Biometrics disabled and cleared from SecureStorage',
@@ -280,7 +322,7 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   @override
   Future<void> lockApp() async {
-    if (state.isSetupCompleted && state.isPinConfigured) {
+    if (state.isSetupCompleted && state.localSecurityMethod != LocalSecurityMethod.none) {
       state = state.copyWith(hasLocalLock: true);
       _logger.i('🔒 App Locked');
     }
@@ -288,20 +330,24 @@ class SecurityService extends _$SecurityService implements ISecurityService {
 
   @override
   Future<void> unlockManually() async {
-    bool isPinConfigured = false;
+    LocalSecurityMethod storedMethod = LocalSecurityMethod.none;
     try {
-      isPinConfigured = await _pinService.hasPin();
+      storedMethod = await _pinService.readStoredLocalSecurityMethod();
     } catch (e) {
-      _logger.e('Failed to check PIN status', error: e);
+      _logger.e('Failed to read local security method', error: e);
     }
 
+    final isMethodConfigured = storedMethod != LocalSecurityMethod.none;
     state = state.copyWith(
       hasLocalLock: false,
       initialized: true,
-      isPinConfigured: isPinConfigured,
-      isSetupCompleted: isPinConfigured,
+      isPinConfigured: storedMethod == LocalSecurityMethod.pin,
+      isSetupCompleted: isMethodConfigured,
+      localSecurityMethod: storedMethod,
     );
-    _logger.i('🔐 Security: Manual unlock. PIN configured: $isPinConfigured');
+    _logger.i(
+      '🔐 Security: Manual unlock. Local method: $storedMethod, configured: $isMethodConfigured',
+    );
   }
 
   Future<void> onAppResumed() async {
@@ -328,15 +374,20 @@ class SecurityService extends _$SecurityService implements ISecurityService {
       key: StorageKeys.isPinConfigured,
       value: false,
     );
+    await _secureStorage.write(
+      key: StorageKeys.localSecurityMethod,
+      value: LocalSecurityMethod.none.name,
+    );
 
     state = state.copyWith(
       hasLocalLock: false,
       isPinConfigured: false,
       isBiometricEnabled: false,
       isSetupCompleted: true,
+      localSecurityMethod: LocalSecurityMethod.none,
     );
 
-    _logger.i('✅ Temporary Security Setup Completed (No PIN)');
+    _logger.i('✅ Temporary Security Setup Completed (No local secret)');
     debugSecurityState();
   }
 

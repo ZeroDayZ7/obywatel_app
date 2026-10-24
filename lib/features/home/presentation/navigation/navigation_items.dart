@@ -22,32 +22,32 @@ abstract class AppNavigationItems {
   static List<NavItem> getMobileItems({int notificationCount = 0}) {
     return [
       const NavItem(
-        label: 'Start',
+        label: 'navigation.start',
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
         route: AppRoutes.home,
       ),
       const NavItem(
-        label: 'Aplikacje',
+        label: 'navigation.apps',
         icon: Icons.grid_view_outlined,
         activeIcon: Icons.grid_view_rounded,
         route: AppRoutes.services,
       ),
       const NavItem(
-        label: 'Dokumenty',
+        label: 'navigation.documents',
         icon: Icons.badge_outlined,
         activeIcon: Icons.badge_rounded,
         route: AppRoutes.documents,
       ),
       NavItem(
-        label: 'Powiadomienia',
+        label: 'navigation.notifications',
         icon: Icons.notifications_none_rounded,
         activeIcon: Icons.notifications_rounded,
         badgeCount: notificationCount,
         route: AppRoutes.notifications,
       ),
       const NavItem(
-        label: 'Profil',
+        label: 'navigation.profile',
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
         route: AppRoutes.profile,
@@ -59,38 +59,38 @@ abstract class AppNavigationItems {
   static List<NavItem> getDesktopItems({int notificationCount = 0}) {
     return [
       const NavItem(
-        label: 'Pulpit',
+        label: 'navigation.home_title',
         icon: Icons.home_outlined,
         activeIcon: Icons.home_rounded,
         route: AppRoutes.home,
       ),
       const NavItem(
-        label: 'Aplikacje',
+        label: 'navigation.apps',
         icon: Icons.grid_view_outlined,
         activeIcon: Icons.grid_view_rounded,
         route: AppRoutes.services,
       ),
       const NavItem(
-        label: 'Dokumenty',
+        label: 'navigation.documents',
         icon: Icons.badge_outlined,
         activeIcon: Icons.badge_rounded,
         route: AppRoutes.documents,
       ),
       NavItem(
-        label: 'Powiadomienia',
+        label: 'navigation.notifications',
         icon: Icons.notifications_none_rounded,
         activeIcon: Icons.notifications_rounded,
         badgeCount: notificationCount,
         route: AppRoutes.notifications,
       ),
       const NavItem(
-        label: 'Profil',
+        label: 'navigation.profile',
         icon: Icons.person_outline_rounded,
         activeIcon: Icons.person_rounded,
         route: AppRoutes.profile,
       ),
       const NavItem(
-        label: 'Ustawienia',
+        label: 'navigation.settings',
         icon: Icons.settings_outlined,
         activeIcon: Icons.settings_rounded,
         route: AppRoutes.settings,

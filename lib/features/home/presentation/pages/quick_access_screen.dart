@@ -1,3 +1,5 @@
+// lib/features/home/presentation/pages/quick_access_screen.dart
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -12,23 +14,28 @@ class QuickAccessScreen extends ConsumerStatefulWidget {
   const QuickAccessScreen({super.key});
 
   static const _communicationItem = QuickAccessItem(
-    title: 'Komunikacja',
-    subtitle: 'Wiadomości i kontakty',
+    title: 'quick_access.communication',
+    subtitle: 'quick_access.communication_subtitle',
     icon: Icons.forum_outlined,
     accent: QuickAccessAccent.primary,
     route: AppRoutes.communication,
   );
 
   static const _liquidDemocracyItem = QuickAccessItem(
-    title: 'Płynna Demokracja',
-    subtitle: 'Głosowanie i delegacje',
+    title: 'quick_access.liquid_democracy',
+    subtitle: 'quick_access.liquid_democracy_subtitle',
     icon: Icons.how_to_vote_rounded,
     accent: QuickAccessAccent.primary,
     route: AppRoutes.eVoting,
   );
 
-class _QuickAccessScreenState extends ConsumerState<QuickAccessScreen> {
-  bool _editMode = false;
+  static final _marketItem = QuickAccessItem(
+    title: 'quick_access.trust_exchange',
+    subtitle: 'quick_access.trust_exchange_subtitle',
+    icon: Icons.trending_up_rounded,
+    accent: QuickAccessAccent.tertiary,
+    route: AppRoutes.eVotingExchangePath(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -64,10 +71,9 @@ class _QuickAccessScreenState extends ConsumerState<QuickAccessScreen> {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Szybki dostęp',
+                  'quick_access.title'.tr(),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
                   ),
                 ),
               ],
@@ -156,7 +162,7 @@ class _QuickAccessCard extends StatelessWidget {
     final enabled = item.isEnabled;
 
     return Container(
-      height: 100, // Stała wysokość dla lekko prostokątnego kształtu
+      constraints: const BoxConstraints(minHeight: 100),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
@@ -166,7 +172,7 @@ class _QuickAccessCard extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: colorScheme.shadow.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -181,7 +187,10 @@ class _QuickAccessCard extends StatelessWidget {
             splashColor: accentColor.withValues(alpha: 0.1),
             highlightColor: accentColor.withValues(alpha: 0.05),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0), // Zmniejszony padding
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -190,7 +199,7 @@ class _QuickAccessCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(6), // Zmniejszony padding ikony
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           color: accentColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
@@ -212,27 +221,23 @@ class _QuickAccessCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.title,
+                        item.title.tr(),
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
                           color: colorScheme.onSurface,
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (item.subtitle case final subtitle?) ...[
                         const SizedBox(height: 2),
                         Text(
-                          subtitle,
+                          subtitle.tr(),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurface.withValues(
-                              alpha: 0.6,
-                            ),
-                            fontSize: 11,
-                            height: 1.1,
+                            color: colorScheme.onSurfaceVariant,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],

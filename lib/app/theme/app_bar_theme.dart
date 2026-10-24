@@ -10,7 +10,6 @@ AppBarTheme buildAppBarTheme(ColorScheme colorScheme) {
       color: colorScheme.onSurface,
       fontSize: 18,
       fontWeight: FontWeight.bold,
-      letterSpacing: 1.2,
     ),
     iconTheme: IconThemeData(color: colorScheme.onSurface),
   );

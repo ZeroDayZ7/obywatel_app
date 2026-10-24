@@ -103,7 +103,10 @@ class _TrashList extends ConsumerWidget {
                       .restoreFromTrash(item.id),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_forever, color: Colors.red),
+                  icon: Icon(
+                    Icons.delete_forever,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                   tooltip: LocaleKeys
                       .notifications_trash_delete_permanent_action
                       .tr(),
@@ -152,8 +155,8 @@ void _confirmAction(
           },
           child: Text(
             LocaleKeys.common_delete.tr(),
-            style: const TextStyle(
-              color: Colors.red,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
               fontWeight: FontWeight.bold,
             ),
           ),

@@ -46,7 +46,7 @@ final class SettingsPreferencesNotifierProvider
 }
 
 String _$settingsPreferencesNotifierHash() =>
-    r'b8544b0057b155021bfc6a45c4ca835dd1fc8a16';
+    r'a6f7ded0f179245e77ee55cf56fbe38269fced74';
 
 abstract class _$SettingsPreferencesNotifier
     extends $Notifier<SettingsPreferencesState> {

@@ -56,6 +56,16 @@ class ContactsApiClient {
       '[CONTACTS-RESPOND-02] HTTP: PUT /contacts/request/$requestId/respond success accept=$accept',
     );
   }
+
+  Future<void> cancelRequest(String requestId) async {
+    _logger.i(
+      '[CONTACTS-CANCEL-01] HTTP: DELETE /contacts/request/$requestId start',
+    );
+    await _apiClient.delete('/contacts/request/$requestId');
+    _logger.i(
+      '[CONTACTS-CANCEL-02] HTTP: DELETE /contacts/request/$requestId success',
+    );
+  }
 }
 
 @riverpod

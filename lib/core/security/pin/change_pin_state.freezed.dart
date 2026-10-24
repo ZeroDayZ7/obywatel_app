@@ -15,30 +15,71 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ChangePinState {
 
-
+ ChangePinStep get step; LocalSecurityMethod get currentMethod; LocalSecurityMethod get targetMethod; ChangePinOperationType get operationType; bool get isSubmitting; String? get errorMessageKey;
+/// Create a copy of ChangePinState
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$ChangePinStateCopyWith<ChangePinState> get copyWith => _$ChangePinStateCopyWithImpl<ChangePinState>(this as ChangePinState, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePinState);
+  final _this = this as ChangePinState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePinState&&(identical(other.step, _this.step) || other.step == _this.step)&&(identical(other.currentMethod, _this.currentMethod) || other.currentMethod == _this.currentMethod)&&(identical(other.targetMethod, _this.targetMethod) || other.targetMethod == _this.targetMethod)&&(identical(other.operationType, _this.operationType) || other.operationType == _this.operationType)&&(identical(other.isSubmitting, _this.isSubmitting) || other.isSubmitting == _this.isSubmitting)&&(identical(other.errorMessageKey, _this.errorMessageKey) || other.errorMessageKey == _this.errorMessageKey));
 }
 
 
 @override
-int get hashCode => runtimeType.hashCode;
+int get hashCode {
+  final _this = this as ChangePinState;
+  return Object.hash(runtimeType,_this.step,_this.currentMethod,_this.targetMethod,_this.operationType,_this.isSubmitting,_this.errorMessageKey);
+}
 
 @override
 String toString() {
-    return 'ChangePinState()';
+  final _this = this as ChangePinState;
+  return 'ChangePinState(step: ${_this.step}, currentMethod: ${_this.currentMethod}, targetMethod: ${_this.targetMethod}, operationType: ${_this.operationType}, isSubmitting: ${_this.isSubmitting}, errorMessageKey: ${_this.errorMessageKey})';
 }
 
 
 }
 
 /// @nodoc
-class $ChangePinStateCopyWith<$Res>  {
-$ChangePinStateCopyWith(ChangePinState _, $Res Function(ChangePinState) __);
+abstract mixin class $ChangePinStateCopyWith<$Res>  {
+  factory $ChangePinStateCopyWith(ChangePinState value, $Res Function(ChangePinState) _then) = _$ChangePinStateCopyWithImpl;
+@useResult
+$Res call({
+ ChangePinStep step, LocalSecurityMethod currentMethod, LocalSecurityMethod targetMethod, ChangePinOperationType operationType, bool isSubmitting, String? errorMessageKey
+});
+
+
+
+
+}
+/// @nodoc
+class _$ChangePinStateCopyWithImpl<$Res>
+    implements $ChangePinStateCopyWith<$Res> {
+  _$ChangePinStateCopyWithImpl(this._self, this._then);
+
+  final ChangePinState _self;
+  final $Res Function(ChangePinState) _then;
+
+/// Create a copy of ChangePinState
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') @override $Res call({Object? step = null,Object? currentMethod = null,Object? targetMethod = null,Object? operationType = null,Object? isSubmitting = null,Object? errorMessageKey = freezed,}) {
+  return _then(ChangePinState(
+step: null == step ? _self.step : step // ignore: cast_nullable_to_non_nullable
+as ChangePinStep,currentMethod: null == currentMethod ? _self.currentMethod : currentMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,targetMethod: null == targetMethod ? _self.targetMethod : targetMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,operationType: null == operationType ? _self.operationType : operationType // ignore: cast_nullable_to_non_nullable
+as ChangePinOperationType,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,errorMessageKey: freezed == errorMessageKey ? _self.errorMessageKey : errorMessageKey // ignore: cast_nullable_to_non_nullable
+as String?,
+  ));
+}
+
 }
 
 
@@ -56,16 +97,11 @@ extension ChangePinStatePatterns on ChangePinState {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( _EnterOld value)?  enterOld,TResult Function( _EnterNew value)?  enterNew,TResult Function( _ConfirmNew value)?  confirmNew,TResult Function( _Loading value)?  loading,TResult Function( _Success value)?  success,TResult Function( _Error value)?  error,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _ChangePinState value)?  $default,{required TResult orElse(),}){
 final _that = this;
 switch (_that) {
-case _EnterOld() when enterOld != null:
-return enterOld(_that);case _EnterNew() when enterNew != null:
-return enterNew(_that);case _ConfirmNew() when confirmNew != null:
-return confirmNew(_that);case _Loading() when loading != null:
-return loading(_that);case _Success() when success != null:
-return success(_that);case _Error() when error != null:
-return error(_that);case _:
+case _ChangePinState() when $default != null:
+return $default(_that);case _:
   return orElse();
 
 }
@@ -83,16 +119,14 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( _EnterOld value)  enterOld,required TResult Function( _EnterNew value)  enterNew,required TResult Function( _ConfirmNew value)  confirmNew,required TResult Function( _Loading value)  loading,required TResult Function( _Success value)  success,required TResult Function( _Error value)  error,}){
+@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _ChangePinState value)  $default,){
 final _that = this;
 switch (_that) {
-case _EnterOld():
-return enterOld(_that);case _EnterNew():
-return enterNew(_that);case _ConfirmNew():
-return confirmNew(_that);case _Loading():
-return loading(_that);case _Success():
-return success(_that);case _Error():
-return error(_that);}
+case _ChangePinState():
+return $default(_that);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -106,16 +140,11 @@ return error(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( _EnterOld value)?  enterOld,TResult? Function( _EnterNew value)?  enterNew,TResult? Function( _ConfirmNew value)?  confirmNew,TResult? Function( _Loading value)?  loading,TResult? Function( _Success value)?  success,TResult? Function( _Error value)?  error,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _ChangePinState value)?  $default,){
 final _that = this;
 switch (_that) {
-case _EnterOld() when enterOld != null:
-return enterOld(_that);case _EnterNew() when enterNew != null:
-return enterNew(_that);case _ConfirmNew() when confirmNew != null:
-return confirmNew(_that);case _Loading() when loading != null:
-return loading(_that);case _Success() when success != null:
-return success(_that);case _Error() when error != null:
-return error(_that);case _:
+case _ChangePinState() when $default != null:
+return $default(_that);case _:
   return null;
 
 }
@@ -132,15 +161,10 @@ return error(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  enterOld,TResult Function()?  enterNew,TResult Function()?  confirmNew,TResult Function()?  loading,TResult Function()?  success,TResult Function( String messageKey)?  error,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( ChangePinStep step,  LocalSecurityMethod currentMethod,  LocalSecurityMethod targetMethod,  ChangePinOperationType operationType,  bool isSubmitting,  String? errorMessageKey)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
-case _EnterOld() when enterOld != null:
-return enterOld();case _EnterNew() when enterNew != null:
-return enterNew();case _ConfirmNew() when confirmNew != null:
-return confirmNew();case _Loading() when loading != null:
-return loading();case _Success() when success != null:
-return success();case _Error() when error != null:
-return error(_that.messageKey);case _:
+case _ChangePinState() when $default != null:
+return $default(_that.step,_that.currentMethod,_that.targetMethod,_that.operationType,_that.isSubmitting,_that.errorMessageKey);case _:
   return orElse();
 
 }
@@ -158,15 +182,13 @@ return error(_that.messageKey);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  enterOld,required TResult Function()  enterNew,required TResult Function()  confirmNew,required TResult Function()  loading,required TResult Function()  success,required TResult Function( String messageKey)  error,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( ChangePinStep step,  LocalSecurityMethod currentMethod,  LocalSecurityMethod targetMethod,  ChangePinOperationType operationType,  bool isSubmitting,  String? errorMessageKey)  $default,) {final _that = this;
 switch (_that) {
-case _EnterOld():
-return enterOld();case _EnterNew():
-return enterNew();case _ConfirmNew():
-return confirmNew();case _Loading():
-return loading();case _Success():
-return success();case _Error():
-return error(_that.messageKey);}
+case _ChangePinState():
+return $default(_that.step,_that.currentMethod,_that.targetMethod,_that.operationType,_that.isSubmitting,_that.errorMessageKey);case _:
+  throw StateError('Unexpected subclass');
+
+}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -180,15 +202,10 @@ return error(_that.messageKey);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  enterOld,TResult? Function()?  enterNew,TResult? Function()?  confirmNew,TResult? Function()?  loading,TResult? Function()?  success,TResult? Function( String messageKey)?  error,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( ChangePinStep step,  LocalSecurityMethod currentMethod,  LocalSecurityMethod targetMethod,  ChangePinOperationType operationType,  bool isSubmitting,  String? errorMessageKey)?  $default,) {final _that = this;
 switch (_that) {
-case _EnterOld() when enterOld != null:
-return enterOld();case _EnterNew() when enterNew != null:
-return enterNew();case _ConfirmNew() when confirmNew != null:
-return confirmNew();case _Loading() when loading != null:
-return loading();case _Success() when success != null:
-return success();case _Error() when error != null:
-return error(_that.messageKey);case _:
+case _ChangePinState() when $default != null:
+return $default(_that.step,_that.currentMethod,_that.targetMethod,_that.operationType,_that.isSubmitting,_that.errorMessageKey);case _:
   return null;
 
 }
@@ -199,205 +216,50 @@ return error(_that.messageKey);case _:
 /// @nodoc
 
 
-class _EnterOld extends ChangePinState {
-  const _EnterOld(): super._();
+class _ChangePinState extends ChangePinState {
+  const _ChangePinState({this.step = ChangePinStep.selectMethod, this.currentMethod = LocalSecurityMethod.none, this.targetMethod = LocalSecurityMethod.none, this.operationType = ChangePinOperationType.changeSecret, this.isSubmitting = false, this.errorMessageKey}): super._();
   
 
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterOld);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ChangePinState.enterOld()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _EnterNew extends ChangePinState {
-  const _EnterNew(): super._();
-  
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _EnterNew);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ChangePinState.enterNew()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _ConfirmNew extends ChangePinState {
-  const _ConfirmNew(): super._();
-  
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ConfirmNew);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ChangePinState.confirmNew()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _Loading extends ChangePinState {
-  const _Loading(): super._();
-  
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ChangePinState.loading()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _Success extends ChangePinState {
-  const _Success(): super._();
-  
-
-
-
-
-
-
-@override
-bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success);
-}
-
-
-@override
-int get hashCode => runtimeType.hashCode;
-
-@override
-String toString() {
-    return 'ChangePinState.success()';
-}
-
-
-}
-
-
-
-
-/// @nodoc
-
-
-class _Error extends ChangePinState {
-  const _Error(this.messageKey): super._();
-  
-
- final  String messageKey;
+@override@JsonKey() final  ChangePinStep step;
+@override@JsonKey() final  LocalSecurityMethod currentMethod;
+@override@JsonKey() final  LocalSecurityMethod targetMethod;
+@override@JsonKey() final  ChangePinOperationType operationType;
+@override@JsonKey() final  bool isSubmitting;
+@override final  String? errorMessageKey;
 
 /// Create a copy of ChangePinState
 /// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
+@override @JsonKey(includeFromJson: false, includeToJson: false)
 @pragma('vm:prefer-inline')
-_$ErrorCopyWith<_Error> get copyWith => __$ErrorCopyWithImpl<_Error>(this, _$identity);
+_$ChangePinStateCopyWith<_ChangePinState> get copyWith => __$ChangePinStateCopyWithImpl<_ChangePinState>(this, _$identity);
 
 
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChangePinState&&(identical(other.step, step) || other.step == step)&&(identical(other.currentMethod, currentMethod) || other.currentMethod == currentMethod)&&(identical(other.targetMethod, targetMethod) || other.targetMethod == targetMethod)&&(identical(other.operationType, operationType) || other.operationType == operationType)&&(identical(other.isSubmitting, isSubmitting) || other.isSubmitting == isSubmitting)&&(identical(other.errorMessageKey, errorMessageKey) || other.errorMessageKey == errorMessageKey));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,messageKey);
+    return Object.hash(runtimeType,step,currentMethod,targetMethod,operationType,isSubmitting,errorMessageKey);
 }
 
 @override
 String toString() {
-    return 'ChangePinState.error(messageKey: $messageKey)';
+    return 'ChangePinState(step: $step, currentMethod: $currentMethod, targetMethod: $targetMethod, operationType: $operationType, isSubmitting: $isSubmitting, errorMessageKey: $errorMessageKey)';
 }
 
 
 }
 
 /// @nodoc
-abstract mixin class _$ErrorCopyWith<$Res> implements $ChangePinStateCopyWith<$Res> {
-  factory _$ErrorCopyWith(_Error value, $Res Function(_Error) _then) = __$ErrorCopyWithImpl;
-@useResult
+abstract mixin class _$ChangePinStateCopyWith<$Res> implements $ChangePinStateCopyWith<$Res> {
+  factory _$ChangePinStateCopyWith(_ChangePinState value, $Res Function(_ChangePinState) _then) = __$ChangePinStateCopyWithImpl;
+@override @useResult
 $Res call({
- String messageKey
+ ChangePinStep step, LocalSecurityMethod currentMethod, LocalSecurityMethod targetMethod, ChangePinOperationType operationType, bool isSubmitting, String? errorMessageKey
 });
 
 
@@ -405,19 +267,24 @@ $Res call({
 
 }
 /// @nodoc
-class __$ErrorCopyWithImpl<$Res>
-    implements _$ErrorCopyWith<$Res> {
-  __$ErrorCopyWithImpl(this._self, this._then);
+class __$ChangePinStateCopyWithImpl<$Res>
+    implements _$ChangePinStateCopyWith<$Res> {
+  __$ChangePinStateCopyWithImpl(this._self, this._then);
 
-  final _Error _self;
-  final $Res Function(_Error) _then;
+  final _ChangePinState _self;
+  final $Res Function(_ChangePinState) _then;
 
 /// Create a copy of ChangePinState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? messageKey = null,}) {
-  return _then(_Error(
-null == messageKey ? _self.messageKey : messageKey // ignore: cast_nullable_to_non_nullable
-as String,
+@override @pragma('vm:prefer-inline') $Res call({Object? step = null,Object? currentMethod = null,Object? targetMethod = null,Object? operationType = null,Object? isSubmitting = null,Object? errorMessageKey = freezed,}) {
+  return _then(_ChangePinState(
+step: null == step ? _self.step : step // ignore: cast_nullable_to_non_nullable
+as ChangePinStep,currentMethod: null == currentMethod ? _self.currentMethod : currentMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,targetMethod: null == targetMethod ? _self.targetMethod : targetMethod // ignore: cast_nullable_to_non_nullable
+as LocalSecurityMethod,operationType: null == operationType ? _self.operationType : operationType // ignore: cast_nullable_to_non_nullable
+as ChangePinOperationType,isSubmitting: null == isSubmitting ? _self.isSubmitting : isSubmitting // ignore: cast_nullable_to_non_nullable
+as bool,errorMessageKey: freezed == errorMessageKey ? _self.errorMessageKey : errorMessageKey // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

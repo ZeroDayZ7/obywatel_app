@@ -125,8 +125,9 @@ QueryExecutor openConnection(String encryptionKey) {
           throw UnsupportedError('SQLite3MultipleCiphers is unavailable.');
         }
 
-        final safeKey = encryptionKey.replaceAll("'", "''");
-        rawDb.execute("PRAGMA key = '$safeKey';");
+        final safeKey = encryptionKey.replaceAll('\'', '\'\'');
+        
+        rawDb.execute('PRAGMA hexkey = \'$safeKey\';');
 
         try {
           rawDb.select('SELECT count(*) FROM sqlite_master;');
@@ -140,7 +141,7 @@ QueryExecutor openConnection(String encryptionKey) {
               file.deleteSync();
             }
 
-            rawDb.execute("PRAGMA key = '$safeKey';");
+            rawDb.execute('PRAGMA hexkey = \'$safeKey\';');
             rawDb.select('SELECT count(*) FROM sqlite_master;');
             debugPrint('[DATABASE-SECURITY] ✅ Świeża zaszyfrowana baza została zainicjalizowana.');
           } else {
@@ -148,7 +149,7 @@ QueryExecutor openConnection(String encryptionKey) {
           }
         }
 
-        debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
+        // debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
       },
     );
   });

@@ -11,11 +11,13 @@ abstract class EmergencyLockDialog {
     showDialog(
       context: context,
       builder: (context) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        final dialogWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.85;
-        final colorScheme = Theme.of(context).colorScheme;
+        final screenWidth = MediaQuery.sizeOf(context).width;
+        final dialogWidth = screenWidth > 588 ? 400.0 : screenWidth * 0.68;
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
 
         return AlertDialog(
+          scrollable: true,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -43,15 +45,13 @@ abstract class EmergencyLockDialog {
               children: [
                 Text(
                   LocaleKeys.settings_security_emergency_lock_description.tr(),
-                  style: const TextStyle(fontSize: 14),
+                  style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 24),
                 ActionSlider.standard(
                   sliderBehavior: SliderBehavior.move,
                   width: dialogWidth,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
                   toggleColor: colorScheme.error,
                   actionThresholdType: ThresholdType.release,
                   icon: Icon(Icons.lock_reset, color: colorScheme.onError),
@@ -65,8 +65,8 @@ abstract class EmergencyLockDialog {
                   },
                   child: Text(
                     LocaleKeys.settings_security_emergency_lock_slider.tr(),
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      color: colorScheme.primary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),

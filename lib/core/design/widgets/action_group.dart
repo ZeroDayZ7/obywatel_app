@@ -14,7 +14,7 @@ class ActionGroup extends StatelessWidget {
       children: [
         if (title != null) ...[
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 2 , vertical: 8),
             child: Text(
               title!.toUpperCase(),
               style: theme.textTheme.labelMedium?.copyWith(
@@ -34,7 +34,6 @@ class ActionGroup extends StatelessWidget {
           ),
           child: Column(children: children),
         ),
-        const SizedBox(height: 24),
       ],
     );
   }

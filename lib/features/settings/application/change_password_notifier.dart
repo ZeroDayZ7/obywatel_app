@@ -61,8 +61,7 @@ class ChangePasswordNotifier extends _$ChangePasswordNotifier {
         newPassword: newPassword,
       );
       state = const ChangePasswordState(
-        status: ChangePasswordStatus.error,
-        messageKey: LocaleKeys.settings_change_password_backend_pending,
+        status: ChangePasswordStatus.success,
       );
     } on UnimplementedError {
       state = const ChangePasswordState(

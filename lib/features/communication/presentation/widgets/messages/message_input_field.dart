@@ -7,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mime/mime.dart';
+import 'package:obywatel_plus/core/notifications/feedback_service.dart';
+import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/message_input_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_attachment_preview.dart';
 import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_input_toolbar.dart';
@@ -312,12 +314,21 @@ class _MessageInputFieldState extends ConsumerState<MessageInputField> {
       messageInputProvider(widget.conversationId).notifier,
     );
     final wasSent = await notifier.sendCurrentMessage();
-    if (!wasSent || !mounted) {
+
+    if (!mounted) {
       return;
     }
 
-    _closeEmojiPicker();
-    _focusNode.unfocus();
+    if (wasSent) {
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.success);
+    } else {
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.error);
+    }
+
+    if (wasSent) {
+      _closeEmojiPicker();
+      _focusNode.unfocus();
+    }
   }
 
   @override

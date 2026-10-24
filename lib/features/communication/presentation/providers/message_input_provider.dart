@@ -362,7 +362,9 @@ class MessageInput extends _$MessageInput {
         preparedUploadUrl != null &&
         preparedUploadUrl.isNotEmpty) {
       try {
-        final storedKey = await repository.getAttachmentKey(preparedAttachmentId);
+        final storedKey = await repository.getAttachmentKey(
+          preparedAttachmentId,
+        );
         if (storedKey == null || storedKey.trim().isEmpty) {
           state = state.copyWith(
             preparedAttachmentId: null,
@@ -489,7 +491,7 @@ class MessageInput extends _$MessageInput {
       final localFilePath = await _safeSaveAttachment(
         localAttachmentStore: localAttachmentStore,
         attachmentId: attachmentId,
-        bytes: encryptedBytes,
+        bytes: pending.bytes,
         mimeType: pending.mimeType,
         fileName: pending.fileName,
       );

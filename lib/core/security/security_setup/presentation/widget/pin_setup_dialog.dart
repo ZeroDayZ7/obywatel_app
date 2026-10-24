@@ -9,10 +9,13 @@ import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/design/widgets/main/responsive_content_wrapper.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/button.dart';
 import 'package:obywatel_plus/core/design/widgets/ui/text_field.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/utils/validators.dart';
 
 class PinSetupDialog extends StatefulWidget {
-  const PinSetupDialog({super.key});
+  final LocalSecurityMethod method;
+
+  const PinSetupDialog({super.key, this.method = LocalSecurityMethod.pin});
 
   @override
   State<PinSetupDialog> createState() => _PinSetupDialogState();
@@ -30,8 +33,11 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
   final _confirmFocus = FocusNode();
 
   bool _isObscured = true;
-  String _firstPin = '';
+  String _firstSecret = '';
   int _currentPage = 0;
+
+  LocalSecurityMethod get _method => widget.method;
+  bool get _isPasswordMode => _method == LocalSecurityMethod.password;
 
   @override
   void initState() {
@@ -63,10 +69,10 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
 
     if (currentForm.currentState!.validate()) {
       if (_currentPage == 0) {
-        _firstPin = _pinController.text;
+        _firstSecret = _pinController.text;
         _goToPage(1);
       } else {
-        context.pop(_confirmController.text);
+        context.pop('$_firstSecret\n${_confirmController.text}');
       }
     }
   }
@@ -124,17 +130,25 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
                         children: [
                           _buildStepPage(
                             formKey: _formKeySetup,
-                            title: LocaleKeys.pin_dialog_set_pin_title.tr(),
+                            title: _isPasswordMode
+                                ? 'Ustaw hasło lokalne'
+                                : LocaleKeys.pin_dialog_set_pin_title.tr(),
                             controller: _pinController,
                             focusNode: _pinFocus,
-                            label: LocaleKeys.pin_dialog_enter_4_digits.tr(),
+                            label: _isPasswordMode
+                                ? 'Podaj hasło lokalne'
+                                : LocaleKeys.pin_dialog_enter_4_digits.tr(),
                           ),
                           _buildStepPage(
                             formKey: _formKeyConfirm,
-                            title: LocaleKeys.pin_dialog_repeat_pin_title.tr(),
+                            title: _isPasswordMode
+                                ? 'Potwierdź hasło'
+                                : LocaleKeys.pin_dialog_repeat_pin_title.tr(),
                             controller: _confirmController,
                             focusNode: _confirmFocus,
-                            label: LocaleKeys.pin_dialog_repeat_4_digits.tr(),
+                            label: _isPasswordMode
+                                ? 'Powtórz hasło lokalne'
+                                : LocaleKeys.pin_dialog_repeat_4_digits.tr(),
                             isConfirm: true,
                           ),
                         ],
@@ -205,26 +219,42 @@ class _PinSetupDialogState extends State<PinSetupDialog> {
             focusNode: focusNode,
             autofocus: true,
             labelText: label,
-            keyboardType: TextInputType.number,
+            keyboardType: _isPasswordMode
+                ? TextInputType.visiblePassword
+                : TextInputType.number,
             obscureText: _isObscured,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(4),
-            ],
+            inputFormatters: _isPasswordMode
+                ? null
+                : [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(4),
+                  ],
             onChanged: (value) {
-              if (value.length == 4) {
+              if (!_isPasswordMode && value.length == 4) {
                 _onNext();
               }
             },
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return LocaleKeys.validators_required_pin.tr();
+                return _isPasswordMode
+                    ? LocaleKeys.validators_required_password.tr()
+                    : LocaleKeys.validators_required_pin.tr();
               }
+
+              if (_isPasswordMode) {
+                final passwordError = Validators.validatePassword(value);
+                if (passwordError != null) return passwordError;
+                if (isConfirm && value != _firstSecret) {
+                  return LocaleKeys.validators_passwords_not_match.tr();
+                }
+                return null;
+              }
+
               final digits = _mapStringToDigits(value);
               final pinError = Validators.validatePinDigits(digits);
               if (pinError != null) return pinError;
 
-              if (isConfirm && value != _firstPin) {
+              if (isConfirm && value != _firstSecret) {
                 return LocaleKeys.pin_dialog_pin_not_identical.tr();
               }
               return null;

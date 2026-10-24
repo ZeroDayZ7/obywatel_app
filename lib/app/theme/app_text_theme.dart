@@ -4,15 +4,22 @@ import 'package:obywatel_plus/app/theme/app_text_styles.dart';
 
 abstract final class AppTextTheme {
   static TextTheme buildTextTheme(ColorScheme colorScheme) {
-    return TextTheme(
+    final baseTextTheme = colorScheme.brightness == Brightness.dark
+        ? Typography.material2021().white
+        : Typography.material2021().black;
+
+    return baseTextTheme.apply(
+      bodyColor: colorScheme.onSurface,
+      displayColor: colorScheme.onSurface,
+    ).copyWith(
       headlineMedium: AppTextStyles.headline.copyWith(
         color: colorScheme.onSurface,
       ),
       titleLarge: AppTextStyles.subtitle.copyWith(
-        color: colorScheme.onSurface.withValues(alpha: 0.7),
+        color: colorScheme.onSurface,
       ),
       bodyMedium: AppTextStyles.body.copyWith(color: colorScheme.onSurface),
-      labelLarge: AppTextStyles.button.copyWith(color: colorScheme.onPrimary),
+      labelLarge: AppTextStyles.button.copyWith(color: colorScheme.onSurface),
     );
   }
 }

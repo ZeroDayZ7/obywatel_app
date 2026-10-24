@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/features/payments/domain/models/wallet_balance.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -9,6 +10,8 @@ class BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final statusColors = context.statusColors;
     final isDark = theme.brightness == Brightness.dark;
 
     return Container(
@@ -16,10 +19,10 @@ class BalanceCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(28),
-        color: isDark ? theme.colorScheme.surfaceContainer : Colors.white,
+        color: colorScheme.surfaceContainerHigh,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
+            color: colorScheme.shadow.withValues(alpha: isDark ? 0.3 : 0.05),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -54,13 +57,13 @@ class BalanceCard extends StatelessWidget {
               _MiniStat(
                 icon: Icons.arrow_upward,
                 value: balance.incomeToday.toStringAsFixed(0),
-                color: Colors.green,
+                color: statusColors.success,
               ),
               const SizedBox(width: 16),
               _MiniStat(
                 icon: Icons.arrow_downward,
                 value: balance.expenseToday.toStringAsFixed(0),
-                color: Colors.red,
+                color: colorScheme.error,
               ),
             ],
           ),

@@ -22,7 +22,7 @@ class HealthDetailsScreen extends ConsumerWidget {
       error: (err, stack) => Center(child: Text('Błąd: $err')),
       data: (records) {
         if (records.isEmpty) {
-          return _buildEmptyState();
+          return _buildEmptyState(context);
         }
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -44,14 +44,20 @@ class HealthDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return const Center(
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.hourglass_empty, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text('Brak danych', style: TextStyle(fontSize: 18)),
+          Icon(
+            Icons.hourglass_empty,
+            size: 64,
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text('Brak danych', style: theme.textTheme.titleMedium),
         ],
       ),
     );

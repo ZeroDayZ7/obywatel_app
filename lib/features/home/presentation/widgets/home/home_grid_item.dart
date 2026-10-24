@@ -54,7 +54,6 @@ class HomeGridItem extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontSize: 12,
-                letterSpacing: 0.2,
                 color: isEnabled ? null : theme.disabledColor,
               ),
               maxLines: 1,

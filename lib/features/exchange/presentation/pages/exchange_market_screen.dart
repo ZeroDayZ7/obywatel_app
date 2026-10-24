@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:obywatel_plus/app/router/app_routes.dart';
+import 'package:obywatel_plus/app/theme/theme_extensions.dart';
 import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/tokens/spacing.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
@@ -58,118 +59,128 @@ class ExchangeMarketScreen extends ConsumerWidget {
     ColorScheme colorScheme,
   ) {
     final theme = Theme.of(context);
+    final statusColors = context.statusColors;
     final offers = state.offers;
 
-    return SingleChildScrollView(
+    return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Rynek reputacji i wpływu',
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
+      itemCount: offers.length + 1,
+      itemBuilder: (context, index) {
+        if (index > 0) {
+          final offer = offers[index - 1];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: Spacing.md),
+            child: DelegationOfferTile(
+              offer: offer,
+              onTap: () => context.push(
+                AppRoutes.eVotingExchangeDetailPath(offer.id),
+              ),
+              onDelegate: () =>
+                  DelegationActionBottomSheet.show(context, ref, offer),
             ),
-          ),
-          const SizedBox(height: Spacing.sm),
-          Text(
-            'Śledź notowania polityków, porównuj zaufanie i analizuj aktywne obszary poparcia.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Rynek reputacji i wpływu',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          const SizedBox(height: Spacing.xl),
-          Row(
-            children: [
-              Expanded(
-                child: _SummaryCard(
-                  title: 'Całkowita moc',
-                  value: '${state.stats.totalDelegatedVolume}',
-                  subtitle: 'PKT w obrocie',
-                  color: colorScheme.primary,
-                ),
+            const SizedBox(height: Spacing.sm),
+            Text(
+              'Śledź notowania polityków, porównuj zaufanie i analizuj aktywne obszary poparcia.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(width: Spacing.sm),
-              Expanded(
-                child: _SummaryCard(
-                  title: 'Płynność',
-                  value: '${state.stats.liquidityRate.toStringAsFixed(1)}%',
-                  subtitle: 'stabilna',
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.md),
-          _SummaryCard(
-            title: 'Aktywni delegaci',
-            value: '${state.stats.activeDelegates}',
-            subtitle: 'w obiegu w tej chwili',
-            color: colorScheme.secondary,
-            fullWidth: true,
-          ),
-          const SizedBox(height: Spacing.xl),
-          MarketChartCard(
-            stats: state.stats,
-            selectedRange: state.selectedRange,
-            onRangeChanged: (range) {
-              ref.read(exchangeMarketProvider.notifier).setRange(range);
-            },
-          ),
-          const SizedBox(height: Spacing.xl),
-          Text(
-            'Filtry',
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
             ),
-          ),
-          const SizedBox(height: Spacing.md),
-          FilterChipsRow(
-            filters: filters,
-            activeFilter: state.activeCategory,
-            onChanged: (category) {
-              ref.read(exchangeMarketProvider.notifier).setCategory(category);
-            },
-          ),
-          const SizedBox(height: Spacing.xl),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Oferty delegacji',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                '${offers.length} aktywne',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: Spacing.md),
-          if (offers.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(Spacing.xl),
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHigh,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: const Text('Brak ofert w wybranej kategorii.'),
-            )
-          else
-            ...offers.map((offer) => Padding(
-                  padding: const EdgeInsets.only(bottom: Spacing.md),
-                  child: DelegationOfferTile(
-                    offer: offer,
-                    onTap: () => context.push(AppRoutes.eVotingExchangeDetailPath(offer.id)),
-                    onDelegate: () => DelegationActionBottomSheet.show(context, ref, offer),
+            const SizedBox(height: Spacing.xl),
+            Row(
+              children: [
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'Całkowita moc',
+                    value: '${state.stats.totalDelegatedVolume}',
+                    subtitle: 'PKT w obrocie',
+                    color: colorScheme.primary,
                   ),
-                )),
-        ],
-      ),
+                ),
+                const SizedBox(width: Spacing.sm),
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'Płynność',
+                    value: '${state.stats.liquidityRate.toStringAsFixed(1)}%',
+                    subtitle: 'stabilna',
+                    color: statusColors.success,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Spacing.md),
+            _SummaryCard(
+              title: 'Aktywni delegaci',
+              value: '${state.stats.activeDelegates}',
+              subtitle: 'w obiegu w tej chwili',
+              color: colorScheme.secondary,
+              fullWidth: true,
+            ),
+            const SizedBox(height: Spacing.xl),
+            MarketChartCard(
+              stats: state.stats,
+              selectedRange: state.selectedRange,
+              onRangeChanged: (range) {
+                ref.read(exchangeMarketProvider.notifier).setRange(range);
+              },
+            ),
+            const SizedBox(height: Spacing.xl),
+            Text(
+              'Filtry',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: Spacing.md),
+            FilterChipsRow(
+              filters: filters,
+              activeFilter: state.activeCategory,
+              onChanged: (category) {
+                ref.read(exchangeMarketProvider.notifier).setCategory(category);
+              },
+            ),
+            const SizedBox(height: Spacing.xl),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Oferty delegacji',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  '${offers.length} aktywne',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: Spacing.md),
+            if (offers.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(Spacing.xl),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: const Text('Brak ofert w wybranej kategorii.'),
+              ),
+          ],
+        );
+      },
     );
   }
 }

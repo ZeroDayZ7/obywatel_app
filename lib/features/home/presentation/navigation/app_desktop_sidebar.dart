@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +72,7 @@ class AppDesktopSidebar extends ConsumerWidget {
                     textColor: colorScheme.onError,
                     child: Icon(item.activeIcon),
                   ),
-                  label: Text(item.label),
+                  label: Text(item.label.tr()),
                 );
               }).toList(),
             ),

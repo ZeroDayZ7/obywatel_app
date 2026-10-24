@@ -25,10 +25,24 @@
     "copied_to_clipboard": "Skopiowano do schowka"
   },
   "navigation": {
+    "start": "Start",
     "apps": "Aplikacje",
+    "documents": "Dokumenty",
+    "notifications": "Powiadomienia",
+    "profile": "Profil",
+    "settings": "Ustawienia",
     "civic_cases": "Sprawy Obywatelskie",
     "home_title": "Pulpit",
     "my_account": "Moje Konto"
+  },
+  "quick_access": {
+    "title": "Szybki dostęp",
+    "communication": "Komunikacja",
+    "communication_subtitle": "Wiadomości i kontakty",
+    "liquid_democracy": "Płynna Demokracja",
+    "liquid_democracy_subtitle": "Głosowanie i delegacje",
+    "trust_exchange": "Giełda Zaufania",
+    "trust_exchange_subtitle": "Rynek reputacji"
   },
   "maintenance": {
     "title": "PRZERWA TECHNICZNA",

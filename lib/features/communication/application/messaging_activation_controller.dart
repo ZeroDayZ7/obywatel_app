@@ -68,7 +68,9 @@ class MessagingActivationController extends _$MessagingActivationController {
       hasLocalActivation: hasConfirmedActivation,
       keyRegistrationStatus:
           persisted?.keyRegistrationStatus ?? 'not_started',
-      errorMessage: null,
+      errorMessage: !hasUsableTerms
+          ? 'Problem z siecią. Regulamin nie jest dostępny. Spróbuj ponownie za chwilę.'
+          : null,
     );
 
     if (hasConfirmedActivation) {
