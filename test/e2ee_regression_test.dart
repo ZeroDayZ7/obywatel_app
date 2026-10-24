@@ -1,9 +1,10 @@
 import 'dart:convert';
-import 'dart:typed_data';
+import 'dart:io';
+import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
@@ -13,6 +14,7 @@ import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/communication/application/contact_identity_verification_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 
 class _StubDeviceInfoService extends DeviceInfoService {
@@ -110,14 +112,57 @@ Map<String, dynamic> _bundleToJson(PreKeyBundle bundle) {
   };
 }
 
+AppDatabase _createIsolatedDatabase() {
+  final uniquePath =
+      '${Directory.systemTemp.path}/obywatel_plus_test_${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(100000)}.db';
+  return AppDatabase(NativeDatabase(File(uniquePath)));
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  final secureStorageValues = <String, String>{};
+  const secureStorageChannel = MethodChannel(
+    'plugins.it_nomads.com/flutter_secure_storage',
+  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(secureStorageChannel, (
+        MethodCall methodCall,
+      ) async {
+        switch (methodCall.method) {
+          case 'write':
+            final key = methodCall.arguments['key'] as String?;
+            final value = methodCall.arguments['value'] as String?;
+            if (key != null && value != null) {
+              secureStorageValues[key] = value;
+            }
+            return null;
+          case 'read':
+            final key = methodCall.arguments['key'] as String?;
+            return key == null ? null : secureStorageValues[key];
+          case 'delete':
+            final key = methodCall.arguments['key'] as String?;
+            if (key != null) {
+              secureStorageValues.remove(key);
+            }
+            return null;
+          case 'deleteAll':
+            secureStorageValues.clear();
+            return null;
+          case 'readAll':
+            return Map<String, String>.from(secureStorageValues);
+          default:
+            return null;
+        }
+      });
 
   group('E2EE regression', () {
     test(
       'local identity and registration id remain stable for the same database',
       () async {
-        final db = AppDatabase(NativeDatabase.memory());
+        final db = _createIsolatedDatabase();
+        addTearDown(() async => db.close());
+
         final storeA = DriftSignalProtocolStore(db);
         final firstRegistrationId = await storeA.getLocalRegistrationId();
         final firstIdentity = await storeA.getIdentityKeyPair();
@@ -130,11 +175,34 @@ void main() {
         expect(secondIdentity.serialize(), equals(firstIdentity.serialize()));
       },
     );
+    test(
+      'parallel initialization keeps the original local identity and registration id',
+      () async {
+        final db = _createIsolatedDatabase();
+        addTearDown(() async => db.close());
 
+        final firstStore = DriftSignalProtocolStore(db);
+        final firstIdentity = await firstStore.getIdentityKeyPair();
+        final firstRegistrationId = await firstStore.getLocalRegistrationId();
+
+        final secondStore = DriftSignalProtocolStore(
+          db,
+          identityKeyPair: generateIdentityKeyPair(),
+          localRegistrationId: generateRegistrationId(false),
+        );
+        final secondIdentity = await secondStore.getIdentityKeyPair();
+        final secondRegistrationId = await secondStore.getLocalRegistrationId();
+
+        expect(secondIdentity.serialize(), equals(firstIdentity.serialize()));
+        expect(secondRegistrationId, equals(firstRegistrationId));
+      },
+    );
     test(
       'session record is readable after storing it at the same address',
       () async {
-        final db = AppDatabase(NativeDatabase.memory());
+        final db = _createIsolatedDatabase();
+        addTearDown(() async => db.close());
+
         final store = DriftSignalProtocolStore(db);
         final address = SignalProtocolAddress('user', 1561500965);
         final record = SessionRecord();
@@ -176,8 +244,8 @@ void main() {
     test(
       'encryptOutboundMessage uses bundle device id instead of stale fallback 1',
       () async {
-        final aliceDb = AppDatabase(NativeDatabase.memory());
-        final bobDb = AppDatabase(NativeDatabase.memory());
+        final aliceDb = _createIsolatedDatabase();
+        final bobDb = _createIsolatedDatabase();
 
         final aliceStore = DriftSignalProtocolStore(aliceDb);
         final bobStore = DriftSignalProtocolStore(bobDb);
@@ -208,8 +276,8 @@ void main() {
     );
 
     test('A can encrypt to B and B can decrypt the message', () async {
-      final aliceDb = AppDatabase(NativeDatabase.memory());
-      final bobDb = AppDatabase(NativeDatabase.memory());
+      final aliceDb = _createIsolatedDatabase();
+      final bobDb = _createIsolatedDatabase();
 
       final aliceStore = DriftSignalProtocolStore(aliceDb);
       final bobStore = DriftSignalProtocolStore(bobDb);
@@ -255,6 +323,175 @@ void main() {
       );
 
       expect(String.fromCharCodes(plaintext), equals('hello'));
+    });
+
+    group('Contact identity verification', () {
+      late AppDatabase db;
+      late SecureStorageService secureStorage;
+      late DriftSignalProtocolStore store;
+
+      setUp(() {
+        secureStorageValues.clear();
+        db = _createIsolatedDatabase();
+        secureStorage = SecureStorageService(
+          const FlutterSecureStorage(),
+          AppLogger(),
+        );
+        store = DriftSignalProtocolStore(db, logger: AppLogger());
+      });
+
+      tearDown(() async {
+        await db.close();
+      });
+
+      test('new contact without a known Signal identity is unknown', () async {
+        final service = ContactIdentityVerificationService(
+          db: db,
+          secureStorage: secureStorage,
+          logger: AppLogger(),
+        );
+
+        final state = await service.resolveForContact('bob', deviceId: 42);
+
+        expect(state.status, ContactIdentityVerificationStatus.unknown);
+        expect(state.fingerprint, equals(null));
+      });
+
+      test(
+        'a known identity without manual verification stays unverified',
+        () async {
+          final address = SignalProtocolAddress('bob', 42);
+          final identity = generateIdentityKeyPair().getPublicKey();
+          await store.saveIdentity(address, identity);
+
+          final service = ContactIdentityVerificationService(
+            db: db,
+            secureStorage: secureStorage,
+            logger: AppLogger(),
+          );
+
+          final state = await service.resolveForContact('bob', deviceId: 42);
+
+          expect(state.status, ContactIdentityVerificationStatus.unverified);
+          expect(state.fingerprint, isNot(equals(null)));
+          expect(state.fingerprint, isNot('bob'));
+        },
+      );
+
+      test(
+        'manual verification without a real Signal comparison stays unverified',
+        () async {
+          final address = SignalProtocolAddress('bob', 42);
+          final identity = generateIdentityKeyPair().getPublicKey();
+          await store.saveIdentity(address, identity);
+
+          final service = ContactIdentityVerificationService(
+            db: db,
+            secureStorage: secureStorage,
+            logger: AppLogger(),
+          );
+
+          final before = await service.resolveForContact('bob', deviceId: 42);
+          final attempted = await service.verifyIdentity('bob', deviceId: 42);
+          final after = await service.resolveForContact('bob', deviceId: 42);
+
+          expect(before.status, ContactIdentityVerificationStatus.unverified);
+          expect(
+            attempted.status,
+            ContactIdentityVerificationStatus.unverified,
+          );
+          expect(after.status, ContactIdentityVerificationStatus.unverified);
+          expect(attempted.fingerprint, before.fingerprint);
+          expect(after.fingerprint, before.fingerprint);
+        },
+      );
+
+      test(
+        'changed Signal identity invalidates the previous verification',
+        () async {
+          final address = SignalProtocolAddress('bob', 42);
+          final originalIdentity = generateIdentityKeyPair().getPublicKey();
+          await store.saveIdentity(address, originalIdentity);
+
+          final originalFingerprint = E2eeCryptoService.fingerprintIdentityKey(
+            originalIdentity,
+          );
+          await secureStorage.write(
+            key:
+                'signal_identity_verification_${base64Url.encode(utf8.encode('bob'))}_42',
+            value: jsonEncode({
+              'userId': 'bob',
+              'deviceId': 42,
+              'fingerprint': originalFingerprint,
+              'verifiedAt': DateTime.now().toUtc().toIso8601String(),
+            }),
+          );
+
+          final replacementIdentity = generateIdentityKeyPair().getPublicKey();
+          await store.saveIdentity(address, replacementIdentity);
+
+          final service = ContactIdentityVerificationService(
+            db: db,
+            secureStorage: secureStorage,
+            logger: AppLogger(),
+          );
+
+          final state = await service.resolveForContact('bob', deviceId: 42);
+
+          expect(state.status, ContactIdentityVerificationStatus.changed);
+          expect(state.previousFingerprint, equals(originalFingerprint));
+          expect(state.previousFingerprint, isNot(state.fingerprint));
+        },
+      );
+
+      test(
+        'stored verification remains durable after re-creating the service',
+        () async {
+          final address = SignalProtocolAddress('bob', 42);
+          final identity = generateIdentityKeyPair().getPublicKey();
+          await store.saveIdentity(address, identity);
+
+          final storageKey =
+              'signal_identity_verification_${base64Url.encode(utf8.encode('bob'))}_42';
+          final verifiedAt = DateTime.now().toUtc().toIso8601String();
+          await secureStorage.write(
+            key: storageKey,
+            value: jsonEncode({
+              'userId': 'bob',
+              'deviceId': 42,
+              'fingerprint': E2eeCryptoService.fingerprintIdentityKey(identity),
+              'verifiedAt': verifiedAt,
+            }),
+          );
+
+          final firstService = ContactIdentityVerificationService(
+            db: db,
+            secureStorage: secureStorage,
+            logger: AppLogger(),
+          );
+          final stateBefore = await firstService.resolveForContact(
+            'bob',
+            deviceId: 42,
+          );
+
+          final secondService = ContactIdentityVerificationService(
+            db: db,
+            secureStorage: secureStorage,
+            logger: AppLogger(),
+          );
+          final stateAfter = await secondService.resolveForContact(
+            'bob',
+            deviceId: 42,
+          );
+
+          expect(
+            stateBefore.status,
+            ContactIdentityVerificationStatus.verified,
+          );
+          expect(stateAfter.status, ContactIdentityVerificationStatus.verified);
+          expect(stateAfter.fingerprint, stateBefore.fingerprint);
+        },
+      );
     });
   });
 }

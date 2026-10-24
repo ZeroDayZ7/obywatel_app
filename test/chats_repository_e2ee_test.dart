@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -15,7 +16,9 @@ import 'package:obywatel_plus/core/utils/device_info_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/contacts/contact.dart';
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 
 class ThrowingCryptoService extends E2eeCryptoService {
   ThrowingCryptoService(
@@ -148,231 +151,367 @@ void main() {
     secureStorageStore.clear();
   });
 
-  test('own message plaintext survives repository restart via secure storage', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(
-      const FlutterSecureStorage(),
-      logger,
-    );
-    final apiClient = RecordingApiClient(
-      storage: secureStorage,
-      logger: logger,
-    );
-    final deviceInfoService = DeviceInfoService(logger);
-    final signalStore = DriftSignalProtocolStore(db);
-    final cryptoService = CapturingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      signalStore,
-    );
+  test(
+    'own message plaintext survives repository restart via secure storage',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = RecordingApiClient(
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final signalStore = DriftSignalProtocolStore(db);
+      final cryptoService = CapturingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        signalStore,
+      );
 
-    final repo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db,
-      logger,
-      'user-1',
-      deviceInfoService,
-      cryptoService,
-      secureStorage,
-    );
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+        SymmetricCrypto(logger),
+        secureStorage,
+      );
 
-    final conversationId = 'user-1:user-2';
-    await repo.sendMessage(
-      conversationId: conversationId,
-      content: 'hello from user-1',
-    );
+      final conversationId = 'user-1:user-2';
+      await repo.sendMessage(
+        conversationId: conversationId,
+        content: 'hello from user-1',
+      );
 
-    final restartedRepo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db,
-      logger,
-      'user-1',
-      deviceInfoService,
-      cryptoService,
-      secureStorage,
-    );
+      final restartedRepo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+        SymmetricCrypto(logger),
+        secureStorage,
+      );
 
-    final history = await restartedRepo.getMessageHistory(conversationId);
+      final history = await restartedRepo.getMessageHistory(conversationId);
 
-    expect(history, isNotEmpty);
-    expect(history.first.content, 'hello from user-1');
-    expect(
-      history.first.content,
-      isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
-    );
-  });
+      expect(history, isNotEmpty);
+      expect(history.first.content, 'hello from user-1');
+      expect(
+        history.first.content,
+        isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
+      );
+    },
+  );
 
-  test('message without plaintext is not rendered as the E2EE placeholder', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(
-      const FlutterSecureStorage(),
-      logger,
-    );
-    final apiClient = RecordingApiClient(
-      storage: secureStorage,
-      logger: logger,
-    );
-    final deviceInfoService = DeviceInfoService(logger);
-    final signalStore = DriftSignalProtocolStore(db);
-    final cryptoService = CapturingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      signalStore,
-    );
+  test(
+    'message without plaintext is not rendered as the E2EE placeholder',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = RecordingApiClient(
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final signalStore = DriftSignalProtocolStore(db);
+      final cryptoService = CapturingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        signalStore,
+      );
 
-    final repo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db,
-      logger,
-      'user-1',
-      deviceInfoService,
-      cryptoService,
-      secureStorage,
-    );
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+        SymmetricCrypto(logger),
+        secureStorage,
+      );
 
-    await db.chatsDao.upsertMessages([
-      MessagesCompanion(
-        id: const Value('message-no-plaintext'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-2'),
-        senderDeviceId: const Value('device-42'),
-        type: const Value('signal'),
-        sequence: Value(BigInt.one),
-        encryptedPayload: Value(utf8.encode('ciphertext-only')),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
-        deletedAt: const Value.absent(),
-      ),
-    ]);
+      await db.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('message-no-plaintext'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-42'),
+          type: const Value('signal'),
+          sequence: Value(BigInt.one),
+          encryptedPayload: Value(utf8.encode('ciphertext-only')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
 
-    final history = await repo.getMessageHistory('user-1:user-2');
+      final history = await repo.getMessageHistory('user-1:user-2');
 
-    expect(history, isNotEmpty);
-    expect(history.first.content, isEmpty);
-    expect(
-      history.first.content,
-      isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
-    );
-  });
+      expect(history, isNotEmpty);
+      expect(history.first.content, isEmpty);
+      expect(
+        history.first.content,
+        isNot('Wiadomość zaszyfrowana – oczekiwanie na klucz sesji'),
+      );
+    },
+  );
 
-  test('message ordering is deterministic by sequence and pending createdAt', () async {
-    final logger = AppLogger();
-    final db = AppDatabase(NativeDatabase.memory());
-    final secureStorage = SecureStorageService(
-      const FlutterSecureStorage(),
-      logger,
-    );
-    final apiClient = RecordingApiClient(
-      storage: secureStorage,
-      logger: logger,
-    );
-    final deviceInfoService = DeviceInfoService(logger);
-    final cryptoService = CapturingCryptoService(
-      secureStorage,
-      logger,
-      apiClient,
-      deviceInfoService,
-      DriftSignalProtocolStore(db),
-    );
+  test(
+    'message ordering is deterministic by sequence and pending createdAt',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = RecordingApiClient(
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final cryptoService = CapturingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        DriftSignalProtocolStore(db),
+      );
 
-    final repo = ChatsRepositoryImpl(
-      ChatsApiClient(apiClient),
-      db,
-      logger,
-      'user-1',
-      deviceInfoService,
-      cryptoService,
-      secureStorage,
-    );
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+        SymmetricCrypto(logger),
+        secureStorage,
+      );
 
-    final now = DateTime.now();
-    await db.chatsDao.upsertMessages([
-      MessagesCompanion(
-        id: const Value('seq-4'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-2'),
-        senderDeviceId: const Value('device-42'),
-        type: const Value('signal'),
-        sequence: Value(BigInt.from(4)),
-        encryptedPayload: Value(utf8.encode('cipher-4')),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(now.add(const Duration(minutes: 4))),
-        updatedAt: Value(now.add(const Duration(minutes: 4))),
-        deletedAt: const Value.absent(),
-      ),
-      MessagesCompanion(
-        id: const Value('seq-1'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-2'),
-        senderDeviceId: const Value('device-42'),
-        type: const Value('signal'),
-        sequence: Value(BigInt.one),
-        encryptedPayload: Value(utf8.encode('cipher-1')),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(now.add(const Duration(minutes: 1))),
-        updatedAt: Value(now.add(const Duration(minutes: 1))),
-        deletedAt: const Value.absent(),
-      ),
-      MessagesCompanion(
-        id: const Value('pending-local'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-1'),
-        senderDeviceId: const Value('device-1'),
-        type: const Value('text'),
-        sequence: const Value.absent(),
-        encryptedPayload: Value(utf8.encode('pending-plaintext')),
-        version: Value(BigInt.one),
-        status: const Value('pending'),
-        createdAt: Value(now.add(const Duration(minutes: 10))),
-        updatedAt: Value(now.add(const Duration(minutes: 10))),
-        deletedAt: const Value.absent(),
-      ),
-      MessagesCompanion(
-        id: const Value('seq-3'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-2'),
-        senderDeviceId: const Value('device-42'),
-        type: const Value('signal'),
-        sequence: Value(BigInt.from(3)),
-        encryptedPayload: Value(utf8.encode('cipher-3')),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(now.add(const Duration(minutes: 3))),
-        updatedAt: Value(now.add(const Duration(minutes: 3))),
-        deletedAt: const Value.absent(),
-      ),
-      MessagesCompanion(
-        id: const Value('seq-2'),
-        conversationId: const Value('user-1:user-2'),
-        senderId: const Value('user-2'),
-        senderDeviceId: const Value('device-42'),
-        type: const Value('signal'),
-        sequence: Value(BigInt.from(2)),
-        encryptedPayload: Value(utf8.encode('cipher-2')),
-        version: Value(BigInt.one),
-        status: const Value('sent'),
-        createdAt: Value(now.add(const Duration(minutes: 2))),
-        updatedAt: Value(now.add(const Duration(minutes: 2))),
-        deletedAt: const Value.absent(),
-      ),
-    ]);
+      final now = DateTime.now();
+      await db.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('seq-4'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-42'),
+          type: const Value('signal'),
+          sequence: Value(BigInt.from(4)),
+          encryptedPayload: Value(utf8.encode('cipher-4')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 4))),
+          updatedAt: Value(now.add(const Duration(minutes: 4))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('seq-1'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-42'),
+          type: const Value('signal'),
+          sequence: Value(BigInt.one),
+          encryptedPayload: Value(utf8.encode('cipher-1')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 1))),
+          updatedAt: Value(now.add(const Duration(minutes: 1))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('pending-local'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-1'),
+          senderDeviceId: const Value('device-1'),
+          type: const Value('text'),
+          sequence: const Value.absent(),
+          encryptedPayload: Value(utf8.encode('pending-plaintext')),
+          version: Value(BigInt.one),
+          status: const Value('pending'),
+          createdAt: Value(now.add(const Duration(minutes: 10))),
+          updatedAt: Value(now.add(const Duration(minutes: 10))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('seq-3'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-42'),
+          type: const Value('signal'),
+          sequence: Value(BigInt.from(3)),
+          encryptedPayload: Value(utf8.encode('cipher-3')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 3))),
+          updatedAt: Value(now.add(const Duration(minutes: 3))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('seq-2'),
+          conversationId: const Value('user-1:user-2'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-42'),
+          type: const Value('signal'),
+          sequence: Value(BigInt.from(2)),
+          encryptedPayload: Value(utf8.encode('cipher-2')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 2))),
+          updatedAt: Value(now.add(const Duration(minutes: 2))),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
 
-    final history = await repo.getMessageHistory('user-1:user-2');
-    expect(
-      history.map((message) => message.id),
-      ['seq-1', 'seq-2', 'seq-3', 'seq-4', 'pending-local'],
-    );
-  });
+      final history = await repo.getMessageHistory('user-1:user-2');
+      expect(history.map((message) => message.id), [
+        'seq-1',
+        'seq-2',
+        'seq-3',
+        'seq-4',
+        'pending-local',
+      ]);
+    },
+  );
+
+  test(
+    'batch conversation fetch keeps each conversation ordered without N+1 queries',
+    () async {
+      final logger = AppLogger();
+      final db = AppDatabase(NativeDatabase.memory());
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = RecordingApiClient(
+        storage: secureStorage,
+        logger: logger,
+      );
+      final deviceInfoService = DeviceInfoService(logger);
+      final cryptoService = CapturingCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        deviceInfoService,
+        DriftSignalProtocolStore(db),
+      );
+
+      await db.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('conv-a'),
+          type: const Value('direct'),
+          title: const Value('Alpha'),
+          lastSequence: Value(BigInt.from(3)),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+        ),
+        ConversationsCompanion(
+          id: const Value('conv-b'),
+          type: const Value('direct'),
+          title: const Value('Beta'),
+          lastSequence: Value(BigInt.from(2)),
+          createdAt: Value(DateTime.now()),
+          updatedAt: Value(DateTime.now()),
+        ),
+      ]);
+
+      final now = DateTime.now();
+      await db.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('m-a-2'),
+          conversationId: const Value('conv-a'),
+          senderId: const Value('user-1'),
+          senderDeviceId: const Value('device-1'),
+          type: const Value('text'),
+          sequence: Value(BigInt.from(2)),
+          encryptedPayload: Value(utf8.encode('cipher-a-2')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 2))),
+          updatedAt: Value(now.add(const Duration(minutes: 2))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('m-a-1'),
+          conversationId: const Value('conv-a'),
+          senderId: const Value('user-1'),
+          senderDeviceId: const Value('device-1'),
+          type: const Value('text'),
+          sequence: Value(BigInt.one),
+          encryptedPayload: Value(utf8.encode('cipher-a-1')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now.add(const Duration(minutes: 1))),
+          updatedAt: Value(now.add(const Duration(minutes: 1))),
+          deletedAt: const Value.absent(),
+        ),
+        MessagesCompanion(
+          id: const Value('m-b-1'),
+          conversationId: const Value('conv-b'),
+          senderId: const Value('user-2'),
+          senderDeviceId: const Value('device-2'),
+          type: const Value('text'),
+          sequence: Value(BigInt.one),
+          encryptedPayload: Value(utf8.encode('cipher-b-1')),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final messagesByConversation = await db.chatsDao
+          .getLatestMessagesForConversations([
+            'conv-a',
+            'conv-b',
+          ], limitPerConversation: 10);
+
+      expect(messagesByConversation['conv-a']!.map((message) => message.id), [
+        'm-a-1',
+        'm-a-2',
+      ]);
+      expect(messagesByConversation['conv-b']!.map((message) => message.id), [
+        'm-b-1',
+      ]);
+
+      final repo = ChatsRepositoryImpl(
+        ChatsApiClient(apiClient),
+        db,
+        logger,
+        'user-1',
+        deviceInfoService,
+        cryptoService,
+        SymmetricCrypto(logger),
+        secureStorage,
+      );
+
+      final conversations = await repo.getConversations();
+      expect(conversations.map((conversation) => conversation.id), [
+        'conv-a',
+        'conv-b',
+      ]);
+    },
+  );
 
   test(
     'ensureConversationForContact does not bootstrap E2EE session',
@@ -406,6 +545,7 @@ void main() {
         'user-1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -509,6 +649,7 @@ void main() {
         'anna',
         deviceInfoService,
         cryptoService1,
+        SymmetricCrypto(logger),
         secureStorage,
       );
       final piotrRepo = ChatsRepositoryImpl(
@@ -518,6 +659,7 @@ void main() {
         'piotr',
         deviceInfoService,
         cryptoService2,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -569,10 +711,11 @@ void main() {
 
       final repo = ChatsRepositoryImpl(
         ChatsApiClient(
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
         ),
         db,
         logger,
@@ -581,13 +724,15 @@ void main() {
         ThrowingCryptoService(
           SecureStorageService(const FlutterSecureStorage(), logger),
           logger,
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -669,10 +814,11 @@ void main() {
 
       final repo = ChatsRepositoryImpl(
         ChatsApiClient(
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
         ),
         db,
         logger,
@@ -681,13 +827,15 @@ void main() {
         ThrowingCryptoService(
           SecureStorageService(const FlutterSecureStorage(), logger),
           logger,
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -772,10 +920,11 @@ void main() {
 
       final repo = ChatsRepositoryImpl(
         ChatsApiClient(
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
         ),
         db,
         logger,
@@ -784,13 +933,15 @@ void main() {
         ThrowingCryptoService(
           SecureStorageService(const FlutterSecureStorage(), logger),
           logger,
-          ApiClient(dio: Dio(), storage: SecureStorageService(
-            const FlutterSecureStorage(),
-            logger,
-          ), logger: logger),
+          ApiClient(
+            dio: Dio(),
+            storage: SecureStorageService(const FlutterSecureStorage(), logger),
+            logger: logger,
+          ),
           DeviceInfoService(logger),
           DriftSignalProtocolStore(db),
         ),
+        SymmetricCrypto(logger),
         SecureStorageService(const FlutterSecureStorage(), logger),
       );
 
@@ -910,6 +1061,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -946,6 +1098,7 @@ void main() {
         'u1',
         deviceInfoService,
         cryptoService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 

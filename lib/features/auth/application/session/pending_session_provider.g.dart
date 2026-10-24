@@ -48,7 +48,7 @@ abstract class _$PendingSessionNotifier extends $Notifier<PendingSession?> {
   PendingSession? build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<PendingSession?, PendingSession?>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$PendingSessionNotifier extends $Notifier<PendingSession?> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

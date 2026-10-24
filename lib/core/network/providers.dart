@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:fresh_dio/fresh_dio.dart';
 import 'package:obywatel_plus/app/config/env.dart';
@@ -19,9 +21,139 @@ import 'package:obywatel_plus/core/network/token_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'providers.g.dart';
+
+@Riverpod(keepAlive: true)
+class WsLifecycleRefresh extends _$WsLifecycleRefresh {
+  @override
+  int build() => 0;
+
+  void bump() {
+    state = state + 1;
+  }
+}
+
+@Riverpod(keepAlive: true)
+void globalWebSocketLifecycle(Ref ref) {
+  // final logger = ref.watch(appLoggerProvider);
+  final client = ref.watch(appWebSocketClientProvider);
+  String? lastAccessToken;
+
+  Future<void> syncWithAuth(AuthState authState) async {
+    // logger.d(
+    //   '[WS-LIFECYCLE][1] syncWithAuth start authState=$authState isAuthenticated=${authState.isAuthenticated}',
+    //   module: 'WS-LIFECYCLE',
+    // );
+
+    if (!authState.isAuthenticated) {
+      // logger.d(
+      //   '[WS-LIFECYCLE][2] auth not authenticated; closing ws if needed. lastAccessToken=${lastAccessToken != null} isConnected=${client.isConnected}',
+      //   module: 'WS-LIFECYCLE',
+      // );
+      if (lastAccessToken != null || client.isConnected) {
+        lastAccessToken = null;
+        await client.disconnect();
+      }
+      return;
+    }
+
+    final token = await ref.read(authFreshProvider).token;
+    final accessToken = token?.accessToken ?? '';
+    // logger.d(
+    //   '[WS-LIFECYCLE][3] token resolved accessTokenPresent=${accessToken.isNotEmpty} lastAccessToken=${lastAccessToken != null} clientConnected=${client.isConnected}',
+    //   module: 'WS-LIFECYCLE',
+    // );
+
+    if (accessToken.isEmpty) {
+      lastAccessToken = null;
+      await client.disconnect();
+      return;
+    }
+
+    final networkState = ref.read(networkStateProvider).asData?.value ??
+        NetworkState.online;
+    // logger.d(
+    //   '[WS-LIFECYCLE][4] networkState=$networkState',
+    //   module: 'WS-LIFECYCLE',
+    // );
+    if (networkState == NetworkState.offline) {
+      // logger.d(
+      //   '[WS-LIFECYCLE][5] offline -> skip connect',
+      //   module: 'WS-LIFECYCLE',
+      // );
+      return;
+    }
+
+    if (lastAccessToken == accessToken && client.isConnected) {
+      // logger.d(
+      //   '[WS-LIFECYCLE][6] token unchanged and socket connected -> skip reconnect',
+      //   module: 'WS-LIFECYCLE',
+      // );
+      return;
+    }
+
+    lastAccessToken = accessToken;
+
+    final deviceFingerprint = await ref
+        .read(deviceInfoServiceProvider)
+        .getFingerprint();
+    final normalizedBaseUrl = ServicesConfig.apiBaseUrl
+        .replaceFirst('https://', 'wss://')
+        .replaceFirst('http://', 'ws://')
+        .replaceAll(RegExp(r'/+$'), '');
+    final wsUrl = '$normalizedBaseUrl${ApiEndpoints.wsMessaging}';
+
+    // logger.i('[WS-LIFECYCLE] Inicjalizacja połączenia WS pod adres: $wsUrl');
+    // logger.d(
+    //   '[WS-LIFECYCLE][7] attempt connect sessionKeyPresent=${accessToken.isNotEmpty} headersPresent=${deviceFingerprint.isNotEmpty}',
+    //   module: 'WS-LIFECYCLE',
+    // );
+
+    await client.connect(
+      wsUrl,
+      sessionKey: accessToken,
+      headers: {
+        'Authorization': 'Bearer $accessToken',
+        'X-Device-Fingerprint': deviceFingerprint,
+      },
+    );
+  }
+
+  ref.listen<AuthState>(authControllerProvider, (_, next) {
+    unawaited(syncWithAuth(next));
+  });
+
+  ref.listen<int>(wsLifecycleRefreshProvider, (_, next) {
+    // logger.d(
+    //   '[WS-LIFECYCLE] manual refresh trigger fired; value=$next',
+    //   module: 'WS-LIFECYCLE',
+    // );
+    unawaited(syncWithAuth(ref.read(authControllerProvider)));
+  });
+
+  ref.listen<AsyncValue<NetworkState>>(networkStateProvider, (_, next) {
+    final state = next.asData?.value ?? NetworkState.unknown;
+    if (state == NetworkState.offline) {
+      unawaited(client.disconnect());
+      return;
+    }
+
+    if (state == NetworkState.online) {
+      unawaited(syncWithAuth(ref.read(authControllerProvider)));
+    }
+  });
+
+  ref.onDispose(() async {
+    lastAccessToken = null;
+    await client.disconnect();
+  });
+
+  unawaited(syncWithAuth(ref.read(authControllerProvider)));
+}
 
 @Riverpod(keepAlive: true)
 Fresh<OAuth2Token> authFresh(Ref ref) {
@@ -78,19 +210,10 @@ Dio authDio(Ref ref) {
     ),
   );
 
-  // 1. Logging Interceptor
   dio.interceptors.add(LoggingInterceptor(logger: logger));
-
-  // 2. Fresh Interceptor (musi być PRZED GlobalErrorInterceptor)
   dio.interceptors.add(ref.watch(authFreshProvider));
-
-  // 3. Device Fingerprint
   dio.interceptors.add(DeviceFingerprintInterceptor(ref));
-
-  // 4. Security Sync
   dio.interceptors.add(SecuritySyncInterceptor(ref));
-
-  // 5. Global Error Interceptor (przetwarza błędy po nieudanej próbie refreshu)
   dio.interceptors.add(
     GlobalErrorInterceptor(logger: logger, networkManager: networkManager),
   );
@@ -142,6 +265,18 @@ ApiClient apiClient(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
+AppWebSocketClient appWebSocketClient(Ref ref) {
+  final client = AppWebSocketClient(logger: ref.watch(appLoggerProvider));
+  ref.onDispose(client.dispose);
+  return client;
+}
+
+@Riverpod(keepAlive: true)
+Stream<WsConnectionStatus> appWebSocketStatus(Ref ref) {
+  return ref.watch(appWebSocketClientProvider).statusStream;
+}
+
+@Riverpod(keepAlive: true)
 NoAuthApiClient noAuthApiClient(Ref ref) {
   return NoAuthApiClient(
     dio: ref.watch(noAuthDioProvider),
@@ -157,14 +292,3 @@ PublicApiClient publicApiClient(Ref ref) {
   );
 }
 
-@Riverpod(keepAlive: true)
-AppWebSocketClient appWebSocketClient(Ref ref) {
-  final logger = ref.watch(appLoggerProvider);
-  final client = AppWebSocketClient(logger: logger);
-
-  ref.onDispose(() {
-    client.dispose();
-  });
-
-  return client;
-}

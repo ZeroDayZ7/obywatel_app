@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'messaging_activation_dto.dart';
@@ -9,6 +9,7 @@ part of 'messaging_activation_dto.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $MessagingActivationDtoCopyWith<MessagingActivationDto> get copyWith => _$Messag
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationDto&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.activatedAt, activatedAt) || other.activatedAt == activatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+  final _this = this as MessagingActivationDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingActivationDto&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.consentAccepted, _this.consentAccepted) || other.consentAccepted == _this.consentAccepted)&&(identical(other.termsVersion, _this.termsVersion) || other.termsVersion == _this.termsVersion)&&(identical(other.currentTermsVersion, _this.currentTermsVersion) || other.currentTermsVersion == _this.currentTermsVersion)&&(identical(other.requiresTermsAcceptance, _this.requiresTermsAcceptance) || other.requiresTermsAcceptance == _this.requiresTermsAcceptance)&&(identical(other.deviceId, _this.deviceId) || other.deviceId == _this.deviceId)&&(identical(other.activatedAt, _this.activatedAt) || other.activatedAt == _this.activatedAt)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt)&&(identical(other.updatedAt, _this.updatedAt) || other.updatedAt == _this.updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,deviceId,activatedAt,createdAt,updatedAt);
+int get hashCode {
+  final _this = this as MessagingActivationDto;
+  return Object.hash(runtimeType,_this.userId,_this.status,_this.consentAccepted,_this.termsVersion,_this.currentTermsVersion,_this.requiresTermsAcceptance,_this.deviceId,_this.activatedAt,_this.createdAt,_this.updatedAt);
+}
 
 @override
 String toString() {
-  return 'MessagingActivationDto(userId: $userId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, deviceId: $deviceId, activatedAt: $activatedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+  final _this = this as MessagingActivationDto;
+  return 'MessagingActivationDto(userId: ${_this.userId}, status: ${_this.status}, consentAccepted: ${_this.consentAccepted}, termsVersion: ${_this.termsVersion}, currentTermsVersion: ${_this.currentTermsVersion}, requiresTermsAcceptance: ${_this.requiresTermsAcceptance}, deviceId: ${_this.deviceId}, activatedAt: ${_this.activatedAt}, createdAt: ${_this.createdAt}, updatedAt: ${_this.updatedAt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$MessagingActivationDtoCopyWithImpl<$Res>
 /// Create a copy of MessagingActivationDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? status = null,Object? consentAccepted = null,Object? termsVersion = null,Object? currentTermsVersion = null,Object? requiresTermsAcceptance = null,Object? deviceId = freezed,Object? activatedAt = freezed,Object? createdAt = freezed,Object? updatedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(MessagingActivationDto(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as String,consentAccepted: null == consentAccepted ? _self.consentAccepted : consentAccepted // ignore: cast_nullable_to_non_nullable
@@ -245,16 +251,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationDto&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.activatedAt, activatedAt) || other.activatedAt == activatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingActivationDto&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.status, status) || other.status == status)&&(identical(other.consentAccepted, consentAccepted) || other.consentAccepted == consentAccepted)&&(identical(other.termsVersion, termsVersion) || other.termsVersion == termsVersion)&&(identical(other.currentTermsVersion, currentTermsVersion) || other.currentTermsVersion == currentTermsVersion)&&(identical(other.requiresTermsAcceptance, requiresTermsAcceptance) || other.requiresTermsAcceptance == requiresTermsAcceptance)&&(identical(other.deviceId, deviceId) || other.deviceId == deviceId)&&(identical(other.activatedAt, activatedAt) || other.activatedAt == activatedAt)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.updatedAt, updatedAt) || other.updatedAt == updatedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,deviceId,activatedAt,createdAt,updatedAt);
+int get hashCode {
+    return Object.hash(runtimeType,userId,status,consentAccepted,termsVersion,currentTermsVersion,requiresTermsAcceptance,deviceId,activatedAt,createdAt,updatedAt);
+}
 
 @override
 String toString() {
-  return 'MessagingActivationDto(userId: $userId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, deviceId: $deviceId, activatedAt: $activatedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
+    return 'MessagingActivationDto(userId: $userId, status: $status, consentAccepted: $consentAccepted, termsVersion: $termsVersion, currentTermsVersion: $currentTermsVersion, requiresTermsAcceptance: $requiresTermsAcceptance, deviceId: $deviceId, activatedAt: $activatedAt, createdAt: $createdAt, updatedAt: $updatedAt)';
 }
 
 
@@ -318,16 +326,21 @@ $MessagingTermsDtoCopyWith<MessagingTermsDto> get copyWith => _$MessagingTermsDt
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingTermsDto&&(identical(other.version, version) || other.version == version)&&(identical(other.text, text) || other.text == text)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+  final _this = this as MessagingTermsDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is MessagingTermsDto&&(identical(other.version, _this.version) || other.version == _this.version)&&(identical(other.text, _this.text) || other.text == _this.text)&&(identical(other.publishedAt, _this.publishedAt) || other.publishedAt == _this.publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version,text,publishedAt);
+int get hashCode {
+  final _this = this as MessagingTermsDto;
+  return Object.hash(runtimeType,_this.version,_this.text,_this.publishedAt);
+}
 
 @override
 String toString() {
-  return 'MessagingTermsDto(version: $version, text: $text, publishedAt: $publishedAt)';
+  final _this = this as MessagingTermsDto;
+  return 'MessagingTermsDto(version: ${_this.version}, text: ${_this.text}, publishedAt: ${_this.publishedAt})';
 }
 
 
@@ -356,7 +369,7 @@ class _$MessagingTermsDtoCopyWithImpl<$Res>
 /// Create a copy of MessagingTermsDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? version = null,Object? text = null,Object? publishedAt = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(MessagingTermsDto(
 version: null == version ? _self.version : version // ignore: cast_nullable_to_non_nullable
 as String,text: null == text ? _self.text : text // ignore: cast_nullable_to_non_nullable
 as String,publishedAt: freezed == publishedAt ? _self.publishedAt : publishedAt // ignore: cast_nullable_to_non_nullable
@@ -521,16 +534,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingTermsDto&&(identical(other.version, version) || other.version == version)&&(identical(other.text, text) || other.text == text)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MessagingTermsDto&&(identical(other.version, version) || other.version == version)&&(identical(other.text, text) || other.text == text)&&(identical(other.publishedAt, publishedAt) || other.publishedAt == publishedAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,version,text,publishedAt);
+int get hashCode {
+    return Object.hash(runtimeType,version,text,publishedAt);
+}
 
 @override
 String toString() {
-  return 'MessagingTermsDto(version: $version, text: $text, publishedAt: $publishedAt)';
+    return 'MessagingTermsDto(version: $version, text: $text, publishedAt: $publishedAt)';
 }
 
 

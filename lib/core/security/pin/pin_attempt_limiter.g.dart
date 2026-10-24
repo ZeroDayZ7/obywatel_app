@@ -39,7 +39,7 @@ abstract class _$PinAttemptLimiter extends $AsyncNotifier<PinAttemptState> {
   FutureOr<PinAttemptState> build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<AsyncValue<PinAttemptState>, PinAttemptState>;
     final element =
         ref.element
@@ -49,6 +49,6 @@ abstract class _$PinAttemptLimiter extends $AsyncNotifier<PinAttemptState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

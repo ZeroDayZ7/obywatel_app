@@ -11,96 +11,13 @@ import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/communication/data/mappers/e2ee_crypto_mapper.dart'
+    as e2ee_crypto_mapper;
+import 'package:obywatel_plus/features/communication/domain/crypto/e2ee_models.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:uuid/uuid.dart';
 
 part 'e2ee_crypto_service.g.dart';
-
-typedef AppDeviceUuid = String;
-typedef SignalDeviceId = int;
-
-class EncryptedData {
-  final String ciphertextBase64;
-  final String nonceBase64;
-  final int type;
-
-  const EncryptedData({
-    required this.ciphertextBase64,
-    required this.nonceBase64,
-    required this.type,
-  });
-}
-
-class SignalCiphertextEnvelope {
-  final int type;
-  final String ciphertext;
-  final String senderDeviceId;
-  final String recipientUserId;
-  final String recipientDeviceId;
-
-  const SignalCiphertextEnvelope({
-    required this.type,
-    required this.ciphertext,
-    required this.senderDeviceId,
-    required this.recipientUserId,
-    required this.recipientDeviceId,
-  });
-
-  Map<String, dynamic> toJson() => {
-    'type': type,
-    'ciphertext': ciphertext,
-    'senderDeviceId': senderDeviceId,
-    'recipientUserId': recipientUserId,
-    'recipientDeviceId': recipientDeviceId,
-  };
-
-  factory SignalCiphertextEnvelope.fromJson(Map<String, dynamic> json) {
-    final typeValue = json['type'] ?? 1;
-    return SignalCiphertextEnvelope(
-      type: typeValue is int
-          ? typeValue
-          : int.tryParse(typeValue.toString()) ?? 1,
-      ciphertext: (json['ciphertext'] ?? '').toString(),
-      senderDeviceId: (json['senderDeviceId'] ?? '').toString(),
-      recipientUserId: (json['recipientUserId'] ?? '').toString(),
-      recipientDeviceId: (json['recipientDeviceId'] ?? '1').toString(),
-    );
-  }
-}
-
-class OneTimePreKeyRegistration {
-  final int keyId;
-  final String publicKey;
-
-  const OneTimePreKeyRegistration({
-    required this.keyId,
-    required this.publicKey,
-  });
-
-  Map<String, dynamic> toJson() => {'keyId': keyId, 'publicKey': publicKey};
-}
-
-class DeviceKeyBundle {
-  final String deviceId;
-  final int registrationId;
-  final String publicKey;
-  final String privateKey;
-  final String signedPreKey;
-  final String signedPreKeySignature;
-  final int signedPreKeyId;
-  final List<OneTimePreKeyRegistration> oneTimePreKeys;
-
-  const DeviceKeyBundle({
-    required this.deviceId,
-    required this.registrationId,
-    required this.publicKey,
-    required this.privateKey,
-    required this.signedPreKey,
-    required this.signedPreKeySignature,
-    required this.signedPreKeyId,
-    required this.oneTimePreKeys,
-  });
-}
 
 class EncryptionFailureException implements Exception {
   final String message;
@@ -109,6 +26,29 @@ class EncryptionFailureException implements Exception {
 
   @override
   String toString() => 'EncryptionFailureException: $message';
+}
+
+class SignalDeviceMappingException implements Exception {
+  final String message;
+
+  const SignalDeviceMappingException(this.message);
+
+  @override
+  String toString() => 'SignalDeviceMappingException: $message';
+}
+
+class SignalDeviceMappingConflictException
+    extends SignalDeviceMappingException {
+  const SignalDeviceMappingConflictException(super.message);
+}
+
+class SignalSessionNotFoundException implements Exception {
+  final String message;
+
+  const SignalSessionNotFoundException(this.message);
+
+  @override
+  String toString() => 'SignalSessionNotFoundException: $message';
 }
 
 class E2eeCryptoService {
@@ -120,6 +60,24 @@ class E2eeCryptoService {
     this._signalStore,
   );
 
+  static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) =>
+      e2ee_crypto_mapper.fromPreKeyBundleJson(json);
+
+  static SignalDeviceId resolveSignalDeviceId(
+    String? rawDeviceId, {
+    SignalDeviceId? fallback,
+  }) =>
+      e2ee_crypto_mapper.resolveSignalDeviceId(rawDeviceId, fallback: fallback);
+
+  static String fingerprintIdentityKey(IdentityKey? identityKey) =>
+      e2ee_crypto_mapper.fingerprintIdentityKey(identityKey);
+
+  static String requireAppDeviceUuid(
+    String? rawAppDeviceId, {
+    String context = 'app_device_id',
+  }) =>
+      e2ee_crypto_mapper.requireAppDeviceUuid(rawAppDeviceId, context: context);
+
   final SecureStorageService _secureStorage;
   final AppLogger _logger;
   final ApiClient _apiClient;
@@ -127,199 +85,199 @@ class E2eeCryptoService {
   final DriftSignalProtocolStore _signalStore;
 
   static const String _sessionKeyPrefix = 'e2ee_session_key_';
+  static const String _signalDeviceMappingStorageKey =
+      'e2ee_signal_device_mapping';
   bool _deviceIdentityRegistered = false;
   Future<void>? _deviceIdentityRegistrationTask;
+  Future<void>? _signalDeviceMappingWriteLock;
 
   static String _signalAddressName(SignalProtocolAddress address) =>
       '${address.getName()}@${address.getDeviceId()}';
 
-  static AppDeviceUuid requireAppDeviceUuid(
-    String? rawAppDeviceId, {
-    String context = 'app_device_id',
+  static Map<String, Map<String, int>> setSignalDeviceMapping({
+    required String senderUserId,
+    required String appDeviceId,
+    required int signalDeviceId,
+    Map<String, Map<String, int>>? existingMappings,
   }) {
-    final normalized = (rawAppDeviceId ?? '').trim();
-    if (normalized.isEmpty) {
-      throw FormatException(
-        'Missing $context; raw app device UUID is required',
-      );
-    }
-    return normalized;
-  }
-
-  static SignalDeviceId _hashUuidToSignalDeviceId(String uuid) {
-    final digestHex = sha256.convert(utf8.encode(uuid)).toString();
-    final numeric = BigInt.parse('0x${digestHex.substring(0, 16)}');
-    final maxSignalDeviceId = BigInt.from(2147483646);
-    final candidate = (numeric % maxSignalDeviceId) + BigInt.one;
-    final resolved = candidate.toInt();
-    return resolved == 1 ? 2 : resolved;
-  }
-
-  static SignalDeviceId resolveSignalDeviceId(
-    String? rawDeviceId, {
-    SignalDeviceId? fallback,
-  }) {
-    final trimmed = (rawDeviceId ?? '').trim();
-    if (trimmed.isEmpty) {
-      if (fallback != null) return fallback;
+    final normalizedUserId = senderUserId.trim();
+    if (normalizedUserId.isEmpty) {
       throw const FormatException(
-        'Signal device id is missing; the bundle must include a positive numeric device id.',
+        'A Signal sender user id is required when setting a device mapping.',
       );
     }
 
-    final numeric = int.tryParse(trimmed);
-    if (numeric != null && numeric > 0) {
-      return numeric;
-    }
-
-    if (Uuid.isValidUUID(fromString: trimmed)) {
-      return _hashUuidToSignalDeviceId(trimmed);
-    }
-
-    if (fallback != null) return fallback;
-    throw const FormatException(
-      'Signal device id is invalid; it must be a positive integer or a valid UUID that maps to a stable Signal device id.',
-    );
-  }
-
-  static SignalDeviceId resolveSignalDeviceIdFromAppUuid(
-    AppDeviceUuid? rawAppDeviceUuid, {
-    SignalDeviceId? fallback,
-  }) {
-    final appDeviceUuid = requireAppDeviceUuid(
-      rawAppDeviceUuid,
+    final normalizedAppDeviceId = requireAppDeviceUuid(
+      appDeviceId,
       context: 'app_device_id',
     );
-    return resolveSignalDeviceId(appDeviceUuid, fallback: fallback);
-  }
-
-  static String fingerprintIdentityKey(IdentityKey? identityKey) {
-    if (identityKey == null) {
-      return 'missing';
-    }
-
-    final digest = sha256.convert(identityKey.serialize());
-    return digest.toString();
-  }
-
-  static PreKeyBundle fromPreKeyBundleJson(Map<String, dynamic> json) {
-    final registrationIdValue = json['registrationId'];
-    final int registrationId;
-    if (registrationIdValue is int) {
-      registrationId = registrationIdValue;
-    } else if (registrationIdValue == null) {
-      throw const FormatException(
-        'Missing required Signal bundle field: registrationId',
-      );
-    } else {
-      final parsed = int.tryParse(registrationIdValue.toString());
-      if (parsed == null) {
-        throw const FormatException(
-          'Missing required Signal bundle field: registrationId',
-        );
-      }
-      registrationId = parsed;
-    }
-    if (registrationId <= 0) {
-      throw const FormatException(
-        'Signal bundle registrationId must be a positive integer.',
-      );
-    }
-
-    final rawDeviceId = json['deviceId'];
-    final int deviceId;
-    if (rawDeviceId is int) {
-      deviceId = resolveSignalDeviceId(rawDeviceId.toString());
-    } else if (rawDeviceId is String) {
-      deviceId = resolveSignalDeviceId(rawDeviceId);
-    } else {
-      throw const FormatException(
-        'Missing required Signal bundle field: deviceId',
-      );
-    }
-
-    final preKeyIdValue = json['preKeyId'];
-    final int? preKeyId;
-    if (preKeyIdValue == null || preKeyIdValue.toString().trim().isEmpty) {
-      preKeyId = null;
-    } else if (preKeyIdValue is int) {
-      preKeyId = preKeyIdValue;
-    } else {
-      preKeyId = int.tryParse(preKeyIdValue.toString());
-    }
-
-    final signedPreKeyIdValue = json['signedPreKeyId'];
-    final int signedPreKeyId;
-    if (signedPreKeyIdValue is int) {
-      signedPreKeyId = signedPreKeyIdValue;
-    } else if (signedPreKeyIdValue == null) {
-      throw const FormatException(
-        'Missing required Signal bundle field: signedPreKeyId',
-      );
-    } else {
-      final parsed = int.tryParse(signedPreKeyIdValue.toString());
-      if (parsed == null) {
-        throw const FormatException(
-          'Missing required Signal bundle field: signedPreKeyId',
-        );
-      }
-      signedPreKeyId = parsed;
-    }
-    if (signedPreKeyId <= 0) {
-      throw const FormatException(
-        'Signal bundle signedPreKeyId must be a positive integer.',
-      );
-    }
-
-    final identityKeyRaw = json['identityKey'];
-    final identityKeyBytes =
-        identityKeyRaw is String && identityKeyRaw.isNotEmpty
-        ? base64Decode(identityKeyRaw)
-        : null;
-
-    final signedPreKeyPublicRaw = json['signedPreKeyPublic'];
-    final signedPreKeyPublicBytes =
-        signedPreKeyPublicRaw is String && signedPreKeyPublicRaw.isNotEmpty
-        ? base64Decode(signedPreKeyPublicRaw)
-        : null;
-
-    final signedPreKeySignatureRaw = json['signedPreKeySignature'];
-    final signedPreKeySignatureBytes =
-        signedPreKeySignatureRaw is String &&
-            signedPreKeySignatureRaw.isNotEmpty
-        ? base64Decode(signedPreKeySignatureRaw)
-        : null;
-
-    final preKeyPublicRaw = json['preKeyPublic'];
-    final preKeyPublicBytes =
-        preKeyPublicRaw is String && preKeyPublicRaw.isNotEmpty
-        ? base64Decode(preKeyPublicRaw)
-        : null;
-
-    if (identityKeyBytes == null ||
-        signedPreKeyPublicBytes == null ||
-        signedPreKeySignatureBytes == null) {
-      throw const FormatException(
-        'Missing required Signal pre-key bundle fields',
-      );
-    }
-
-    final identityKey = IdentityKey.fromBytes(identityKeyBytes, 0);
-    final signedPreKeyPublic = Curve.decodePoint(signedPreKeyPublicBytes, 0);
-    final preKeyPublic = preKeyPublicBytes == null
-        ? null
-        : Curve.decodePoint(preKeyPublicBytes, 0);
-
-    return PreKeyBundle(
-      registrationId,
-      deviceId,
-      preKeyId == 0 ? null : preKeyId,
-      preKeyPublic,
-      signedPreKeyId,
-      signedPreKeyPublic,
-      signedPreKeySignatureBytes,
-      identityKey,
+    final resolvedSignalDeviceId = resolveSignalDeviceId(
+      signalDeviceId.toString(),
     );
+
+    final normalizedMappings = <String, Map<String, int>>{
+      for (final entry in (existingMappings ?? const {}).entries)
+        entry.key: Map<String, int>.from(entry.value),
+    };
+    final userMappings = Map<String, int>.from(
+      normalizedMappings[normalizedUserId] ?? const <String, int>{},
+    );
+
+    final existingSignalDeviceId = userMappings[normalizedAppDeviceId];
+    if (existingSignalDeviceId != null &&
+        existingSignalDeviceId != resolvedSignalDeviceId) {
+      throw SignalDeviceMappingConflictException(
+        'Conflicting Signal device mapping for appDeviceId=$normalizedAppDeviceId on user $normalizedUserId: $existingSignalDeviceId vs $resolvedSignalDeviceId.',
+      );
+    }
+
+    userMappings[normalizedAppDeviceId] = resolvedSignalDeviceId;
+    normalizedMappings[normalizedUserId] = userMappings;
+    return normalizedMappings;
+  }
+
+  static int resolveInboundSignalDeviceId({
+    required String senderUserId,
+    required String senderDeviceId,
+    required Map<String, Map<String, int>> mappedSignalDeviceIds,
+  }) {
+    final normalizedUserId = senderUserId.trim();
+    final trimmedSenderDeviceId = senderDeviceId.trim();
+
+    if (normalizedUserId.isEmpty) {
+      throw const FormatException(
+        'Inbound sender user id is missing; a valid Signal user id is required.',
+      );
+    }
+    if (trimmedSenderDeviceId.isEmpty) {
+      throw const FormatException(
+        'Inbound senderDeviceId is empty; it must be the appDeviceId UUID for this message.',
+      );
+    }
+
+    if (int.tryParse(trimmedSenderDeviceId) != null) {
+      throw const FormatException(
+        'Inbound senderDeviceId is numeric but the app contract uses appDeviceId UUID for message metadata. Numeric Signal device ids must come from a verified backend mapping, not implicit parsing.',
+      );
+    }
+
+    if (!Uuid.isValidUUID(fromString: trimmedSenderDeviceId)) {
+      throw const FormatException(
+        'Inbound senderDeviceId is not a valid appDeviceId UUID. Signal device ids are not inferred from arbitrary message metadata.',
+      );
+    }
+
+    final userMappings =
+        mappedSignalDeviceIds[normalizedUserId] ?? const <String, int>{};
+    final mappedDeviceId = userMappings[trimmedSenderDeviceId];
+    if (mappedDeviceId == null) {
+      throw SignalDeviceMappingException(
+        'No explicit appDeviceId -> signalDeviceId mapping exists for user $normalizedUserId and appDeviceId $trimmedSenderDeviceId.',
+      );
+    }
+
+    return resolveSignalDeviceId(mappedDeviceId.toString());
+  }
+
+  Future<Map<String, Map<String, int>>> _loadSignalDeviceMappings() async {
+    final rawValue = await _secureStorage.read(
+      key: _signalDeviceMappingStorageKey,
+    );
+    if (rawValue == null || rawValue.trim().isEmpty) {
+      return const <String, Map<String, int>>{};
+    }
+
+    try {
+      final decodedValue = jsonDecode(rawValue);
+      if (decodedValue is! Map) {
+        throw const FormatException(
+          'Persisted Signal device mappings must be stored as a JSON object.',
+        );
+      }
+
+      final source = Map<String, dynamic>.from(decodedValue);
+      final resolved = <String, Map<String, int>>{};
+      for (final entry in source.entries) {
+        final userId = entry.key.trim();
+        final userMappings = entry.value;
+        if (userId.isEmpty || userMappings is! Map) {
+          throw const FormatException(
+            'Persisted Signal device mappings contain invalid user entries.',
+          );
+        }
+
+        final explicitMappings = <String, int>{};
+        for (final mappingEntry in Map<String, dynamic>.from(
+          userMappings,
+        ).entries) {
+          final appDeviceId = mappingEntry.key.trim();
+          final signalDeviceId = mappingEntry.value;
+          if (appDeviceId.isEmpty ||
+              !Uuid.isValidUUID(fromString: appDeviceId) ||
+              signalDeviceId == null) {
+            throw const FormatException(
+              'Persisted Signal device mappings contain invalid app-device entries.',
+            );
+          }
+
+          final parsedDeviceId = int.tryParse(signalDeviceId.toString());
+          if (parsedDeviceId == null || parsedDeviceId <= 0) {
+            throw const FormatException(
+              'Persisted Signal device mappings contain non-positive Signal device ids.',
+            );
+          }
+
+          explicitMappings[appDeviceId] = parsedDeviceId;
+        }
+
+        resolved[userId] = explicitMappings;
+      }
+      return resolved;
+    } catch (error) {
+      throw FormatException(
+        'Stored Signal device mappings are corrupt or invalid: ${error.toString()}',
+      );
+    }
+  }
+
+  Future<void> _persistSignalDeviceMappingWithLock({
+    required String senderUserId,
+    required String appDeviceId,
+    required int signalDeviceId,
+  }) async {
+    final persistedMappings = await _loadSignalDeviceMappings();
+    final nextMappings = setSignalDeviceMapping(
+      senderUserId: senderUserId,
+      appDeviceId: appDeviceId,
+      signalDeviceId: signalDeviceId,
+      existingMappings: persistedMappings,
+    );
+    await _secureStorage.write(
+      key: _signalDeviceMappingStorageKey,
+      value: jsonEncode(nextMappings),
+    );
+  }
+
+  Future<void> persistSignalDeviceMapping({
+    required String senderUserId,
+    required String appDeviceId,
+    required int signalDeviceId,
+  }) async {
+    if (_signalDeviceMappingWriteLock != null) {
+      await _signalDeviceMappingWriteLock;
+      return;
+    }
+
+    _signalDeviceMappingWriteLock = _persistSignalDeviceMappingWithLock(
+      senderUserId: senderUserId,
+      appDeviceId: appDeviceId,
+      signalDeviceId: signalDeviceId,
+    );
+    try {
+      await _signalDeviceMappingWriteLock;
+    } finally {
+      _signalDeviceMappingWriteLock = null;
+    }
   }
 
   Future<PreKeyBundle> fetchRemotePreKeyBundle(
@@ -327,10 +285,6 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_fetch_start event=start remote_user_id=$remoteUserId',
-      module: 'E2eeCrypto',
-    );
 
     try {
       final headers = {'X-Operation-Id': effectiveOperationId};
@@ -346,10 +300,15 @@ class E2eeCryptoService {
 
       final map = Map<String, dynamic>.from(payload);
       final bundle = fromPreKeyBundleJson(map);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_fetch_success event=success remote_user_id=$remoteUserId bundle_device_id=${bundle.getDeviceId()} bundle_identity_fingerprint=${fingerprintIdentityKey(bundle.getIdentityKey())} bundle_has_prekey=${bundle.getPreKeyId() != null}',
-        module: 'E2eeCrypto',
-      );
+      final trustedAppDeviceId = (map['appDeviceId'] ?? '').toString().trim();
+      if (trustedAppDeviceId.isNotEmpty &&
+          Uuid.isValidUUID(fromString: trustedAppDeviceId)) {
+        await persistSignalDeviceMapping(
+          senderUserId: remoteUserId,
+          appDeviceId: trustedAppDeviceId,
+          signalDeviceId: bundle.getDeviceId(),
+        );
+      }
       return bundle;
     } catch (error, stackTrace) {
       _logger.e(
@@ -377,33 +336,11 @@ class E2eeCryptoService {
     }
     final address = SignalProtocolAddress(remoteUserId, resolvedDeviceId);
     final bundleIdentity = remoteBundle.getIdentityKey();
-    final existingIdentity = await _signalStore.getIdentity(address);
-    final existingFingerprint = fingerprintIdentityKey(existingIdentity);
-    final bundleFingerprint = fingerprintIdentityKey(bundleIdentity);
 
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_initialize_start event=start remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} bundle_identity_fingerprint=$bundleFingerprint known_identity_fingerprint=$existingFingerprint',
-      module: 'E2eeCrypto',
-    );
-
-    final startedAt = DateTime.now();
     try {
       final builder = SessionBuilder.fromSignalStore(_signalStore, address);
       await builder.processPreKeyBundle(remoteBundle);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_builder_process event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} duration_ms=${DateTime.now().difference(startedAt).inMilliseconds}',
-        module: 'E2eeCrypto',
-      );
       await _signalStore.saveIdentity(address, bundleIdentity);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=signal_store_save_identity event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} identity_fingerprint=$bundleFingerprint',
-        module: 'E2eeCrypto',
-      );
-      final refreshedIdentity = await _signalStore.getIdentity(address);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_identity_verify event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(address)} stored_identity_fingerprint=${fingerprintIdentityKey(refreshedIdentity)}',
-        module: 'E2eeCrypto',
-      );
       return address;
     } catch (error, stackTrace) {
       _logger.e(
@@ -428,15 +365,7 @@ class E2eeCryptoService {
 
     if (explicitAddress != null) {
       final sessionExists = await _signalStore.containsSession(explicitAddress);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_check_start event=start remote_user_id=$remoteUserId signal_address=${_signalAddressName(explicitAddress)} session_exists=$sessionExists',
-        module: 'E2eeCrypto',
-      );
       if (sessionExists) {
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(explicitAddress)}',
-          module: 'E2eeCrypto',
-        );
         return;
       }
     }
@@ -452,30 +381,18 @@ class E2eeCryptoService {
         remoteUserId,
         bundleSignalDeviceId,
       );
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=prekey_bundle_decision event=success remote_user_id=$remoteUserId bundle_device_id=$bundleSignalDeviceId bundle_identity_fingerprint=${fingerprintIdentityKey(remoteBundle.getIdentityKey())}',
-        module: 'E2eeCrypto',
-      );
       final hasSessionForBundle = await _signalStore.containsSession(
         bundleAddress,
       );
       if (hasSessionForBundle) {
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_reuse_bundle event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(bundleAddress)}',
-          module: 'E2eeCrypto',
-        );
         return;
       }
 
-      final activeAddress = await initializeSessionForPeer(
+      await initializeSessionForPeer(
         remoteUserId,
         remoteBundle: remoteBundle,
         deviceId: bundleSignalDeviceId,
         operationId: effectiveOperationId,
-      );
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_init_complete event=success remote_user_id=$remoteUserId signal_address=${_signalAddressName(activeAddress)} bundle_address=${_signalAddressName(bundleAddress)}',
-        module: 'E2eeCrypto',
       );
     } catch (error, stackTrace) {
       final fallbackAddress =
@@ -510,7 +427,7 @@ class E2eeCryptoService {
     return hasSignedPreKey && hasOneTimePreKeys;
   }
 
-  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+  Future<LocalDeviceKeyBundle> _ensureLocalDeviceIdentityBundle() async {
     final deviceId = await _deviceInfoService.getOrCreateDeviceId();
     final registrationId = await _signalStore.getLocalRegistrationId();
     final identityKeyPair = await _signalStore.getIdentityKeyPair();
@@ -528,7 +445,7 @@ class E2eeCryptoService {
         }),
       );
 
-      return DeviceKeyBundle(
+      return LocalDeviceKeyBundle(
         deviceId: deviceId,
         registrationId: registrationId,
         publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
@@ -558,7 +475,7 @@ class E2eeCryptoService {
         )
         .toList();
 
-    return DeviceKeyBundle(
+    return LocalDeviceKeyBundle(
       deviceId: deviceId,
       registrationId: registrationId,
       publicKey: base64Encode(identityKeyPair.getPublicKey().serialize()),
@@ -572,28 +489,21 @@ class E2eeCryptoService {
     );
   }
 
+  Future<DeviceKeyBundle> ensureDeviceIdentityBundle() async {
+    final localBundle = await _ensureLocalDeviceIdentityBundle();
+    return localBundle.toRegistrationBundle();
+  }
+
   Future<void> registerDeviceIdentity() async {
     await registerDeviceIdentityWithOperation(null);
   }
 
   Future<void> registerDeviceIdentityWithOperation(String? operationId) async {
     final effectiveOperationId = _resolveOperationId(operationId);
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_start event=start',
-      module: 'E2eeCrypto',
-    );
     if (_deviceIdentityRegistered) {
-      _logger.i(
-        '[E2EE-FLOW-2.1] device identity already registered; skipping',
-        module: 'E2eeCrypto',
-      );
       return;
     }
     if (_deviceIdentityRegistrationTask != null) {
-      _logger.i(
-        '[E2EE-FLOW-2.2] device identity registration already in progress; waiting',
-        module: 'E2eeCrypto',
-      );
       await _deviceIdentityRegistrationTask;
       return;
     }
@@ -603,7 +513,8 @@ class E2eeCryptoService {
         final persistedMarker = await _secureStorage.read(
           key: 'e2ee_device_registration_marker',
         );
-        final bundle = await ensureDeviceIdentityBundle();
+        final localBundle = await _ensureLocalDeviceIdentityBundle();
+        final bundle = localBundle.toRegistrationBundle();
         final marker = {
           'deviceId': bundle.deviceId,
           'registrationId': bundle.registrationId,
@@ -616,10 +527,6 @@ class E2eeCryptoService {
         if (persistedMarker != null) {
           if (persistedMarker == marker) {
             _deviceIdentityRegistered = true;
-            _logger.i(
-              '[E2EE-FLOW-2.3] device identity already published for this installation; skipping duplicate registration',
-              module: 'E2eeCrypto',
-            );
             return;
           }
 
@@ -628,32 +535,22 @@ class E2eeCryptoService {
           );
         }
 
-        final payload = {
-          'deviceId': bundle.deviceId,
-          'registrationId': bundle.registrationId,
-          'identityPublicKey': bundle.publicKey,
-          'publicKey': bundle.publicKey,
-          'signedPreKey': bundle.signedPreKey,
-          'signedPreKeySig': bundle.signedPreKeySignature,
-          'signedPreKeyId': bundle.signedPreKeyId,
-          'oneTimePreKeys': bundle.oneTimePreKeys
-              .map((preKey) => preKey.toJson())
-              .toList(),
+        final payload = bundle.toRegistrationPayload();
+        final transportKeys = <String>{
+          'privateKey',
+          'privateKeyBase64',
+          'private_key',
+          'devicePrivateKey',
+          'device_private_key',
         };
-
-        if (payload.containsKey('private_key') ||
-            payload.containsKey('device_private_key') ||
-            payload.containsValue(bundle.privateKey)) {
+        final hasPrivateMaterial = transportKeys.any(payload.containsKey);
+        if (hasPrivateMaterial) {
           throw StateError(
             'Private E2EE keys must never be sent to the backend',
           );
         }
 
         final headers = {'X-Operation-Id': effectiveOperationId};
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_request event=start payload_fields=${payload.keys.toList()} registrationId=${payload['registrationId']} deviceId=${payload['deviceId']} signedPreKeyId=${payload['signedPreKeyId']}',
-          module: 'E2eeCrypto',
-        );
         await _apiClient.post(
           '/crypto/keys/device',
           data: payload,
@@ -664,10 +561,6 @@ class E2eeCryptoService {
           value: marker,
         );
         _deviceIdentityRegistered = true;
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_success event=success',
-          module: 'E2eeCrypto',
-        );
       } catch (error, stackTrace) {
         _logger.e(
           '[E2EE_TRACE] operation_id=$effectiveOperationId stage=device_identity_registration_error event=error error_type=${error.runtimeType} error_message=${error.toString()}',
@@ -695,6 +588,88 @@ class E2eeCryptoService {
     return _secureStorage.read(key: '$_sessionKeyPrefix$conversationId');
   }
 
+  Future<SignalProtocolAddress> resolveOrCreateSessionAddress(
+    String recipientUserId,
+    int? recipientDeviceId,
+    String operationId,
+  ) async {
+    var resolvedDeviceId = recipientDeviceId;
+    if (resolvedDeviceId == null || resolvedDeviceId <= 0) {
+      final knownSessionDeviceIds = await _signalStore.getSubDeviceSessions(
+        recipientUserId,
+      );
+      resolvedDeviceId = knownSessionDeviceIds.firstWhere(
+        (deviceId) => deviceId > 0,
+        orElse: () => 0,
+      );
+
+      if (resolvedDeviceId <= 0) {
+        final remoteBundle = await fetchRemotePreKeyBundle(
+          recipientUserId,
+          operationId: operationId,
+        );
+        resolvedDeviceId = remoteBundle.getDeviceId();
+        final address = SignalProtocolAddress(
+          recipientUserId,
+          resolvedDeviceId,
+        );
+
+        if (!await _signalStore.containsSession(address)) {
+          await initializeSessionForPeer(
+            recipientUserId,
+            remoteBundle: remoteBundle,
+            deviceId: resolvedDeviceId,
+            operationId: operationId,
+          );
+        }
+      }
+    }
+
+    if (resolvedDeviceId <= 0) {
+      throw const FormatException('Signal recipient device id is required');
+    }
+
+    final address = SignalProtocolAddress(recipientUserId, resolvedDeviceId);
+    if (!await _signalStore.containsSession(address)) {
+      await registerDeviceIdentityWithOperation(operationId);
+      final remoteBundle = await fetchRemotePreKeyBundle(
+        recipientUserId,
+        operationId: operationId,
+      );
+      final bundleSignalDeviceId = remoteBundle.getDeviceId();
+      final bundleAddress = SignalProtocolAddress(
+        recipientUserId,
+        bundleSignalDeviceId,
+      );
+
+      if (!await _signalStore.containsSession(bundleAddress)) {
+        await initializeSessionForPeer(
+          recipientUserId,
+          remoteBundle: remoteBundle,
+          deviceId: bundleSignalDeviceId,
+          operationId: operationId,
+        );
+      }
+
+      return bundleAddress;
+    }
+
+    return address;
+  }
+
+  Future<SessionCipher> getOrCreateSessionCipher(
+    String recipientUserId,
+    int? recipientDeviceId,
+    String operationId,
+  ) async {
+    final address = await resolveOrCreateSessionAddress(
+      recipientUserId,
+      recipientDeviceId,
+      operationId,
+    );
+    return SessionCipher.fromStore(_signalStore, address);
+  }
+
   Future<SignalCiphertextEnvelope> encryptOutboundMessage(
     String recipientUserId,
     String plaintext, {
@@ -703,56 +678,16 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = _resolveOperationId(operationId);
-    var resolvedRecipientDeviceId = recipientDeviceId;
-    if (resolvedRecipientDeviceId == null || resolvedRecipientDeviceId <= 0) {
-      final remoteBundle = await fetchRemotePreKeyBundle(
-        recipientUserId,
-        operationId: effectiveOperationId,
-      );
-      resolvedRecipientDeviceId = remoteBundle.getDeviceId();
-    }
-    if (resolvedRecipientDeviceId <= 0) {
-      throw const FormatException('Signal recipient device id is required');
-    }
+    var address = const SignalProtocolAddress('', 0);
 
-    var address = SignalProtocolAddress(
-      recipientUserId,
-      resolvedRecipientDeviceId,
-    );
-    _logger.i(
-      '[E2EE_TRACE] operation_id=$effectiveOperationId stage=encrypt_start event=start recipient_user_id=$recipientUserId sender_app_device_id=${senderDeviceId ?? "unknown"} signal_address=${_signalAddressName(address)} plaintext_length=${plaintext.length}',
-      module: 'E2eeCrypto',
-    );
     try {
-      final sessionExists = await _signalStore.containsSession(address);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=session_presence_check event=success recipient_user_id=$recipientUserId signal_address=${_signalAddressName(address)} session_exists=$sessionExists',
-        module: 'E2eeCrypto',
+      address = await resolveOrCreateSessionAddress(
+        recipientUserId,
+        recipientDeviceId,
+        effectiveOperationId,
       );
-      if (!sessionExists) {
-        await registerDeviceIdentityWithOperation(effectiveOperationId);
-        final remoteBundle = await fetchRemotePreKeyBundle(
-          recipientUserId,
-          operationId: effectiveOperationId,
-        );
-        resolvedRecipientDeviceId = remoteBundle.getDeviceId();
-        address = SignalProtocolAddress(
-          recipientUserId,
-          resolvedRecipientDeviceId,
-        );
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=outbound_bundle_loaded event=success recipient_user_id=$recipientUserId bundle_device_id=$resolvedRecipientDeviceId bundle_identity_fingerprint=${fingerprintIdentityKey(remoteBundle.getIdentityKey())}',
-          module: 'E2eeCrypto',
-        );
-        await initializeSessionForPeer(
-          recipientUserId,
-          remoteBundle: remoteBundle,
-          deviceId: resolvedRecipientDeviceId,
-          operationId: effectiveOperationId,
-        );
-      }
-
       final sessionCipher = SessionCipher.fromStore(_signalStore, address);
+
       final cipherText = await sessionCipher.encrypt(
         Uint8List.fromList(utf8.encode(plaintext)),
       );
@@ -764,10 +699,6 @@ class E2eeCryptoService {
             senderDeviceId ?? await _deviceInfoService.getOrCreateDeviceId(),
         recipientUserId: recipientUserId,
         recipientDeviceId: address.getDeviceId().toString(),
-      );
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=encrypt_success event=success recipient_user_id=$recipientUserId signal_address=${_signalAddressName(address)} signal_type=${envelope.type} ciphertext_len=${envelope.ciphertext.length}',
-        module: 'E2eeCrypto',
       );
       return envelope;
     } catch (e, st) {
@@ -791,54 +722,22 @@ class E2eeCryptoService {
     String? operationId,
   }) async {
     final effectiveOperationId = operationId ?? const Uuid().v4();
-    final trimmedSenderDeviceId = senderDeviceId.trim();
-    final candidateDeviceIds = <int>{};
 
-    final explicitDeviceId = int.tryParse(trimmedSenderDeviceId);
-    if (explicitDeviceId != null && explicitDeviceId > 0) {
-      candidateDeviceIds.add(explicitDeviceId);
-    } else if (Uuid.isValidUUID(fromString: trimmedSenderDeviceId)) {
-      candidateDeviceIds.add(resolveSignalDeviceId(trimmedSenderDeviceId));
-    }
-
-    final knownDeviceIds = await _signalStore.getSubDeviceSessions(
-      senderUserId,
-    );
-    for (final knownDeviceId in knownDeviceIds) {
-      if (knownDeviceId > 0) {
-        candidateDeviceIds.add(knownDeviceId);
-      }
-    }
-
-    if (candidateDeviceIds.isEmpty) {
-      final senderAppDeviceId = requireAppDeviceUuid(
-        trimmedSenderDeviceId,
-        context: 'sender_device_id',
+    Future<String> attemptDecrypt() async {
+      final signalDeviceId = resolveInboundSignalDeviceId(
+        senderUserId: senderUserId,
+        senderDeviceId: senderDeviceId,
+        mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
       );
-      if (Uuid.isValidUUID(fromString: senderAppDeviceId)) {
-        throw const FormatException(
-          'Inbound sender app UUID cannot be used as a Signal device id; no valid local numeric Signal session exists for this sender',
+      final address = SignalProtocolAddress(senderUserId, signalDeviceId);
+
+      if (!await _signalStore.containsSession(address)) {
+        throw SignalSessionNotFoundException(
+          'No local Signal session exists for sender $senderUserId on device $signalDeviceId. Refusing to use a different session as fallback.',
         );
       }
-      throw const FormatException(
-        'No valid numeric Signal device id was found for this inbound message; local session data is missing or stale',
-      );
-    }
-
-    Object? lastError;
-    for (final candidateDeviceId in candidateDeviceIds) {
-      final address = SignalProtocolAddress(senderUserId, candidateDeviceId);
-      _logger.i(
-        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_start event=start sender_user_id=$senderUserId sender_device_id=$trimmedSenderDeviceId signal_device_id=$candidateDeviceId signal_address=${_signalAddressName(address)} signal_type=$type ciphertext_len=${ciphertextBase64.length}',
-        module: 'E2eeCrypto',
-      );
 
       try {
-        final trustedIdentity = await _signalStore.getIdentity(address);
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_identity_loaded event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} trusted_identity_fingerprint=${fingerprintIdentityKey(trustedIdentity)}',
-          module: 'E2eeCrypto',
-        );
         final ciphertextBytes = base64Decode(ciphertextBase64);
         final sessionCipher = SessionCipher.fromStore(_signalStore, address);
 
@@ -853,27 +752,94 @@ class E2eeCryptoService {
           );
         }
 
-        final decoded = utf8.decode(plaintext);
-        _logger.i(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_success event=success sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} plaintext_len=${decoded.length} signal_type=$type',
-          module: 'E2eeCrypto',
-        );
-        return decoded;
+        try {
+          await persistSignalDeviceMapping(
+            senderUserId: senderUserId,
+            appDeviceId: senderDeviceId,
+            signalDeviceId: signalDeviceId,
+          );
+        } catch (persistError, persistStackTrace) {
+          _logger.w(
+            '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_mapping_persist_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId signal_device_id=$signalDeviceId error_type=${persistError.runtimeType}',
+            error: persistError,
+            stackTrace: persistStackTrace,
+            module: 'E2eeCrypto',
+          );
+        }
+
+        return utf8.decode(plaintext);
       } catch (e, st) {
-        lastError = e;
         _logger.w(
-          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_candidate_failed event=warning sender_user_id=$senderUserId signal_address=${_signalAddressName(address)} signal_device_id=$candidateDeviceId signal_type=$type error_type=${e.runtimeType} error_message=${e.toString()}',
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=decrypt_session_failed event=warning sender_user_id=$senderUserId signal_device_id=${resolveInboundSignalDeviceId(
+            senderUserId: senderUserId,
+            senderDeviceId: senderDeviceId,
+            mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
+          )} signal_type=$type error_type=${e.runtimeType}',
           error: e,
           stackTrace: st,
           module: 'E2eeCrypto',
         );
+        throw EncryptionFailureException(
+          'Nie można odszyfrować wiadomości od użytkownika $senderUserId dla urządzenia ${resolveInboundSignalDeviceId(
+            senderUserId: senderUserId,
+            senderDeviceId: senderDeviceId,
+            mappedSignalDeviceIds: await _loadSignalDeviceMappings(),
+          )}. Nie wolno przełączać się na inną sesję Signal.',
+        );
       }
     }
 
-    final lastErrorMessage = lastError?.toString() ?? 'unknown';
-    throw EncryptionFailureException(
-      'Nie można odszyfrować wiadomości od użytkownika $senderUserId. Nie ma poprawnego numeru Signal device id dla sesji lokalnej i nie wolno zgadywać UUID jako device id. Ostatni błąd: $lastErrorMessage',
-    );
+    try {
+      return await attemptDecrypt();
+    } on SignalDeviceMappingException catch (mappingError, mappingStackTrace) {
+      _logger.w(
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_mapping_missing_retry event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${mappingError.runtimeType}',
+        error: mappingError,
+        stackTrace: mappingStackTrace,
+        module: 'E2eeCrypto',
+      );
+
+      try {
+        await registerDeviceIdentityWithOperation(effectiveOperationId);
+        await ensureSessionForPeer(
+          senderUserId,
+          operationId: effectiveOperationId,
+        );
+        return await attemptDecrypt();
+      } catch (bootstrapError, bootstrapStackTrace) {
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_mapping_bootstrap_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${bootstrapError.runtimeType}',
+          error: bootstrapError,
+          stackTrace: bootstrapStackTrace,
+          module: 'E2eeCrypto',
+        );
+        rethrow;
+      }
+    } on SignalSessionNotFoundException catch (sessionError, sessionStackTrace) {
+      _logger.w(
+        '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_session_missing_retry event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${sessionError.runtimeType}',
+        error: sessionError,
+        stackTrace: sessionStackTrace,
+        module: 'E2eeCrypto',
+      );
+
+      try {
+        await registerDeviceIdentityWithOperation(effectiveOperationId);
+        await ensureSessionForPeer(
+          senderUserId,
+          operationId: effectiveOperationId,
+        );
+        return await attemptDecrypt();
+      } catch (bootstrapError, bootstrapStackTrace) {
+        _logger.w(
+          '[E2EE_TRACE] operation_id=$effectiveOperationId stage=inbound_session_bootstrap_failed event=warning sender_user_id=$senderUserId sender_app_device_id=$senderDeviceId error_type=${bootstrapError.runtimeType}',
+          error: bootstrapError,
+          stackTrace: bootstrapStackTrace,
+          module: 'E2eeCrypto',
+        );
+        rethrow;
+      }
+    }
   }
 
   Future<EncryptedData> encryptMessage(
@@ -908,55 +874,6 @@ class E2eeCryptoService {
       );
     }
   }
-
-  Future<String?> decryptMessage(
-    String conversationId,
-    String ciphertextBase64,
-    String nonceBase64,
-  ) async {
-    _logger.w(
-      'Błąd odszyfrowywania wiadomości Signal: brak peerDeviceId; nie można zgadywać adresu Signal z konwersacji lub ciphertextu.',
-      module: 'E2eeCrypto',
-    );
-    return null;
-  }
-
-  Future<String?> decryptMessageWithPeerDevice(
-    String conversationId,
-    String peerDeviceId,
-    String ciphertextBase64,
-    String nonceBase64,
-  ) async {
-    try {
-      final ciphertextBytes = base64Decode(ciphertextBase64);
-      final peerAddress = SignalProtocolAddress(
-        conversationId,
-        resolveSignalDeviceId(peerDeviceId),
-      );
-      final sessionCipher = SessionCipher.fromStore(_signalStore, peerAddress);
-
-      Uint8List plaintext;
-      try {
-        plaintext = await sessionCipher.decrypt(
-          PreKeySignalMessage(ciphertextBytes),
-        );
-      } catch (_) {
-        plaintext = await sessionCipher.decryptFromSignal(
-          SignalMessage.fromSerialized(ciphertextBytes),
-        );
-      }
-
-      return utf8.decode(plaintext);
-    } catch (e, st) {
-      _logger.e(
-        'Błąd odszyfrowywania wiadomości Signal',
-        error: e,
-        stackTrace: st,
-        module: 'E2eeCrypto',
-      );
-      return null;
-    }
-  }
 }
 
 @riverpod
@@ -966,7 +883,7 @@ E2eeCryptoService e2eeCryptoService(Ref ref) {
   final apiClient = ref.watch(apiClientProvider);
   final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final db = ref.watch(appDatabaseProvider);
-  final signalStore = DriftSignalProtocolStore(db);
+  final signalStore = DriftSignalProtocolStore(db, logger: logger);
 
   return E2eeCryptoService(
     secureStorage,

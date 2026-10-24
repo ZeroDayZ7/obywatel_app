@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_failure.dart';
@@ -9,6 +9,7 @@ part of 'app_failure.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFailure);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppFailure);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure()';
+    return 'AppFailure()';
 }
 
 
@@ -239,7 +240,7 @@ class _Network extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Network);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Network);
 }
 
 
@@ -248,7 +249,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.network()';
+    return 'AppFailure.network()';
 }
 
 
@@ -271,7 +272,7 @@ class _Timeout extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Timeout);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Timeout);
 }
 
 
@@ -280,7 +281,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.timeout()';
+    return 'AppFailure.timeout()';
 }
 
 
@@ -303,7 +304,7 @@ class _BackendUnavailable extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackendUnavailable);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _BackendUnavailable);
 }
 
 
@@ -312,7 +313,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.backendUnavailable()';
+    return 'AppFailure.backendUnavailable()';
 }
 
 
@@ -340,16 +341,18 @@ _$ServerCopyWith<_Server> get copyWith => __$ServerCopyWithImpl<_Server>(this, _
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Server&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Server&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,statusCode);
+int get hashCode {
+    return Object.hash(runtimeType,statusCode);
+}
 
 @override
 String toString() {
-  return 'AppFailure.server(statusCode: $statusCode)';
+    return 'AppFailure.server(statusCode: $statusCode)';
 }
 
 
@@ -406,16 +409,18 @@ _$UpstreamCopyWith<_Upstream> get copyWith => __$UpstreamCopyWithImpl<_Upstream>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Upstream&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Upstream&&(identical(other.statusCode, statusCode) || other.statusCode == statusCode));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,statusCode);
+int get hashCode {
+    return Object.hash(runtimeType,statusCode);
+}
 
 @override
 String toString() {
-  return 'AppFailure.upstream(statusCode: $statusCode)';
+    return 'AppFailure.upstream(statusCode: $statusCode)';
 }
 
 
@@ -467,7 +472,7 @@ class _Unauthorized extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthorized);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthorized);
 }
 
 
@@ -476,7 +481,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.unauthorized()';
+    return 'AppFailure.unauthorized()';
 }
 
 
@@ -499,7 +504,7 @@ class _Forbidden extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Forbidden);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Forbidden);
 }
 
 
@@ -508,7 +513,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.forbidden()';
+    return 'AppFailure.forbidden()';
 }
 
 
@@ -536,16 +541,18 @@ _$ValidationCopyWith<_Validation> get copyWith => __$ValidationCopyWithImpl<_Val
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Validation&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Validation&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,messageKey);
+int get hashCode {
+    return Object.hash(runtimeType,messageKey);
+}
 
 @override
 String toString() {
-  return 'AppFailure.validation(messageKey: $messageKey)';
+    return 'AppFailure.validation(messageKey: $messageKey)';
 }
 
 
@@ -597,7 +604,7 @@ class _Parse extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Parse);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Parse);
 }
 
 
@@ -606,7 +613,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.parse()';
+    return 'AppFailure.parse()';
 }
 
 
@@ -629,7 +636,7 @@ class _Cache extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Cache);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Cache);
 }
 
 
@@ -638,7 +645,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.cache()';
+    return 'AppFailure.cache()';
 }
 
 
@@ -661,7 +668,7 @@ class _Unknown extends AppFailure {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unknown);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unknown);
 }
 
 
@@ -670,7 +677,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppFailure.unknown()';
+    return 'AppFailure.unknown()';
 }
 
 

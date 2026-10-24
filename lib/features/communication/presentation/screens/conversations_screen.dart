@@ -1,245 +1,109 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/presentation/providers/conversations_provider.dart';
 import 'package:obywatel_plus/features/communication/presentation/screens/chat_room_screen.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/conversations/conversation_tile.dart';
 
-class ConversationsScreen extends ConsumerWidget {
+class ConversationsScreen extends ConsumerStatefulWidget {
   const ConversationsScreen({super.key});
 
-@override
-Widget build(BuildContext context, WidgetRef ref) {
-  final theme = Theme.of(context);
-  final colorScheme = theme.colorScheme;
-  final conversationsState = ref.watch(conversationsProvider);
+  @override
+  ConsumerState<ConversationsScreen> createState() =>
+      _ConversationsScreenState();
+}
 
-  // Zwracamy bezpośrednio Column zamiast Scaffold, 
-  // ponieważ rodzic (CommunicationScreen) dostarcza już Scaffold i AppBar.
-  return Column(
-    children: [
-      Expanded(
-        child: conversationsState.when(
-          data: (conversations) {
-            if (conversations.isEmpty) {
-              return Center(
-                child: Text(
-                  'Brak aktywnych konwersacji',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              );
-            }
+class _ConversationsScreenState extends ConsumerState<ConversationsScreen> {
+  bool _selfConversationInitialized = false;
 
-            return RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(conversationsProvider.notifier).refresh(),
-              child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: conversations.length,
-                itemBuilder: (context, index) {
-                  final conversation = conversations[index];
-                  var previewText = 'Brak podglądu';
+  Future<void> _initializeSelfConversation() async {
+    if (_selfConversationInitialized) {
+      return;
+    }
 
-                  for (final item in conversation.messages ?? const []) {
-                    if (item != null) {
-                      final message = item as dynamic;
-                      final content = message.content?.toString();
-                      if (content != null && content.isNotEmpty) {
-                        previewText = content;
-                        break;
-                      }
-                    }
-                  }
+    _selfConversationInitialized = true;
+    await Future.microtask(() async {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(chatsRepositoryProvider).ensureSelfConversation();
+    });
+  }
 
-                  final displayName =
-                      (conversation.title != null &&
-                          conversation.title!.isNotEmpty)
-                      ? conversation.title!
-                      : 'Konwersacja #${conversation.id.substring(0, 4)}';
+  @override
+  void initState() {
+    super.initState();
+    _initializeSelfConversation();
+  }
 
-                  final lastActivity =
-                      conversation.updatedAt ?? DateTime.now();
-                  final timestamp =
-                      '${lastActivity.hour.toString().padLeft(2, '0')}:${lastActivity.minute.toString().padLeft(2, '0')}';
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final conversationsState = ref.watch(conversationsProvider);
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.35,
-                        ),
-                      ),
-                    ),
-                    child: InkWell(
-                      onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => ChatRoomScreen(
-                              conversationId: conversation.id,
-                              title: displayName,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(4),
-                              border: Border.all(
-                                color: colorScheme.outlineVariant
-                                    .withValues(alpha: 0.3),
-                              ),
-                            ),
-                            child: Icon(
-                              conversation.type == 'group'
-                                  ? Icons.group_outlined
-                                  : Icons.person_outline,
-                              color: colorScheme.onSurface,
-                              size: 20,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        displayName,
-                                        style: theme.textTheme.titleSmall
-                                            ?.copyWith(
-                                              color: colorScheme.onSurface,
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    Text(
-                                      timestamp,
-                                      style: theme.textTheme.labelSmall
-                                          ?.copyWith(
-                                            color: colorScheme
-                                                .onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  'SESSION: ${conversation.id.substring(0, min(12, conversation.id.length))}',
-                                  style: theme.textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                        letterSpacing: 0.4,
-                                      ),
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.shield_outlined,
-                                      size: 14,
-                                      color: colorScheme.primary,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Expanded(
-                                      child: Text(
-                                        previewText,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: theme.textTheme.bodySmall
-                                            ?.copyWith(
-                                              color: colorScheme
-                                                  .onSurfaceVariant,
-                                            ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 3,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primaryContainer,
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                                child: Text(
-                                  'E2EE',
-                                  style: theme.textTheme.labelSmall
-                                      ?.copyWith(
-                                        color:
-                                            colorScheme.onPrimaryContainer,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
+    return conversationsState.when(
+      data: (conversations) {
+        if (conversations.isEmpty) {
+          return Center(
+            child: Text(
+              'Brak aktywnych konwersacji',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          );
+        }
+
+        return RefreshIndicator(
+          onRefresh: () => ref.read(conversationsProvider.notifier).refresh(),
+          child: ListView.builder(
+            key: const PageStorageKey('conversations-list'),
+            padding: const EdgeInsets.all(12),
+            itemCount: conversations.length,
+            itemBuilder: (context, index) {
+              final conversation = conversations[index];
+              return ConversationTile(
+                key: ValueKey(conversation.id),
+                conversation: conversation,
+                onTap: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => ChatRoomScreen(
+                        conversationId: conversation.id,
+                        title: conversation.title?.trim().isNotEmpty == true
+                            ? conversation.title!
+                            : 'Konwersacja #${conversation.id.trim().length <= 4 ? conversation.id.trim() : conversation.id.trim().substring(0, 4)}',
                       ),
                     ),
                   );
                 },
+              );
+            },
+          ),
+        );
+      },
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Wystąpił błąd podczas ładowania wiadomości',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.error,
               ),
-            );
-          },
-          loading: () => Center(
-            child: CircularProgressIndicator(color: colorScheme.primary),
-          ),
-          error: (error, stack) => Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Wystąpił błąd podczas ładowania wiadomości',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.error,
-                  ),
-                ),
-                const SizedBox(height: 8.0),
-                FilledButton(
-                  onPressed: () =>
-                      ref.read(conversationsProvider.notifier).refresh(),
-                  child: const Text('Spróbuj ponownie'),
-                ),
-              ],
             ),
-          ),
+            const SizedBox(height: 8.0),
+            FilledButton(
+              onPressed: () =>
+                  ref.read(conversationsProvider.notifier).refresh(),
+              child: const Text('Spróbuj ponownie'),
+            ),
+          ],
         ),
       ),
-    ],
-  );
-}
+    );
+  }
 }

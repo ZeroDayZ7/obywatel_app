@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'auth_models.dart';
@@ -9,6 +9,7 @@ part of 'auth_models.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $UserProfileCopyWith<UserProfile> get copyWith => _$UserProfileCopyWithImpl<User
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin)&&(identical(other.role, role) || other.role == role));
+  final _this = this as UserProfile;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserProfile&&(identical(other.userId, _this.userId) || other.userId == _this.userId)&&(identical(other.displayName, _this.displayName) || other.displayName == _this.displayName)&&(identical(other.lastLogin, _this.lastLogin) || other.lastLogin == _this.lastLogin)&&(identical(other.role, _this.role) || other.role == _this.role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,displayName,lastLogin,role);
+int get hashCode {
+  final _this = this as UserProfile;
+  return Object.hash(runtimeType,_this.userId,_this.displayName,_this.lastLogin,_this.role);
+}
 
 @override
 String toString() {
-  return 'UserProfile(userId: $userId, displayName: $displayName, lastLogin: $lastLogin, role: $role)';
+  final _this = this as UserProfile;
+  return 'UserProfile(userId: ${_this.userId}, displayName: ${_this.displayName}, lastLogin: ${_this.lastLogin}, role: ${_this.role})';
 }
 
 
@@ -66,7 +72,7 @@ class _$UserProfileCopyWithImpl<$Res>
 /// Create a copy of UserProfile
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? userId = null,Object? displayName = null,Object? lastLogin = null,Object? role = null,}) {
-  return _then(_self.copyWith(
+  return _then(UserProfile(
 userId: null == userId ? _self.userId : userId // ignore: cast_nullable_to_non_nullable
 as String,displayName: null == displayName ? _self.displayName : displayName // ignore: cast_nullable_to_non_nullable
 as String,lastLogin: null == lastLogin ? _self.lastLogin : lastLogin // ignore: cast_nullable_to_non_nullable
@@ -227,16 +233,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin)&&(identical(other.role, role) || other.role == role));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserProfile&&(identical(other.userId, userId) || other.userId == userId)&&(identical(other.displayName, displayName) || other.displayName == displayName)&&(identical(other.lastLogin, lastLogin) || other.lastLogin == lastLogin)&&(identical(other.role, role) || other.role == role));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,userId,displayName,lastLogin,role);
+int get hashCode {
+    return Object.hash(runtimeType,userId,displayName,lastLogin,role);
+}
 
 @override
 String toString() {
-  return 'UserProfile(userId: $userId, displayName: $displayName, lastLogin: $lastLogin, role: $role)';
+    return 'UserProfile(userId: $userId, displayName: $displayName, lastLogin: $lastLogin, role: $role)';
 }
 
 
@@ -294,16 +302,21 @@ $RbacDataCopyWith<RbacData> get copyWith => _$RbacDataCopyWithImpl<RbacData>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is RbacData&&const DeepCollectionEquality().equals(other.permissions, permissions)&&(identical(other.workContext, workContext) || other.workContext == workContext));
+  final _this = this as RbacData;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is RbacData&&const DeepCollectionEquality().equals(other.permissions, _this.permissions)&&(identical(other.workContext, _this.workContext) || other.workContext == _this.workContext));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(permissions),workContext);
+int get hashCode {
+  final _this = this as RbacData;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.permissions),_this.workContext);
+}
 
 @override
 String toString() {
-  return 'RbacData(permissions: $permissions, workContext: $workContext)';
+  final _this = this as RbacData;
+  return 'RbacData(permissions: ${_this.permissions}, workContext: ${_this.workContext})';
 }
 
 
@@ -332,7 +345,7 @@ class _$RbacDataCopyWithImpl<$Res>
 /// Create a copy of RbacData
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? permissions = null,Object? workContext = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(RbacData(
 permissions: null == permissions ? _self.permissions : permissions // ignore: cast_nullable_to_non_nullable
 as List<String>,workContext: freezed == workContext ? _self.workContext : workContext // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -470,7 +483,7 @@ return $default(_that.permissions,_that.workContext);case _:
 @JsonSerializable()
 
 class _RbacData implements RbacData {
-  const _RbacData({@JsonKey(readValue: _readPermissions) final  List<String> permissions = const [], this.workContext}): _permissions = permissions;
+  const _RbacData({@JsonKey(readValue: _readPermissions)  List<String> permissions = const [], this.workContext}): _permissions = permissions;
   factory _RbacData.fromJson(Map<String, dynamic> json) => _$RbacDataFromJson(json);
 
  final  List<String> _permissions;
@@ -495,16 +508,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _RbacData&&const DeepCollectionEquality().equals(other._permissions, _permissions)&&(identical(other.workContext, workContext) || other.workContext == workContext));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _RbacData&&const DeepCollectionEquality().equals(other.permissions, _permissions)&&(identical(other.workContext, workContext) || other.workContext == workContext));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_permissions),workContext);
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_permissions),workContext);
+}
 
 @override
 String toString() {
-  return 'RbacData(permissions: $permissions, workContext: $workContext)';
+    return 'RbacData(permissions: $permissions, workContext: $workContext)';
 }
 
 

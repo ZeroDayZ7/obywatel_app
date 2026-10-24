@@ -41,13 +41,13 @@ final class SecurityServiceProvider
   }
 }
 
-String _$securityServiceHash() => r'286d44faf99e8d9069756b4fa8fa8b6b88a73f13';
+String _$securityServiceHash() => r'712a72b955e2c04de16edcfb112e5e6384a5326d';
 
 abstract class _$SecurityService extends $Notifier<SecurityState> {
   SecurityState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SecurityState, SecurityState>;
     final element =
         ref.element
@@ -57,6 +57,6 @@ abstract class _$SecurityService extends $Notifier<SecurityState> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

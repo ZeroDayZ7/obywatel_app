@@ -17,6 +17,8 @@ abstract class MessageDto with _$MessageDto {
     @JsonKey(name: 'senderId', fromJson: _stringFromJson) required String senderId,
     @JsonKey(name: 'senderDeviceId', fromJson: _nullableStringFromJson)
     String? senderDeviceId,
+    @JsonKey(name: 'attachmentId', fromJson: _nullableStringFromJson)
+    String? attachmentId,
     @JsonKey(name: 'type', fromJson: _stringFromJson) required String type,
     @JsonKey(name: 'sequence') @Default(0) int sequence,
     @JsonKey(name: 'version') @Default(1) int version,

@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/features/communication/application/messaging_activation_controller.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
 
 class MessagingOnboardingScreen extends ConsumerWidget {
-  const MessagingOnboardingScreen({super.key});
+  const MessagingOnboardingScreen({
+    super.key,
+    this.activationState,
+  });
+
+  final MessagingActivationState? activationState;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -18,9 +24,15 @@ class MessagingOnboardingScreen extends ConsumerWidget {
       );
     }
 
-    final activationState = state.value ?? const MessagingActivationState();
-    final termsText = activationState.terms?.text ??
-        'Komunikator XYZ umożliwia prowadzenie prywatnych rozmów z innymi użytkownikami Obywatel Plus. Przed rozpoczęciem korzystania z komunikatora zapoznaj się z zasadami usługi i potwierdź ich akceptację.';
+    final currentState = activationState ?? state.value ?? const MessagingActivationState();
+    final termsText = currentState.termsText?.trim();
+    final currentTermsVersion = currentState.currentTermsVersion?.trim();
+    final hasUsableTerms = currentState.hasUsableTerms;
+
+    final errorMessage = currentState.errorMessage ??
+        (!hasUsableTerms
+            ? 'Problem z siecią. Regulamin nie jest dostępny. Spróbuj ponownie za chwilę.'
+            : null);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -36,32 +48,56 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Komunikator XYZ',
+                      'Aktywacja komunikatora',
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      'Aktywacja i regulamin',
+                      'Regulamin',
                       style: textTheme.titleMedium?.copyWith(
                         color: colorScheme.primary,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+                    if (currentTermsVersion != null && currentTermsVersion.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Wersja: $currentTermsVersion',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(16),
+                    if (hasUsableTerms)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          termsText ?? '',
+                          style: textTheme.bodyLarge,
+                        ),
+                      )
+                    else
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Text(
+                          'Brak treści regulaminu do akceptacji. Pobierz regulamin ponownie, aby kontynuować.',
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onErrorContainer,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        termsText,
-                        style: textTheme.bodyLarge,
-                      ),
-                    ),
-                    if (activationState.errorMessage != null) ...[
+                    if (errorMessage != null) ...[
                       const SizedBox(height: 16),
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -70,7 +106,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          activationState.errorMessage!,
+                          errorMessage,
                           style: textTheme.bodyMedium?.copyWith(
                             color: colorScheme.onErrorContainer,
                           ),
@@ -78,17 +114,33 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                       ),
                     ],
                     const SizedBox(height: 24),
-                    FilledButton.icon(
-                      onPressed: state.isLoading ? null : () => controller.acceptCurrentTerms(),
-                      icon: const Icon(Icons.check_circle_outline),
-                      label: const Text('Akceptuję regulamin'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton.icon(
-                      onPressed: state.isLoading ? null : () => controller.declineTerms(),
-                      icon: const Icon(Icons.close),
-                      label: const Text('Zrezygnuj'),
-                    ),
+                    if (!hasUsableTerms) ...[
+                      FilledButton.icon(
+                        onPressed: state.isLoading
+                            ? null
+                            : () {
+                                if (Navigator.of(context).canPop()) {
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        label: const Text('Wróć do menu głównego'),
+                      ),
+                    ] else ...[
+                      FilledButton.icon(
+                        onPressed: state.isLoading
+                            ? null
+                            : () => controller.acceptCurrentTerms(),
+                        icon: const Icon(Icons.check_circle_outline),
+                        label: const Text('Akceptuję regulamin'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextButton.icon(
+                        onPressed: state.isLoading ? null : () => controller.declineTerms(),
+                        icon: const Icon(Icons.close),
+                        label: const Text('Zrezygnuj'),
+                      ),
+                    ],
                   ],
                 ),
               ),

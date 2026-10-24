@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/drift_signal_protocol_store.dart';
+import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
@@ -21,9 +22,10 @@ import 'package:obywatel_plus/features/communication/data/datasources/chats_api_
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_utils.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_bubble.dart';
-import 'package:obywatel_plus/features/communication/presentation/widgets/message_list.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_bubble.dart';
+import 'package:obywatel_plus/features/communication/presentation/widgets/messages/message_list.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
@@ -105,126 +107,6 @@ void main() {
     return conversationId;
   }
 
-  setUp(() {
-    database = AppDatabase(NativeDatabase.memory());
-    logger = AppLogger();
-  });
-
-  test(
-    'device bundle persists generated signed and one-time prekeys in Drift before session setup',
-    () async {
-      final secureStorage = SecureStorageService(
-        const FlutterSecureStorage(),
-        logger,
-      );
-      final apiClient = ApiClient(
-        dio: Dio(),
-        storage: secureStorage,
-        logger: logger,
-      );
-      final store = DriftSignalProtocolStore(database);
-      final service = E2eeCryptoService(
-        secureStorage,
-        logger,
-        apiClient,
-        DeviceInfoService(logger),
-        store,
-      );
-
-      final bundle = await service.ensureDeviceIdentityBundle();
-
-      expect(bundle.signedPreKeyId, 1);
-      expect(await store.containsSignedPreKey(bundle.signedPreKeyId), isTrue);
-      expect(await store.containsPreKey(1), isTrue);
-
-      final loadedSigned = await store.loadSignedPreKey(bundle.signedPreKeyId);
-      final loadedPreKey = await store.loadPreKey(1);
-
-      expect(loadedSigned.id, bundle.signedPreKeyId);
-      expect(loadedPreKey.id, 1);
-    },
-  );
-
-  test('outbox payload keeps only ciphertext and omits plaintext content', () {
-    final message = Message(
-      id: const Uuid().v4(),
-      conversationId: const Uuid().v4(),
-      senderId: const Uuid().v4(),
-      content: 'visible plaintext',
-      encryptedPayload: 'ciphertext-base64',
-      isMine: true,
-      createdAt: DateTime.now(),
-      status: 'pending',
-      isEncrypted: true,
-    );
-
-    final payload = buildOutboxEventPayload(message, 'device-1');
-
-    expect(payload['content'], equals(null));
-    expect(payload['payload']['content'], equals(null));
-    expect(payload['payload']['ciphertext'], 'ciphertext-base64');
-  });
-
-  testWidgets('message list orders oldest messages first and keeps deterministic chronology', (tester) async {
-    final messages = [
-      Message(
-        id: 'msg-2',
-        conversationId: 'conv-1',
-        senderId: 'user-a',
-        content: 'newer',
-        encryptedPayload: 'newer',
-        isMine: true,
-        createdAt: DateTime.utc(2024, 1, 1, 12, 5),
-        status: 'sent',
-        isEncrypted: false,
-      ),
-      Message(
-        id: 'msg-1',
-        conversationId: 'conv-1',
-        senderId: 'user-b',
-        content: 'older',
-        encryptedPayload: 'older',
-        isMine: false,
-        createdAt: DateTime.utc(2024, 1, 1, 11, 55),
-        status: 'sent',
-        isEncrypted: false,
-      ),
-    ];
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Scaffold(body: MessageList(messages: messages)),
-      ),
-    );
-
-    final rendered = tester.widgetList<Text>(find.byType(Text)).toList();
-    expect(rendered.map((text) => text.data).toList(), containsAll(['older', 'newer']));
-    expect(find.text('older'), findsOneWidget);
-    expect(find.text('newer'), findsOneWidget);
-  });
-
-  testWidgets('message bubble renders placeholder instead of an empty ghost bubble', (tester) async {
-    final message = Message(
-      id: 'msg-empty',
-      conversationId: 'conv-1',
-      senderId: 'user-b',
-      content: '',
-      encryptedPayload: 'ciphertext',
-      isMine: false,
-      createdAt: DateTime.utc(2024, 1, 1, 12, 0),
-      status: 'sent',
-      isEncrypted: true,
-    );
-
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MessageBubble(message: message))));
-
-    expect(find.text('Nie można odszyfrować wiadomości'), findsOneWidget);
-  });
-
-  tearDown(() async {
-    await database.close();
-  });
-
   Future<ChatsRepositoryImpl> createRepositoryWithSession({
     required String userId,
     required String peerId,
@@ -280,9 +162,265 @@ void main() {
       userId,
       DeviceInfoService(logger),
       aliceService,
+      SymmetricCrypto(logger),
       secureStorage,
     );
   }
+
+  setUp(() {
+    database = AppDatabase(NativeDatabase.memory());
+    logger = AppLogger();
+  });
+
+  test(
+    'persisted plaintext in Drift is reused without live decrypt on restart',
+    () async {
+      final repository = await createRepositoryWithSession(
+        userId: 'user-a',
+        peerId: 'peer-user',
+      );
+
+      await database.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('msg-restart-plain'),
+          conversationId: const Value('peer-user'),
+          senderId: const Value('peer-user'),
+          senderDeviceId: const Value('device-2'),
+          type: const Value('text'),
+          sequence: Value(BigInt.one),
+          content: Value('wartość jawna z bazy'),
+          encryptedPayload: Value(
+            utf8.encode('ciphertext-zostawiony-dla-legacy'),
+          ),
+          mediaHeader: const Value.absent(),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(DateTime.utc(2024, 1, 1, 10, 0)),
+          updatedAt: Value(DateTime.utc(2024, 1, 1, 10, 0)),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final loaded = await repository
+          .watchMessagesForConversation('peer-user')
+          .first;
+      expect(loaded.single.content, 'wartość jawna z bazy');
+      expect(loaded.single.isEncrypted, isFalse);
+    },
+  );
+
+  test('message mapping prefers explicit plaintext for owned messages', () {
+    final dto = MessageDto(
+      id: 'msg-owned-plain',
+      conversationId: 'conv-1',
+      senderId: 'user-a',
+      senderDeviceId: 'device-1',
+      type: 'text',
+      sequence: 1,
+      version: 1,
+      encryptedPayload: 'ciphertext-base64',
+      createdAt: DateTime.utc(2024, 1, 2, 9, 30),
+    );
+
+    final message = mapMessageFromDto(
+      dto,
+      'user-a',
+      plaintext: 'hello from me',
+    );
+
+    expect(message.content, 'hello from me');
+    expect(message.isMine, isTrue);
+  });
+
+  test(
+    'attachment-only message falls back to filename when Drift content is empty',
+    () async {
+      final repository = await createRepositoryWithSession(
+        userId: 'user-a',
+        peerId: 'peer-user',
+      );
+
+      final attachmentId = 'att-fallback-1';
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      await secureStorage.write(
+        key: '$attachmentId-attachment-meta',
+        value: jsonEncode({
+          'key': base64Encode(List<int>.filled(32, 7)),
+          'originalFilename': 'S (1).jpg',
+          'originalContentType': 'image/jpeg',
+          'size': 42,
+        }),
+      );
+
+      await database.chatsDao.upsertConversations([
+        ConversationsCompanion(
+          id: const Value('conv-attachment-fallback'),
+          type: const Value('direct'),
+          title: const Value('Peer'),
+          lastSequence: Value(BigInt.zero),
+          updatedAt: Value(DateTime.now()),
+          createdAt: Value(DateTime.now()),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      await database.chatsDao.upsertMessages([
+        MessagesCompanion(
+          id: const Value('msg-attachment-empty-content'),
+          conversationId: const Value('conv-attachment-fallback'),
+          senderId: const Value('peer-user'),
+          senderDeviceId: const Value('device-2'),
+          attachmentId: Value(attachmentId),
+          type: const Value('signal'),
+          sequence: Value(BigInt.one),
+          content: const Value(''),
+          encryptedPayload: Value(utf8.encode('fake-ciphertext')),
+          mediaHeader: const Value.absent(),
+          version: Value(BigInt.one),
+          status: const Value('sent'),
+          createdAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+          updatedAt: Value(DateTime.utc(2024, 1, 2, 11, 0)),
+          deletedAt: const Value.absent(),
+        ),
+      ]);
+
+      final messages = await repository
+          .watchMessagesForConversation('conv-attachment-fallback')
+          .first;
+      expect(messages.single.content, '📎 S (1).jpg');
+    },
+  );
+
+  test(
+    'device bundle persists generated signed and one-time prekeys in Drift before session setup',
+    () async {
+      final secureStorage = SecureStorageService(
+        const FlutterSecureStorage(),
+        logger,
+      );
+      final apiClient = ApiClient(
+        dio: Dio(),
+        storage: secureStorage,
+        logger: logger,
+      );
+      final store = DriftSignalProtocolStore(database);
+      final service = E2eeCryptoService(
+        secureStorage,
+        logger,
+        apiClient,
+        DeviceInfoService(logger),
+        store,
+      );
+
+      final bundle = await service.ensureDeviceIdentityBundle();
+
+      expect(bundle.signedPreKeyId, 1);
+      expect(await store.containsSignedPreKey(bundle.signedPreKeyId), isTrue);
+      expect(await store.containsPreKey(1), isTrue);
+
+      final loadedSigned = await store.loadSignedPreKey(bundle.signedPreKeyId);
+      final loadedPreKey = await store.loadPreKey(1);
+
+      expect(loadedSigned.id, bundle.signedPreKeyId);
+      expect(loadedPreKey.id, 1);
+    },
+  );
+
+  test('outbox payload keeps only ciphertext and omits plaintext content', () {
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: const Uuid().v4(),
+      senderId: const Uuid().v4(),
+      content: 'visible plaintext',
+      encryptedPayload: 'ciphertext-base64',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+
+    final payload = buildOutboxEventPayload(message, 'device-1', signalType: 2);
+
+    expect(payload['content'], equals(null));
+    expect(payload['payload']['content'], equals(null));
+    expect(payload['payload']['ciphertext'], 'ciphertext-base64');
+  });
+
+  testWidgets(
+    'message list orders oldest messages first and keeps deterministic chronology',
+    (tester) async {
+      final messages = [
+        Message(
+          id: 'msg-2',
+          conversationId: 'conv-1',
+          senderId: 'user-a',
+          content: 'newer',
+          encryptedPayload: 'newer',
+          isMine: true,
+          createdAt: DateTime.utc(2024, 1, 1, 12, 5),
+          status: 'sent',
+          isEncrypted: false,
+        ),
+        Message(
+          id: 'msg-1',
+          conversationId: 'conv-1',
+          senderId: 'user-b',
+          content: 'older',
+          encryptedPayload: 'older',
+          isMine: false,
+          createdAt: DateTime.utc(2024, 1, 1, 11, 55),
+          status: 'sent',
+          isEncrypted: false,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MessageList(messages: messages)),
+        ),
+      );
+
+      final rendered = tester.widgetList<Text>(find.byType(Text)).toList();
+      expect(
+        rendered.map((text) => text.data).toList(),
+        containsAll(['older', 'newer']),
+      );
+      expect(find.text('older'), findsOneWidget);
+      expect(find.text('newer'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'message bubble renders placeholder instead of an empty ghost bubble',
+    (tester) async {
+      final message = Message(
+        id: 'msg-empty',
+        conversationId: 'conv-1',
+        senderId: 'user-b',
+        content: '',
+        encryptedPayload: 'ciphertext',
+        isMine: false,
+        createdAt: DateTime.utc(2024, 1, 1, 12, 0),
+        status: 'sent',
+        isEncrypted: true,
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(body: MessageBubble(message: message)),
+        ),
+      );
+
+      expect(find.text('Nie można odszyfrować wiadomości'), findsOneWidget);
+    },
+  );
+
+  tearDown(() async {
+    await database.close();
+  });
 
   test(
     'local first: sendMessage stores ciphertext in Drift and keeps UI plaintext from local flow',
@@ -421,6 +559,7 @@ void main() {
         'user-a',
         DeviceInfoService(logger),
         aliceService,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 
@@ -486,6 +625,7 @@ void main() {
         message,
         'device-abc',
         encryptedContent: message.encryptedPayload,
+        signalType: 2,
       );
       await database.outboxDao.enqueueEvent(
         OutboxEventsCompanion(
@@ -538,6 +678,7 @@ void main() {
         message,
         'device-abc',
         encryptedContent: message.encryptedPayload,
+        signalType: 2,
       );
 
       await database.outboxDao.enqueueEvent(
@@ -605,6 +746,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -636,6 +778,66 @@ void main() {
     expect(row.retryCount, equals(2));
   });
 
+  test('repository schedules retry and persists new retryCount', () async {
+    final repository = await createRepositoryWithSession(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+    final conversationId = await seedServerConversationForPeer(
+      userId: 'user-a',
+      peerId: 'peer-user',
+    );
+    final message = Message(
+      id: const Uuid().v4(),
+      conversationId: conversationId,
+      senderId: 'user-a',
+      content: 'retry count check',
+      encryptedPayload: 'ciphertext-retry-count-check',
+      isMine: true,
+      createdAt: DateTime.now(),
+      status: 'pending',
+      isEncrypted: true,
+    );
+    final event = buildOutboxEventPayload(
+      message,
+      'device-abc',
+      encryptedContent: message.encryptedPayload,
+      signalType: 2,
+    );
+    final outboxEventId = (event['eventId'] as String?) ?? const Uuid().v4();
+
+    await database.outboxDao.enqueueEvent(
+      OutboxEventsCompanion(
+        id: Value(message.id),
+        outboxEventId: Value(outboxEventId),
+        eventType: const Value('SEND_MESSAGE'),
+        conversationId: Value(conversationId),
+        payload: Value(jsonEncode(event)),
+        status: const Value('pending'),
+        retryCount: const Value(0),
+        attemptCount: const Value(0),
+        nextAttemptAt: const Value.absent(),
+        createdAt: Value(message.createdAt),
+        updatedAt: Value(message.createdAt),
+      ),
+    );
+
+    await repository.scheduleOutboxRetry(
+      message.id,
+      retryCount: 3,
+      referenceTime: DateTime.now(),
+    );
+
+    final row = await database.outboxDao.getRowById(message.id);
+    final domainEvent = await repository.getOutboxEventById(message.id);
+
+    expect(row == null, isFalse);
+    expect(row!.retryCount, equals(3));
+    expect(domainEvent == null, isFalse);
+    expect(domainEvent!.retryCount, equals(3));
+    expect(row.nextAttemptAt == null, isFalse);
+  });
+
   test('phase 6: retry eligibility is gated by nextAttemptAt', () async {
     final conversationId = await seedServerConversationForPeer(
       userId: 'user-a',
@@ -656,6 +858,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -713,6 +916,7 @@ void main() {
       message,
       'device-abc',
       encryptedContent: message.encryptedPayload,
+      signalType: 2,
     );
 
     await database.outboxDao.enqueueEvent(
@@ -782,16 +986,19 @@ void main() {
     },
   );
 
-  test('signal device id is stable for UUID device ids and does not collapse to 1', () {
-    const uuidDeviceId = '8e681e7c-6ccc-4854-8fc6-b6dd5074f39e';
+  test(
+    'signal device id is stable for UUID device ids and does not collapse to 1',
+    () {
+      const uuidDeviceId = '8e681e7c-6ccc-4854-8fc6-b6dd5074f39e';
 
-    final first = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
-    final second = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+      final first = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
+      final second = E2eeCryptoService.resolveSignalDeviceId(uuidDeviceId);
 
-    expect(first, isNot(1));
-    expect(second, equals(first));
-    expect(first, isPositive);
-  });
+      expect(first, isNot(1));
+      expect(second, equals(first));
+      expect(first, isPositive);
+    },
+  );
 
   test('device identity should stay stable per installation', () async {
     const secureStorage = FlutterSecureStorage();
@@ -838,7 +1045,11 @@ void main() {
         createdAt: DateTime.utc(2024, 1, 1, 10, 0),
       );
 
-      final event = buildOutboxEventPayload(message, 'device-abc');
+      final event = buildOutboxEventPayload(
+        message,
+        'device-abc',
+        signalType: 2,
+      );
       final payload = event['payload'] as Map<String, dynamic>;
 
       expect(Uuid.isValidUUID(fromString: event['event_id'] as String), isTrue);
@@ -886,7 +1097,7 @@ void main() {
       );
 
       expect(
-        () => buildOutboxEventPayload(message, 'device-abc'),
+        () => buildOutboxEventPayload(message, 'device-abc', signalType: 2),
         throwsA(isA<StateError>()),
       );
     },
@@ -936,6 +1147,7 @@ void main() {
         'user-123',
         DeviceInfoService(logger),
         crypto,
+        SymmetricCrypto(logger),
         secureStorage,
       );
 

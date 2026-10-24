@@ -3655,6 +3655,29 @@ class $MessagesTable extends Messages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _attachmentIdMeta = const VerificationMeta(
+    'attachmentId',
+  );
+  @override
+  late final GeneratedColumn<String> attachmentId = GeneratedColumn<String>(
+    'attachment_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _contentMeta = const VerificationMeta(
+    'content',
+  );
+  @override
+  late final GeneratedColumn<String> content = GeneratedColumn<String>(
+    'content',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
@@ -3763,6 +3786,8 @@ class $MessagesTable extends Messages
     conversationId,
     senderId,
     senderDeviceId,
+    attachmentId,
+    content,
     type,
     sequence,
     encryptedPayload,
@@ -3819,6 +3844,21 @@ class $MessagesTable extends Messages
       );
     } else if (isInserting) {
       context.missing(_senderDeviceIdMeta);
+    }
+    if (data.containsKey('attachment_id')) {
+      context.handle(
+        _attachmentIdMeta,
+        attachmentId.isAcceptableOrUnknown(
+          data['attachment_id']!,
+          _attachmentIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('content')) {
+      context.handle(
+        _contentMeta,
+        content.isAcceptableOrUnknown(data['content']!, _contentMeta),
+      );
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -3907,6 +3947,14 @@ class $MessagesTable extends Messages
         DriftSqlType.string,
         data['${effectivePrefix}sender_device_id'],
       )!,
+      attachmentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}attachment_id'],
+      ),
+      content: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}content'],
+      )!,
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -3957,6 +4005,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
   final String conversationId;
   final String senderId;
   final String senderDeviceId;
+  final String? attachmentId;
+  final String content;
   final String type;
   final BigInt? sequence;
   final Uint8List encryptedPayload;
@@ -3971,6 +4021,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     required this.conversationId,
     required this.senderId,
     required this.senderDeviceId,
+    this.attachmentId,
+    required this.content,
     required this.type,
     this.sequence,
     required this.encryptedPayload,
@@ -3988,6 +4040,10 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     map['conversation_id'] = Variable<String>(conversationId);
     map['sender_id'] = Variable<String>(senderId);
     map['sender_device_id'] = Variable<String>(senderDeviceId);
+    if (!nullToAbsent || attachmentId != null) {
+      map['attachment_id'] = Variable<String>(attachmentId);
+    }
+    map['content'] = Variable<String>(content);
     map['type'] = Variable<String>(type);
     if (!nullToAbsent || sequence != null) {
       map['sequence'] = Variable<BigInt>(sequence);
@@ -4012,6 +4068,10 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       conversationId: Value(conversationId),
       senderId: Value(senderId),
       senderDeviceId: Value(senderDeviceId),
+      attachmentId: attachmentId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(attachmentId),
+      content: Value(content),
       type: Value(type),
       sequence: sequence == null && nullToAbsent
           ? const Value.absent()
@@ -4040,6 +4100,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       conversationId: serializer.fromJson<String>(json['conversationId']),
       senderId: serializer.fromJson<String>(json['senderId']),
       senderDeviceId: serializer.fromJson<String>(json['senderDeviceId']),
+      attachmentId: serializer.fromJson<String?>(json['attachmentId']),
+      content: serializer.fromJson<String>(json['content']),
       type: serializer.fromJson<String>(json['type']),
       sequence: serializer.fromJson<BigInt?>(json['sequence']),
       encryptedPayload: serializer.fromJson<Uint8List>(
@@ -4061,6 +4123,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       'conversationId': serializer.toJson<String>(conversationId),
       'senderId': serializer.toJson<String>(senderId),
       'senderDeviceId': serializer.toJson<String>(senderDeviceId),
+      'attachmentId': serializer.toJson<String?>(attachmentId),
+      'content': serializer.toJson<String>(content),
       'type': serializer.toJson<String>(type),
       'sequence': serializer.toJson<BigInt?>(sequence),
       'encryptedPayload': serializer.toJson<Uint8List>(encryptedPayload),
@@ -4078,6 +4142,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     String? conversationId,
     String? senderId,
     String? senderDeviceId,
+    Value<String?> attachmentId = const Value.absent(),
+    String? content,
     String? type,
     Value<BigInt?> sequence = const Value.absent(),
     Uint8List? encryptedPayload,
@@ -4092,6 +4158,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     conversationId: conversationId ?? this.conversationId,
     senderId: senderId ?? this.senderId,
     senderDeviceId: senderDeviceId ?? this.senderDeviceId,
+    attachmentId: attachmentId.present ? attachmentId.value : this.attachmentId,
+    content: content ?? this.content,
     type: type ?? this.type,
     sequence: sequence.present ? sequence.value : this.sequence,
     encryptedPayload: encryptedPayload ?? this.encryptedPayload,
@@ -4112,6 +4180,10 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
       senderDeviceId: data.senderDeviceId.present
           ? data.senderDeviceId.value
           : this.senderDeviceId,
+      attachmentId: data.attachmentId.present
+          ? data.attachmentId.value
+          : this.attachmentId,
+      content: data.content.present ? data.content.value : this.content,
       type: data.type.present ? data.type.value : this.type,
       sequence: data.sequence.present ? data.sequence.value : this.sequence,
       encryptedPayload: data.encryptedPayload.present
@@ -4135,6 +4207,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           ..write('conversationId: $conversationId, ')
           ..write('senderId: $senderId, ')
           ..write('senderDeviceId: $senderDeviceId, ')
+          ..write('attachmentId: $attachmentId, ')
+          ..write('content: $content, ')
           ..write('type: $type, ')
           ..write('sequence: $sequence, ')
           ..write('encryptedPayload: $encryptedPayload, ')
@@ -4154,6 +4228,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
     conversationId,
     senderId,
     senderDeviceId,
+    attachmentId,
+    content,
     type,
     sequence,
     $driftBlobEquality.hash(encryptedPayload),
@@ -4172,6 +4248,8 @@ class MessageEntity extends DataClass implements Insertable<MessageEntity> {
           other.conversationId == this.conversationId &&
           other.senderId == this.senderId &&
           other.senderDeviceId == this.senderDeviceId &&
+          other.attachmentId == this.attachmentId &&
+          other.content == this.content &&
           other.type == this.type &&
           other.sequence == this.sequence &&
           $driftBlobEquality.equals(
@@ -4191,6 +4269,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
   final Value<String> conversationId;
   final Value<String> senderId;
   final Value<String> senderDeviceId;
+  final Value<String?> attachmentId;
+  final Value<String> content;
   final Value<String> type;
   final Value<BigInt?> sequence;
   final Value<Uint8List> encryptedPayload;
@@ -4206,6 +4286,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     this.conversationId = const Value.absent(),
     this.senderId = const Value.absent(),
     this.senderDeviceId = const Value.absent(),
+    this.attachmentId = const Value.absent(),
+    this.content = const Value.absent(),
     this.type = const Value.absent(),
     this.sequence = const Value.absent(),
     this.encryptedPayload = const Value.absent(),
@@ -4222,6 +4304,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     required String conversationId,
     required String senderId,
     required String senderDeviceId,
+    this.attachmentId = const Value.absent(),
+    this.content = const Value.absent(),
     this.type = const Value.absent(),
     this.sequence = const Value.absent(),
     required Uint8List encryptedPayload,
@@ -4242,6 +4326,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Expression<String>? conversationId,
     Expression<String>? senderId,
     Expression<String>? senderDeviceId,
+    Expression<String>? attachmentId,
+    Expression<String>? content,
     Expression<String>? type,
     Expression<BigInt>? sequence,
     Expression<Uint8List>? encryptedPayload,
@@ -4258,6 +4344,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       if (conversationId != null) 'conversation_id': conversationId,
       if (senderId != null) 'sender_id': senderId,
       if (senderDeviceId != null) 'sender_device_id': senderDeviceId,
+      if (attachmentId != null) 'attachment_id': attachmentId,
+      if (content != null) 'content': content,
       if (type != null) 'type': type,
       if (sequence != null) 'sequence': sequence,
       if (encryptedPayload != null) 'encrypted_payload': encryptedPayload,
@@ -4276,6 +4364,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     Value<String>? conversationId,
     Value<String>? senderId,
     Value<String>? senderDeviceId,
+    Value<String?>? attachmentId,
+    Value<String>? content,
     Value<String>? type,
     Value<BigInt?>? sequence,
     Value<Uint8List>? encryptedPayload,
@@ -4292,6 +4382,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
       conversationId: conversationId ?? this.conversationId,
       senderId: senderId ?? this.senderId,
       senderDeviceId: senderDeviceId ?? this.senderDeviceId,
+      attachmentId: attachmentId ?? this.attachmentId,
+      content: content ?? this.content,
       type: type ?? this.type,
       sequence: sequence ?? this.sequence,
       encryptedPayload: encryptedPayload ?? this.encryptedPayload,
@@ -4319,6 +4411,12 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
     }
     if (senderDeviceId.present) {
       map['sender_device_id'] = Variable<String>(senderDeviceId.value);
+    }
+    if (attachmentId.present) {
+      map['attachment_id'] = Variable<String>(attachmentId.value);
+    }
+    if (content.present) {
+      map['content'] = Variable<String>(content.value);
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
@@ -4360,6 +4458,8 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
           ..write('conversationId: $conversationId, ')
           ..write('senderId: $senderId, ')
           ..write('senderDeviceId: $senderDeviceId, ')
+          ..write('attachmentId: $attachmentId, ')
+          ..write('content: $content, ')
           ..write('type: $type, ')
           ..write('sequence: $sequence, ')
           ..write('encryptedPayload: $encryptedPayload, ')
@@ -4369,6 +4469,710 @@ class MessagesCompanion extends UpdateCompanion<MessageEntity> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $MessagingActivationStatesTable extends MessagingActivationStates
+    with
+        TableInfo<
+          $MessagingActivationStatesTable,
+          MessagingActivationStateRow
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MessagingActivationStatesTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
+  @override
+  late final GeneratedColumn<String> userId = GeneratedColumn<String>(
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _consentAcceptedMeta = const VerificationMeta(
+    'consentAccepted',
+  );
+  @override
+  late final GeneratedColumn<bool> consentAccepted = GeneratedColumn<bool>(
+    'consent_accepted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("consent_accepted" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('not_started'),
+  );
+  static const VerificationMeta _termsVersionMeta = const VerificationMeta(
+    'termsVersion',
+  );
+  @override
+  late final GeneratedColumn<String> termsVersion = GeneratedColumn<String>(
+    'terms_version',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _currentTermsVersionMeta =
+      const VerificationMeta('currentTermsVersion');
+  @override
+  late final GeneratedColumn<String> currentTermsVersion =
+      GeneratedColumn<String>(
+        'current_terms_version',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(''),
+      );
+  static const VerificationMeta _requiresTermsAcceptanceMeta =
+      const VerificationMeta('requiresTermsAcceptance');
+  @override
+  late final GeneratedColumn<bool> requiresTermsAcceptance =
+      GeneratedColumn<bool>(
+        'requires_terms_acceptance',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("requires_terms_acceptance" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
+  static const VerificationMeta _keyRegistrationStatusMeta =
+      const VerificationMeta('keyRegistrationStatus');
+  @override
+  late final GeneratedColumn<String> keyRegistrationStatus =
+      GeneratedColumn<String>(
+        'key_registration_status',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant('not_started'),
+      );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    userId,
+    deviceId,
+    consentAccepted,
+    status,
+    termsVersion,
+    currentTermsVersion,
+    requiresTermsAcceptance,
+    keyRegistrationStatus,
+    lastError,
+    updatedAt,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'messaging_activation_states';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MessagingActivationStateRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('user_id')) {
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userIdMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('consent_accepted')) {
+      context.handle(
+        _consentAcceptedMeta,
+        consentAccepted.isAcceptableOrUnknown(
+          data['consent_accepted']!,
+          _consentAcceptedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('terms_version')) {
+      context.handle(
+        _termsVersionMeta,
+        termsVersion.isAcceptableOrUnknown(
+          data['terms_version']!,
+          _termsVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('current_terms_version')) {
+      context.handle(
+        _currentTermsVersionMeta,
+        currentTermsVersion.isAcceptableOrUnknown(
+          data['current_terms_version']!,
+          _currentTermsVersionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('requires_terms_acceptance')) {
+      context.handle(
+        _requiresTermsAcceptanceMeta,
+        requiresTermsAcceptance.isAcceptableOrUnknown(
+          data['requires_terms_acceptance']!,
+          _requiresTermsAcceptanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('key_registration_status')) {
+      context.handle(
+        _keyRegistrationStatusMeta,
+        keyRegistrationStatus.isAcceptableOrUnknown(
+          data['key_registration_status']!,
+          _keyRegistrationStatusMeta,
+        ),
+      );
+    }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {userId, deviceId};
+  @override
+  MessagingActivationStateRow map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MessagingActivationStateRow(
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      consentAccepted: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}consent_accepted'],
+      )!,
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      termsVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}terms_version'],
+      )!,
+      currentTermsVersion: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}current_terms_version'],
+      )!,
+      requiresTermsAcceptance: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}requires_terms_acceptance'],
+      )!,
+      keyRegistrationStatus: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key_registration_status'],
+      )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $MessagingActivationStatesTable createAlias(String alias) {
+    return $MessagingActivationStatesTable(attachedDatabase, alias);
+  }
+}
+
+class MessagingActivationStateRow extends DataClass
+    implements Insertable<MessagingActivationStateRow> {
+  final String userId;
+  final String deviceId;
+  final bool consentAccepted;
+  final String status;
+  final String termsVersion;
+  final String currentTermsVersion;
+  final bool requiresTermsAcceptance;
+  final String keyRegistrationStatus;
+  final String? lastError;
+  final DateTime updatedAt;
+  final DateTime createdAt;
+  const MessagingActivationStateRow({
+    required this.userId,
+    required this.deviceId,
+    required this.consentAccepted,
+    required this.status,
+    required this.termsVersion,
+    required this.currentTermsVersion,
+    required this.requiresTermsAcceptance,
+    required this.keyRegistrationStatus,
+    this.lastError,
+    required this.updatedAt,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['user_id'] = Variable<String>(userId);
+    map['device_id'] = Variable<String>(deviceId);
+    map['consent_accepted'] = Variable<bool>(consentAccepted);
+    map['status'] = Variable<String>(status);
+    map['terms_version'] = Variable<String>(termsVersion);
+    map['current_terms_version'] = Variable<String>(currentTermsVersion);
+    map['requires_terms_acceptance'] = Variable<bool>(requiresTermsAcceptance);
+    map['key_registration_status'] = Variable<String>(keyRegistrationStatus);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  MessagingActivationStatesCompanion toCompanion(bool nullToAbsent) {
+    return MessagingActivationStatesCompanion(
+      userId: Value(userId),
+      deviceId: Value(deviceId),
+      consentAccepted: Value(consentAccepted),
+      status: Value(status),
+      termsVersion: Value(termsVersion),
+      currentTermsVersion: Value(currentTermsVersion),
+      requiresTermsAcceptance: Value(requiresTermsAcceptance),
+      keyRegistrationStatus: Value(keyRegistrationStatus),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      updatedAt: Value(updatedAt),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory MessagingActivationStateRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MessagingActivationStateRow(
+      userId: serializer.fromJson<String>(json['userId']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      consentAccepted: serializer.fromJson<bool>(json['consentAccepted']),
+      status: serializer.fromJson<String>(json['status']),
+      termsVersion: serializer.fromJson<String>(json['termsVersion']),
+      currentTermsVersion: serializer.fromJson<String>(
+        json['currentTermsVersion'],
+      ),
+      requiresTermsAcceptance: serializer.fromJson<bool>(
+        json['requiresTermsAcceptance'],
+      ),
+      keyRegistrationStatus: serializer.fromJson<String>(
+        json['keyRegistrationStatus'],
+      ),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'userId': serializer.toJson<String>(userId),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'consentAccepted': serializer.toJson<bool>(consentAccepted),
+      'status': serializer.toJson<String>(status),
+      'termsVersion': serializer.toJson<String>(termsVersion),
+      'currentTermsVersion': serializer.toJson<String>(currentTermsVersion),
+      'requiresTermsAcceptance': serializer.toJson<bool>(
+        requiresTermsAcceptance,
+      ),
+      'keyRegistrationStatus': serializer.toJson<String>(keyRegistrationStatus),
+      'lastError': serializer.toJson<String?>(lastError),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  MessagingActivationStateRow copyWith({
+    String? userId,
+    String? deviceId,
+    bool? consentAccepted,
+    String? status,
+    String? termsVersion,
+    String? currentTermsVersion,
+    bool? requiresTermsAcceptance,
+    String? keyRegistrationStatus,
+    Value<String?> lastError = const Value.absent(),
+    DateTime? updatedAt,
+    DateTime? createdAt,
+  }) => MessagingActivationStateRow(
+    userId: userId ?? this.userId,
+    deviceId: deviceId ?? this.deviceId,
+    consentAccepted: consentAccepted ?? this.consentAccepted,
+    status: status ?? this.status,
+    termsVersion: termsVersion ?? this.termsVersion,
+    currentTermsVersion: currentTermsVersion ?? this.currentTermsVersion,
+    requiresTermsAcceptance:
+        requiresTermsAcceptance ?? this.requiresTermsAcceptance,
+    keyRegistrationStatus: keyRegistrationStatus ?? this.keyRegistrationStatus,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    updatedAt: updatedAt ?? this.updatedAt,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  MessagingActivationStateRow copyWithCompanion(
+    MessagingActivationStatesCompanion data,
+  ) {
+    return MessagingActivationStateRow(
+      userId: data.userId.present ? data.userId.value : this.userId,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      consentAccepted: data.consentAccepted.present
+          ? data.consentAccepted.value
+          : this.consentAccepted,
+      status: data.status.present ? data.status.value : this.status,
+      termsVersion: data.termsVersion.present
+          ? data.termsVersion.value
+          : this.termsVersion,
+      currentTermsVersion: data.currentTermsVersion.present
+          ? data.currentTermsVersion.value
+          : this.currentTermsVersion,
+      requiresTermsAcceptance: data.requiresTermsAcceptance.present
+          ? data.requiresTermsAcceptance.value
+          : this.requiresTermsAcceptance,
+      keyRegistrationStatus: data.keyRegistrationStatus.present
+          ? data.keyRegistrationStatus.value
+          : this.keyRegistrationStatus,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessagingActivationStateRow(')
+          ..write('userId: $userId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('consentAccepted: $consentAccepted, ')
+          ..write('status: $status, ')
+          ..write('termsVersion: $termsVersion, ')
+          ..write('currentTermsVersion: $currentTermsVersion, ')
+          ..write('requiresTermsAcceptance: $requiresTermsAcceptance, ')
+          ..write('keyRegistrationStatus: $keyRegistrationStatus, ')
+          ..write('lastError: $lastError, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    userId,
+    deviceId,
+    consentAccepted,
+    status,
+    termsVersion,
+    currentTermsVersion,
+    requiresTermsAcceptance,
+    keyRegistrationStatus,
+    lastError,
+    updatedAt,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MessagingActivationStateRow &&
+          other.userId == this.userId &&
+          other.deviceId == this.deviceId &&
+          other.consentAccepted == this.consentAccepted &&
+          other.status == this.status &&
+          other.termsVersion == this.termsVersion &&
+          other.currentTermsVersion == this.currentTermsVersion &&
+          other.requiresTermsAcceptance == this.requiresTermsAcceptance &&
+          other.keyRegistrationStatus == this.keyRegistrationStatus &&
+          other.lastError == this.lastError &&
+          other.updatedAt == this.updatedAt &&
+          other.createdAt == this.createdAt);
+}
+
+class MessagingActivationStatesCompanion
+    extends UpdateCompanion<MessagingActivationStateRow> {
+  final Value<String> userId;
+  final Value<String> deviceId;
+  final Value<bool> consentAccepted;
+  final Value<String> status;
+  final Value<String> termsVersion;
+  final Value<String> currentTermsVersion;
+  final Value<bool> requiresTermsAcceptance;
+  final Value<String> keyRegistrationStatus;
+  final Value<String?> lastError;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const MessagingActivationStatesCompanion({
+    this.userId = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.consentAccepted = const Value.absent(),
+    this.status = const Value.absent(),
+    this.termsVersion = const Value.absent(),
+    this.currentTermsVersion = const Value.absent(),
+    this.requiresTermsAcceptance = const Value.absent(),
+    this.keyRegistrationStatus = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MessagingActivationStatesCompanion.insert({
+    required String userId,
+    required String deviceId,
+    this.consentAccepted = const Value.absent(),
+    this.status = const Value.absent(),
+    this.termsVersion = const Value.absent(),
+    this.currentTermsVersion = const Value.absent(),
+    this.requiresTermsAcceptance = const Value.absent(),
+    this.keyRegistrationStatus = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : userId = Value(userId),
+       deviceId = Value(deviceId);
+  static Insertable<MessagingActivationStateRow> custom({
+    Expression<String>? userId,
+    Expression<String>? deviceId,
+    Expression<bool>? consentAccepted,
+    Expression<String>? status,
+    Expression<String>? termsVersion,
+    Expression<String>? currentTermsVersion,
+    Expression<bool>? requiresTermsAcceptance,
+    Expression<String>? keyRegistrationStatus,
+    Expression<String>? lastError,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (userId != null) 'user_id': userId,
+      if (deviceId != null) 'device_id': deviceId,
+      if (consentAccepted != null) 'consent_accepted': consentAccepted,
+      if (status != null) 'status': status,
+      if (termsVersion != null) 'terms_version': termsVersion,
+      if (currentTermsVersion != null)
+        'current_terms_version': currentTermsVersion,
+      if (requiresTermsAcceptance != null)
+        'requires_terms_acceptance': requiresTermsAcceptance,
+      if (keyRegistrationStatus != null)
+        'key_registration_status': keyRegistrationStatus,
+      if (lastError != null) 'last_error': lastError,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MessagingActivationStatesCompanion copyWith({
+    Value<String>? userId,
+    Value<String>? deviceId,
+    Value<bool>? consentAccepted,
+    Value<String>? status,
+    Value<String>? termsVersion,
+    Value<String>? currentTermsVersion,
+    Value<bool>? requiresTermsAcceptance,
+    Value<String>? keyRegistrationStatus,
+    Value<String?>? lastError,
+    Value<DateTime>? updatedAt,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return MessagingActivationStatesCompanion(
+      userId: userId ?? this.userId,
+      deviceId: deviceId ?? this.deviceId,
+      consentAccepted: consentAccepted ?? this.consentAccepted,
+      status: status ?? this.status,
+      termsVersion: termsVersion ?? this.termsVersion,
+      currentTermsVersion: currentTermsVersion ?? this.currentTermsVersion,
+      requiresTermsAcceptance:
+          requiresTermsAcceptance ?? this.requiresTermsAcceptance,
+      keyRegistrationStatus:
+          keyRegistrationStatus ?? this.keyRegistrationStatus,
+      lastError: lastError ?? this.lastError,
+      updatedAt: updatedAt ?? this.updatedAt,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (userId.present) {
+      map['user_id'] = Variable<String>(userId.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (consentAccepted.present) {
+      map['consent_accepted'] = Variable<bool>(consentAccepted.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (termsVersion.present) {
+      map['terms_version'] = Variable<String>(termsVersion.value);
+    }
+    if (currentTermsVersion.present) {
+      map['current_terms_version'] = Variable<String>(
+        currentTermsVersion.value,
+      );
+    }
+    if (requiresTermsAcceptance.present) {
+      map['requires_terms_acceptance'] = Variable<bool>(
+        requiresTermsAcceptance.value,
+      );
+    }
+    if (keyRegistrationStatus.present) {
+      map['key_registration_status'] = Variable<String>(
+        keyRegistrationStatus.value,
+      );
+    }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MessagingActivationStatesCompanion(')
+          ..write('userId: $userId, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('consentAccepted: $consentAccepted, ')
+          ..write('status: $status, ')
+          ..write('termsVersion: $termsVersion, ')
+          ..write('currentTermsVersion: $currentTermsVersion, ')
+          ..write('requiresTermsAcceptance: $requiresTermsAcceptance, ')
+          ..write('keyRegistrationStatus: $keyRegistrationStatus, ')
+          ..write('lastError: $lastError, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -6980,6 +7784,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ConversationMembersTable conversationMembers =
       $ConversationMembersTable(this);
   late final $MessagesTable messages = $MessagesTable(this);
+  late final $MessagingActivationStatesTable messagingActivationStates =
+      $MessagingActivationStatesTable(this);
   late final $OutboxEventsTable outboxEvents = $OutboxEventsTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $SignalLocalIdentityTable signalLocalIdentity =
@@ -7013,6 +7819,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     conversations,
     conversationMembers,
     messages,
+    messagingActivationStates,
     outboxEvents,
     syncState,
     signalLocalIdentity,
@@ -7182,7 +7989,16 @@ class $$CryptoKeysTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$CryptoKeysTable, CryptoKey>(table),
+                  BaseReferences<_$AppDatabase, $CryptoKeysTable, CryptoKey>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -7446,7 +8262,16 @@ class $$NotificationsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$NotificationsTable, DbNotification>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $NotificationsTable,
+                    DbNotification
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -7905,7 +8730,16 @@ class $$UserDocumentsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$UserDocumentsTable, DbUserDocument>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $UserDocumentsTable,
+                    DbUserDocument
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8263,7 +9097,16 @@ class $$ContactsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ContactsTable, ContactEntity>(table),
+                  BaseReferences<_$AppDatabase, $ContactsTable, ContactEntity>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8507,7 +9350,16 @@ class $$ConversationsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$ConversationsTable, ConversationEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ConversationsTable,
+                    ConversationEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8780,7 +9632,19 @@ class $$ConversationMembersTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $ConversationMembersTable,
+                    ConversationMemberEntity
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ConversationMembersTable,
+                    ConversationMemberEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -8814,6 +9678,8 @@ typedef $$MessagesTableCreateCompanionBuilder =
       required String conversationId,
       required String senderId,
       required String senderDeviceId,
+      Value<String?> attachmentId,
+      Value<String> content,
       Value<String> type,
       Value<BigInt?> sequence,
       required Uint8List encryptedPayload,
@@ -8831,6 +9697,8 @@ typedef $$MessagesTableUpdateCompanionBuilder =
       Value<String> conversationId,
       Value<String> senderId,
       Value<String> senderDeviceId,
+      Value<String?> attachmentId,
+      Value<String> content,
       Value<String> type,
       Value<BigInt?> sequence,
       Value<Uint8List> encryptedPayload,
@@ -8869,6 +9737,16 @@ class $$MessagesTableFilterComposer
 
   ColumnFilters<String> get senderDeviceId => $composableBuilder(
     column: $table.senderDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get attachmentId => $composableBuilder(
+    column: $table.attachmentId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get content => $composableBuilder(
+    column: $table.content,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8947,6 +9825,16 @@ class $$MessagesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get attachmentId => $composableBuilder(
+    column: $table.attachmentId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get content => $composableBuilder(
+    column: $table.content,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
@@ -9018,6 +9906,14 @@ class $$MessagesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get attachmentId => $composableBuilder(
+    column: $table.attachmentId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get content =>
+      $composableBuilder(column: $table.content, builder: (column) => column);
+
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
@@ -9085,6 +9981,8 @@ class $$MessagesTableTableManager
                 Value<String> conversationId = const Value.absent(),
                 Value<String> senderId = const Value.absent(),
                 Value<String> senderDeviceId = const Value.absent(),
+                Value<String?> attachmentId = const Value.absent(),
+                Value<String> content = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<BigInt?> sequence = const Value.absent(),
                 Value<Uint8List> encryptedPayload = const Value.absent(),
@@ -9100,6 +9998,8 @@ class $$MessagesTableTableManager
                 conversationId: conversationId,
                 senderId: senderId,
                 senderDeviceId: senderDeviceId,
+                attachmentId: attachmentId,
+                content: content,
                 type: type,
                 sequence: sequence,
                 encryptedPayload: encryptedPayload,
@@ -9117,6 +10017,8 @@ class $$MessagesTableTableManager
                 required String conversationId,
                 required String senderId,
                 required String senderDeviceId,
+                Value<String?> attachmentId = const Value.absent(),
+                Value<String> content = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<BigInt?> sequence = const Value.absent(),
                 required Uint8List encryptedPayload,
@@ -9132,6 +10034,8 @@ class $$MessagesTableTableManager
                 conversationId: conversationId,
                 senderId: senderId,
                 senderDeviceId: senderDeviceId,
+                attachmentId: attachmentId,
+                content: content,
                 type: type,
                 sequence: sequence,
                 encryptedPayload: encryptedPayload,
@@ -9144,7 +10048,16 @@ class $$MessagesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$MessagesTable, MessageEntity>(table),
+                  BaseReferences<_$AppDatabase, $MessagesTable, MessageEntity>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9166,6 +10079,361 @@ typedef $$MessagesTableProcessedTableManager =
         BaseReferences<_$AppDatabase, $MessagesTable, MessageEntity>,
       ),
       MessageEntity,
+      PrefetchHooks Function()
+    >;
+typedef $$MessagingActivationStatesTableCreateCompanionBuilder =
+    MessagingActivationStatesCompanion Function({
+      required String userId,
+      required String deviceId,
+      Value<bool> consentAccepted,
+      Value<String> status,
+      Value<String> termsVersion,
+      Value<String> currentTermsVersion,
+      Value<bool> requiresTermsAcceptance,
+      Value<String> keyRegistrationStatus,
+      Value<String?> lastError,
+      Value<DateTime> updatedAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$MessagingActivationStatesTableUpdateCompanionBuilder =
+    MessagingActivationStatesCompanion Function({
+      Value<String> userId,
+      Value<String> deviceId,
+      Value<bool> consentAccepted,
+      Value<String> status,
+      Value<String> termsVersion,
+      Value<String> currentTermsVersion,
+      Value<bool> requiresTermsAcceptance,
+      Value<String> keyRegistrationStatus,
+      Value<String?> lastError,
+      Value<DateTime> updatedAt,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$MessagingActivationStatesTableFilterComposer
+    extends Composer<_$AppDatabase, $MessagingActivationStatesTable> {
+  $$MessagingActivationStatesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get consentAccepted => $composableBuilder(
+    column: $table.consentAccepted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get termsVersion => $composableBuilder(
+    column: $table.termsVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currentTermsVersion => $composableBuilder(
+    column: $table.currentTermsVersion,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get requiresTermsAcceptance => $composableBuilder(
+    column: $table.requiresTermsAcceptance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get keyRegistrationStatus => $composableBuilder(
+    column: $table.keyRegistrationStatus,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$MessagingActivationStatesTableOrderingComposer
+    extends Composer<_$AppDatabase, $MessagingActivationStatesTable> {
+  $$MessagingActivationStatesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get userId => $composableBuilder(
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get consentAccepted => $composableBuilder(
+    column: $table.consentAccepted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get termsVersion => $composableBuilder(
+    column: $table.termsVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currentTermsVersion => $composableBuilder(
+    column: $table.currentTermsVersion,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get requiresTermsAcceptance => $composableBuilder(
+    column: $table.requiresTermsAcceptance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get keyRegistrationStatus => $composableBuilder(
+    column: $table.keyRegistrationStatus,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MessagingActivationStatesTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MessagingActivationStatesTable> {
+  $$MessagingActivationStatesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get userId =>
+      $composableBuilder(column: $table.userId, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<bool> get consentAccepted => $composableBuilder(
+    column: $table.consentAccepted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get termsVersion => $composableBuilder(
+    column: $table.termsVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currentTermsVersion => $composableBuilder(
+    column: $table.currentTermsVersion,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get requiresTermsAcceptance => $composableBuilder(
+    column: $table.requiresTermsAcceptance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get keyRegistrationStatus => $composableBuilder(
+    column: $table.keyRegistrationStatus,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$MessagingActivationStatesTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MessagingActivationStatesTable,
+          MessagingActivationStateRow,
+          $$MessagingActivationStatesTableFilterComposer,
+          $$MessagingActivationStatesTableOrderingComposer,
+          $$MessagingActivationStatesTableAnnotationComposer,
+          $$MessagingActivationStatesTableCreateCompanionBuilder,
+          $$MessagingActivationStatesTableUpdateCompanionBuilder,
+          (
+            MessagingActivationStateRow,
+            BaseReferences<
+              _$AppDatabase,
+              $MessagingActivationStatesTable,
+              MessagingActivationStateRow
+            >,
+          ),
+          MessagingActivationStateRow,
+          PrefetchHooks Function()
+        > {
+  $$MessagingActivationStatesTableTableManager(
+    _$AppDatabase db,
+    $MessagingActivationStatesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MessagingActivationStatesTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$MessagingActivationStatesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$MessagingActivationStatesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> userId = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<bool> consentAccepted = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> termsVersion = const Value.absent(),
+                Value<String> currentTermsVersion = const Value.absent(),
+                Value<bool> requiresTermsAcceptance = const Value.absent(),
+                Value<String> keyRegistrationStatus = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessagingActivationStatesCompanion(
+                userId: userId,
+                deviceId: deviceId,
+                consentAccepted: consentAccepted,
+                status: status,
+                termsVersion: termsVersion,
+                currentTermsVersion: currentTermsVersion,
+                requiresTermsAcceptance: requiresTermsAcceptance,
+                keyRegistrationStatus: keyRegistrationStatus,
+                lastError: lastError,
+                updatedAt: updatedAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String userId,
+                required String deviceId,
+                Value<bool> consentAccepted = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<String> termsVersion = const Value.absent(),
+                Value<String> currentTermsVersion = const Value.absent(),
+                Value<bool> requiresTermsAcceptance = const Value.absent(),
+                Value<String> keyRegistrationStatus = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MessagingActivationStatesCompanion.insert(
+                userId: userId,
+                deviceId: deviceId,
+                consentAccepted: consentAccepted,
+                status: status,
+                termsVersion: termsVersion,
+                currentTermsVersion: currentTermsVersion,
+                requiresTermsAcceptance: requiresTermsAcceptance,
+                keyRegistrationStatus: keyRegistrationStatus,
+                lastError: lastError,
+                updatedAt: updatedAt,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<
+                    $MessagingActivationStatesTable,
+                    MessagingActivationStateRow
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $MessagingActivationStatesTable,
+                    MessagingActivationStateRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MessagingActivationStatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MessagingActivationStatesTable,
+      MessagingActivationStateRow,
+      $$MessagingActivationStatesTableFilterComposer,
+      $$MessagingActivationStatesTableOrderingComposer,
+      $$MessagingActivationStatesTableAnnotationComposer,
+      $$MessagingActivationStatesTableCreateCompanionBuilder,
+      $$MessagingActivationStatesTableUpdateCompanionBuilder,
+      (
+        MessagingActivationStateRow,
+        BaseReferences<
+          _$AppDatabase,
+          $MessagingActivationStatesTable,
+          MessagingActivationStateRow
+        >,
+      ),
+      MessagingActivationStateRow,
       PrefetchHooks Function()
     >;
 typedef $$OutboxEventsTableCreateCompanionBuilder =
@@ -9512,7 +10780,16 @@ class $$OutboxEventsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$OutboxEventsTable, OutboxEventEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $OutboxEventsTable,
+                    OutboxEventEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9697,7 +10974,16 @@ class $$SyncStateTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SyncStateTable, SyncStateEntity>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SyncStateTable,
+                    SyncStateEntity
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -9894,7 +11180,19 @@ class $$SignalLocalIdentityTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<
+                    $SignalLocalIdentityTable,
+                    SignalLocalIdentityData
+                  >(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalLocalIdentityTable,
+                    SignalLocalIdentityData
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10090,7 +11388,18 @@ class $$SignalIdentityKeysTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalIdentityKeysTable, SignalIdentityKey>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalIdentityKeysTable,
+                    SignalIdentityKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10250,7 +11559,16 @@ class $$SignalPreKeysTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalPreKeysTable, SignalPreKey>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalPreKeysTable,
+                    SignalPreKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10418,7 +11736,18 @@ class $$SignalSignedPreKeysTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalSignedPreKeysTable, SignalSignedPreKey>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalSignedPreKeysTable,
+                    SignalSignedPreKey
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10605,7 +11934,16 @@ class $$SignalSessionsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$SignalSessionsTable, SignalSession>(table),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $SignalSessionsTable,
+                    SignalSession
+                  >(db, table, e),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -10647,6 +11985,11 @@ class $AppDatabaseManager {
       $$ConversationMembersTableTableManager(_db, _db.conversationMembers);
   $$MessagesTableTableManager get messages =>
       $$MessagesTableTableManager(_db, _db.messages);
+  $$MessagingActivationStatesTableTableManager get messagingActivationStates =>
+      $$MessagingActivationStatesTableTableManager(
+        _db,
+        _db.messagingActivationStates,
+      );
   $$OutboxEventsTableTableManager get outboxEvents =>
       $$OutboxEventsTableTableManager(_db, _db.outboxEvents);
   $$SyncStateTableTableManager get syncState =>

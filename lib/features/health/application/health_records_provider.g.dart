@@ -86,7 +86,7 @@ abstract class _$HealthRecordsNotifier
   FutureOr<List<HealthRecord>> build(HealthRecordType type);
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<AsyncValue<List<HealthRecord>>, List<HealthRecord>>;
     final element =
@@ -97,6 +97,6 @@ abstract class _$HealthRecordsNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, () => build(_$args));
+    return element.handleCreate(ref, () => build(_$args));
   }
 }

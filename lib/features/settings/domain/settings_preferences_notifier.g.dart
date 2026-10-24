@@ -46,14 +46,14 @@ final class SettingsPreferencesNotifierProvider
 }
 
 String _$settingsPreferencesNotifierHash() =>
-    r'b8544b0057b155021bfc6a45c4ca835dd1fc8a16';
+    r'a6f7ded0f179245e77ee55cf56fbe38269fced74';
 
 abstract class _$SettingsPreferencesNotifier
     extends $Notifier<SettingsPreferencesState> {
   SettingsPreferencesState build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref =
         this.ref as $Ref<SettingsPreferencesState, SettingsPreferencesState>;
     final element =
@@ -64,6 +64,6 @@ abstract class _$SettingsPreferencesNotifier
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

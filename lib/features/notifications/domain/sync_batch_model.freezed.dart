@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'sync_batch_model.dart';
@@ -9,6 +9,7 @@ part of 'sync_batch_model.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 
@@ -28,16 +29,21 @@ $SyncEventDtoCopyWith<SyncEventDto> get copyWith => _$SyncEventDtoCopyWithImpl<S
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&const DeepCollectionEquality().equals(other.payload, payload)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+  final _this = this as SyncEventDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncEventDto&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.eventType, _this.eventType) || other.eventType == _this.eventType)&&const DeepCollectionEquality().equals(other.payload, _this.payload)&&(identical(other.createdAt, _this.createdAt) || other.createdAt == _this.createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventType,const DeepCollectionEquality().hash(payload),createdAt);
+int get hashCode {
+  final _this = this as SyncEventDto;
+  return Object.hash(runtimeType,_this.id,_this.eventType,const DeepCollectionEquality().hash(_this.payload),_this.createdAt);
+}
 
 @override
 String toString() {
-  return 'SyncEventDto(id: $id, eventType: $eventType, payload: $payload, createdAt: $createdAt)';
+  final _this = this as SyncEventDto;
+  return 'SyncEventDto(id: ${_this.id}, eventType: ${_this.eventType}, payload: ${_this.payload}, createdAt: ${_this.createdAt})';
 }
 
 
@@ -66,7 +72,7 @@ class _$SyncEventDtoCopyWithImpl<$Res>
 /// Create a copy of SyncEventDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? eventType = null,Object? payload = null,Object? createdAt = null,}) {
-  return _then(_self.copyWith(
+  return _then(SyncEventDto(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,eventType: null == eventType ? _self.eventType : eventType // ignore: cast_nullable_to_non_nullable
 as String,payload: null == payload ? _self.payload : payload // ignore: cast_nullable_to_non_nullable
@@ -212,7 +218,7 @@ return $default(_that.id,_that.eventType,_that.payload,_that.createdAt);case _:
 @JsonSerializable()
 
 class _SyncEventDto implements SyncEventDto {
-  const _SyncEventDto({required this.id, @JsonKey(name: 'event_type') required this.eventType, required final  Map<String, dynamic> payload, @JsonKey(name: 'created_at') required this.createdAt}): _payload = payload;
+  const _SyncEventDto({required this.id, @JsonKey(name: 'event_type') required this.eventType, required  Map<String, dynamic> payload, @JsonKey(name: 'created_at') required this.createdAt}): _payload = payload;
   factory _SyncEventDto.fromJson(Map<String, dynamic> json) => _$SyncEventDtoFromJson(json);
 
 @override final  String id;
@@ -239,16 +245,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&const DeepCollectionEquality().equals(other._payload, _payload)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncEventDto&&(identical(other.id, id) || other.id == id)&&(identical(other.eventType, eventType) || other.eventType == eventType)&&const DeepCollectionEquality().equals(other.payload, _payload)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,eventType,const DeepCollectionEquality().hash(_payload),createdAt);
+int get hashCode {
+    return Object.hash(runtimeType,id,eventType,const DeepCollectionEquality().hash(_payload),createdAt);
+}
 
 @override
 String toString() {
-  return 'SyncEventDto(id: $id, eventType: $eventType, payload: $payload, createdAt: $createdAt)';
+    return 'SyncEventDto(id: $id, eventType: $eventType, payload: $payload, createdAt: $createdAt)';
 }
 
 
@@ -306,16 +314,21 @@ $SyncBatchRequestDtoCopyWith<SyncBatchRequestDto> get copyWith => _$SyncBatchReq
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncBatchRequestDto&&const DeepCollectionEquality().equals(other.events, events));
+  final _this = this as SyncBatchRequestDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncBatchRequestDto&&const DeepCollectionEquality().equals(other.events, _this.events));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(events));
+int get hashCode {
+  final _this = this as SyncBatchRequestDto;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.events));
+}
 
 @override
 String toString() {
-  return 'SyncBatchRequestDto(events: $events)';
+  final _this = this as SyncBatchRequestDto;
+  return 'SyncBatchRequestDto(events: ${_this.events})';
 }
 
 
@@ -344,7 +357,7 @@ class _$SyncBatchRequestDtoCopyWithImpl<$Res>
 /// Create a copy of SyncBatchRequestDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? events = null,}) {
-  return _then(_self.copyWith(
+  return _then(SyncBatchRequestDto(
 events: null == events ? _self.events : events // ignore: cast_nullable_to_non_nullable
 as List<SyncEventDto>,
   ));
@@ -487,7 +500,7 @@ return $default(_that.events);case _:
 @JsonSerializable()
 
 class _SyncBatchRequestDto implements SyncBatchRequestDto {
-  const _SyncBatchRequestDto({required final  List<SyncEventDto> events}): _events = events;
+  const _SyncBatchRequestDto({required  List<SyncEventDto> events}): _events = events;
   factory _SyncBatchRequestDto.fromJson(Map<String, dynamic> json) => _$SyncBatchRequestDtoFromJson(json);
 
  final  List<SyncEventDto> _events;
@@ -511,16 +524,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncBatchRequestDto&&const DeepCollectionEquality().equals(other._events, _events));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncBatchRequestDto&&const DeepCollectionEquality().equals(other.events, _events));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_events));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_events));
+}
 
 @override
 String toString() {
-  return 'SyncBatchRequestDto(events: $events)';
+    return 'SyncBatchRequestDto(events: $events)';
 }
 
 
@@ -575,16 +590,21 @@ $SyncBatchResponseDtoCopyWith<SyncBatchResponseDto> get copyWith => _$SyncBatchR
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncBatchResponseDto&&const DeepCollectionEquality().equals(other.processedEventIds, processedEventIds)&&const DeepCollectionEquality().equals(other.failedEventIds, failedEventIds));
+  final _this = this as SyncBatchResponseDto;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is SyncBatchResponseDto&&const DeepCollectionEquality().equals(other.processedEventIds, _this.processedEventIds)&&const DeepCollectionEquality().equals(other.failedEventIds, _this.failedEventIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(processedEventIds),const DeepCollectionEquality().hash(failedEventIds));
+int get hashCode {
+  final _this = this as SyncBatchResponseDto;
+  return Object.hash(runtimeType,const DeepCollectionEquality().hash(_this.processedEventIds),const DeepCollectionEquality().hash(_this.failedEventIds));
+}
 
 @override
 String toString() {
-  return 'SyncBatchResponseDto(processedEventIds: $processedEventIds, failedEventIds: $failedEventIds)';
+  final _this = this as SyncBatchResponseDto;
+  return 'SyncBatchResponseDto(processedEventIds: ${_this.processedEventIds}, failedEventIds: ${_this.failedEventIds})';
 }
 
 
@@ -613,7 +633,7 @@ class _$SyncBatchResponseDtoCopyWithImpl<$Res>
 /// Create a copy of SyncBatchResponseDto
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? processedEventIds = null,Object? failedEventIds = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(SyncBatchResponseDto(
 processedEventIds: null == processedEventIds ? _self.processedEventIds : processedEventIds // ignore: cast_nullable_to_non_nullable
 as List<String>,failedEventIds: freezed == failedEventIds ? _self.failedEventIds : failedEventIds // ignore: cast_nullable_to_non_nullable
 as List<String>?,
@@ -757,7 +777,7 @@ return $default(_that.processedEventIds,_that.failedEventIds);case _:
 @JsonSerializable()
 
 class _SyncBatchResponseDto implements SyncBatchResponseDto {
-  const _SyncBatchResponseDto({@JsonKey(name: 'processed_event_ids') required final  List<String> processedEventIds, @JsonKey(name: 'failed_event_ids') final  List<String>? failedEventIds}): _processedEventIds = processedEventIds,_failedEventIds = failedEventIds;
+  const _SyncBatchResponseDto({@JsonKey(name: 'processed_event_ids') required  List<String> processedEventIds, @JsonKey(name: 'failed_event_ids')  List<String>? failedEventIds}): _processedEventIds = processedEventIds,_failedEventIds = failedEventIds;
   factory _SyncBatchResponseDto.fromJson(Map<String, dynamic> json) => _$SyncBatchResponseDtoFromJson(json);
 
  final  List<String> _processedEventIds;
@@ -790,16 +810,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncBatchResponseDto&&const DeepCollectionEquality().equals(other._processedEventIds, _processedEventIds)&&const DeepCollectionEquality().equals(other._failedEventIds, _failedEventIds));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _SyncBatchResponseDto&&const DeepCollectionEquality().equals(other.processedEventIds, _processedEventIds)&&const DeepCollectionEquality().equals(other.failedEventIds, _failedEventIds));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_processedEventIds),const DeepCollectionEquality().hash(_failedEventIds));
+int get hashCode {
+    return Object.hash(runtimeType,const DeepCollectionEquality().hash(_processedEventIds),const DeepCollectionEquality().hash(_failedEventIds));
+}
 
 @override
 String toString() {
-  return 'SyncBatchResponseDto(processedEventIds: $processedEventIds, failedEventIds: $failedEventIds)';
+    return 'SyncBatchResponseDto(processedEventIds: $processedEventIds, failedEventIds: $failedEventIds)';
 }
 
 

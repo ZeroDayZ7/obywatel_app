@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'change_password_state.dart';
@@ -9,6 +9,7 @@ part of 'change_password_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -25,16 +26,21 @@ $ChangePasswordStateCopyWith<ChangePasswordState> get copyWith => _$ChangePasswo
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePasswordState&&(identical(other.status, status) || other.status == status)&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
+  final _this = this as ChangePasswordState;
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ChangePasswordState&&(identical(other.status, _this.status) || other.status == _this.status)&&(identical(other.messageKey, _this.messageKey) || other.messageKey == _this.messageKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,messageKey);
+int get hashCode {
+  final _this = this as ChangePasswordState;
+  return Object.hash(runtimeType,_this.status,_this.messageKey);
+}
 
 @override
 String toString() {
-  return 'ChangePasswordState(status: $status, messageKey: $messageKey)';
+  final _this = this as ChangePasswordState;
+  return 'ChangePasswordState(status: ${_this.status}, messageKey: ${_this.messageKey})';
 }
 
 
@@ -63,7 +69,7 @@ class _$ChangePasswordStateCopyWithImpl<$Res>
 /// Create a copy of ChangePasswordState
 /// with the given fields replaced by the non-null parameter values.
 @pragma('vm:prefer-inline') @override $Res call({Object? status = null,Object? messageKey = freezed,}) {
-  return _then(_self.copyWith(
+  return _then(ChangePasswordState(
 status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
 as ChangePasswordStatus,messageKey: freezed == messageKey ? _self.messageKey : messageKey // ignore: cast_nullable_to_non_nullable
 as String?,
@@ -217,16 +223,18 @@ _$ChangePasswordStateCopyWith<_ChangePasswordState> get copyWith => __$ChangePas
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChangePasswordState&&(identical(other.status, status) || other.status == status)&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ChangePasswordState&&(identical(other.status, status) || other.status == status)&&(identical(other.messageKey, messageKey) || other.messageKey == messageKey));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,status,messageKey);
+int get hashCode {
+    return Object.hash(runtimeType,status,messageKey);
+}
 
 @override
 String toString() {
-  return 'ChangePasswordState(status: $status, messageKey: $messageKey)';
+    return 'ChangePasswordState(status: $status, messageKey: $messageKey)';
 }
 
 

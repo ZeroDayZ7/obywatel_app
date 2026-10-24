@@ -1,13 +1,16 @@
 // lib/features/communication/data/repositories/contacts_repository_impl.dart
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/database/daos/contacts_dao.dart';
 import 'package:obywatel_plus/core/database/daos/outbox_dao.dart';
 import 'package:obywatel_plus/core/database/database.dart';
 import 'package:obywatel_plus/core/database/database_provider.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/contacts_api_client.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/contact_dto.dart';
@@ -23,13 +26,14 @@ class ContactsRepositoryImpl implements ContactsRepository {
   final ContactsApiClient _apiClient;
   final ContactsDao _dao;
   final OutboxDao _outboxDao;
+  final AppLogger _logger;
   final String? _currentUserId;
-  final AppLogger _logger = AppLogger();
 
   ContactsRepositoryImpl(
     this._apiClient,
     this._dao,
-    this._outboxDao, [
+    this._outboxDao,
+    this._logger, [
     this._currentUserId,
   ]);
 
@@ -148,14 +152,29 @@ class ContactsRepositoryImpl implements ContactsRepository {
     }
 
     final normalized = ContactIdentifier.parse(targetUserId).normalized;
+    final hasExistingRelation = await _dao.hasExistingRelationForUser(
+      currentUserId: _currentUserId!,
+      targetUserId: normalized,
+    );
+
+    if (hasExistingRelation) {
+      _logger.w(
+        '[CONTACTS-INVITE-02] REPOSITORY: pominięto wysyłkę — kontakt już istnieje dla $normalized',
+      );
+      throw const ValidationException(
+        message: 'Zaproszenie lub kontakt już istnieje.',
+        code: 'CONTACT_ALREADY_EXISTS',
+      );
+    }
+
     _logger.i(
-      '[CONTACTS-INVITE-02] REPOSITORY: wysyłka zaproszenia do $normalized',
+      '[CONTACTS-INVITE-03] REPOSITORY: wysyłka zaproszenia do $normalized',
     );
 
     try {
       await _apiClient.sendContactRequest(normalized);
       _logger.i(
-        '[CONTACTS-INVITE-03] REPOSITORY: backend przyjął zaproszenie dla $normalized',
+        '[CONTACTS-INVITE-04] REPOSITORY: backend przyjął zaproszenie dla $normalized',
       );
     } catch (error, stackTrace) {
       _logger.e(
@@ -163,25 +182,32 @@ class ContactsRepositoryImpl implements ContactsRepository {
         error: error,
         stackTrace: stackTrace,
       );
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'contacts_repository_impl',
-          context: ErrorDescription(
-            'Failed to send contact request to backend',
+
+      final isExpectedNetworkError =
+          error is AppException ||
+          (error is DioException && error.error is AppException);
+
+      if (!isExpectedNetworkError) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'contacts_repository_impl',
+            context: ErrorDescription(
+              'Failed to send contact request to backend',
+            ),
           ),
-        ),
-      );
+        );
+      }
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     final companion = ContactsCompanion(
       id: Value(eventId),
-      ownerId: Value(_currentUserId!),
+      ownerId: Value(_currentUserId),
       contactId: Value(normalized),
       status: const Value('pending'),
       syncState: const Value('pending_create'),
@@ -211,6 +237,106 @@ class ContactsRepositoryImpl implements ContactsRepository {
               'eventType': 'ADD_CONTACT',
               'action': 'request',
               'targetUserId': normalized,
+              'createdAt': now.toUtc().toIso8601String(),
+            }),
+          ),
+          status: const Value('pending'),
+          retryCount: const Value(0),
+          attemptCount: const Value(0),
+          createdAt: Value(now),
+          updatedAt: Value(now),
+        ),
+      );
+    });
+  }
+
+  @override
+  Future<void> cancelRequest(String requestId) async {
+    if (!_hasCurrentUserId) {
+      _logger.w(
+        '[CONTACTS-CANCEL-01] REPOSITORY: pominięto anulowanie — brak zalogowanego użytkownika.',
+      );
+      return;
+    }
+
+    final normalizedId = requestId.trim();
+    if (normalizedId.isEmpty) {
+      throw const ValidationException(
+        message: 'Brak identyfikatora zaproszenia do anulowania.',
+        code: 'INVALID_CONTACT_REQUEST_ID',
+      );
+    }
+
+    _logger.i(
+      '[CONTACTS-CANCEL-02] REPOSITORY: rozpoczęto anulowanie dla $normalizedId',
+    );
+
+    try {
+      await _apiClient.cancelRequest(normalizedId);
+      _logger.i(
+        '[CONTACTS-CANCEL-03] REPOSITORY: backend potwierdził anulowanie dla $normalizedId',
+      );
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[CONTACTS-CANCEL-99] REPOSITORY: błąd anulowania dla $normalizedId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stackTrace,
+          library: 'contacts_repository_impl',
+          context: ErrorDescription(
+            'Failed to cancel contact request on backend',
+          ),
+        ),
+      );
+      rethrow;
+    }
+
+    final now = DateTime.now().toUtc();
+    final eventId = const Uuid().v7();
+
+    await _dao.db.transaction(() async {
+      final affected = await (_dao.update(_dao.contacts)
+            ..where(
+              (t) =>
+                  t.id.equals(normalizedId) &
+                  t.ownerId.equals(_currentUserId!) &
+                  t.deletedAt.isNull() &
+                  t.status.equals('pending') &
+                  t.direction.equals('outgoing'),
+            ))
+          .write(
+            ContactsCompanion(
+              status: const Value('blocked'),
+              deletedAt: Value(now),
+              syncState: const Value('pending_delete'),
+              updatedAt: Value(now),
+            ),
+          );
+
+      if (affected == 0) {
+        _logger.w(
+          '[CONTACTS-CANCEL-04] REPOSITORY: brak lokalnego rekordu do usunięcia po sukcesie backendu id=$normalizedId',
+        );
+        return;
+      }
+
+      await _outboxDao.enqueueEvent(
+        OutboxEventsCompanion(
+          id: Value(eventId),
+          entityType: const Value('CONTACT'),
+          entityId: Value(normalizedId),
+          eventType: const Value('REMOVE_CONTACT'),
+          conversationId: const Value.absent(),
+          payload: Value(
+            jsonEncode({
+              'entityType': 'CONTACT',
+              'entityId': normalizedId,
+              'eventType': 'REMOVE_CONTACT',
+              'action': 'CANCEL',
               'createdAt': now.toUtc().toIso8601String(),
             }),
           ),
@@ -275,7 +401,7 @@ class ContactsRepositoryImpl implements ContactsRepository {
       rethrow;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final eventId = const Uuid().v7();
 
     await _dao.db.transaction(() async {
@@ -326,11 +452,13 @@ class ContactsRepositoryImpl implements ContactsRepository {
 ContactsRepository contactsRepository(Ref ref) {
   final apiClient = ref.watch(contactsApiClientProvider);
   final db = ref.watch(appDatabaseProvider);
+  final logger = ref.watch(appLoggerProvider);
   final currentUserId = ref.watch(authControllerProvider).userId;
   return ContactsRepositoryImpl(
     apiClient,
     db.contactsDao,
     db.outboxDao,
+    logger,
     currentUserId,
   );
 }

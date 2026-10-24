@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:obywatel_plus/core/notifications/feedback_service.dart';
+import 'package:obywatel_plus/core/notifications/feedback_type.dart';
 import 'package:obywatel_plus/features/communication/application/chat_sync_service.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/chats/conversation.dart';
@@ -141,10 +143,9 @@ class Conversations extends _$Conversations {
       _handleIncomingMessage,
     );
 
+    final conversationsStream = repository.watchConversations();
     _conversationsSubscription?.cancel();
-    _conversationsSubscription = repository.watchConversations().listen((
-      items,
-    ) {
+    _conversationsSubscription = conversationsStream.listen((items) {
       state = AsyncValue.data(items);
     });
 
@@ -153,7 +154,7 @@ class Conversations extends _$Conversations {
       _conversationsSubscription?.cancel();
     });
 
-    return repository.watchConversations().first;
+    return conversationsStream.first;
   }
 
   Future<void> refresh() async {
@@ -184,6 +185,8 @@ class Conversations extends _$Conversations {
       type: targetConv.type,
       title: targetConv.title,
       lastSequence: targetConv.lastSequence,
+      lastReadSequence: targetConv.lastReadSequence,
+      unreadCount: targetConv.unreadCount,
       members: targetConv.members,
       messages: mergedMessages,
       updatedAt: message.createdAt,
@@ -194,5 +197,9 @@ class Conversations extends _$Conversations {
     newList.insert(0, updatedConv);
 
     state = AsyncValue.data(newList);
+
+    if (!message.isMine) {
+      ref.read(feedbackServiceProvider).trigger(FeedbackType.info);
+    }
   }
 }

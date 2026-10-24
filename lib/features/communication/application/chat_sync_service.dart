@@ -1,53 +1,88 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/clients/app_websocket_client.dart';
-import 'package:obywatel_plus/core/utils/device_info_service.dart';
-import 'package:obywatel_plus/features/communication/application/outbox_event_builder.dart';
+import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
+import 'package:obywatel_plus/features/auth/domain/auth_state.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_processor.dart';
 import 'package:obywatel_plus/features/communication/application/sync_status.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/chats_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/datasources/chats_ws_client.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/chats_repository_impl.dart';
-import 'package:obywatel_plus/features/communication/domain/chats/message.dart';
-import 'package:uuid/uuid.dart';
+import 'package:obywatel_plus/features/communication/domain/repositories/chats_repository.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-Map<String, dynamic> messageToOutboxJson(
-  Message message,
-  String deviceId, {
-  int signalType = 1,
-}) => buildOutboxEventPayload(message, deviceId, signalType: signalType);
+part 'chat_sync_service.g.dart';
 
 class ChatSyncService {
-  final ChatsApiClient _apiClient;
-  final ChatsWsClient _wsClient;
-  final ChatsRepositoryImpl _repository;
-  final AppLogger _logger;
-  final DeviceInfoService _deviceInfoService;
-  final void Function(SyncStatus status) _updateStatus;
-
-  StreamSubscription<WsConnectionStatus>? _statusSubscription;
-  bool _isSyncing = false;
-  SyncStatus _currentStatus = SyncStatus.idle;
-
   ChatSyncService(
     this._apiClient,
     this._wsClient,
     this._repository,
     this._logger,
-    this._deviceInfoService,
-    this._updateStatus,
-  );
+    this._updateStatus, {
+    required OutboxProcessor outboxProcessor,
+  }) : _outboxProcessor = outboxProcessor;
+
+  final ChatsApiClient _apiClient;
+  final AppWebSocketClient _wsClient;
+  final ChatsRepository _repository;
+  final AppLogger _logger;
+  final OutboxProcessor _outboxProcessor;
+  final void Function(SyncStatus status) _updateStatus;
+
+  StreamSubscription<WsConnectionStatus>? _statusSubscription;
+  bool _isSyncing = false;
+  bool _isStarted = false;
+  bool _isDisposed = false;
+  int _generation = 0;
+  SyncStatus _currentStatus = SyncStatus.idle;
 
   SyncStatus get currentStatus => _currentStatus;
 
-  void init() {
-    _statusSubscription = _wsClient.statusStream.listen(_onStatusChanged);
+  bool _isGenerationActive(int generation) {
+    return !_isDisposed && generation == _generation;
   }
 
+  void _setCurrentStatus(SyncStatus status, {int? generation}) {
+    if (_isDisposed || (generation != null && generation != _generation)) {
+      return;
+    }
+    _currentStatus = status;
+    _updateStatus(status);
+  }
+
+  void startSession() {
+    if (_isDisposed || _isStarted) {
+      return;
+    }
+
+    _isStarted = true;
+    _generation++;
+    _statusSubscription ??= _wsClient.statusStream.listen(_onStatusChanged);
+  }
+
+  void stopSession() {
+    _generation++;
+    _isStarted = false;
+    _isSyncing = false;
+    _statusSubscription?.cancel();
+    _statusSubscription = null;
+    if (!_isDisposed) {
+      _currentStatus = SyncStatus.idle;
+      _updateStatus(SyncStatus.idle);
+    }
+  }
+
+  void init() => startSession();
+
   void _onStatusChanged(WsConnectionStatus status) {
+    if (_isDisposed || !_isStarted) {
+      return;
+    }
+
     if (status == WsConnectionStatus.connected) {
       _logger.i(
         'Połączenie WS nawiązane. Uruchamianie synchronizacji...',
@@ -57,27 +92,40 @@ class ChatSyncService {
     }
   }
 
-  Future<void> syncPendingData() async {
-    if (_isSyncing) return;
+  Future<void> syncPendingData({bool force = false}) async {
+    if (_isDisposed) {
+      return;
+    }
+
+    if (!force && _isSyncing) {
+      return;
+    }
+
+    final generation = force ? ++_generation : _generation;
     _isSyncing = true;
-    _updateStatus(SyncStatus.syncing);
+    _setCurrentStatus(SyncStatus.syncing, generation: generation);
 
     try {
       await _flushOutbox();
+      if (!_isGenerationActive(generation)) return;
+
       await _fetchDeltaSync();
+      if (!_isGenerationActive(generation)) return;
+
       await _fetchLatestConversations();
-      _currentStatus = SyncStatus.idle;
-      _updateStatus(SyncStatus.idle);
+      if (!_isGenerationActive(generation)) return;
+
+      _setCurrentStatus(SyncStatus.idle, generation: generation);
     } on SocketException {
-      _currentStatus = SyncStatus.offline;
-      _updateStatus(SyncStatus.offline);
+      if (!_isGenerationActive(generation)) return;
+      _setCurrentStatus(SyncStatus.offline, generation: generation);
       _logger.w(
         'Brak połączenia z serwerem. Tryb offline.',
         module: 'ChatSync',
       );
     } catch (e, st) {
-      _currentStatus = SyncStatus.error;
-      _updateStatus(SyncStatus.error);
+      if (!_isGenerationActive(generation)) return;
+      _setCurrentStatus(SyncStatus.error, generation: generation);
       _logger.e(
         'Błąd podczas synchronizacji czatu',
         error: e,
@@ -89,101 +137,10 @@ class ChatSyncService {
     }
   }
 
+  Future<void> forceSyncPendingData() => syncPendingData(force: true);
+
   Future<void> _flushOutbox() async {
-    final pendingMessages = await _repository.getPendingOutboxMessages();
-    if (pendingMessages.isEmpty) return;
-
-    final invalidMessageIds = <String>[];
-    final validMessages = <Message>[];
-
-    for (final message in pendingMessages) {
-      final hasConversationId = message.conversationId.trim().isNotEmpty;
-      final hasCiphertext = message.encryptedPayload.trim().isNotEmpty;
-      final hasValidMessageUuid = Uuid.isValidUUID(fromString: message.id);
-      final conversationParts = message.conversationId
-          .split(':')
-          .map((part) => part.trim())
-          .where((part) => part.isNotEmpty)
-          .toList();
-      final hasValidConversationIdFormat =
-          hasConversationId &&
-          (Uuid.isValidUUID(fromString: message.conversationId) ||
-              conversationParts.length == 2);
-      final isReadyForServerDelivery =
-          hasConversationId &&
-          hasCiphertext &&
-          hasValidMessageUuid &&
-          hasValidConversationIdFormat;
-
-      if (!hasValidMessageUuid || (!hasCiphertext && !hasConversationId)) {
-        _logger.w(
-          '[OUTBOX-FLOW-3] irrecoverably invalid pending event detected and will be dropped: '
-          'message_id=${message.id} conversationId=${message.conversationId} '
-          'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'conversationId_format_valid=$hasValidConversationIdFormat',
-          module: 'ChatSync',
-        );
-        invalidMessageIds.add(message.id);
-        continue;
-      }
-
-      if (!isReadyForServerDelivery) {
-        _logger.w(
-          '[OUTBOX-FLOW-3] unresolved pending message held for later retry: '
-          'message_id=${message.id} conversationId=${message.conversationId} '
-          'ciphertext_present=$hasCiphertext message_uuid=$hasValidMessageUuid '
-          'conversationId_format_valid=$hasValidConversationIdFormat',
-          module: 'ChatSync',
-        );
-        continue;
-      }
-
-      validMessages.add(message);
-    }
-
-    if (invalidMessageIds.isNotEmpty) {
-      await _repository.db.outboxDao.deleteEvents(invalidMessageIds);
-      _logger.i(
-        '[OUTBOX-FLOW-3.1] dropped ${invalidMessageIds.length} irrecoverably invalid pending entries from outbox',
-        module: 'ChatSync',
-      );
-    }
-
-    if (validMessages.isEmpty) {
-      _logger.w(
-        '[OUTBOX-FLOW-3.2] no valid pending outbox entries ready to flush; unresolved local entries remain queued for retry',
-        module: 'ChatSync',
-      );
-      return;
-    }
-
-    final deviceId = await _deviceInfoService.getOrCreateDeviceId();
-
-    _logger.i(
-      'Wysyłanie ${validMessages.length} zaległych wiadomości z outboxa',
-      module: 'ChatSync',
-    );
-
-    final payload = validMessages
-        .map((message) => messageToOutboxJson(message, deviceId))
-        .toList();
-
-    try {
-      await _apiClient.sendOutboxBatch(payload);
-      await _repository.clearSentOutboxMessages(
-        validMessages.map((m) => m.id).toList(),
-      );
-    } catch (e) {
-      for (final message in validMessages) {
-        final current = await _repository.db.outboxDao.getRowById(message.id);
-        final retryCount = (current?.retryCount ?? 0) + 1;
-        await _repository.db.outboxDao.scheduleRetry(
-          message.id,
-          retryCount: retryCount,
-        );
-      }
-      rethrow;
-    }
+    await _outboxProcessor.processPending();
   }
 
   Future<void> _fetchDeltaSync() async {
@@ -206,42 +163,55 @@ class ChatSyncService {
   }
 
   void dispose() {
-    _statusSubscription?.cancel();
+    _isDisposed = true;
+    stopSession();
   }
 }
 
-class ChatSyncStatusController extends Notifier<SyncStatus> {
+@riverpod
+class ChatSyncStatusController extends _$ChatSyncStatusController {
   @override
   SyncStatus build() => SyncStatus.idle;
 
   void update(SyncStatus status) {
+    if (!ref.mounted) {
+      return;
+    }
     state = status;
   }
 }
 
-final chatSyncStatusControllerProvider =
-    NotifierProvider<ChatSyncStatusController, SyncStatus>(
-      ChatSyncStatusController.new,
-    );
-
-final chatSyncServiceProvider = Provider<ChatSyncService>((ref) {
+@Riverpod(keepAlive: true)
+ChatSyncService chatSyncService(Ref ref) {
   final apiClient = ref.watch(chatsApiClientProvider);
-  final wsClient = ref.watch(chatsWsClientProvider);
-  final repository = ref.watch(chatsRepositoryProvider) as ChatsRepositoryImpl;
+  final wsClient = ref.watch(appWebSocketClientProvider);
+  final repository = ref.watch(chatsRepositoryProvider);
   final logger = ref.watch(appLoggerProvider);
-  final deviceInfoService = ref.watch(deviceInfoServiceProvider);
   final syncStatus = ref.read(chatSyncStatusControllerProvider.notifier);
+  final outboxProcessor = ref.read(outboxProcessorProvider);
 
   final service = ChatSyncService(
     apiClient,
     wsClient,
     repository,
     logger,
-    deviceInfoService,
     syncStatus.update,
+    outboxProcessor: outboxProcessor,
   );
-  service.init();
+
+  ref.listen<AuthState>(authControllerProvider, (_, next) {
+    if (next.isAuthenticated) {
+      service.startSession();
+    } else {
+      service.stopSession();
+    }
+  });
+
+  final initialState = ref.read(authControllerProvider);
+  if (initialState.isAuthenticated) {
+    service.startSession();
+  }
 
   ref.onDispose(() => service.dispose());
   return service;
-});
+}

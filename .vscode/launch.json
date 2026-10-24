@@ -1,19 +1,20 @@
 {
   "version": "0.2.0",
   "configurations": [
-    // {
-    //   "name": "Flutter Attach (Do działającej aplikacji)",
-    //   "request": "attach",
-    //   "type": "dart",
-    //   "deviceId": "5200d78bfa479449",
-    //   "vmServiceUri": "${command:dart.promptForVmServiceUri}"
-    // },
     {
       "name": "Flutter Build & Install",
       "request": "launch",
       "type": "dart",
       "program": "lib/main.dart",
       "deviceId": "5200d78bfa479449"
+    },
+    {
+      "name": "Flutter Profile on Phone",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart",
+      "deviceId": "5200d78bfa479449",
+      "flutterMode": "profile"
     },
     {
       "name": "Flutter on Windows",

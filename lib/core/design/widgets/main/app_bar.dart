@@ -69,7 +69,7 @@ class AppAppBar extends ConsumerWidget implements PreferredSizeWidget {
                   )
                 : null),
         elevation: 0,
-        actions: [if (actions != null) ...actions!, const SizedBox(width: 8)],
+        actions: [...?actions, const SizedBox(width: 8)],
       ),
     );
   }

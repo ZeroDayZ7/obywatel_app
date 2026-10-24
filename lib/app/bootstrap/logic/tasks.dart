@@ -5,20 +5,32 @@ import 'package:obywatel_plus/app/bootstrap/logic/startup_task.dart';
 import 'package:obywatel_plus/app/bootstrap/logic/version/version_models.dart';
 import 'package:obywatel_plus/app/bootstrap/migration_service.dart';
 import 'package:obywatel_plus/core/database/database.dart';
+import 'package:obywatel_plus/core/database/database_provider.dart';
 import 'package:obywatel_plus/core/security/device_integrity/device_integrity_facade.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/shared_preferences_provider.dart';
 
+bool shouldResetLocalDataForDevelopment({
+  required bool isDebugMode,
+  required bool developerResetEnabled,
+}) {
+  return isDebugMode && developerResetEnabled;
+}
+
 class StorageInitTask implements StartupTask {
   final SecureStorageService storage;
   final SharedPreferencesService prefs;
-  final AppDatabase database;
+  final AppDatabase? database;
+  final AppDatabase Function()? databaseBuilder;
+  final bool developerResetEnabled;
 
   StorageInitTask({
     required this.storage,
     required this.prefs,
-    required this.database,
+    this.database,
+    this.databaseBuilder,
+    this.developerResetEnabled = false,
   });
 
   @override
@@ -26,41 +38,37 @@ class StorageInitTask implements StartupTask {
 
   @override
   Future<AppInitStatus?> initialize() async {
+    final shouldResetForDevelopment = shouldResetLocalDataForDevelopment(
+      isDebugMode: kDebugMode,
+      developerResetEnabled: developerResetEnabled,
+    );
+
     if (kDebugMode) {
-      // Manual debug-only reset helper for intentional first-run / clean-install simulation.
-      // This block is intentionally commented and MUST NOT run during normal startup.
-
-      await Future.wait([
-        storage.clearAll(),
-        prefs.clearAll(),
-      ]);
-      storage.clearAll();
-      prefs.clearAll();
-      database.clearSignalStore();
-      database.clearDatabase();
-
-      await database.clearSignalStore();
-      await database.clearDatabase();
-      
       await storage.debugPrintAll();
       await prefs.debugPrintAll();
-
-      final signalIdentityCount = await database
-          .select(database.signalIdentityKeys)
-          .get();
-      final signalPreKeyCount = await database
-          .select(database.signalPreKeys)
-          .get();
-      final signalSessionCount = await database
-          .select(database.signalSessions)
-          .get();
-
-      debugPrint(
-        '[StorageInitTask] Signal store integrity: identities=${signalIdentityCount.length}, prekeys=${signalPreKeyCount.length}, sessions=${signalSessionCount.length}',
-      );
     }
 
-    return null;
+    if (!shouldResetForDevelopment) {
+      return null;
+    }
+
+    try {
+      if (database != null) {
+        try {
+          await database!.close();
+        } catch (_) {}
+      }
+
+      await deleteLocalDatabaseFiles();
+      await storage.clearAll();
+      await prefs.clearAll();
+
+      debugPrint('[StorageInitTask] ✅ Local DB reset completed.');
+      return null;
+    } catch (e, st) {
+      debugPrint('[StorageInitTask] ❌ Reset failed: $e\n$st');
+      return const AppInitStatus.blocked(reason: 'storage_reset_failed');
+    }
   }
 }
 

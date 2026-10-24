@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'auth_response.dart';
@@ -9,6 +9,7 @@ part of 'auth_response.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 AuthResponse _$AuthResponseFromJson(
@@ -54,7 +55,7 @@ mixin _$AuthResponse {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthResponse);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AuthResponse);
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -63,7 +64,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AuthResponse()';
+    return 'AuthResponse()';
 }
 
 
@@ -221,7 +222,7 @@ return temporarySuccess(_that.accessToken);case _:
 @JsonSerializable()
 
 class _TwoFaRequired implements AuthResponse {
-  const _TwoFaRequired({this.twoFaToken = '', final  String? $type}): $type = $type ?? 'twoFaRequired';
+  const _TwoFaRequired({this.twoFaToken = '',  String? $type}): $type = $type ?? 'twoFaRequired';
   factory _TwoFaRequired.fromJson(Map<String, dynamic> json) => _$TwoFaRequiredFromJson(json);
 
 @JsonKey() final  String twoFaToken;
@@ -243,16 +244,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TwoFaRequired&&(identical(other.twoFaToken, twoFaToken) || other.twoFaToken == twoFaToken));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TwoFaRequired&&(identical(other.twoFaToken, twoFaToken) || other.twoFaToken == twoFaToken));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,twoFaToken);
+int get hashCode {
+    return Object.hash(runtimeType,twoFaToken);
+}
 
 @override
 String toString() {
-  return 'AuthResponse.twoFaRequired(twoFaToken: $twoFaToken)';
+    return 'AuthResponse.twoFaRequired(twoFaToken: $twoFaToken)';
 }
 
 
@@ -294,7 +297,7 @@ as String,
 @JsonSerializable()
 
 class _PreTrust implements AuthResponse {
-  const _PreTrust({this.setupToken = '', this.challenge = '', final  String? $type}): $type = $type ?? 'preTrust';
+  const _PreTrust({this.setupToken = '', this.challenge = '',  String? $type}): $type = $type ?? 'preTrust';
   factory _PreTrust.fromJson(Map<String, dynamic> json) => _$PreTrustFromJson(json);
 
 @JsonKey() final  String setupToken;
@@ -317,16 +320,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreTrust&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _PreTrust&&(identical(other.setupToken, setupToken) || other.setupToken == setupToken)&&(identical(other.challenge, challenge) || other.challenge == challenge));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,setupToken,challenge);
+int get hashCode {
+    return Object.hash(runtimeType,setupToken,challenge);
+}
 
 @override
 String toString() {
-  return 'AuthResponse.preTrust(setupToken: $setupToken, challenge: $challenge)';
+    return 'AuthResponse.preTrust(setupToken: $setupToken, challenge: $challenge)';
 }
 
 
@@ -369,7 +374,7 @@ as String,
 @JsonSerializable()
 
 class _FullSuccess implements AuthResponse {
-  const _FullSuccess({this.accessToken = '', this.refreshToken = '', final  String? $type}): $type = $type ?? 'fullSuccess';
+  const _FullSuccess({this.accessToken = '', this.refreshToken = '',  String? $type}): $type = $type ?? 'fullSuccess';
   factory _FullSuccess.fromJson(Map<String, dynamic> json) => _$FullSuccessFromJson(json);
 
 @JsonKey() final  String accessToken;
@@ -392,16 +397,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _FullSuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _FullSuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken)&&(identical(other.refreshToken, refreshToken) || other.refreshToken == refreshToken));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken,refreshToken);
+int get hashCode {
+    return Object.hash(runtimeType,accessToken,refreshToken);
+}
 
 @override
 String toString() {
-  return 'AuthResponse.fullSuccess(accessToken: $accessToken, refreshToken: $refreshToken)';
+    return 'AuthResponse.fullSuccess(accessToken: $accessToken, refreshToken: $refreshToken)';
 }
 
 
@@ -444,7 +451,7 @@ as String,
 @JsonSerializable()
 
 class _TemporarySuccess implements AuthResponse {
-  const _TemporarySuccess({this.accessToken = '', final  String? $type}): $type = $type ?? 'temporarySuccess';
+  const _TemporarySuccess({this.accessToken = '',  String? $type}): $type = $type ?? 'temporarySuccess';
   factory _TemporarySuccess.fromJson(Map<String, dynamic> json) => _$TemporarySuccessFromJson(json);
 
 @JsonKey() final  String accessToken;
@@ -466,16 +473,18 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TemporarySuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _TemporarySuccess&&(identical(other.accessToken, accessToken) || other.accessToken == accessToken));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,accessToken);
+int get hashCode {
+    return Object.hash(runtimeType,accessToken);
+}
 
 @override
 String toString() {
-  return 'AuthResponse.temporarySuccess(accessToken: $accessToken)';
+    return 'AuthResponse.temporarySuccess(accessToken: $accessToken)';
 }
 
 

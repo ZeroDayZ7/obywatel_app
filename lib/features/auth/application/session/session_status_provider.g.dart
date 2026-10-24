@@ -48,7 +48,7 @@ abstract class _$SessionStatusNotifier extends $Notifier<SessionStatus> {
   SessionStatus build();
   @$mustCallSuper
   @override
-  void runBuild() {
+  WhenComplete runBuild() {
     final ref = this.ref as $Ref<SessionStatus, SessionStatus>;
     final element =
         ref.element
@@ -58,6 +58,6 @@ abstract class _$SessionStatusNotifier extends $Notifier<SessionStatus> {
               Object?,
               Object?
             >;
-    element.handleCreate(ref, build);
+    return element.handleCreate(ref, build);
   }
 }

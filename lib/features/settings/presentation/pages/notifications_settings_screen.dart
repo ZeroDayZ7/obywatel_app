@@ -6,8 +6,8 @@ import 'package:obywatel_plus/core/design/tokens/container_size.dart';
 import 'package:obywatel_plus/core/design/widgets/action_group.dart';
 import 'package:obywatel_plus/core/design/widgets/action_tile.dart';
 import 'package:obywatel_plus/core/design/widgets/main/app_scaffold.dart';
+import 'package:obywatel_plus/core/notifications/notification_settings.dart';
 import 'package:obywatel_plus/core/utils/device_capabilities_provider.dart';
-import 'package:obywatel_plus/features/settings/domain/notification_settings_notifier.dart';
 import 'package:obywatel_plus/features/settings/presentation/config/notifications_settings_config.dart';
 
 class NotificationsSettingsScreen extends ConsumerWidget {
@@ -16,8 +16,8 @@ class NotificationsSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final caps = ref.watch(deviceCapabilitiesProvider);
-    final settings = ref.watch(notificationSettingsProvider);
-    final notifier = ref.read(notificationSettingsProvider.notifier);
+    final settings = ref.watch(appNotificationSettingsProvider);
+    final notifier = ref.read(appNotificationSettingsProvider.notifier);
 
     if (!caps.initialized) {
       return const Center(child: CircularProgressIndicator());

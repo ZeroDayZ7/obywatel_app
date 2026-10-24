@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'pin_verification_state.dart';
@@ -9,6 +9,7 @@ part of 'pin_verification_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$PinVerificationState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is PinVerificationState);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is PinVerificationState);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PinVerificationState()';
+    return 'PinVerificationState()';
 }
 
 
@@ -203,7 +204,7 @@ class _Idle implements PinVerificationState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Idle);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Idle);
 }
 
 
@@ -212,7 +213,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PinVerificationState.idle()';
+    return 'PinVerificationState.idle()';
 }
 
 
@@ -235,7 +236,7 @@ class _Loading implements PinVerificationState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
 }
 
 
@@ -244,7 +245,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PinVerificationState.loading()';
+    return 'PinVerificationState.loading()';
 }
 
 
@@ -267,7 +268,7 @@ class _Success implements PinVerificationState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Success);
 }
 
 
@@ -276,7 +277,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PinVerificationState.success()';
+    return 'PinVerificationState.success()';
 }
 
 
@@ -299,7 +300,7 @@ class _Error implements PinVerificationState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Error);
 }
 
 
@@ -308,7 +309,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'PinVerificationState.error()';
+    return 'PinVerificationState.error()';
 }
 
 
@@ -336,16 +337,18 @@ _$LockedCopyWith<_Locked> get copyWith => __$LockedCopyWithImpl<_Locked>(this, _
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Locked&&(identical(other.remaining, remaining) || other.remaining == remaining));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Locked&&(identical(other.remaining, remaining) || other.remaining == remaining));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,remaining);
+int get hashCode {
+    return Object.hash(runtimeType,remaining);
+}
 
 @override
 String toString() {
-  return 'PinVerificationState.locked(remaining: $remaining)';
+    return 'PinVerificationState.locked(remaining: $remaining)';
 }
 
 

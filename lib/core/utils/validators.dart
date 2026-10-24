@@ -80,6 +80,12 @@ class Validators {
       return LocaleKeys.validators_pin_length.tr(); // "PIN musi mieć 4 cyfry"
     }
 
+    for (final digit in digits) {
+      if (digit < 0 || digit > 9) {
+        return LocaleKeys.validators_invalid_pin.tr();
+      }
+    }
+
     final value = digits.join();
     const simplePins = [
       '0000',

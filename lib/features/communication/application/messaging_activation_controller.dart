@@ -1,138 +1,381 @@
 import 'dart:async';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/foundation.dart';
 import 'package:obywatel_plus/core/utils/device_info_service.dart';
+import 'package:obywatel_plus/features/auth/application/session/session_service.dart';
 import 'package:obywatel_plus/features/communication/application/e2ee_crypto_service.dart';
 import 'package:obywatel_plus/features/communication/data/datasources/messaging_activation_api_client.dart';
-import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+import 'package:obywatel_plus/features/communication/data/repositories/messaging_activation_repository.dart';
+import 'package:obywatel_plus/features/communication/domain/models/messaging_activation_state.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-class MessagingActivationState {
-  const MessagingActivationState({
-    this.status,
-    this.terms,
-    this.errorMessage,
-  });
+part 'messaging_activation_controller.g.dart';
 
-  final MessagingActivationDto? status;
-  final MessagingTermsDto? terms;
-  final String? errorMessage;
+class _ActivationContext {
+  const _ActivationContext({required this.userId, required this.deviceId});
 
-  MessagingActivationState copyWith({
-    MessagingActivationDto? status,
-    MessagingTermsDto? terms,
-    String? errorMessage,
-  }) {
-    return MessagingActivationState(
-      status: status ?? this.status,
-      terms: terms ?? this.terms,
-      errorMessage: errorMessage ?? this.errorMessage,
+  final String userId;
+  final String deviceId;
+}
+
+@riverpod
+class MessagingActivationController extends _$MessagingActivationController {
+  int _requestVersion = 0;
+
+  Future<_ActivationContext?> _resolveContext() async {
+    final user = await ref.read(sessionServiceProvider).getCachedUser();
+    final userId = user?.id;
+    if (userId == null || userId.trim().isEmpty) {
+      return null;
+    }
+
+    final deviceId = await ref.read(deviceInfoServiceProvider).getOrCreateDeviceId();
+    return _ActivationContext(userId: userId, deviceId: deviceId);
+  }
+
+  Future<MessagingActivationState> _loadStatusForContext(
+    _ActivationContext context,
+  ) async {
+    final apiClient = ref.read(messagingActivationApiClientProvider);
+    final persisted = await _readPersistedState(context);
+    final status = await apiClient.getActivationStatus();
+    final terms = await apiClient.getCurrentTerms();
+    final normalizedText = terms.text.trim();
+    final normalizedCurrentVersion = terms.version.trim();
+    final normalizedAcceptedVersion = status.termsVersion.trim();
+    final hasUsableTerms =
+        normalizedText.isNotEmpty && normalizedCurrentVersion.isNotEmpty;
+    final hasConfirmedActivation =
+        status.status == 'active' &&
+        status.consentAccepted == true &&
+        hasUsableTerms;
+
+    final nextState = MessagingActivationState(
+      userId: context.userId,
+      deviceId: context.deviceId,
+      status: hasConfirmedActivation ? status.status : status.status,
+      consentAccepted: status.consentAccepted,
+      termsVersion: normalizedAcceptedVersion.isNotEmpty
+          ? normalizedAcceptedVersion
+          : null,
+      currentTermsVersion: normalizedCurrentVersion.isNotEmpty
+          ? normalizedCurrentVersion
+          : status.currentTermsVersion.trim().isNotEmpty
+              ? status.currentTermsVersion.trim()
+              : null,
+      requiresTermsAcceptance: status.requiresTermsAcceptance,
+      termsText: normalizedText.isNotEmpty ? normalizedText : null,
+      hasLocalActivation: hasConfirmedActivation,
+      keyRegistrationStatus:
+          persisted?.keyRegistrationStatus ?? 'not_started',
+      errorMessage: !hasUsableTerms
+          ? 'Problem z siecią. Regulamin nie jest dostępny. Spróbuj ponownie za chwilę.'
+          : null,
+    );
+
+    if (hasConfirmedActivation) {
+      final confirmedState = await _ensureDeviceIdentityReady(
+        nextState: nextState,
+        context: context,
+      );
+      await _saveState(context, confirmedState);
+      return confirmedState;
+    }
+
+    return nextState;
+  }
+
+  Future<void> _saveState(
+    _ActivationContext context,
+    MessagingActivationState state,
+  ) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    await repo.saveState(
+      userId: context.userId,
+      deviceId: context.deviceId,
+      state: state,
     );
   }
 
-  bool get isActive =>
-      status != null &&
-      status!.status == 'active' &&
-      status!.consentAccepted == true;
-
-  bool get shouldShowOnboarding {
-    if (status == null && terms == null) {
-      return true;
-    }
-    if (isActive) {
-      return false;
-    }
-
-    final currentTermsVersion = status?.currentTermsVersion ?? terms?.version ?? '';
-    final acceptedVersion = status?.termsVersion ?? '';
-    return status == null ||
-        status!.status == 'not_started' ||
-        status!.requiresTermsAcceptance ||
-        acceptedVersion != currentTermsVersion;
-  }
-}
-
-class MessagingActivationController extends AsyncNotifier<MessagingActivationState> {
-  late final MessagingActivationApiClient _apiClient;
-  late final DeviceInfoService _deviceInfoService;
-  late final E2eeCryptoService _cryptoService;
-
-  @override
-  FutureOr<MessagingActivationState> build() async {
-    _apiClient = ref.read(messagingActivationApiClientProvider);
-    _deviceInfoService = ref.read(deviceInfoServiceProvider);
-    _cryptoService = ref.read(e2eeCryptoServiceProvider);
-    return await _loadStatus();
+  Future<MessagingActivationState?> _readPersistedState(
+    _ActivationContext context,
+  ) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    return repo.readForContext(
+      userId: context.userId,
+      deviceId: context.deviceId,
+    );
   }
 
-  Future<MessagingActivationState> _loadStatus() async {
-    final status = await _apiClient.getActivationStatus();
-    final terms = await _apiClient.getCurrentTerms();
-    return MessagingActivationState(status: status, terms: terms);
+  Future<void> _clearPersistedState(_ActivationContext context) async {
+    final repo = ref.read(messagingActivationRepositoryProvider);
+    await repo.clearForContext(
+      userId: context.userId,
+      deviceId: context.deviceId,
+    );
+  }
+
+  Future<bool> _isCurrentContext(_ActivationContext context) async {
+    final current = await _resolveContext();
+    return current != null &&
+        current.userId == context.userId &&
+        current.deviceId == context.deviceId;
   }
 
   Future<MessagingActivationState> _ensureDeviceIdentityReady({
-    MessagingActivationState? nextState,
+    required MessagingActivationState nextState,
+    required _ActivationContext context,
   }) async {
-    final activationState = nextState ?? state.value;
-    if (activationState == null || !activationState.isActive) {
-      return activationState ?? const MessagingActivationState();
+    if (!nextState.isActive) {
+      return nextState;
+    }
+
+    if (nextState.keyRegistrationStatus == 'completed') {
+      return nextState;
     }
 
     try {
-      await _cryptoService.registerDeviceIdentity();
-      return activationState;
-    } catch (error) {
-      return activationState.copyWith(
+      final cryptoService = ref.read(e2eeCryptoServiceProvider);
+      await cryptoService.registerDeviceIdentity();
+      final persisted = nextState.copyWith(
+        keyRegistrationStatus: 'completed',
+        errorMessage: null,
+      );
+      await _saveState(context, persisted);
+      return persisted;
+    } on Exception catch (_) {
+      final failedState = nextState.copyWith(
+        keyRegistrationStatus: 'failed',
         errorMessage:
-            'Regulamin został zaakceptowany, ale nie udała się rejestracja kluczy E2EE. Spróbuj ponownie.',
+            'Rejestracja kluczy E2EE nie została zakończona. Spróbuj ponownie.',
+      );
+      await _saveState(context, failedState);
+      return failedState;
+    }
+  }
+
+  Future<void> _runExclusive(
+    Future<void> Function(int requestId, _ActivationContext context) action,
+  ) async {
+    final context = await _resolveContext();
+    if (context == null) {
+      state = const AsyncData(
+        MessagingActivationState(
+          status: null,
+          keyRegistrationStatus: 'not_started',
+          errorMessage: 'Brak aktywnej sesji użytkownika.',
+        ),
+      );
+      return;
+    }
+
+    final requestId = ++_requestVersion;
+    await action(requestId, context);
+  }
+
+  @override
+  FutureOr<MessagingActivationState> build() async {
+    final context = await _resolveContext();
+    if (context == null) {
+      return const MessagingActivationState(
+        status: null,
+        keyRegistrationStatus: 'not_started',
+        errorMessage: 'Brak aktywnej sesji użytkownika.',
+      );
+    }
+
+    final persisted = await _readPersistedState(context);
+    if (persisted != null) {
+      if (persisted.isActive && persisted.keyRegistrationStatus != 'completed') {
+        return _ensureDeviceIdentityReady(
+          nextState: persisted,
+          context: context,
+        );
+      }
+      return persisted;
+    }
+
+    try {
+      return await _loadStatusForContext(context);
+    } on Exception {
+      return const MessagingActivationState(
+        status: null,
+        keyRegistrationStatus: 'not_started',
+        errorMessage: 'Brak dostępu do sieci. Stan aktywacji jest niekompletny.',
       );
     }
   }
 
   Future<void> load() async {
-    state = const AsyncLoading();
-    try {
-      final nextState = await _loadStatus();
-      final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
-      state = AsyncData(resolvedState);
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-    }
+    await _runExclusive((requestId, context) async {
+      final persisted = await _readPersistedState(context);
+      final currentState = state.value ?? persisted ?? const MessagingActivationState();
+
+      if (persisted != null && persisted.isActive) {
+        final resolved = persisted.keyRegistrationStatus == 'completed'
+            ? persisted
+            : await _ensureDeviceIdentityReady(
+                nextState: persisted,
+                context: context,
+              );
+
+        if (requestId == _requestVersion) {
+          state = AsyncData(resolved);
+        }
+        return;
+      }
+
+      state = const AsyncLoading();
+
+      try {
+        final nextState = await _loadStatusForContext(context);
+        if (requestId == _requestVersion) {
+          state = AsyncData(nextState);
+        }
+      } on Exception {
+        final fallback = persisted ?? currentState;
+        if (requestId == _requestVersion) {
+          state = AsyncData(
+            fallback.copyWith(
+              errorMessage: fallback.errorMessage ??
+                  'Nie udało się pobrać stanu komunikatora.',
+            ),
+          );
+        }
+      }
+    });
   }
 
   Future<void> acceptCurrentTerms() async {
-    try {
-      final currentState = state.value ?? const MessagingActivationState();
-      final terms = currentState.terms ?? await _apiClient.getCurrentTerms();
-      final deviceId = await _deviceInfoService.getOrCreateDeviceId();
-      final updatedStatus = await _apiClient.acceptTerms(
-        deviceId: deviceId,
-        termsVersion: terms.version,
-      );
-      final nextState = currentState.copyWith(
-        status: updatedStatus,
-        terms: terms,
-        errorMessage: null,
-      );
-      final resolvedState = await _ensureDeviceIdentityReady(nextState: nextState);
-      state = AsyncData(resolvedState);
-    } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
-    }
+    await _runExclusive((requestId, context) async {
+      final currentState =
+          state.value ?? await _readPersistedState(context) ?? const MessagingActivationState();
+      state = const AsyncLoading();
+
+      try {
+        if (!await _isCurrentContext(context)) {
+          return;
+        }
+
+        final apiClient = ref.read(messagingActivationApiClientProvider);
+        final terms = await apiClient.getCurrentTerms();
+        final normalizedText = terms.text.trim();
+        final normalizedVersion = terms.version.trim();
+
+        if (normalizedText.isEmpty || normalizedVersion.isEmpty) {
+          if (requestId == _requestVersion) {
+            state = AsyncData(
+              currentState.copyWith(
+                userId: context.userId,
+                deviceId: context.deviceId,
+                termsText: null,
+                currentTermsVersion: null,
+                errorMessage:
+                    'Regulamin nie jest dostępny. Pobierz go ponownie, aby kontynuować.',
+              ),
+            );
+          }
+          return;
+        }
+
+        final updatedStatus = await apiClient.acceptTerms(
+          deviceId: context.deviceId,
+          termsVersion: normalizedVersion,
+        );
+
+        final isConfirmed =
+            updatedStatus.status == 'active' && updatedStatus.consentAccepted;
+
+        if (!isConfirmed) {
+          if (requestId == _requestVersion) {
+            state = AsyncData(
+              currentState.copyWith(
+                userId: context.userId,
+                deviceId: context.deviceId,
+                termsText: normalizedText,
+                currentTermsVersion: normalizedVersion,
+                errorMessage:
+                    'Backend nie potwierdził akceptacji regulaminu. Spróbuj ponownie później.',
+              ),
+            );
+          }
+          return;
+        }
+
+        final nextState = currentState.copyWith(
+          userId: context.userId,
+          deviceId: context.deviceId,
+          status: updatedStatus.status,
+          consentAccepted: true,
+          termsVersion: updatedStatus.termsVersion.trim().isNotEmpty
+              ? updatedStatus.termsVersion.trim()
+              : normalizedVersion,
+          currentTermsVersion: normalizedVersion,
+          requiresTermsAcceptance: false,
+          termsText: normalizedText,
+          hasLocalActivation: true,
+          errorMessage: null,
+          keyRegistrationStatus: currentState.keyRegistrationStatus == 'completed'
+              ? 'completed'
+              : currentState.keyRegistrationStatus == 'failed'
+                  ? 'failed'
+                  : 'not_started',
+        );
+
+        if (!await _isCurrentContext(context)) {
+          return;
+        }
+
+        await _saveState(context, nextState);
+        final resolved = await _ensureDeviceIdentityReady(
+          nextState: nextState,
+          context: context,
+        );
+
+        if (requestId == _requestVersion && await _isCurrentContext(context)) {
+          state = AsyncData(resolved);
+        }
+      } catch (error, stackTrace) {
+        if (requestId == _requestVersion) {
+          state = AsyncData(
+            currentState.copyWith(
+              userId: context.userId,
+              deviceId: context.deviceId,
+              errorMessage: 'Nie można aktywować komunikatora bez dostępu do sieci lub bez prawidłowego regulaminu.',
+            ),
+          );
+        }
+        // ignore stack trace here; controller error state is surfaced to UI
+        debugPrintStack(stackTrace: stackTrace, label: error.toString());
+      }
+    });
   }
 
   Future<void> declineTerms() async {
-    final currentState = state.value ?? const MessagingActivationState();
-    state = AsyncData(
-      currentState.copyWith(
+    await _runExclusive((requestId, context) async {
+      final persisted = await _readPersistedState(context);
+      if (persisted != null && persisted.isActive) {
+        if (requestId == _requestVersion) {
+          state = AsyncData(
+            persisted.copyWith(
+              errorMessage: 'Aktywacja komunikatora jest już potwierdzona.',
+            ),
+          );
+        }
+        return;
+      }
+
+      await _clearPersistedState(context);
+
+      final clearedState = const MessagingActivationState(
         status: null,
+        keyRegistrationStatus: 'not_started',
         errorMessage: 'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
-      ),
-    );
+      );
+
+      if (requestId == _requestVersion) {
+        state = AsyncData(clearedState);
+      }
+    });
   }
 }
-
-final messagingActivationControllerProvider =
-    AsyncNotifierProvider<MessagingActivationController, MessagingActivationState>(
-  MessagingActivationController.new,
-);

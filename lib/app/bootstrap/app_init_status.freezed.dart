@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'app_init_status.dart';
@@ -9,6 +9,7 @@ part of 'app_init_status.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is AppInitStatus);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is AppInitStatus);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus()';
+    return 'AppInitStatus()';
 }
 
 
@@ -215,7 +216,7 @@ class _Loading implements AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
 }
 
 
@@ -224,7 +225,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus.loading()';
+    return 'AppInitStatus.loading()';
 }
 
 
@@ -247,7 +248,7 @@ class _Unauthenticated implements AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthenticated);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Unauthenticated);
 }
 
 
@@ -256,7 +257,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus.unauthenticated()';
+    return 'AppInitStatus.unauthenticated()';
 }
 
 
@@ -279,7 +280,7 @@ class _LockedPin implements AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _LockedPin);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _LockedPin);
 }
 
 
@@ -288,7 +289,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus.lockedPin()';
+    return 'AppInitStatus.lockedPin()';
 }
 
 
@@ -311,7 +312,7 @@ class _Ready implements AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Ready);
 }
 
 
@@ -320,7 +321,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus.ready()';
+    return 'AppInitStatus.ready()';
 }
 
 
@@ -343,7 +344,7 @@ class _ForceUpdate implements AppInitStatus {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _ForceUpdate);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _ForceUpdate);
 }
 
 
@@ -352,7 +353,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'AppInitStatus.forceUpdate()';
+    return 'AppInitStatus.forceUpdate()';
 }
 
 
@@ -381,16 +382,18 @@ _$MaintenanceCopyWith<_Maintenance> get copyWith => __$MaintenanceCopyWithImpl<_
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Maintenance&&(identical(other.message, message) || other.message == message)&&(identical(other.estimatedEndTime, estimatedEndTime) || other.estimatedEndTime == estimatedEndTime));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Maintenance&&(identical(other.message, message) || other.message == message)&&(identical(other.estimatedEndTime, estimatedEndTime) || other.estimatedEndTime == estimatedEndTime));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,message,estimatedEndTime);
+int get hashCode {
+    return Object.hash(runtimeType,message,estimatedEndTime);
+}
 
 @override
 String toString() {
-  return 'AppInitStatus.maintenance(message: $message, estimatedEndTime: $estimatedEndTime)';
+    return 'AppInitStatus.maintenance(message: $message, estimatedEndTime: $estimatedEndTime)';
 }
 
 
@@ -448,16 +451,18 @@ _$BlockedCopyWith<_Blocked> get copyWith => __$BlockedCopyWithImpl<_Blocked>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Blocked&&(identical(other.reason, reason) || other.reason == reason));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Blocked&&(identical(other.reason, reason) || other.reason == reason));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,reason);
+int get hashCode {
+    return Object.hash(runtimeType,reason);
+}
 
 @override
 String toString() {
-  return 'AppInitStatus.blocked(reason: $reason)';
+    return 'AppInitStatus.blocked(reason: $reason)';
 }
 
 

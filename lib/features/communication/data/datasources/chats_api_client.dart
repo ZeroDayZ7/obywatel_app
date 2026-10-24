@@ -1,7 +1,11 @@
+import 'dart:typed_data';
+
 import 'package:dio/dio.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
+import 'package:obywatel_plus/features/communication/application/outbox/outbox_transport_client.dart';
+import 'package:obywatel_plus/features/communication/data/dtos/attachment_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/conversation_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_dto.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/message_envelope.dart';
@@ -10,7 +14,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'chats_api_client.g.dart';
 
-class ChatsApiClient {
+class ChatsApiClient implements OutboxTransportClient {
   final ApiClient _apiClient;
 
   const ChatsApiClient(this._apiClient);
@@ -29,10 +33,7 @@ class ChatsApiClient {
     String? beforeId,
     int limit = 50,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit,
-      'beforeId': beforeId,
-    };
+    final queryParams = <String, dynamic>{'limit': limit, 'beforeId': beforeId};
 
     final response = await _apiClient.get(
       ApiEndpoints.conversationMessages(conversationId),
@@ -68,6 +69,7 @@ class ChatsApiClient {
     return _apiClient.post(path, data: data);
   }
 
+  @override
   Future<void> sendOutboxBatch(List<Map<String, dynamic>> payload) async {
     final requestBody = {'messages': payload};
 
@@ -88,6 +90,13 @@ class ChatsApiClient {
 
     final data = response.data as Map<String, dynamic>? ?? const {};
     return data;
+  }
+
+  Future<void> markConversationAsRead(String conversationId) async {
+    await _apiClient.post(
+      ApiEndpoints.markConversationAsRead(conversationId),
+      data: const <String, dynamic>{},
+    );
   }
 
   Future<MessageEnvelope> sendMessageEnvelope(MessageEnvelope envelope) async {
@@ -130,6 +139,93 @@ class ChatsApiClient {
   Future<Map<String, dynamic>> getUserPreKeys(String userId) async {
     final response = await _apiClient.get(ApiEndpoints.userPreKeys(userId));
     return response.data as Map<String, dynamic>;
+  }
+
+  Future<AttachmentUploadResponseDto> prepareAttachmentUpload({
+    required String conversationId,
+    required String fileName,
+    required String contentType,
+    required int size,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.attachmentUpload,
+      data: {
+        'conversationId': conversationId,
+        'fileName': fileName,
+        'contentType': contentType,
+        'size': size,
+      },
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentUploadResponseDto.fromJson(payload);
+  }
+
+  Future<AttachmentDto> finalizeAttachmentUpload({
+    required String attachmentId,
+    required int size,
+    String? sha256,
+    Map<String, dynamic>? metadata,
+  }) async {
+    final response = await _apiClient.post(
+      ApiEndpoints.attachmentFinalize,
+      data: {
+        'attachmentId': attachmentId,
+        'size': size,
+        if (sha256 != null && sha256.trim().isNotEmpty) 'sha256': sha256,
+        if (metadata != null && metadata.isNotEmpty) 'metadata': metadata,
+      },
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDto.fromJson(payload);
+  }
+
+  Future<AttachmentDto> getAttachment(String attachmentId) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.attachmentById(attachmentId),
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDto.fromJson(payload);
+  }
+
+  Future<AttachmentDownloadResponseDto> getAttachmentDownloadUrl(
+    String attachmentId,
+  ) async {
+    final response = await _apiClient.get(
+      ApiEndpoints.attachmentDownload(attachmentId),
+    );
+
+    final payload = response.data as Map<String, dynamic>? ?? const {};
+    return AttachmentDownloadResponseDto.fromJson(payload);
+  }
+
+  Future<List<int>> downloadBytes(String url) async {
+    final normalizedUrl = url.trim();
+    if (normalizedUrl.isEmpty) {
+      return const <int>[];
+    }
+
+    final response = await _apiClient.dio.get<List<int>>(
+      normalizedUrl,
+      options: Options(responseType: ResponseType.bytes, followRedirects: true),
+    );
+
+    final payload = response.data;
+    if (payload == null) {
+      return const <int>[];
+    }
+
+    if (payload is Uint8List) {
+      return payload.toList(growable: false);
+    }
+
+    return List<int>.from(payload, growable: false);
+  }
+
+  Future<void> deleteAttachment(String attachmentId) async {
+    await _apiClient.delete(ApiEndpoints.attachmentById(attachmentId));
   }
 }
 

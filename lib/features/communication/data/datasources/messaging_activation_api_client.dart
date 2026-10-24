@@ -1,8 +1,10 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/network/api_endpoints.dart';
 import 'package:obywatel_plus/core/network/clients/api_client.dart';
 import 'package:obywatel_plus/core/network/providers.dart';
 import 'package:obywatel_plus/features/communication/data/dtos/messaging_activation_dto.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'messaging_activation_api_client.g.dart';
 
 class MessagingActivationApiClient {
   const MessagingActivationApiClient(this._apiClient);
@@ -54,7 +56,7 @@ class MessagingActivationApiClient {
   }
 }
 
-final messagingActivationApiClientProvider =
-    Provider<MessagingActivationApiClient>((ref) {
+@riverpod
+MessagingActivationApiClient messagingActivationApiClient(Ref ref) {
   return MessagingActivationApiClient(ref.watch(apiClientProvider));
-});
+}

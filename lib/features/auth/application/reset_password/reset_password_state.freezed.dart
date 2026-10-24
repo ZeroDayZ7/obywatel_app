@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
-// ignore_for_file: type=lint
+// ignore_for_file: type=lint, type=warning, deprecated_member_use, deprecated_member_use_from_same_package
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'reset_password_state.dart';
@@ -9,6 +9,7 @@ part of 'reset_password_state.dart';
 // FreezedGenerator
 // **************************************************************************
 
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // dart format off
 T _$identity<T>(T value) => value;
 /// @nodoc
@@ -20,7 +21,7 @@ mixin _$ResetPasswordState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResetPasswordState);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is ResetPasswordState);
 }
 
 
@@ -29,7 +30,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ResetPasswordState()';
+    return 'ResetPasswordState()';
 }
 
 
@@ -215,7 +216,7 @@ class _Initial implements ResetPasswordState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Initial);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Initial);
 }
 
 
@@ -224,7 +225,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ResetPasswordState.initial()';
+    return 'ResetPasswordState.initial()';
 }
 
 
@@ -254,16 +255,18 @@ _$MethodChosenCopyWith<_MethodChosen> get copyWith => __$MethodChosenCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _MethodChosen&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _MethodChosen&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,accountIdentifier,contactValue,method);
+int get hashCode {
+    return Object.hash(runtimeType,accountIdentifier,contactValue,method);
+}
 
 @override
 String toString() {
-  return 'ResetPasswordState.methodChosen(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method)';
+    return 'ResetPasswordState.methodChosen(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method)';
 }
 
 
@@ -317,7 +320,7 @@ class _Loading implements ResetPasswordState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Loading);
 }
 
 
@@ -326,7 +329,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ResetPasswordState.loading()';
+    return 'ResetPasswordState.loading()';
 }
 
 
@@ -359,16 +362,18 @@ _$CodeSentCopyWith<_CodeSent> get copyWith => __$CodeSentCopyWithImpl<_CodeSent>
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeSent&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method)&&(identical(other.resendTime, resendTime) || other.resendTime == resendTime)&&(identical(other.canResend, canResend) || other.canResend == canResend)&&(identical(other.token, token) || other.token == token));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeSent&&(identical(other.accountIdentifier, accountIdentifier) || other.accountIdentifier == accountIdentifier)&&(identical(other.contactValue, contactValue) || other.contactValue == contactValue)&&(identical(other.method, method) || other.method == method)&&(identical(other.resendTime, resendTime) || other.resendTime == resendTime)&&(identical(other.canResend, canResend) || other.canResend == canResend)&&(identical(other.token, token) || other.token == token));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,accountIdentifier,contactValue,method,resendTime,canResend,token);
+int get hashCode {
+    return Object.hash(runtimeType,accountIdentifier,contactValue,method,resendTime,canResend,token);
+}
 
 @override
 String toString() {
-  return 'ResetPasswordState.codeSent(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method, resendTime: $resendTime, canResend: $canResend, token: $token)';
+    return 'ResetPasswordState.codeSent(accountIdentifier: $accountIdentifier, contactValue: $contactValue, method: $method, resendTime: $resendTime, canResend: $canResend, token: $token)';
 }
 
 
@@ -431,16 +436,18 @@ _$CodeVerifiedCopyWith<_CodeVerified> get copyWith => __$CodeVerifiedCopyWithImp
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeVerified&&(identical(other.token, token) || other.token == token)&&(identical(other.challenge, challenge) || other.challenge == challenge));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _CodeVerified&&(identical(other.token, token) || other.token == token)&&(identical(other.challenge, challenge) || other.challenge == challenge));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,token,challenge);
+int get hashCode {
+    return Object.hash(runtimeType,token,challenge);
+}
 
 @override
 String toString() {
-  return 'ResetPasswordState.codeVerified(token: $token, challenge: $challenge)';
+    return 'ResetPasswordState.codeVerified(token: $token, challenge: $challenge)';
 }
 
 
@@ -493,7 +500,7 @@ class _Completed implements ResetPasswordState {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _Completed);
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _Completed);
 }
 
 
@@ -502,7 +509,7 @@ int get hashCode => runtimeType.hashCode;
 
 @override
 String toString() {
-  return 'ResetPasswordState.completed()';
+    return 'ResetPasswordState.completed()';
 }
 
 

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:obywatel_plus/core/crypto/crypto_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
@@ -11,6 +13,7 @@ import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/pin/pin_verification_state.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
+import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:obywatel_plus/features/auth/application/auth/auth_controller.dart';
@@ -21,18 +24,19 @@ part 'pin_verification_notifier.g.dart';
 @Riverpod(keepAlive: true)
 class PinVerificationNotifier extends _$PinVerificationNotifier {
   /// Flaga ręcznego włączania/wyłączania szczegółowych logów debugowych w tym pliku.
-  static const bool _enableVerboseLogging = false;
+  // static const bool _enableVerboseLogging = false;
 
   Timer? _lockoutTimer;
   bool _hasAttemptedAutoBiometrics = false;
+  bool _isBiometricPromptInProgress = false;
 
   AppLogger get _log => ref.read(appLoggerProvider);
 
-  void _logDebug(String message) {
-    if (_enableVerboseLogging) {
-      _log.d(message);
-    }
-  }
+  // void _logDebug(String message) {
+  //   if (_enableVerboseLogging) {
+  //     _log.d(message);
+  //   }
+  // }
 
   @override
   PinVerificationState build() {
@@ -51,15 +55,23 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     return const PinVerificationState.idle();
   }
 
-  /// Wyzwalanie autoryzacji biometrycznej przeniesione do Notifiera
+  /// Wyzwalanie autoryzacji biometrycznej przeniesione do Notifiera.
+  /// Biometria ma tylko potwierdzić tożsamość; nie zastępuje weryfikacji lokalnego PIN-u/hasła.
   Future<void> triggerBiometricAuth({bool isAutoPrompt = false}) async {
-    if (isAutoPrompt && _hasAttemptedAutoBiometrics) return;
-
     final securityState = ref.read(securityServiceProvider);
     if (!securityState.isBiometricEnabled || !securityState.canUseBiometrics) {
       return;
     }
 
+    if (_isBiometricPromptInProgress) {
+      return;
+    }
+
+    if (isAutoPrompt && _hasAttemptedAutoBiometrics) {
+      return;
+    }
+
+    _isBiometricPromptInProgress = true;
     if (isAutoPrompt) {
       _hasAttemptedAutoBiometrics = true;
     }
@@ -72,23 +84,77 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
         persistAcrossBackgrounding: true,
       );
 
-      if (authenticated) {
-        await ref.read(securityServiceProvider.notifier).unlockApp();
+      if (!authenticated) {
+        // _log.w(
+        //   '[PIN-VERIFICATION] Biometria odrzucona lub nie została potwierdzona. Ekran blokady pozostaje aktywny.',
+        // );
+        state = const PinVerificationState.error();
+        return;
       }
+
+      final sessionValid = await ref
+          .read(authControllerProvider.notifier)
+          .unlockWithPinAndValidateSession();
+
+      if (!sessionValid) {
+        // _log.w(
+        //   '[PIN-VERIFICATION] Biometria potwierdziła tożsamość, ale sesja nie została odblokowana. Ekran blokady pozostaje aktywny.',
+        // );
+        state = const PinVerificationState.error();
+        return;
+      }
+
+      await ref.read(securityServiceProvider.notifier).unlockApp();
+      state = const PinVerificationState.success();
+      // _log.i('[PIN-VERIFICATION] Biometria zakończona sukcesem. Ekran blokady został zamknięty.');
+    } on PlatformException catch (e) {
+      final code = e.code;
+      if (code == 'userCanceled' || code == 'UserCanceled') {
+        // _log.i('[PIN-VERIFICATION] Anulowanie biometrii przez użytkownika. Zostawiam ekran blokady.');
+        state = const PinVerificationState.error();
+        return;
+      }
+      // _log.w(
+      //   '[PIN-VERIFICATION] PlatformException podczas biometrii: ${e.code}',
+      //   error: e,
+      // );
+      state = const PinVerificationState.error();
+    } on LocalAuthException catch (e) {
+      final isCanceled = e.code == LocalAuthExceptionCode.userCanceled ||
+          e.code == LocalAuthExceptionCode.systemCanceled;
+
+      if (isCanceled) {
+        // _log.i('[PIN-VERIFICATION] LocalAuthException userCanceled. Ekran blokady pozostaje aktywny.');
+        state = const PinVerificationState.error();
+        return;
+      }
+      _log.w(
+        '[PIN-VERIFICATION] LocalAuthException podczas biometrii: ${e.code} ${e.description ?? ""}',
+        error: e,
+      );
+      state = const PinVerificationState.error();
     } catch (e, st) {
       _log.w('Błąd autoryzacji biometrycznej', error: e, stackTrace: st);
+      state = const PinVerificationState.error();
+    } finally {
+      _isBiometricPromptInProgress = false;
     }
   }
 
-  Future<void> verifyPin(List<int> pinCodes) async {
-    _log.i('[PIN-VERIFICATION] Weryfikacja PIN-u...');
-    _logDebug('[PIN-VERIFICATION] Długość pinCodes: ${pinCodes.length}');
-
+  Future<void> verifyLocalSecret({
+    required LocalSecurityMethod method,
+    required List<int> secretBytes,
+  }) async {
     state = const PinVerificationState.loading();
 
-    final ok = await ref.read(pinServiceProvider).verifyPin(pinCodes);
+    final ok = await ref.read(pinServiceProvider).verifyLocalSecret(
+      method: method,
+      secretBytes: secretBytes,
+    );
     if (!ok) {
-      _log.w('[PIN-VERIFICATION] Nieudana weryfikacja PIN-u w PinService.');
+      _log.w(
+        '[PIN-VERIFICATION] Nieudana weryfikacja lokalnego sekretu w PinService dla metody $method.',
+      );
       await _handleFailedAttempt();
       return;
     }
@@ -97,16 +163,17 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
 
     if (saltBase64 == null || saltBase64.isEmpty) {
-      _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
+      // _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
       state = const PinVerificationState.error();
       return;
     }
 
     try {
       final salt = base64Decode(saltBase64);
-      await ref
-          .read(cryptoServiceProvider.notifier)
-          .loadAndUnlockPrivateKey(pinBytes: pinCodes, salt: salt);
+      await ref.read(cryptoServiceProvider.notifier).loadAndUnlockPrivateKey(
+        pinBytes: secretBytes,
+        salt: salt,
+      );
     } catch (e, st) {
       _log.e(
         '[PIN-VERIFICATION] Błąd odszyfrowywania klucza prywatnego!',
@@ -125,12 +192,28 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
 
     if (!sessionValid) {
       _log.w(
-        '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym PIN-ie. Zachowano odblokowanie lokalne.',
+        '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym lokalnym sekrecie. Zachowano odblokowanie lokalne.',
       );
       return;
     }
 
-    _log.i('✅ [PIN-VERIFICATION] Proces weryfikacji PIN zakończony sukcesem.');
+    _log.i(
+      '✅ [PIN-VERIFICATION] Proces weryfikacji lokalnego sekretu zakończony sukcesem.',
+    );
+  }
+
+  Future<void> verifyPin(List<int> pinCodes) async {
+    await verifyLocalSecret(
+      method: LocalSecurityMethod.pin,
+      secretBytes: pinCodes,
+    );
+  }
+
+  Future<void> verifyPassword(String password) async {
+    await verifyLocalSecret(
+      method: LocalSecurityMethod.password,
+      secretBytes: utf8.encode(password),
+    );
   }
 
   Future<void> _handleFailedAttempt() async {

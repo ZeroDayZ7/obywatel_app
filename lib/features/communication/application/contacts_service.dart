@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:obywatel_plus/core/errors/exceptions/app_exception.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
+import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/features/communication/data/repositories/contacts_repository_impl.dart';
 import 'package:obywatel_plus/features/communication/domain/repositories/contacts_repository.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -8,24 +11,51 @@ part 'contacts_service.g.dart';
 
 class ContactsService {
   final ContactsRepository _repository;
-  final AppLogger _logger = AppLogger();
+  final AppLogger _logger;
 
-  ContactsService(this._repository);
+  ContactsService(this._repository, this._logger);
 
   Future<void> addContact(String userId) async {
-    _logger.i('[CONTACTS-INVITE-01] UI: wysyłanie zaproszenia do userId=$userId');
+    _logger.i(
+      '[CONTACTS-INVITE-01] UI: wysyłanie zaproszenia do userId=$userId',
+    );
     try {
       await _repository.sendRequest(userId);
       _logger.i('[CONTACTS-INVITE-06] UI: zaproszenie wysłane userId=$userId');
     } catch (error, stackTrace) {
-      _logger.e('[CONTACTS-INVITE-99] UI: błąd wysyłki zaproszenia userId=$userId', error: error, stackTrace: stackTrace);
-      FlutterError.reportError(
-        FlutterErrorDetails(
-          exception: error,
-          stack: stackTrace,
-          library: 'contacts_service',
-          context: ErrorDescription('Contact request failed'),
-        ),
+      _logger.e(
+        '[CONTACTS-INVITE-99] UI: błąd wysyłki zaproszenia userId=$userId',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      final isExpectedAppError =
+          error is AppException ||
+          (error is DioException && error.error is AppException);
+      if (!isExpectedAppError) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stackTrace,
+            library: 'contacts_service',
+            context: ErrorDescription('Contact request failed'),
+          ),
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> cancelRequest(String requestId) async {
+    _logger.i('[CONTACTS-CANCEL-01] UI: anulowanie zaproszenia id=$requestId');
+    try {
+      await _repository.cancelRequest(requestId);
+      _logger.i('[CONTACTS-CANCEL-06] UI: anulowanie potwierdzone id=$requestId');
+    } catch (error, stackTrace) {
+      _logger.e(
+        '[CONTACTS-CANCEL-99] UI: błąd anulowania zaproszenia id=$requestId',
+        error: error,
+        stackTrace: stackTrace,
       );
       rethrow;
     }
@@ -43,5 +73,6 @@ class ContactsService {
 @riverpod
 ContactsService contactsService(Ref ref) {
   final repo = ref.watch(contactsRepositoryProvider);
-  return ContactsService(repo);
+  final logger = ref.watch(appLoggerProvider);
+  return ContactsService(repo, logger);
 }
