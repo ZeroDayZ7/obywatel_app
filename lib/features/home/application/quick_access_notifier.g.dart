@@ -42,7 +42,7 @@ final class QuickAccessNotifierProvider
 }
 
 String _$quickAccessNotifierHash() =>
-    r'd69a4f3396368cc340a44bb67f274e8043384a80';
+    r'a1b56f1283302caf9de55190aece64c34d343992';
 
 abstract class _$QuickAccessNotifier extends $Notifier<List<QuickAccessItem>> {
   List<QuickAccessItem> build();

@@ -16,49 +16,9 @@ sealed class QuickAccessItem with _$QuickAccessItem {
     @Default(QuickAccessAccent.primary) QuickAccessAccent accent,
     required String route,
     @Default(true) bool isEnabled,
-    @Default(0) int sortOrder,
-    @Default(false) bool isHidden,
-    @Default(0) int visualOffsetX,
-    @Default(0) int visualOffsetY,
-    @Default(1.0) double widthScale,
   }) = _QuickAccessItem;
 
   const QuickAccessItem._();
-
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'title': title,
-    'subtitle': subtitle,
-    'iconName': iconName,
-    'accent': accent.name,
-    'route': route,
-    'isEnabled': isEnabled,
-    'sortOrder': sortOrder,
-    'isHidden': isHidden,
-    'visualOffsetX': visualOffsetX,
-    'visualOffsetY': visualOffsetY,
-    'widthScale': widthScale,
-  };
-
-  static QuickAccessItem fromMap(Map<String, dynamic> json) {
-    return QuickAccessItem(
-      id: json['id'] as String? ?? '',
-      title: json['title'] as String? ?? '',
-      subtitle: json['subtitle'] as String? ?? '',
-      iconName: json['iconName'] as String? ?? 'apps_rounded',
-      accent: QuickAccessAccent.values.firstWhere(
-        (value) => value.name == (json['accent'] as String? ?? 'primary'),
-        orElse: () => QuickAccessAccent.primary,
-      ),
-      route: json['route'] as String? ?? AppRoutes.home,
-      isEnabled: json['isEnabled'] as bool? ?? true,
-      sortOrder: json['sortOrder'] as int? ?? 0,
-      isHidden: json['isHidden'] as bool? ?? false,
-      visualOffsetX: json['visualOffsetX'] as int? ?? 0,
-      visualOffsetY: json['visualOffsetY'] as int? ?? 0,
-      widthScale: (json['widthScale'] as num?)?.toDouble() ?? 1.0,
-    );
-  }
 
   static List<QuickAccessItem> defaultItems() => [
     const QuickAccessItem(
@@ -68,34 +28,22 @@ sealed class QuickAccessItem with _$QuickAccessItem {
       iconName: 'forum_outlined',
       accent: QuickAccessAccent.primary,
       route: AppRoutes.communication,
-      sortOrder: 0,
-      visualOffsetX: 0,
-      visualOffsetY: 0,
-      widthScale: 1.0,
     ),
-    QuickAccessItem(
+    const QuickAccessItem(
       id: 'evoting',
       title: 'Płynna Demokracja',
       subtitle: 'Głosowanie i delegacje',
       iconName: 'how_to_vote_rounded',
       accent: QuickAccessAccent.primary,
       route: AppRoutes.eVoting,
-      sortOrder: 4,
-      visualOffsetX: -14,
-      visualOffsetY: 18,
-      widthScale: 1.02,
     ),
-    QuickAccessItem(
+    const QuickAccessItem(
       id: 'market',
       title: 'Giełda Zaufania',
       subtitle: 'Rynek reputacji',
       iconName: 'trending_up_rounded',
       accent: QuickAccessAccent.tertiary,
       route: '/evoting/exchange',
-      sortOrder: 5,
-      visualOffsetX: 10,
-      visualOffsetY: 20,
-      widthScale: 0.94,
     ),
   ];
 

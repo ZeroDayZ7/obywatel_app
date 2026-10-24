@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$QuickAccessItem {
 
- String get id; String get title; String get subtitle; String get iconName; QuickAccessAccent get accent; String get route; bool get isEnabled; int get sortOrder; bool get isHidden; int get visualOffsetX; int get visualOffsetY; double get widthScale;
+ String get id; String get title; String get subtitle; String get iconName; QuickAccessAccent get accent; String get route; bool get isEnabled;
 /// Create a copy of QuickAccessItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -27,20 +27,20 @@ $QuickAccessItemCopyWith<QuickAccessItem> get copyWith => _$QuickAccessItemCopyW
 @override
 bool operator ==(Object other) {
   final _this = this as QuickAccessItem;
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAccessItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.iconName, _this.iconName) || other.iconName == _this.iconName)&&(identical(other.accent, _this.accent) || other.accent == _this.accent)&&(identical(other.route, _this.route) || other.route == _this.route)&&(identical(other.isEnabled, _this.isEnabled) || other.isEnabled == _this.isEnabled)&&(identical(other.sortOrder, _this.sortOrder) || other.sortOrder == _this.sortOrder)&&(identical(other.isHidden, _this.isHidden) || other.isHidden == _this.isHidden)&&(identical(other.visualOffsetX, _this.visualOffsetX) || other.visualOffsetX == _this.visualOffsetX)&&(identical(other.visualOffsetY, _this.visualOffsetY) || other.visualOffsetY == _this.visualOffsetY)&&(identical(other.widthScale, _this.widthScale) || other.widthScale == _this.widthScale));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is QuickAccessItem&&(identical(other.id, _this.id) || other.id == _this.id)&&(identical(other.title, _this.title) || other.title == _this.title)&&(identical(other.subtitle, _this.subtitle) || other.subtitle == _this.subtitle)&&(identical(other.iconName, _this.iconName) || other.iconName == _this.iconName)&&(identical(other.accent, _this.accent) || other.accent == _this.accent)&&(identical(other.route, _this.route) || other.route == _this.route)&&(identical(other.isEnabled, _this.isEnabled) || other.isEnabled == _this.isEnabled));
 }
 
 
 @override
 int get hashCode {
   final _this = this as QuickAccessItem;
-  return Object.hash(runtimeType,_this.id,_this.title,_this.subtitle,_this.iconName,_this.accent,_this.route,_this.isEnabled,_this.sortOrder,_this.isHidden,_this.visualOffsetX,_this.visualOffsetY,_this.widthScale);
+  return Object.hash(runtimeType,_this.id,_this.title,_this.subtitle,_this.iconName,_this.accent,_this.route,_this.isEnabled);
 }
 
 @override
 String toString() {
   final _this = this as QuickAccessItem;
-  return 'QuickAccessItem(id: ${_this.id}, title: ${_this.title}, subtitle: ${_this.subtitle}, iconName: ${_this.iconName}, accent: ${_this.accent}, route: ${_this.route}, isEnabled: ${_this.isEnabled}, sortOrder: ${_this.sortOrder}, isHidden: ${_this.isHidden}, visualOffsetX: ${_this.visualOffsetX}, visualOffsetY: ${_this.visualOffsetY}, widthScale: ${_this.widthScale})';
+  return 'QuickAccessItem(id: ${_this.id}, title: ${_this.title}, subtitle: ${_this.subtitle}, iconName: ${_this.iconName}, accent: ${_this.accent}, route: ${_this.route}, isEnabled: ${_this.isEnabled})';
 }
 
 
@@ -51,7 +51,7 @@ abstract mixin class $QuickAccessItemCopyWith<$Res>  {
   factory $QuickAccessItemCopyWith(QuickAccessItem value, $Res Function(QuickAccessItem) _then) = _$QuickAccessItemCopyWithImpl;
 @useResult
 $Res call({
- String id, String title, String subtitle, String iconName, QuickAccessAccent accent, String route, bool isEnabled, int sortOrder, bool isHidden, int visualOffsetX, int visualOffsetY, double widthScale
+ String id, String title, String subtitle, String iconName, QuickAccessAccent accent, String route, bool isEnabled
 });
 
 
@@ -68,7 +68,7 @@ class _$QuickAccessItemCopyWithImpl<$Res>
 
 /// Create a copy of QuickAccessItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? subtitle = null,Object? iconName = null,Object? accent = null,Object? route = null,Object? isEnabled = null,Object? sortOrder = null,Object? isHidden = null,Object? visualOffsetX = null,Object? visualOffsetY = null,Object? widthScale = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? title = null,Object? subtitle = null,Object? iconName = null,Object? accent = null,Object? route = null,Object? isEnabled = null,}) {
   return _then(QuickAccessItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -77,12 +77,7 @@ as String,iconName: null == iconName ? _self.iconName : iconName // ignore: cast
 as String,accent: null == accent ? _self.accent : accent // ignore: cast_nullable_to_non_nullable
 as QuickAccessAccent,route: null == route ? _self.route : route // ignore: cast_nullable_to_non_nullable
 as String,isEnabled: null == isEnabled ? _self.isEnabled : isEnabled // ignore: cast_nullable_to_non_nullable
-as bool,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,isHidden: null == isHidden ? _self.isHidden : isHidden // ignore: cast_nullable_to_non_nullable
-as bool,visualOffsetX: null == visualOffsetX ? _self.visualOffsetX : visualOffsetX // ignore: cast_nullable_to_non_nullable
-as int,visualOffsetY: null == visualOffsetY ? _self.visualOffsetY : visualOffsetY // ignore: cast_nullable_to_non_nullable
-as int,widthScale: null == widthScale ? _self.widthScale : widthScale // ignore: cast_nullable_to_non_nullable
-as double,
+as bool,
   ));
 }
 
@@ -164,10 +159,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled,  int sortOrder,  bool isHidden,  int visualOffsetX,  int visualOffsetY,  double widthScale)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _QuickAccessItem() when $default != null:
-return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled,_that.sortOrder,_that.isHidden,_that.visualOffsetX,_that.visualOffsetY,_that.widthScale);case _:
+return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled);case _:
   return orElse();
 
 }
@@ -185,10 +180,10 @@ return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled,  int sortOrder,  bool isHidden,  int visualOffsetX,  int visualOffsetY,  double widthScale)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled)  $default,) {final _that = this;
 switch (_that) {
 case _QuickAccessItem():
-return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled,_that.sortOrder,_that.isHidden,_that.visualOffsetX,_that.visualOffsetY,_that.widthScale);}
+return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -202,10 +197,10 @@ return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled,  int sortOrder,  bool isHidden,  int visualOffsetX,  int visualOffsetY,  double widthScale)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String title,  String subtitle,  String iconName,  QuickAccessAccent accent,  String route,  bool isEnabled)?  $default,) {final _that = this;
 switch (_that) {
 case _QuickAccessItem() when $default != null:
-return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled,_that.sortOrder,_that.isHidden,_that.visualOffsetX,_that.visualOffsetY,_that.widthScale);case _:
+return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,_that.route,_that.isEnabled);case _:
   return null;
 
 }
@@ -217,7 +212,7 @@ return $default(_that.id,_that.title,_that.subtitle,_that.iconName,_that.accent,
 
 
 class _QuickAccessItem extends QuickAccessItem {
-  const _QuickAccessItem({required this.id, required this.title, this.subtitle = '', required this.iconName, this.accent = QuickAccessAccent.primary, required this.route, this.isEnabled = true, this.sortOrder = 0, this.isHidden = false, this.visualOffsetX = 0, this.visualOffsetY = 0, this.widthScale = 1.0}): super._();
+  const _QuickAccessItem({required this.id, required this.title, this.subtitle = '', required this.iconName, this.accent = QuickAccessAccent.primary, required this.route, this.isEnabled = true}): super._();
   
 
 @override final  String id;
@@ -227,11 +222,6 @@ class _QuickAccessItem extends QuickAccessItem {
 @override@JsonKey() final  QuickAccessAccent accent;
 @override final  String route;
 @override@JsonKey() final  bool isEnabled;
-@override@JsonKey() final  int sortOrder;
-@override@JsonKey() final  bool isHidden;
-@override@JsonKey() final  int visualOffsetX;
-@override@JsonKey() final  int visualOffsetY;
-@override@JsonKey() final  double widthScale;
 
 /// Create a copy of QuickAccessItem
 /// with the given fields replaced by the non-null parameter values.
@@ -243,18 +233,18 @@ _$QuickAccessItemCopyWith<_QuickAccessItem> get copyWith => __$QuickAccessItemCo
 
 @override
 bool operator ==(Object other) {
-    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAccessItem&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.iconName, iconName) || other.iconName == iconName)&&(identical(other.accent, accent) || other.accent == accent)&&(identical(other.route, route) || other.route == route)&&(identical(other.isEnabled, isEnabled) || other.isEnabled == isEnabled)&&(identical(other.sortOrder, sortOrder) || other.sortOrder == sortOrder)&&(identical(other.isHidden, isHidden) || other.isHidden == isHidden)&&(identical(other.visualOffsetX, visualOffsetX) || other.visualOffsetX == visualOffsetX)&&(identical(other.visualOffsetY, visualOffsetY) || other.visualOffsetY == visualOffsetY)&&(identical(other.widthScale, widthScale) || other.widthScale == widthScale));
+    return identical(this, other) || (other.runtimeType == runtimeType&&other is _QuickAccessItem&&(identical(other.id, id) || other.id == id)&&(identical(other.title, title) || other.title == title)&&(identical(other.subtitle, subtitle) || other.subtitle == subtitle)&&(identical(other.iconName, iconName) || other.iconName == iconName)&&(identical(other.accent, accent) || other.accent == accent)&&(identical(other.route, route) || other.route == route)&&(identical(other.isEnabled, isEnabled) || other.isEnabled == isEnabled));
 }
 
 
 @override
 int get hashCode {
-    return Object.hash(runtimeType,id,title,subtitle,iconName,accent,route,isEnabled,sortOrder,isHidden,visualOffsetX,visualOffsetY,widthScale);
+    return Object.hash(runtimeType,id,title,subtitle,iconName,accent,route,isEnabled);
 }
 
 @override
 String toString() {
-    return 'QuickAccessItem(id: $id, title: $title, subtitle: $subtitle, iconName: $iconName, accent: $accent, route: $route, isEnabled: $isEnabled, sortOrder: $sortOrder, isHidden: $isHidden, visualOffsetX: $visualOffsetX, visualOffsetY: $visualOffsetY, widthScale: $widthScale)';
+    return 'QuickAccessItem(id: $id, title: $title, subtitle: $subtitle, iconName: $iconName, accent: $accent, route: $route, isEnabled: $isEnabled)';
 }
 
 
@@ -265,7 +255,7 @@ abstract mixin class _$QuickAccessItemCopyWith<$Res> implements $QuickAccessItem
   factory _$QuickAccessItemCopyWith(_QuickAccessItem value, $Res Function(_QuickAccessItem) _then) = __$QuickAccessItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String title, String subtitle, String iconName, QuickAccessAccent accent, String route, bool isEnabled, int sortOrder, bool isHidden, int visualOffsetX, int visualOffsetY, double widthScale
+ String id, String title, String subtitle, String iconName, QuickAccessAccent accent, String route, bool isEnabled
 });
 
 
@@ -282,7 +272,7 @@ class __$QuickAccessItemCopyWithImpl<$Res>
 
 /// Create a copy of QuickAccessItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? subtitle = null,Object? iconName = null,Object? accent = null,Object? route = null,Object? isEnabled = null,Object? sortOrder = null,Object? isHidden = null,Object? visualOffsetX = null,Object? visualOffsetY = null,Object? widthScale = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? title = null,Object? subtitle = null,Object? iconName = null,Object? accent = null,Object? route = null,Object? isEnabled = null,}) {
   return _then(_QuickAccessItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,title: null == title ? _self.title : title // ignore: cast_nullable_to_non_nullable
@@ -291,12 +281,7 @@ as String,iconName: null == iconName ? _self.iconName : iconName // ignore: cast
 as String,accent: null == accent ? _self.accent : accent // ignore: cast_nullable_to_non_nullable
 as QuickAccessAccent,route: null == route ? _self.route : route // ignore: cast_nullable_to_non_nullable
 as String,isEnabled: null == isEnabled ? _self.isEnabled : isEnabled // ignore: cast_nullable_to_non_nullable
-as bool,sortOrder: null == sortOrder ? _self.sortOrder : sortOrder // ignore: cast_nullable_to_non_nullable
-as int,isHidden: null == isHidden ? _self.isHidden : isHidden // ignore: cast_nullable_to_non_nullable
-as bool,visualOffsetX: null == visualOffsetX ? _self.visualOffsetX : visualOffsetX // ignore: cast_nullable_to_non_nullable
-as int,visualOffsetY: null == visualOffsetY ? _self.visualOffsetY : visualOffsetY // ignore: cast_nullable_to_non_nullable
-as int,widthScale: null == widthScale ? _self.widthScale : widthScale // ignore: cast_nullable_to_non_nullable
-as double,
+as bool,
   ));
 }
 
