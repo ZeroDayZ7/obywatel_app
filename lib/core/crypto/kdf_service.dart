@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cryptography/cryptography.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'kdf_service.g.dart';
@@ -53,14 +54,19 @@ class KdfService {
       throw ArgumentError('Salt too short');
     }
 
+    final secureBuffer = SecureBuffer(pinBytes.length);
+    final securePinBytes = secureBuffer.view;
+    securePinBytes.setAll(0, pinBytes);
+
     try {
       final key = await _argon2id.deriveKey(
-        secretKey: SecretKey(pinBytes),
+        secretKey: SecretKey(securePinBytes),
         nonce: salt,
       );
 
       return key;
     } finally {
+      secureBuffer.dispose();
       wipe(pinBytes);
     }
   }

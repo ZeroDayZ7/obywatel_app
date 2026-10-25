@@ -8,6 +8,7 @@ import 'package:libsignal_protocol_dart/libsignal_protocol_dart.dart';
 import 'package:obywatel_plus/core/crypto/kdf_service.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
+import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -113,11 +114,19 @@ class CryptoService extends _$CryptoService {
         secretKey: kek,
       );
 
-      final seed = clearPrivateKeyBytes.sublist(0, 32);
-      final algorithm = Ed25519();
-      _activeDeviceKeyPair = await algorithm.newKeyPairFromSeed(seed);
+      final secureKeyBuffer = SecureBuffer(clearPrivateKeyBytes.length);
+      final secureKeyBytes = secureKeyBuffer.view;
+      secureKeyBytes.setAll(0, clearPrivateKeyBytes);
 
-      ref.read(kdfServiceProvider).wipe(clearPrivateKeyBytes);
+      try {
+        final seed = secureKeyBytes.sublist(0, 32);
+        final algorithm = Ed25519();
+        _activeDeviceKeyPair = await algorithm.newKeyPairFromSeed(seed);
+      } finally {
+        secureKeyBuffer.dispose();
+        ref.read(kdfServiceProvider).wipe(clearPrivateKeyBytes);
+      }
+
       _log.i(
         '[CryptoService] Klucz prywatny został pomyślnie odblokowany i załadowany do RAM.',
       );
@@ -216,37 +225,44 @@ class CryptoService extends _$CryptoService {
     try {
       final privateKeyData = await _activeDeviceKeyPair!.extract();
       final privKeyBytes = privateKeyData.bytes;
+      final securePrivKeyBuffer = SecureBuffer(privKeyBytes.length);
+      final securePrivKeyBytes = securePrivKeyBuffer.view;
+      securePrivKeyBytes.setAll(0, privKeyBytes);
 
-      final kek = await ref
-          .read(kdfServiceProvider)
-          .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
+      try {
+        final kek = await ref
+            .read(kdfServiceProvider)
+            .deriveKeyFromPin(pinBytes: pinBytes, salt: salt);
 
-      final secretBox = await AesGcm.with256bits().encrypt(
-        privKeyBytes,
-        secretKey: kek,
-      );
+        final secretBox = await AesGcm.with256bits().encrypt(
+          securePrivKeyBytes,
+          secretKey: kek,
+        );
 
-      final encryptedData = secretBox.concatenation();
-      final storage = ref.read(secureStorageProvider);
-      final encryptedBase64 = base64Encode(encryptedData);
+        final encryptedData = secretBox.concatenation();
+        final storage = ref.read(secureStorageProvider);
+        final encryptedBase64 = base64Encode(encryptedData);
 
-      await storage.write(
-        key: StorageKeys.devicePrivateKey,
-        value: encryptedBase64,
-      );
+        await storage.write(
+          key: StorageKeys.devicePrivateKey,
+          value: encryptedBase64,
+        );
 
-      final publicKey = await _activeDeviceKeyPair!.extractPublicKey();
-      final pubKeyBase64 = base64Encode(publicKey.bytes);
+        final publicKey = await _activeDeviceKeyPair!.extractPublicKey();
+        final pubKeyBase64 = base64Encode(publicKey.bytes);
 
-      await storage.write(
-        key: StorageKeys.devicePublicKey,
-        value: pubKeyBase64,
-      );
+        await storage.write(
+          key: StorageKeys.devicePublicKey,
+          value: pubKeyBase64,
+        );
 
-      ref.read(kdfServiceProvider).wipe(privKeyBytes);
-      _log.i(
-        '[CryptoService] Klucze urządzenia zostały zaszyfrowane i zapisane w SecureStorage.',
-      );
+        ref.read(kdfServiceProvider).wipe(privKeyBytes);
+        _log.i(
+          '[CryptoService] Klucze urządzenia zostały zaszyfrowane i zapisane w SecureStorage.',
+        );
+      } finally {
+        securePrivKeyBuffer.dispose();
+      }
     } catch (e, st) {
       _log.e(
         '[CryptoService] Błąd podczas zapisu kluczy',
