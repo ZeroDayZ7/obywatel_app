@@ -98,20 +98,9 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     final securityState = ref.watch(securityServiceProvider);
     final verificationState = ref.watch(pinVerificationProvider);
 
-    final isLockedUI = verificationState.maybeMap(
-      locked: (_) => true,
-      orElse: () => false,
-    );
-
-    final isLoading = verificationState.maybeMap(
-      loading: (_) => true,
-      orElse: () => false,
-    );
-
-    final isError = verificationState.maybeMap(
-      error: (_) => true,
-      orElse: () => false,
-    );
+    final isLocked = verificationState.isLocked;
+    final isLoading = verificationState.isLoading;
+    final isError = verificationState.isError;
 
     final canShowBiometricButton =
         securityState.isBiometricEnabled && securityState.canUseBiometrics;
@@ -124,7 +113,6 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, _) => Center(child: Text('Error: $err')),
         data: (limiter) {
-          final isLocked = isLockedUI || limiter.isLocked;
           final remainingAttempts = ref
               .read(pinAttemptLimiterProvider.notifier)
               .remainingAttempts;

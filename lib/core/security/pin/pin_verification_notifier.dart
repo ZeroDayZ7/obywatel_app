@@ -27,9 +27,12 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   // static const bool _enableVerboseLogging = false;
 
   Timer? _lockoutTimer;
+  DateTime? _activeLockUntil;
+  int _lockoutGeneration = 0;
   bool _hasAttemptedAutoBiometrics = false;
   bool _isBiometricPromptInProgress = false;
   bool _isVerificationInProgress = false;
+  bool _isFinishingLockout = false;
 
   AppLogger get _log => ref.read(appLoggerProvider);
 
@@ -54,13 +57,24 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       next,
     ) {
       next.whenData((data) {
-        if (data.isLocked && _lockoutTimer == null) {
+        final now = ref.read(backendStateProvider.notifier).getSafeNow();
+
+        if (data.lockUntil != null && data.isExpiredAt(now)) {
+          unawaited(_clearExpiredLockout(lockUntil: data.lockUntil!));
+          return;
+        }
+
+        if (data.isLockedAt(now) && _lockoutTimer == null) {
           _startLockoutTimer(data.lockUntil!);
         }
       });
     });
 
-    ref.onDispose(() => _lockoutTimer?.cancel());
+    ref.onDispose(() {
+      _lockoutTimer?.cancel();
+      _lockoutTimer = null;
+      _activeLockUntil = null;
+    });
     return const PinVerificationState.idle();
   }
 
@@ -181,7 +195,6 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
 
       if (saltBase64 == null || saltBase64.isEmpty) {
-        // _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
         state = const PinVerificationState.error();
         return;
       }
@@ -219,6 +232,20 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       _log.i(
         '✅ [PIN-VERIFICATION] Proces weryfikacji lokalnego sekretu zakończony sukcesem.',
       );
+    } on PinValidationException catch (e, st) {
+      _log.e(
+        '[PIN-VERIFICATION] Nieprawidłowa konfiguracja lokalnego sekretu: ${e.message}',
+        error: e,
+        stackTrace: st,
+      );
+      state = const PinVerificationState.error();
+    } catch (e, st) {
+      _log.e(
+        '[PIN-VERIFICATION] Niespodziewany błąd weryfikacji lokalnego sekretu.',
+        error: e,
+        stackTrace: st,
+      );
+      state = const PinVerificationState.error();
     } finally {
       _isVerificationInProgress = false;
     }
@@ -261,22 +288,84 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     }
   }
 
-  void _startLockoutTimer(DateTime lockUntil) {
-    _lockoutTimer?.cancel();
+  Future<void> _clearExpiredLockout({required DateTime lockUntil}) async {
+    if (_isFinishingLockout) {
+      return;
+    }
+
     final backendNotifier = ref.read(backendStateProvider.notifier);
+    final now = backendNotifier.getSafeNow();
+    if (now.isBefore(lockUntil)) {
+      return;
+    }
+
+    if (_activeLockUntil != null && _activeLockUntil != lockUntil) {
+      return;
+    }
+
+    _isFinishingLockout = true;
+    try {
+      _lockoutTimer?.cancel();
+      _lockoutTimer = null;
+      _activeLockUntil = null;
+      await ref.read(pinAttemptLimiterProvider.notifier).reset();
+      state = const PinVerificationState.idle();
+    } finally {
+      _isFinishingLockout = false;
+    }
+  }
+
+  void _startLockoutTimer(DateTime lockUntil) {
+    final backendNotifier = ref.read(backendStateProvider.notifier);
+    final now = backendNotifier.getSafeNow();
+
+    if (!lockUntil.isAfter(now)) {
+      unawaited(_clearExpiredLockout(lockUntil: lockUntil));
+      return;
+    }
+
+    _activeLockUntil = lockUntil;
+    _lockoutGeneration++;
+    final generation = _lockoutGeneration;
+
+    _lockoutTimer?.cancel();
+
+    void updateFromLockUntil() {
+      final currentNow = backendNotifier.getSafeNow();
+      final remaining = lockUntil.difference(currentNow);
+
+      if (!lockUntil.isAfter(currentNow)) {
+        unawaited(_clearExpiredLockout(lockUntil: lockUntil));
+        return;
+      }
+
+      if (generation != _lockoutGeneration || _activeLockUntil != lockUntil) {
+        return;
+      }
+
+      state = PinVerificationState.locked(remaining: remaining);
+    }
+
+    updateFromLockUntil();
 
     _lockoutTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      final now = backendNotifier.getSafeNow();
-      final remaining = lockUntil.difference(now);
+      final currentNow = backendNotifier.getSafeNow();
+      final remaining = lockUntil.difference(currentNow);
 
-      if (remaining.inSeconds <= 0) {
+      if (!lockUntil.isAfter(currentNow)) {
         timer.cancel();
         _lockoutTimer = null;
-        await ref.read(pinAttemptLimiterProvider.notifier).reset();
-        state = const PinVerificationState.idle();
-      } else {
-        state = PinVerificationState.locked(remaining: remaining);
+        await _clearExpiredLockout(lockUntil: lockUntil);
+        return;
       }
+
+      if (generation != _lockoutGeneration || _activeLockUntil != lockUntil) {
+        timer.cancel();
+        _lockoutTimer = null;
+        return;
+      }
+
+      state = PinVerificationState.locked(remaining: remaining);
     });
   }
 }

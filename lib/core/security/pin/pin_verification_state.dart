@@ -11,3 +11,9 @@ sealed class PinVerificationState with _$PinVerificationState {
   const factory PinVerificationState.locked({required Duration remaining}) =
       _Locked;
 }
+
+extension PinVerificationStateX on PinVerificationState {
+  bool get isLocked => maybeMap(locked: (_) => true, orElse: () => false);
+  bool get isLoading => maybeMap(loading: (_) => true, orElse: () => false);
+  bool get isError => maybeMap(error: (_) => true, orElse: () => false);
+}

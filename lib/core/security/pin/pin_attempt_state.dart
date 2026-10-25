@@ -14,5 +14,7 @@ sealed class PinAttemptState with _$PinAttemptState {
 
   bool isLockedAt(DateTime now) => lockUntil != null && now.isBefore(lockUntil!);
 
+  bool isExpiredAt(DateTime now) => lockUntil != null && !now.isBefore(lockUntil!);
+
   bool get isLocked => isLockedAt(DateTime.now());
 }

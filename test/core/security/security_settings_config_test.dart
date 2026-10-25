@@ -154,7 +154,7 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [9, 9, 9, 9],
@@ -182,7 +182,7 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [0, 0, 0, 0],
@@ -208,7 +208,7 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     notifier.confirmNewSecret([9, 9, 9, 9], targetMethod: LocalSecurityMethod.pin);
 
     expect(fakeService.updateCalled, isFalse);
@@ -229,7 +229,7 @@ void main() {
 
     final notifier = container.read(changePinProvider.notifier);
 
-    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [9, 9, 9, 9],
@@ -254,7 +254,7 @@ void main() {
     );
 
     final notifier = container.read(changePinProvider.notifier);
-    notifier.setNewPin([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
+    notifier.setNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     notifier.confirmNewSecret([4, 2, 8, 7], targetMethod: LocalSecurityMethod.pin);
     await notifier.verifyCurrentSecretAndSave(
       [9, 9, 9, 9],

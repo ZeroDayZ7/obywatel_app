@@ -1,13 +1,11 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/pin/change_pin_state.dart';
+import 'package:obywatel_plus/core/security/pin/local_secret_validator.dart';
 import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/security/security/security_service_provider.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
-import 'package:obywatel_plus/core/utils/validators.dart';
 
 /// Provider flow zmiany PIN-u / hasła lokalnego.
 final changePinProvider = NotifierProvider<ChangePinNotifier, ChangePinState>(
@@ -134,16 +132,12 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
   String? _validateSecret(List<int> secret, LocalSecurityMethod targetMethod) {
     _flowLog('ChangePinNotifier._validateSecret', 1,
         'method=${targetMethod.name} bytes=${secret.length}');
-    if (targetMethod == LocalSecurityMethod.pin) {
-      final result = Validators.validatePinDigits(secret);
-      _flowLog('ChangePinNotifier._validateSecret', 2,
-          'pinValidation=${result ?? 'ok'}');
-      return result;
-    }
-
-    final result = Validators.validatePassword(utf8.decode(secret));
-    _flowLog('ChangePinNotifier._validateSecret', 3,
-        'passwordValidation=${result ?? 'ok'}');
+    final result = LocalSecretValidator.validate(
+      method: targetMethod,
+      secret: secret,
+    );
+    _flowLog('ChangePinNotifier._validateSecret', 2,
+        'validation=${result ?? 'ok'}');
     return result;
   }
 
@@ -176,14 +170,6 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     _flowLog('ChangePinNotifier.setNewSecret', 3,
         'newSecretStored bytes=${_newSecret!.length} state=${state.logSummary()}');
     _logTransition('NEW_SECRET_SET');
-  }
-
-  @Deprecated('Use setNewSecret instead.')
-  void setNewPin(
-    List<int> secret, {
-    required LocalSecurityMethod targetMethod,
-  }) {
-    setNewSecret(secret, targetMethod: targetMethod);
   }
 
   void confirmNewSecret(
@@ -224,14 +210,6 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
     _flowLog('ChangePinNotifier.confirmNewSecret', 4,
         'confirmationPassed state=${state.logSummary()}');
     _logTransition('SECRET_CONFIRMED');
-  }
-
-  @Deprecated('Use verifyCurrentSecretAndSave instead.')
-  Future<void> verifyOldPin(
-    List<int> secret, {
-    required LocalSecurityMethod method,
-  }) async {
-    await verifyCurrentSecretAndSave(secret, currentMethod: method);
   }
 
   Future<void> verifyCurrentSecretAndSave(

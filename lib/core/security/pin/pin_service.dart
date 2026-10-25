@@ -8,6 +8,7 @@ import 'package:obywatel_plus/core/crypto/symmetric_crypto.dart';
 import 'package:obywatel_plus/core/logger/app_logger.dart';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/security/cryptography/secure_buffer.dart';
+import 'package:obywatel_plus/core/security/pin/local_secret_validator.dart';
 import 'package:obywatel_plus/core/security/security_setup/security_setup_state.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
@@ -36,6 +37,14 @@ class PinValidationException implements Exception {
 
   @override
   String toString() => 'PinValidationException: $message';
+}
+
+class SecurityConfigurationException implements Exception {
+  final String message;
+  const SecurityConfigurationException(this.message);
+
+  @override
+  String toString() => 'SecurityConfigurationException: $message';
 }
 
 /// Serwis obsługi PIN
@@ -100,12 +109,12 @@ class PinService {
       );
     }
 
-    if (method == LocalSecurityMethod.pin) {
-      _validatePinList(secretBytes);
-    } else if (method == LocalSecurityMethod.password) {
-      if (secretBytes.isEmpty) {
-        throw PinValidationException('errors.required_password');
-      }
+    final validationError = LocalSecretValidator.validate(
+      method: method,
+      secret: secretBytes,
+    );
+    if (validationError != null) {
+      throw PinValidationException(validationError);
     }
 
     final localCopy = List<int>.from(secretBytes);
@@ -244,13 +253,19 @@ class PinService {
 
   Future<LocalSecurityMethod> readStoredLocalSecurityMethod() async {
     final rawMethod = await _storage.read(key: StorageKeys.localSecurityMethod);
-    switch (rawMethod?.trim().toLowerCase()) {
+    if (rawMethod == null || rawMethod.trim().isEmpty) {
+      return LocalSecurityMethod.none;
+    }
+
+    switch (rawMethod.trim().toLowerCase()) {
       case 'pin':
         return LocalSecurityMethod.pin;
       case 'password':
         return LocalSecurityMethod.password;
       default:
-        return LocalSecurityMethod.none;
+        throw const SecurityConfigurationException(
+          'Unknown local security method stored in secure storage.',
+        );
     }
   }
 
@@ -264,13 +279,10 @@ class PinService {
 
     final storedMethod = await readStoredLocalSecurityMethod();
     if (storedMethod == LocalSecurityMethod.none) {
-      // Backward compatibility: older installs without the persisted method are
-      // treated as PIN-based if the caller explicitly validates PIN.
       if (method != LocalSecurityMethod.pin) {
-        // _logger.w(
-        //   '[PIN-SERVICE] Brak zapisanego LocalSecurityMethod dla hasła lokalnego.',
-        // );
-        return false;
+        throw const SecurityConfigurationException(
+          'Password-based local security is configured but method metadata is missing.',
+        );
       }
     } else if (storedMethod != method) {
       _logger.w(
@@ -279,12 +291,12 @@ class PinService {
       return false;
     }
 
-    if (method == LocalSecurityMethod.pin) {
-      _validatePinList(secretBytes);
-    } else if (method == LocalSecurityMethod.password) {
-      if (secretBytes.isEmpty) {
-        return false;
-      }
+    final validationError = LocalSecretValidator.validate(
+      method: method,
+      secret: secretBytes,
+    );
+    if (validationError != null) {
+      throw PinValidationException(validationError);
     }
 
     final workingCopy = List<int>.from(secretBytes);
@@ -384,20 +396,16 @@ class PinService {
   }
 
   Future<void> removePin() async {
-    await _storage.delete(key: StorageKeys.pinHash);
-    _logger.i('[PIN-SERVICE] PIN usunięty');
-  }
-
-  void _validatePinList(List<int> pinCodes) {
-    if (pinCodes.length < 4 || pinCodes.length > 6) {
-      throw PinValidationException('errors.pin_invalid_length');
-    }
-
-    for (final c in pinCodes) {
-      if (c < 0 || c > 9) {
-        throw PinValidationException('errors.pin_not_numeric');
-      }
-    }
+    await Future.wait([
+      _storage.delete(key: StorageKeys.pinHash),
+      _storage.delete(key: StorageKeys.localSecurityMethod),
+      _storage.delete(key: StorageKeys.kekSalt),
+      _storage.delete(key: StorageKeys.devicePrivateKey),
+      _storage.delete(key: StorageKeys.pinAttempts),
+      _storage.delete(key: StorageKeys.pinLockUntil),
+    ]);
+    lock();
+    _logger.i('[PIN-SERVICE] Lokalna konfiguracja bezpieczeństwa została usunięta');
   }
 
   void _wipe(List<int> data) {

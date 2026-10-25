@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:obywatel_plus/core/logger/logger_provider.dart';
 import 'package:obywatel_plus/core/network/backend_sync.dart';
 import 'package:obywatel_plus/core/security/pin/pin_attempt_state.dart';
+import 'package:obywatel_plus/core/security/pin/pin_service.dart';
 import 'package:obywatel_plus/core/storage/secure_storage_provider.dart';
 import 'package:obywatel_plus/core/storage/storage_keys.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -18,9 +19,21 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
   /// czasu blokady przy wielokrotnych próbach.
   static const Duration maxLockDuration = Duration(hours: 1);
 
+  Future<void> _writeQueue = Future.value();
+
   @override
   Future<PinAttemptState> build() async {
     return _loadFromStorage();
+  }
+
+  Future<void> _runSerialized(Future<void> Function() operation) {
+    final previous = _writeQueue;
+    final next = previous.then(
+      (_) => operation(),
+      onError: (error, stack) => operation(),
+    );
+    _writeQueue = next.catchError((_) {});
+    return next;
   }
 
   Future<PinAttemptState> _loadFromStorage() async {
@@ -28,15 +41,28 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     final attemptsStr = await storage.read(key: StorageKeys.pinAttempts);
     final lockMillisStr = await storage.read(key: StorageKeys.pinLockUntil);
 
-    final attempts = int.tryParse(attemptsStr ?? '') ?? 0;
-    DateTime? lockUntil;
-
-    if (lockMillisStr != null) {
-      final millis = int.tryParse(lockMillisStr);
-      if (millis != null) {
-        lockUntil = DateTime.fromMillisecondsSinceEpoch(millis);
+    int attempts = 0;
+    if (attemptsStr != null && attemptsStr.trim().isNotEmpty) {
+      final parsed = int.tryParse(attemptsStr);
+      if (parsed == null) {
+        throw SecurityConfigurationException(
+          'Corrupted pin attempt counter in secure storage.',
+        );
       }
+      attempts = parsed;
     }
+
+    DateTime? lockUntil;
+    if (lockMillisStr != null && lockMillisStr.trim().isNotEmpty) {
+      final millis = int.tryParse(lockMillisStr);
+      if (millis == null) {
+        throw SecurityConfigurationException(
+          'Corrupted pin lock timestamp in secure storage.',
+        );
+      }
+      lockUntil = DateTime.fromMillisecondsSinceEpoch(millis);
+    }
+
     return PinAttemptState(attempts: attempts, lockUntil: lockUntil);
   }
 
@@ -59,49 +85,53 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     return Duration(seconds: cappedSeconds);
   }
 
-  Future<void> registerFailedAttempt() async {
-    final currentState = state.value ?? const PinAttemptState();
-    final serverNow = ref.read(backendStateProvider.notifier).getSafeNow();
+  Future<void> registerFailedAttempt() {
+    return _runSerialized(() async {
+      final currentState = state.value ?? const PinAttemptState();
+      final serverNow = ref.read(backendStateProvider.notifier).getSafeNow();
 
-    if (currentState.isLockedAt(serverNow)) {
-      return;
-    }
+      if (currentState.isLockedAt(serverNow)) {
+        return;
+      }
 
-    final nextAttempts = currentState.attempts + 1;
-    final lockDuration = _getLockDuration(nextAttempts);
+      final nextAttempts = currentState.attempts + 1;
+      final lockDuration = _getLockDuration(nextAttempts);
 
-    DateTime? lockUntil;
-    if (lockDuration > Duration.zero) {
-      lockUntil = serverNow.add(lockDuration);
-    }
+      DateTime? lockUntil;
+      if (lockDuration > Duration.zero) {
+        lockUntil = serverNow.add(lockDuration);
+      }
 
-    ref
-        .read(appLoggerProvider)
-        .w(
-          'PIN trial failed ($nextAttempts/$maxAttemptsBeforeLock). Device locked until: $lockUntil',
-          module: 'SECURITY',
-        );
+      ref
+          .read(appLoggerProvider)
+          .w(
+            'PIN trial failed ($nextAttempts/$maxAttemptsBeforeLock). Device locked until: $lockUntil',
+            module: 'SECURITY',
+          );
 
-    final newState = currentState.copyWith(
-      attempts: nextAttempts,
-      lockUntil: lockUntil,
-    );
+      final newState = currentState.copyWith(
+        attempts: nextAttempts,
+        lockUntil: lockUntil,
+      );
 
-    state = AsyncData(newState);
-    await _saveToStorage(newState);
+      await _saveToStorage(newState);
+      state = AsyncData(newState);
+    });
   }
 
-  Future<void> reset() async {
-    final currentState = state.value;
-    final now = ref.read(backendStateProvider.notifier).getSafeNow();
+  Future<void> reset() {
+    return _runSerialized(() async {
+      final currentState = state.value;
+      final now = ref.read(backendStateProvider.notifier).getSafeNow();
 
-    if (currentState != null && currentState.isLockedAt(now)) {
-      return;
-    }
+      if (currentState != null && currentState.isLockedAt(now)) {
+        return;
+      }
 
-    const newState = PinAttemptState();
-    state = const AsyncData(newState);
-    await _saveToStorage(newState);
+      const newState = PinAttemptState();
+      await _saveToStorage(newState);
+      state = const AsyncData(newState);
+    });
   }
 
   Future<void> _saveToStorage(PinAttemptState data) async {
