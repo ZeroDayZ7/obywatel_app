@@ -42,85 +42,99 @@ void globalWebSocketLifecycle(Ref ref) {
   // final logger = ref.watch(appLoggerProvider);
   final client = ref.watch(appWebSocketClientProvider);
   String? lastAccessToken;
+  bool isSyncInProgress = false;
+  AuthState? pendingAuthState;
 
   Future<void> syncWithAuth(AuthState authState) async {
-    // logger.d(
-    //   '[WS-LIFECYCLE][1] syncWithAuth start authState=$authState isAuthenticated=${authState.isAuthenticated}',
-    //   module: 'WS-LIFECYCLE',
-    // );
+    if (isSyncInProgress) {
+      pendingAuthState = authState;
+      return;
+    }
 
-    if (!authState.isAuthenticated) {
-      // logger.d(
-      //   '[WS-LIFECYCLE][2] auth not authenticated; closing ws if needed. lastAccessToken=${lastAccessToken != null} isConnected=${client.isConnected}',
-      //   module: 'WS-LIFECYCLE',
-      // );
-      if (lastAccessToken != null || client.isConnected) {
-        lastAccessToken = null;
-        await client.disconnect();
+    isSyncInProgress = true;
+
+    try {
+      var currentAuthState = authState;
+      while (true) {
+        if (!currentAuthState.isAuthenticated) {
+          if (lastAccessToken != null || client.isConnected) {
+            lastAccessToken = null;
+            await client.disconnect();
+          }
+          if (pendingAuthState == null) {
+            return;
+          }
+          currentAuthState = pendingAuthState!;
+          pendingAuthState = null;
+          continue;
+        }
+
+        final token = await ref.read(authFreshProvider).token;
+        final accessToken = token?.accessToken ?? '';
+
+        if (accessToken.isEmpty) {
+          lastAccessToken = null;
+          await client.disconnect();
+          if (pendingAuthState == null) {
+            return;
+          }
+          currentAuthState = pendingAuthState!;
+          pendingAuthState = null;
+          continue;
+        }
+
+        final networkState = ref.read(networkStateProvider).asData?.value ??
+            NetworkState.online;
+        if (networkState == NetworkState.offline) {
+          if (pendingAuthState == null) {
+            return;
+          }
+          currentAuthState = pendingAuthState!;
+          pendingAuthState = null;
+          continue;
+        }
+
+        if (lastAccessToken == accessToken && client.isConnected) {
+          if (pendingAuthState == null) {
+            return;
+          }
+          currentAuthState = pendingAuthState!;
+          pendingAuthState = null;
+          continue;
+        }
+
+        lastAccessToken = accessToken;
+
+        final deviceFingerprint = await ref
+            .read(deviceInfoServiceProvider)
+            .getFingerprint();
+        final normalizedBaseUrl = ServicesConfig.apiBaseUrl
+            .replaceFirst('https://', 'wss://')
+            .replaceFirst('http://', 'ws://')
+            .replaceAll(RegExp(r'/+$'), '');
+        final wsUrl = '$normalizedBaseUrl${ApiEndpoints.wsMessaging}';
+
+        await client.connect(
+          wsUrl,
+          sessionKey: accessToken,
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'X-Device-Fingerprint': deviceFingerprint,
+          },
+        );
+
+        if (pendingAuthState == null) {
+          return;
+        }
+        currentAuthState = pendingAuthState!;
+        pendingAuthState = null;
       }
-      return;
+    } finally {
+      isSyncInProgress = false;
+      if (pendingAuthState != null) {
+        unawaited(syncWithAuth(pendingAuthState!));
+      }
     }
-
-    final token = await ref.read(authFreshProvider).token;
-    final accessToken = token?.accessToken ?? '';
-    // logger.d(
-    //   '[WS-LIFECYCLE][3] token resolved accessTokenPresent=${accessToken.isNotEmpty} lastAccessToken=${lastAccessToken != null} clientConnected=${client.isConnected}',
-    //   module: 'WS-LIFECYCLE',
-    // );
-
-    if (accessToken.isEmpty) {
-      lastAccessToken = null;
-      await client.disconnect();
-      return;
-    }
-
-    final networkState = ref.read(networkStateProvider).asData?.value ??
-        NetworkState.online;
-    // logger.d(
-    //   '[WS-LIFECYCLE][4] networkState=$networkState',
-    //   module: 'WS-LIFECYCLE',
-    // );
-    if (networkState == NetworkState.offline) {
-      // logger.d(
-      //   '[WS-LIFECYCLE][5] offline -> skip connect',
-      //   module: 'WS-LIFECYCLE',
-      // );
-      return;
-    }
-
-    if (lastAccessToken == accessToken && client.isConnected) {
-      // logger.d(
-      //   '[WS-LIFECYCLE][6] token unchanged and socket connected -> skip reconnect',
-      //   module: 'WS-LIFECYCLE',
-      // );
-      return;
-    }
-
-    lastAccessToken = accessToken;
-
-    final deviceFingerprint = await ref
-        .read(deviceInfoServiceProvider)
-        .getFingerprint();
-    final normalizedBaseUrl = ServicesConfig.apiBaseUrl
-        .replaceFirst('https://', 'wss://')
-        .replaceFirst('http://', 'ws://')
-        .replaceAll(RegExp(r'/+$'), '');
-    final wsUrl = '$normalizedBaseUrl${ApiEndpoints.wsMessaging}';
-
-    // logger.i('[WS-LIFECYCLE] Inicjalizacja połączenia WS pod adres: $wsUrl');
-    // logger.d(
-    //   '[WS-LIFECYCLE][7] attempt connect sessionKeyPresent=${accessToken.isNotEmpty} headersPresent=${deviceFingerprint.isNotEmpty}',
-    //   module: 'WS-LIFECYCLE',
-    // );
-
-    await client.connect(
-      wsUrl,
-      sessionKey: accessToken,
-      headers: {
-        'Authorization': 'Bearer $accessToken',
-        'X-Device-Fingerprint': deviceFingerprint,
-      },
-    );
   }
 
   ref.listen<AuthState>(authControllerProvider, (_, next) {
