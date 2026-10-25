@@ -14,18 +14,26 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
     try {
       final payloadJson = event.payload.value;
       final payloadMap = _readPayloadMap(payloadJson);
-      final targetId = payloadMap?['id']?.toString() ??
-          payloadMap?['entity_id']?.toString();
-      final action = payloadMap?['action']?.toString() ??
-          payloadMap?['event_type']?.toString();
+      final validationError = _validatePayload(payloadMap);
+      if (validationError != null) {
+        await _markEventAsFailed(
+          event,
+          'Rejected invalid outbox payload: $validationError',
+        );
+        return;
+      }
+
+      final targetId = payloadMap['id']?.toString() ??
+          payloadMap['entityId']?.toString();
+      final action = payloadMap['action']?.toString() ??
+          payloadMap['eventType']?.toString();
 
       final isMessageEvent =
           (event.eventType.value == 'SEND_MESSAGE') ||
           (action == 'SEND_MESSAGE');
-      final conversationId =
-          payloadMap?['conversation_id']?.toString() ?? event.conversationId.value;
-      final payloadMapValue = payloadMap?['payload'];
-      final ciphertext = payloadMap?['ciphertext']?.toString() ??
+      final conversationId = payloadMap['conversationId']?.toString();
+      final payloadMapValue = payloadMap['payload'];
+      final ciphertext = payloadMap['ciphertext']?.toString() ??
           (payloadMapValue is Map
               ? (payloadMapValue)['ciphertext']?.toString()
               : null);
@@ -34,7 +42,11 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
           (conversationId == null || conversationId.trim().isEmpty ||
               (ciphertext == null || ciphertext.trim().isEmpty))) {
         print(
-          '[OUTBOX-DAO-REJECTED] refusing to enqueue invalid SEND_MESSAGE event without conversation_id or ciphertext. event_id=${event.id.value} payload_event_type=${action ?? event.eventType.value}',
+          '[OUTBOX-DAO-REJECTED] refusing to enqueue invalid SEND_MESSAGE event without conversationId or ciphertext. event_id=${event.id.value} payload_eventType=${action ?? event.eventType.value}',
+        );
+        await _markEventAsFailed(
+          event,
+          'Invalid SEND_MESSAGE payload: missing conversationId or ciphertext.',
         );
         return;
       }
@@ -51,8 +63,8 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
 
       final related = pending.where((row) {
         final next = _readPayloadMap(row.payload);
-        return next?['id']?.toString() == targetId ||
-            next?['entity_id']?.toString() == targetId;
+        return next['id']?.toString() == targetId ||
+            next['entityId']?.toString() == targetId;
       }).toList();
 
       if (action == 'mark_read' &&
@@ -95,28 +107,112 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
       }
 
       await into(outboxEvents).insert(event);
-    } catch (_) {
-      await into(outboxEvents).insert(event);
+    } on FormatException catch (error) {
+      print(
+        '[OUTBOX-DAO-REJECTED] invalid payload JSON. event_id=${event.id.value} error=${error.message}',
+      );
+      await _markEventAsFailed(event, 'Invalid JSON payload: ${error.message}');
+    } on ArgumentError catch (error) {
+      print(
+        '[OUTBOX-DAO-REJECTED] invalid payload structure. event_id=${event.id.value} error=$error',
+      );
+      await _markEventAsFailed(event, 'Invalid payload structure: $error');
+    } on Exception catch (error) {
+      print(
+        '[OUTBOX-DAO-DB] database error while enqueueing outbox event. event_id=${event.id.value} error=$error',
+      );
+      rethrow;
     }
   }
 
-  Map<String, dynamic>? _readPayloadMap(String rawJson) {
-    if (rawJson.trim().isEmpty) {
-      return null;
-    }
+  Future<void> _markEventAsFailed(
+    OutboxEventsCompanion event,
+    String reason,
+  ) async {
+    final failedEvent = event.copyWith(
+      status: const Value('failed'),
+      updatedAt: Value(DateTime.now()),
+    );
 
     try {
-      final decoded = jsonDecode(rawJson);
-      if (decoded is Map<String, dynamic>) {
-        return decoded;
-      }
-      if (decoded is Map) {
-        return Map<String, dynamic>.from(decoded);
-      }
-      return null;
-    } catch (_) {
-      return null;
+      await into(outboxEvents).insert(failedEvent);
+      print('[OUTBOX-DAO-FAILED] event_id=${event.id.value} reason=$reason');
+    } on Exception catch (error) {
+      print(
+        '[OUTBOX-DAO-FAILED] unable to persist failed outbox record. event_id=${event.id.value} error=$error reason=$reason',
+      );
+      rethrow;
     }
+  }
+
+  String? _validatePayload(Map<String, dynamic>? payloadMap) {
+    if (payloadMap == null) {
+      return 'payload is not a valid JSON object';
+    }
+
+    final candidateId = payloadMap['id'] ?? payloadMap['entityId'];
+    if (candidateId != null &&
+        candidateId is! String &&
+        candidateId is! num &&
+        candidateId is! bool) {
+      return 'payload id/entityId must be a primitive value';
+    }
+
+    final action = payloadMap['action'] ?? payloadMap['eventType'];
+    if (action != null && action is! String) {
+      return 'payload action/eventType must be string';
+    }
+
+    final conversationId = payloadMap['conversationId'];
+    if (conversationId != null &&
+        conversationId is! String &&
+        conversationId is! num) {
+      return 'payload conversationId must be string or numeric';
+    }
+
+    final payloadValue = payloadMap['payload'];
+    if (payloadValue != null && payloadValue is Map) {
+      final nestedCiphertext = payloadValue['ciphertext'];
+      if (nestedCiphertext != null &&
+          nestedCiphertext is! String &&
+          nestedCiphertext is! num) {
+        return 'payload.payload.ciphertext must be string or numeric';
+      }
+    }
+
+    final ciphertext = payloadMap['ciphertext'];
+    if (ciphertext != null &&
+        ciphertext is! String &&
+        ciphertext is! num) {
+      return 'payload.ciphertext must be string or numeric';
+    }
+
+    return null;
+  }
+
+  Map<String, dynamic> _readPayloadMap(String rawJson) {
+    if (rawJson.trim().isEmpty) {
+      throw const FormatException('Payload is empty');
+    }
+
+    final decoded = jsonDecode(rawJson);
+    if (decoded is! Map) {
+      throw const FormatException('Payload must be a JSON object');
+    }
+
+    for (final key in decoded.keys) {
+      if (key is String && key.contains('_')) {
+        throw FormatException(
+          'Outbox payload violates the backend contract: camelCase-only keys are required. Found snake_case key: $key. There is no backward-compatibility path for snake_case payloads.',
+        );
+      }
+    }
+
+    if (decoded is Map<String, dynamic>) {
+      return decoded;
+    }
+
+    return Map<String, dynamic>.from(decoded);
   }
 
   Future<List<OutboxEventEntity>> getPendingEvents() {
