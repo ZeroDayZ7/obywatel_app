@@ -109,7 +109,7 @@ class PinService {
       );
     }
 
-    final validationError = LocalSecretValidator.validate(
+    final validationError = LocalSecretValidator.validateForCreation(
       method: method,
       secret: secretBytes,
     );
@@ -291,7 +291,7 @@ class PinService {
       return false;
     }
 
-    final validationError = LocalSecretValidator.validate(
+    final validationError = LocalSecretValidator.validateForVerification(
       method: method,
       secret: secretBytes,
     );

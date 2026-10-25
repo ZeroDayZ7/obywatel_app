@@ -6,7 +6,7 @@ import 'package:obywatel_plus/core/utils/validators.dart';
 class LocalSecretValidator {
   const LocalSecretValidator._();
 
-  static String? validate({
+  static String? validateForCreation({
     required LocalSecurityMethod method,
     required List<int> secret,
   }) {
@@ -16,6 +16,26 @@ class LocalSecretValidator {
 
     if (method == LocalSecurityMethod.pin) {
       return Validators.validatePinDigits(secret);
+    }
+
+    if (secret.isEmpty) {
+      return 'errors.required_password';
+    }
+
+    final password = utf8.decode(secret, allowMalformed: false);
+    return Validators.validatePassword(password);
+  }
+
+  static String? validateForVerification({
+    required LocalSecurityMethod method,
+    required List<int> secret,
+  }) {
+    if (method == LocalSecurityMethod.none) {
+      return 'errors.invalid_security_method';
+    }
+
+    if (method == LocalSecurityMethod.pin) {
+      return Validators.validatePinDigitsFormat(secret);
     }
 
     if (secret.isEmpty) {

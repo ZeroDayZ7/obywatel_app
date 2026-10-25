@@ -70,14 +70,15 @@ class Validators {
     return null;
   }
 
-  /// Walidacja PIN
-  static String? validatePinDigits(List<int>? digits) {
+  /// Walidacja poprawności formatu PIN-u używanego do weryfikacji.
+  /// Nie blokuje prostych PIN-ów, bo polityka „słabości” powinna dotyczyć tylko ustawiania nowego PIN-u.
+  static String? validatePinDigitsFormat(List<int>? digits) {
     if (digits == null || digits.isEmpty) {
       return LocaleKeys.validators_required_pin.tr();
     }
 
     if (digits.length != 4) {
-      return LocaleKeys.validators_pin_length.tr(); // "PIN musi mieć 4 cyfry"
+      return LocaleKeys.validators_pin_length.tr();
     }
 
     for (final digit in digits) {
@@ -86,7 +87,18 @@ class Validators {
       }
     }
 
-    final value = digits.join();
+    return null;
+  }
+
+  /// Walidacja PIN-u podczas tworzenia / zmiany.
+  /// Tutaj stosujemy dodatkową politykę bezpieczeństwa w stosunku do prostej konfiguracji.
+  static String? validatePinDigits(List<int>? digits) {
+    final formatError = validatePinDigitsFormat(digits);
+    if (formatError != null) {
+      return formatError;
+    }
+
+    final value = digits!.join();
     const simplePins = [
       '0000',
       '1111',
@@ -119,7 +131,7 @@ class Validators {
       return LocaleKeys.validators_pin_too_simple.tr();
     }
 
-    return null; // OK
+    return null;
   }
 
   /// Walidacja numeru telefonu

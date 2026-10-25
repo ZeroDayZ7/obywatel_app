@@ -126,6 +126,11 @@ void main() {
     expect(Validators.validatePinDigits([1, 2, 3, 8]), isNull);
   });
 
+  test('verification accepts a structurally valid simple PIN without reusing setup policy', () {
+    expect(Validators.validatePinDigitsFormat([0, 0, 0, 0]), isNull);
+    expect(Validators.validatePinDigits([0, 0, 0, 0]), isNotNull);
+  });
+
   test('method switch flow begins with an explicit select method step', () async {
     final container = ProviderContainer();
     final notifier = container.read(changePinProvider.notifier);

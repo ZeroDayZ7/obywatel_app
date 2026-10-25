@@ -132,7 +132,7 @@ class ChangePinNotifier extends Notifier<ChangePinState> {
   String? _validateSecret(List<int> secret, LocalSecurityMethod targetMethod) {
     _flowLog('ChangePinNotifier._validateSecret', 1,
         'method=${targetMethod.name} bytes=${secret.length}');
-    final result = LocalSecretValidator.validate(
+    final result = LocalSecretValidator.validateForCreation(
       method: targetMethod,
       secret: secret,
     );
