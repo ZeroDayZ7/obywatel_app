@@ -29,6 +29,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   Timer? _lockoutTimer;
   bool _hasAttemptedAutoBiometrics = false;
   bool _isBiometricPromptInProgress = false;
+  bool _isVerificationInProgress = false;
 
   AppLogger get _log => ref.read(appLoggerProvider);
 
@@ -153,69 +154,74 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     required LocalSecurityMethod method,
     required List<int> secretBytes,
   }) async {
-    if (shouldIgnoreRetry(state)) {
+    if (_isVerificationInProgress || shouldIgnoreRetry(state)) {
       _log.d(
         '[PIN-VERIFICATION] Ignoring duplicate verification request for method $method while previous attempt is still active.',
       );
       return;
     }
 
+    _isVerificationInProgress = true;
     state = const PinVerificationState.loading();
 
-    final ok = await ref.read(pinServiceProvider).verifyLocalSecret(
-      method: method,
-      secretBytes: secretBytes,
-    );
-    if (!ok) {
-      _log.w(
-        '[PIN-VERIFICATION] Nieudana weryfikacja lokalnego sekretu w PinService dla metody $method.',
-      );
-      await _handleFailedAttempt();
-      return;
-    }
-
-    final storage = ref.read(secureStorageProvider);
-    final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
-
-    if (saltBase64 == null || saltBase64.isEmpty) {
-      // _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
-      state = const PinVerificationState.error();
-      return;
-    }
-
     try {
-      final salt = base64Decode(saltBase64);
-      await ref.read(cryptoServiceProvider.notifier).loadAndUnlockPrivateKey(
-        pinBytes: secretBytes,
-        salt: salt,
+      final ok = await ref.read(pinServiceProvider).verifyLocalSecret(
+        method: method,
+        secretBytes: secretBytes,
       );
-    } catch (e, st) {
-      _log.e(
-        '[PIN-VERIFICATION] Błąd odszyfrowywania klucza prywatnego!',
-        error: e,
-        stackTrace: st,
+      if (!ok) {
+        _log.w(
+          '[PIN-VERIFICATION] Nieudana weryfikacja lokalnego sekretu w PinService dla metody $method.',
+        );
+        await _handleFailedAttempt();
+        return;
+      }
+
+      final storage = ref.read(secureStorageProvider);
+      final saltBase64 = await storage.read(key: StorageKeys.kekSalt);
+
+      if (saltBase64 == null || saltBase64.isEmpty) {
+        // _log.e('[PIN-VERIFICATION] Brak kek_salt w SecureStorage!');
+        state = const PinVerificationState.error();
+        return;
+      }
+
+      try {
+        final salt = base64Decode(saltBase64);
+        await ref.read(cryptoServiceProvider.notifier).loadAndUnlockPrivateKey(
+          pinBytes: secretBytes,
+          salt: salt,
+        );
+      } catch (e, st) {
+        _log.e(
+          '[PIN-VERIFICATION] Błąd odszyfrowywania klucza prywatnego!',
+          error: e,
+          stackTrace: st,
+        );
+        state = const PinVerificationState.error();
+        return;
+      }
+
+      await ref.read(pinAttemptLimiterProvider.notifier).reset();
+      state = const PinVerificationState.success();
+
+      final sessionValid = await ref
+          .read(authControllerProvider.notifier)
+          .unlockWithPinAndValidateSession();
+
+      if (!sessionValid) {
+        _log.w(
+          '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym lokalnym sekrecie. Zachowano odblokowanie lokalne.',
+        );
+        return;
+      }
+
+      _log.i(
+        '✅ [PIN-VERIFICATION] Proces weryfikacji lokalnego sekretu zakończony sukcesem.',
       );
-      state = const PinVerificationState.error();
-      return;
+    } finally {
+      _isVerificationInProgress = false;
     }
-
-    await ref.read(pinAttemptLimiterProvider.notifier).reset();
-    state = const PinVerificationState.success();
-
-    final sessionValid = await ref
-        .read(authControllerProvider.notifier)
-        .unlockWithPinAndValidateSession();
-
-    if (!sessionValid) {
-      _log.w(
-        '[PIN-VERIFICATION] Brak połączenia z serwerem po poprawnym lokalnym sekrecie. Zachowano odblokowanie lokalne.',
-      );
-      return;
-    }
-
-    _log.i(
-      '✅ [PIN-VERIFICATION] Proces weryfikacji lokalnego sekretu zakończony sukcesem.',
-    );
   }
 
   Future<void> verifyPin(List<int> pinCodes) async {

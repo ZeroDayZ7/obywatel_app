@@ -17,7 +17,7 @@
     "windows": true,
     "android": true,
     "test": true,
-    "assets": true,
+    // "assets": true,
     "scripts": true,
     ".gitattributes": true,
     // ".gitignore": true,

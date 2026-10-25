@@ -14,6 +14,10 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
   /// Maksymalna liczba nieudanych prób przed nałożeniem pierwszej blokady czasowej.
   static const int maxAttemptsBeforeLock = 3;
 
+  /// Górna granica dla wydłużania blokady. Chroni przed nieograniczonym wzrostem
+  /// czasu blokady przy wielokrotnych próbach.
+  static const Duration maxLockDuration = Duration(hours: 1);
+
   @override
   Future<PinAttemptState> build() async {
     return _loadFromStorage();
@@ -47,19 +51,27 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     if (attempts < maxAttemptsBeforeLock) return Duration.zero;
 
     final lockCount = attempts - (maxAttemptsBeforeLock - 1);
-    final seconds = 60 * (1 << (lockCount - 1));
-    return Duration(seconds: seconds);
+    final boundedLockCount = lockCount.clamp(1, 7);
+    final exponentialSeconds = 60 * (1 << (boundedLockCount - 1));
+    final cappedSeconds = exponentialSeconds
+        .clamp(0, maxLockDuration.inSeconds);
+
+    return Duration(seconds: cappedSeconds);
   }
 
   Future<void> registerFailedAttempt() async {
     final currentState = state.value ?? const PinAttemptState();
+    final serverNow = ref.read(backendStateProvider.notifier).getSafeNow();
+
+    if (currentState.isLockedAt(serverNow)) {
+      return;
+    }
 
     final nextAttempts = currentState.attempts + 1;
     final lockDuration = _getLockDuration(nextAttempts);
 
     DateTime? lockUntil;
     if (lockDuration > Duration.zero) {
-      final serverNow = ref.read(backendStateProvider.notifier).getSafeNow();
       lockUntil = serverNow.add(lockDuration);
     }
 
@@ -80,6 +92,13 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
   }
 
   Future<void> reset() async {
+    final currentState = state.value;
+    final now = ref.read(backendStateProvider.notifier).getSafeNow();
+
+    if (currentState != null && currentState.isLockedAt(now)) {
+      return;
+    }
+
     const newState = PinAttemptState();
     state = const AsyncData(newState);
     await _saveToStorage(newState);

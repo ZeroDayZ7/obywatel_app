@@ -80,6 +80,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
 
     final verificationState = ref.read(pinVerificationProvider);
     final isBlocked = verificationState.maybeMap(
+      loading: (_) => true,
       locked: (_) => true,
       orElse: () => false,
     );

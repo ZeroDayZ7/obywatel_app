@@ -11,5 +11,8 @@ sealed class PinAttemptState with _$PinAttemptState {
 
   // Dodajemy helper wewnątrz modelu (wymaga pustego konstruktora const)
   const PinAttemptState._();
-  bool get isLocked => lockUntil != null && DateTime.now().isBefore(lockUntil!);
+
+  bool isLockedAt(DateTime now) => lockUntil != null && now.isBefore(lockUntil!);
+
+  bool get isLocked => isLockedAt(DateTime.now());
 }
