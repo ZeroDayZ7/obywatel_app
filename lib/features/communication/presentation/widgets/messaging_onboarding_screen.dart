@@ -29,10 +29,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
     final currentTermsVersion = currentState.currentTermsVersion?.trim();
     final hasUsableTerms = currentState.hasUsableTerms;
 
-    final errorMessage = currentState.errorMessage ??
-        (!hasUsableTerms
-            ? 'Problem z siecią. Regulamin nie jest dostępny. Spróbuj ponownie za chwilę.'
-            : null);
+    final errorMessage = hasUsableTerms ? currentState.errorMessage : null;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -91,7 +88,7 @@ class MessagingOnboardingScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          'Brak treści regulaminu do akceptacji. Pobierz regulamin ponownie, aby kontynuować.',
+                          'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
                           style: textTheme.bodyLarge?.copyWith(
                             color: colorScheme.onErrorContainer,
                           ),

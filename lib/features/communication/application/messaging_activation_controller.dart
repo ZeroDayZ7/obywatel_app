@@ -271,7 +271,7 @@ class MessagingActivationController extends _$MessagingActivationController {
                 termsText: null,
                 currentTermsVersion: null,
                 errorMessage:
-                    'Regulamin nie jest dostępny. Pobierz go ponownie, aby kontynuować.',
+                    'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
               ),
             );
           }
@@ -370,7 +370,7 @@ class MessagingActivationController extends _$MessagingActivationController {
       final clearedState = const MessagingActivationState(
         status: null,
         keyRegistrationStatus: 'not_started',
-        errorMessage: 'Akceptacja regulaminu jest wymagana do korzystania z komunikatora.',
+        errorMessage: null,
       );
 
       if (requestId == _requestVersion) {

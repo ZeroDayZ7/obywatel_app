@@ -172,7 +172,8 @@ class _QuickAccessCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        item.title.tr(),
+                        // item.title.tr(),
+                        item.title,
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
                           fontSize: 13,
@@ -184,7 +185,8 @@ class _QuickAccessCard extends StatelessWidget {
                       if (item.subtitle.isNotEmpty) ...[
                         const SizedBox(height: 2),
                         Text(
-                          item.subtitle.tr(),
+                          // item.subtitle.tr(),
+                          item.subtitle,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
