@@ -59,6 +59,25 @@ part 'database.g.dart';
     SyncStateDao,
   ],
 )
+class DatabaseSecurityException implements Exception {
+  final String message;
+
+  const DatabaseSecurityException(this.message);
+
+  @override
+  String toString() => 'DatabaseSecurityException: $message';
+}
+
+bool shouldAutoResetCorruptedDatabase(
+  Object error, {
+  required bool isDebugMode,
+}) {
+  final normalized = error.toString().toLowerCase();
+
+  return isDebugMode &&
+      (normalized.contains('code 26') || normalized.contains('not a database'));
+}
+
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.executor);
 
@@ -132,11 +151,20 @@ QueryExecutor openConnection(String encryptionKey) {
         try {
           rawDb.select('SELECT count(*) FROM sqlite_master;');
         } catch (e) {
-          if (e.toString().contains('code 26') || e.toString().contains('not a database')) {
-            debugPrint('[DATABASE-SECURITY] ⚠️ Stary plik bazy jest niekompatybilny. Usuwam plik i tworzę świeżą bazę...');
-            
-            try { rawDb.close(); } catch (_) {}
-            
+          final shouldReset = shouldAutoResetCorruptedDatabase(
+            e,
+            isDebugMode: kDebugMode,
+          );
+
+          if (shouldReset) {
+            debugPrint(
+              '[DATABASE-SECURITY] ⚠️ Stary plik bazy jest niekompatybilny. Usuwam plik i tworzę świeżą bazę (debug mode).',
+            );
+
+            try {
+              rawDb.close();
+            } catch (_) {}
+
             if (file.existsSync()) {
               file.deleteSync();
             }
@@ -144,9 +172,12 @@ QueryExecutor openConnection(String encryptionKey) {
             rawDb.execute('PRAGMA hexkey = \'$safeKey\';');
             rawDb.select('SELECT count(*) FROM sqlite_master;');
             debugPrint('[DATABASE-SECURITY] ✅ Świeża zaszyfrowana baza została zainicjalizowana.');
-          } else {
-            rethrow;
+            return;
           }
+
+          throw const DatabaseSecurityException(
+            'Encrypted database cannot be opened because the key is invalid or the database is corrupt. Automatic reset is disabled in production to prevent data loss.',
+          );
         }
 
         // debugPrint('[DATABASE-SECURITY] Cipher available; database key verified.');
