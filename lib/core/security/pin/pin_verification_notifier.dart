@@ -38,6 +38,14 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
   //   }
   // }
 
+  static bool shouldIgnoreRetry(PinVerificationState state) {
+    return state.maybeMap(
+      loading: (_) => true,
+      locked: (_) => true,
+      orElse: () => false,
+    );
+  }
+
   @override
   PinVerificationState build() {
     ref.listen<AsyncValue<PinAttemptState>>(pinAttemptLimiterProvider, (
@@ -145,6 +153,13 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
     required LocalSecurityMethod method,
     required List<int> secretBytes,
   }) async {
+    if (shouldIgnoreRetry(state)) {
+      _log.d(
+        '[PIN-VERIFICATION] Ignoring duplicate verification request for method $method while previous attempt is still active.',
+      );
+      return;
+    }
+
     state = const PinVerificationState.loading();
 
     final ok = await ref.read(pinServiceProvider).verifyLocalSecret(
@@ -184,6 +199,7 @@ class PinVerificationNotifier extends _$PinVerificationNotifier {
       return;
     }
 
+    await ref.read(pinAttemptLimiterProvider.notifier).reset();
     state = const PinVerificationState.success();
 
     final sessionValid = await ref

@@ -74,6 +74,21 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
     });
   }
 
+  void _submitPassword() {
+    final password = _passwordController.text;
+    if (password.isEmpty) return;
+
+    final verificationState = ref.read(pinVerificationProvider);
+    final isBlocked = verificationState.maybeMap(
+      locked: (_) => true,
+      orElse: () => false,
+    );
+
+    if (isBlocked) return;
+
+    ref.read(pinVerificationProvider.notifier).verifyPassword(password);
+  }
+
   @override
   Widget build(BuildContext context) {
     _listenToStateChanges(context);
@@ -145,13 +160,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                             obscureText: true,
                             keyboardType: TextInputType.visiblePassword,
                             textInputAction: TextInputAction.done,
-                            onSubmitted: (_) {
-                              if (!isLoading && !isLocked) {
-                                ref
-                                    .read(pinVerificationProvider.notifier)
-                                    .verifyPassword(_passwordController.text);
-                              }
-                            },
+                            onSubmitted: (_) => _submitPassword(),
                             decoration: InputDecoration(
                               border: const OutlineInputBorder(),
                               labelText: 'Hasło',
@@ -162,9 +171,7 @@ class _PinScreenState extends ConsumerState<PinVerificationScreen> {
                           FilledButton(
                             onPressed: isLoading || isLocked
                                 ? null
-                                : () => ref
-                                      .read(pinVerificationProvider.notifier)
-                                      .verifyPassword(_passwordController.text),
+                                : _submitPassword,
                             child: const Text('Odblokuj'),
                           ),
                         ] else ...[

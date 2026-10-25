@@ -43,6 +43,14 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     return remaining > 0 ? remaining : 0;
   }
 
+  static Duration lockDurationForAttempts(int attempts) {
+    if (attempts < maxAttemptsBeforeLock) return Duration.zero;
+
+    final lockCount = attempts - (maxAttemptsBeforeLock - 1);
+    final seconds = 60 * (1 << (lockCount - 1));
+    return Duration(seconds: seconds);
+  }
+
   Future<void> registerFailedAttempt() async {
     final currentState = state.value ?? const PinAttemptState();
 
@@ -94,11 +102,5 @@ class PinAttemptLimiter extends _$PinAttemptLimiter {
     }
   }
 
-  Duration _getLockDuration(int attempts) {
-    if (attempts < maxAttemptsBeforeLock) return Duration.zero;
-
-    final lockCount = attempts - (maxAttemptsBeforeLock - 1);
-    final seconds = 60 * (1 << (lockCount - 1));
-    return Duration(seconds: seconds);
-  }
+  Duration _getLockDuration(int attempts) => lockDurationForAttempts(attempts);
 }

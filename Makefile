@@ -4,7 +4,7 @@ SHELL := bash
 DEVICE_ID ?= 5200d78bfa479449
 PORT ?= 8081
 
-.PHONY: help reverse r build-runner br generate-keys gk gen g scrcpy s clean c analyze a check dev-setup d diff
+.PHONY: help reverse r build-runner br generate-keys gk gen g scrcpy s clean c analyze a check dev-setup d diff del dd
 
 help: ## Lista komend
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -44,3 +44,8 @@ a: analyze
 
 dev-setup: reverse gen ## ADB reverse + gen na raz
 d: dev-setup
+
+del:  
+	find . -type f -name "roznice.patch" -delete
+	find . -type f -name "combined.txt" -delete
+dd: del
